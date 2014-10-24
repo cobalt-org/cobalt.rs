@@ -1,7 +1,13 @@
-pub struct Document;
+pub struct Document {
+    attributes: Vec<(String, String)>,
+    content: String,
+}
 
 impl Document {
-    pub fn new(path: &Path) {
-        println!("Creating Document from path {}", path.as_str().unwrap());
+    pub fn new(attributes: Vec<(String, String)>, content: String) -> Document {
+        Document {
+            attributes: attributes,
+            content: content,
+        }
     }
 }
