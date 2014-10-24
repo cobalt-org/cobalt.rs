@@ -1,7 +1,15 @@
 extern crate rustie;
 
 use rustie::cli::Runner;
+use std::os;
 
 fn main() {
-    Runner::run();
+    let args        = os::args();
+    let use_default = args.len() == 1u;
+
+    if use_default {
+        Runner::run(".");
+    } else {
+        Runner::run(args[1].as_slice());
+    }
 }
