@@ -1,0 +1,5 @@
+[package]
+
+name = "rustie"
+version = "0.0.1"
+authors = ["Benny Klotz <r3qnbenni@gmail.com>"]
