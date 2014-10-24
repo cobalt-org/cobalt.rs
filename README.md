@@ -1,6 +1,6 @@
 # Rustie
 
-A static site generator for (rust)[http://www.rust-lang.org/].
+A static site generator for [rust](http://www.rust-lang.org/).
 
 ## Usage (not implemented yet)
 
