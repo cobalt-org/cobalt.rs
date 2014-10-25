@@ -1,6 +1,6 @@
 extern crate cobalt;
 
-use cobalt::cli::Runner;
+use cobalt::Runner;
 use std::os;
 
 fn main() {
