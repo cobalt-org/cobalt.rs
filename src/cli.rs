@@ -1,5 +1,4 @@
 extern crate libc;
-extern crate mustache;
 
 use std::os;
 use std::io;

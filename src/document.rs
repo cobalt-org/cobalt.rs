@@ -1,10 +1,10 @@
-extern crate mustache;
-
 use std::fmt;
 use std::io;
-use std::str;
 use std::collections::HashMap;
 use std::io::File;
+
+// reimport mustache from root module where its imported via extern crate mustache;
+use mustache;
 
 pub struct Document {
     attributes: HashMap<String, String>,
