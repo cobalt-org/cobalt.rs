@@ -1,4 +1,12 @@
 [root]
 name = "cobalt"
 version = "0.0.1"
+dependencies = [
+ "rust-mustache 0.3.0 (git+https://github.com/Ryman/rust-mustache#1240fe10a84fb2104cac95085cab8535bcce82c8)",
+]
+
+[[package]]
+name = "rust-mustache"
+version = "0.3.0"
+source = "git+https://github.com/Ryman/rust-mustache#1240fe10a84fb2104cac95085cab8535bcce82c8"
 
