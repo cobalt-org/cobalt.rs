@@ -17,7 +17,6 @@ Posts live in ```_posts``` and are written in .tpl format and use mustache under
 Example:
 
 ```text
----
 title:   My first Blogpost
 date:    24/08/2014 at 15:36
 ---
@@ -26,7 +25,7 @@ Hey there this is my first blogpost and this is super awesome.
 My Blog is lorem ipsum like, yes it is..
 ```
 
-The content between ```---``` are meta attributes and accessible via their key.
+The content before ```---``` are meta attributes and accessible via their key.
 
 In the post layout file title is accessible via ```{{ title }}``` and the date via ```{{ date }}```
 
