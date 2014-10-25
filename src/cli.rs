@@ -1,7 +1,12 @@
+extern crate libc;
+extern crate mustache;
+
 use std::os;
+use std::io;
 use std::io::fs;
 use std::io::File;
 use std::path::Path;
+use std::collections::HashMap;
 
 use document::Document;
 
@@ -11,10 +16,27 @@ impl Runner {
     pub fn run(path_string: &str) {
         let base_path      = os::make_absolute(&Path::new(path_string));
         let documents_path = os::make_absolute(&Path::new((path_string.to_string() + "/_posts").as_slice()));
+        let layout_path    = os::make_absolute(&Path::new((path_string.to_string() + "/_layouts/default.tpl").as_slice()));
+        let index_path     = os::make_absolute(&Path::new(path_string.to_string() + "/index.tpl"));
+        let build_path     = os::make_absolute(&Path::new(path_string.to_string() + "/build"));
+        let post_path      = os::make_absolute(&Path::new(path_string.to_string() + "/build/posts"));
 
-        println!("Generating site in {}", base_path.as_str().unwrap());
+        println!("Generating site in {}\n", base_path.as_str().unwrap());
 
-        let documents = Runner::parse_documents(documents_path);
+        let mut documents = Runner::parse_documents(documents_path);
+        let layout    = Runner::parse_file(layout_path);
+
+        let mut index_attr = HashMap::new();
+        index_attr.insert("name".to_string(), "index".to_string());
+
+        let index     = Document::new(
+            index_attr,
+            Runner::parse_file(index_path)
+        );
+
+        documents.insert(0, index);
+
+        Runner::create_build(build_path, post_path, documents, layout);
     }
 
     fn parse_documents(documents_path: Path) -> Vec<Document> {
@@ -27,27 +49,45 @@ impl Runner {
                     continue;
                 }
 
-                let attributes = Runner::extract_attributes(path);
-                let content    = Runner::extract_content(path);
+                let attributes = Runner::extract_attributes(path.clone());
+                let content    = Runner::extract_content(path.clone());
 
                 documents.push(Document::new(attributes, content));
             }
         } else {
-            println!("Path {} doesn't exist", documents_path.as_str().unwrap());
+            println!("Path {} doesn't exist\n", documents_path.as_str().unwrap());
+            unsafe { libc::exit(1 as libc::c_int); }
         }
-
-        /*for document in documents.iter() {
-            println!("{}", document.as_html());
-        }*/
 
         return documents;
     }
 
-    fn extract_attributes(document_path: &Path) -> Vec<(String, String)> {
-        let mut attributes = vec!();
-        attributes.push(("name".to_string(), document_path.filestem_str().unwrap().to_string()));
+    fn parse_file(file_path: Path) -> String {
+        if File::open(&file_path).is_ok() {
+            return File::open(&file_path).read_to_string().unwrap();
+        } else {
+            println!("File {} doesn't exist\n", file_path.as_str().unwrap());
+            unsafe { libc::exit(1 as libc::c_int); }
+        }
+    }
 
-        let content = File::open(document_path).read_to_string().unwrap();
+    fn create_build(build_path: Path, post_path: Path, documents: Vec<Document>, layout: String) {
+        fs::mkdir(&build_path, io::USER_RWX);
+        fs::mkdir(&post_path, io::USER_RWX);
+
+        for document in documents.iter() {
+            document.create_file(build_path.clone(), post_path.clone(), layout.clone());
+        }
+
+        println!("Directory {} created", build_path.as_str().unwrap());
+    }
+
+
+    fn extract_attributes(document_path: Path) -> HashMap<String, String> {
+        let mut attributes = HashMap::new();
+        attributes.insert("name".to_string(), document_path.filestem_str().unwrap().to_string());
+
+        let content = Runner::parse_file(document_path);
 
         let mut content_splits = content.as_slice().split_str("---");
 
@@ -60,17 +100,17 @@ impl Runner {
 
             let mut attribute_split = attribute_line.split(':');
 
-            let key   = attribute_split.nth(0u).unwrap().trim_chars(' ').to_string();
-            let value = attribute_split.nth(0u).unwrap().trim_chars(' ').to_string();
+            let key   = attribute_split.nth(0u).unwrap().trim_chars(' ').to_string().clone();
+            let value = attribute_split.nth(0u).unwrap().trim_chars(' ').to_string().clone();
 
-            attributes.push((key, value));
+            attributes.insert(key, value);
         }
 
         return attributes;
     }
 
-    fn extract_content(document_path: &Path) -> String {
-        let content = File::open(document_path).read_to_string().unwrap();
+    fn extract_content(document_path: Path) -> String {
+        let content = Runner::parse_file(document_path);
 
         let mut content_splits = content.as_slice().split_str("---");
 
