@@ -1,4 +1,4 @@
-# Rustie
+# Cobalt
 
 A static site generator for [rust](http://www.rust-lang.org/).
 
@@ -44,7 +44,7 @@ For this given site layout:
             * 2014-08-24-my-first-blogpost.content
             * 2014-09-05-my-second-blogpost.content
 
-Rustie will generate:
+Cobalt will generate:
 
     * path/to/repo/
         * build/

@@ -1,6 +1,6 @@
-extern crate rustie;
+extern crate cobalt;
 
-use rustie::cli::Runner;
+use cobalt::cli::Runner;
 use std::os;
 
 fn main() {
