@@ -1,2 +1,4 @@
+extern crate mustache;
+
 pub mod cli;
-pub mod document;
+mod document;
