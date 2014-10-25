@@ -8,9 +8,11 @@ A static site generator for [rust](http://www.rust-lang.org/).
 
 You can have a custom layout in the ```_layout``` Directory.
 
+Same as Post files Layout files are written as [mustache](https://github.com/erickt/rust-mustache) templates.
+
 ### Posts
 
-Posts live in ```_posts``` and are written in .content format (not a real format).
+Posts live in ```_posts``` and are written in .tpl format and use mustache under the hood.
 
 Example:
 
@@ -36,13 +38,13 @@ Also there is one standard attribute which is named statically - ```{{ content }
 For this given site layout:
 
     * path/to/repo/
-        * index.html
+        * index.tpl
         * _layouts/
-            * default.html
-            * post.html
+            * default.tpl
+            * post.tpl
         * _posts/
-            * 2014-08-24-my-first-blogpost.content
-            * 2014-09-05-my-second-blogpost.content
+            * 2014-08-24-my-first-blogpost.tpl
+            * 2014-09-05-my-second-blogpost.tpl
 
 Cobalt will generate:
 
