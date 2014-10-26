@@ -1,6 +1,5 @@
 extern crate libc;
 
-use std::os;
 use std::io;
 use std::io::fs;
 use std::io::File;
@@ -21,10 +20,10 @@ impl Runner {
 
         println!("Generating site in {}\n", path_string);
 
-        let mut posts = Runner::parse_documents(documents_path.as_slice());
+        let posts     = Runner::parse_documents(documents_path.as_slice());
         let layout    = Runner::parse_file(layout_path.as_slice());
+        let documents = Runner::parse_index(index_path.as_slice(), posts);
 
-        let mut documents = Runner::parse_index(index_path.as_slice(), posts);
         Runner::create_build(build_path.as_slice(), post_path.as_slice(), documents, layout);
     }
 
