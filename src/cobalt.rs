@@ -21,19 +21,10 @@ impl Runner {
 
         println!("Generating site in {}\n", path_string);
 
-        let mut documents = Runner::parse_documents(documents_path.as_slice());
-        let layout        = Runner::parse_file(layout_path.as_slice());
+        let mut posts = Runner::parse_documents(documents_path.as_slice());
+        let layout    = Runner::parse_file(layout_path.as_slice());
 
-        let mut index_attr = HashMap::new();
-        index_attr.insert("name".to_string(), "index".to_string());
-
-        let index     = Document::new(
-            index_attr,
-            Runner::parse_file(index_path.as_slice())
-        );
-
-        documents.insert(0, index);
-
+        let mut documents = Runner::parse_index(index_path.as_slice(), posts);
         Runner::create_build(build_path.as_slice(), post_path.as_slice(), documents, layout);
     }
 
@@ -71,6 +62,23 @@ impl Runner {
             println!("File {} doesn't exist\n", file_path);
             unsafe { libc::exit(1 as libc::c_int); }
         }
+    }
+
+    fn parse_index(index_path: &str, posts: Vec<Document>) -> Vec<Document> {
+        let mut index_attr = HashMap::new();
+        index_attr.insert("name".to_string(), "index".to_string());
+
+        let index     = Document::new(
+            index_attr,
+            Runner::parse_file(index_path)
+        );
+
+        let mut documents = posts;
+        documents.insert(0, index);
+
+        println!("{}", documents);
+
+        return documents;
     }
 
     fn create_build(build_path: &str, post_path: &str, documents: Vec<Document>, layout: String) {
