@@ -36,9 +36,9 @@ impl Document {
         /* and end it here, I don't know whats going on here... WAT */
     }
 
-    pub fn create_file(&self, build_path: Path, document_path: Path, layout: String) {
+    pub fn create_file(&self, build_path: &str, document_path: &str, layout: String) {
         if self.attributes.get_copy(&"name".to_string()) == "index".to_string() {
-            let mut file = File::create(&Path::new((build_path.as_str().unwrap().to_string() + "/index.html").as_slice()));
+            let mut file = File::create(&Path::new((build_path.to_string() + "/index.html").as_slice()));
 
             let mut data = HashMap::new();
             data.insert("content", self.as_html());
@@ -49,7 +49,7 @@ impl Document {
         } else {
             let mut file = File::create(
                 &Path::new(
-                    (document_path.as_str().unwrap().to_string() + "/" + self.attributes.get_copy(&"name".to_string()) + ".html").as_slice()
+                    (document_path.to_string() + "/" + self.attributes.get_copy(&"name".to_string()) + ".html").as_slice()
                 )
             );
 

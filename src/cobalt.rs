@@ -13,33 +13,34 @@ pub struct Runner;
 
 impl Runner {
     pub fn run(path_string: &str) {
-        let base_path      = os::make_absolute(&Path::new(path_string));
-        let documents_path = os::make_absolute(&Path::new((path_string.to_string() + "/_posts").as_slice()));
-        let layout_path    = os::make_absolute(&Path::new((path_string.to_string() + "/_layouts/default.tpl").as_slice()));
-        let index_path     = os::make_absolute(&Path::new(path_string.to_string() + "/index.tpl"));
-        let build_path     = os::make_absolute(&Path::new(path_string.to_string() + "/build"));
-        let post_path      = os::make_absolute(&Path::new(path_string.to_string() + "/build/posts"));
+        let documents_path = path_string.to_string() + "/_posts";
+        let layout_path    = path_string.to_string() + "/_layouts/default.tpl";
+        let index_path     = path_string.to_string() + "/index.tpl";
+        let build_path     = path_string.to_string() + "/build";
+        let post_path      = path_string.to_string() + "/build/posts";
 
-        println!("Generating site in {}\n", base_path.as_str().unwrap());
+        println!("Generating site in {}\n", path_string);
 
-        let mut documents = Runner::parse_documents(documents_path);
-        let layout    = Runner::parse_file(layout_path);
+        let mut documents = Runner::parse_documents(documents_path.as_slice());
+        let layout        = Runner::parse_file(layout_path.as_slice());
 
         let mut index_attr = HashMap::new();
         index_attr.insert("name".to_string(), "index".to_string());
 
         let index     = Document::new(
             index_attr,
-            Runner::parse_file(index_path)
+            Runner::parse_file(index_path.as_slice())
         );
 
         documents.insert(0, index);
 
-        Runner::create_build(build_path, post_path, documents, layout);
+        Runner::create_build(build_path.as_slice(), post_path.as_slice(), documents, layout);
     }
 
-    fn parse_documents(documents_path: Path) -> Vec<Document> {
-        let paths = fs::readdir(&documents_path);
+    fn parse_documents(documents_path: &str) -> Vec<Document> {
+        let path = &Path::new(documents_path);
+
+        let paths = fs::readdir(path);
         let mut documents = vec!();
 
         if paths.is_ok() {
@@ -48,43 +49,46 @@ impl Runner {
                     continue;
                 }
 
-                let attributes = Runner::extract_attributes(path.clone());
-                let content    = Runner::extract_content(path.clone());
+                let attributes = Runner::extract_attributes(path.as_str().unwrap());
+                let content    = Runner::extract_content(path.as_str().unwrap());
 
                 documents.push(Document::new(attributes, content));
             }
         } else {
-            println!("Path {} doesn't exist\n", documents_path.as_str().unwrap());
+            println!("Path {} doesn't exist\n", documents_path);
             unsafe { libc::exit(1 as libc::c_int); }
         }
 
         return documents;
     }
 
-    fn parse_file(file_path: Path) -> String {
-        if File::open(&file_path).is_ok() {
-            return File::open(&file_path).read_to_string().unwrap();
+    fn parse_file(file_path: &str) -> String {
+        let path = &Path::new(file_path);
+
+        if File::open(path).is_ok() {
+            return File::open(path).read_to_string().unwrap();
         } else {
-            println!("File {} doesn't exist\n", file_path.as_str().unwrap());
+            println!("File {} doesn't exist\n", file_path);
             unsafe { libc::exit(1 as libc::c_int); }
         }
     }
 
-    fn create_build(build_path: Path, post_path: Path, documents: Vec<Document>, layout: String) {
-        fs::mkdir(&build_path, io::USER_RWX);
-        fs::mkdir(&post_path, io::USER_RWX);
+    fn create_build(build_path: &str, post_path: &str, documents: Vec<Document>, layout: String) {
+        fs::mkdir(&Path::new(build_path), io::USER_RWX);
+        fs::mkdir(&Path::new(post_path), io::USER_RWX);
 
         for document in documents.iter() {
-            document.create_file(build_path.clone(), post_path.clone(), layout.clone());
+            document.create_file(build_path, post_path, layout.clone());
         }
 
-        println!("Directory {} created", build_path.as_str().unwrap());
+        println!("Directory {} created", build_path);
     }
 
 
-    fn extract_attributes(document_path: Path) -> HashMap<String, String> {
+    fn extract_attributes(document_path: &str) -> HashMap<String, String> {
+        let path = Path::new(document_path);
         let mut attributes = HashMap::new();
-        attributes.insert("name".to_string(), document_path.filestem_str().unwrap().to_string());
+        attributes.insert("name".to_string(), path.filestem_str().unwrap().to_string());
 
         let content = Runner::parse_file(document_path);
 
@@ -108,7 +112,7 @@ impl Runner {
         return attributes;
     }
 
-    fn extract_content(document_path: Path) -> String {
+    fn extract_content(document_path: &str) -> String {
         let content = Runner::parse_file(document_path);
 
         let mut content_splits = content.as_slice().split_str("---");
