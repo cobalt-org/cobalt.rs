@@ -8,7 +8,7 @@ Note: This is my first rust project, so it's possible that you wanna shoot me do
 
 ### Layout / Design
 
-You can have a custom layout in the ```_layout``` Directory.
+You can have a custom layout in the ```_layouts``` Directory.
 
 Same as Post files Layout files are written as [mustache](https://github.com/erickt/rust-mustache) templates.
 
