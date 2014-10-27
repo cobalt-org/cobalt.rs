@@ -3,7 +3,6 @@ use std::io;
 use std::collections::HashMap;
 use std::io::File;
 
-// reimport mustache from root module where its imported via extern crate mustache;
 use mustache;
 
 pub struct Document {
@@ -24,10 +23,8 @@ impl Document {
     pub fn as_html(&self) -> String {
         let template = mustache::compile_str(self.content.as_slice());
 
-        /* let the brainfuck start here */
         // a Writer which impl Writer is needed here (could be file, could be socket or any other writer)
         // StringWriter doesn't exist yet, therefore I have to use a MemWriter
-        // and convert the u8 vec sequence into ascii so its convertable to u8 again
         let mut w = io::MemWriter::new();
 
         // why do I have to say &mut here
@@ -37,7 +34,6 @@ impl Document {
         template.render(&mut w, &self.attributes);
 
         w.unwrap().into_ascii().into_string()
-        /* and end it here, I don't know whats going on here... WAT */
     }
 
     pub fn create_file(&self, path: &str, layout_path: &str) {
