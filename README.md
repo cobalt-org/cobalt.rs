@@ -2,8 +2,6 @@
 
 A static site generator written in [rust](http://www.rust-lang.org/).
 
-Note: This is my first rust project, so it's possible that you wanna shoot me down for the code you will see here...
-
 ## Usage
 
 ### Layout / Design
