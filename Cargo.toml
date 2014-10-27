@@ -2,7 +2,7 @@
 
 name = "cobalt"
 version = "0.0.1"
-authors = ["Benny Klotz <r3qnbenni@gmail.com>"]
+authors = ["Benny Klotz <r3qnbenni@gmail.com>", "Johann Hofmann"]
 
 [dependencies.rust-mustache]
 git = "https://github.com/Ryman/rust-mustache"
