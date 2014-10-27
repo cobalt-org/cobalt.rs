@@ -14,18 +14,17 @@ impl Runner {
     pub fn run(path_string: &str) {
         let base_path      = &Path::new(path_string);
         let documents_path = base_path.as_str().unwrap().to_string() + "/_posts";
-        let layout_path    = base_path.as_str().unwrap().to_string() + "/_layouts/default.tpl";
+        let layout_path    = base_path.as_str().unwrap().to_string() + "/_layouts/";
         let index_path     = base_path.as_str().unwrap().to_string() + "/index.tpl";
         let build_path     = base_path.as_str().unwrap().to_string() + "/build/";
 
         println!("Generating site in {}\n", path_string);
 
+        let index     = Runner::parse_document(index_path.as_slice());
         let posts     = Runner::parse_documents(documents_path.as_slice());
-        let layout    = Runner::parse_file(layout_path.as_slice());
-        let index     = Runner::parse_index(index_path.as_slice());
         let post_path = Runner::create_dirs(build_path.as_slice());
 
-        Runner::create_files(build_path.as_slice(), post_path.as_slice(), index, posts, layout.as_slice());
+        Runner::create_files(build_path.as_slice(), post_path.as_slice(), layout_path.as_slice(), index, posts);
     }
 
     fn parse_documents(documents_path: &str) -> Vec<Document> {
@@ -40,16 +39,7 @@ impl Runner {
                     continue;
                 }
 
-                let attributes = Runner::extract_attributes(path.as_str().unwrap());
-                let content    = Runner::extract_content(path.as_str().unwrap());
-
-                documents.push(
-                    Document::new(
-                        attributes,
-                        content,
-                        path.filestem_str().unwrap().to_string() + ".html",
-                    )
-                );
+                documents.push(Runner::parse_document(path.as_str().unwrap()));
             }
         } else {
             println!("Path {} doesn't exist\n", documents_path);
@@ -57,6 +47,18 @@ impl Runner {
         }
 
         return documents;
+    }
+
+    fn parse_document(document_path: &str) -> Document {
+        let path       = Path::new(document_path);
+        let attributes = Runner::extract_attributes(document_path);
+        let content    = Runner::extract_content(document_path);
+
+        Document::new(
+            attributes,
+            content,
+            path.filestem_str().unwrap().to_string() + ".html",
+        )
     }
 
     fn parse_file(file_path: &str) -> String {
@@ -70,21 +72,8 @@ impl Runner {
         }
     }
 
-    fn parse_index(index_path: &str) -> Document {
-        let mut index_attr = HashMap::new();
-        let path = Path::new(index_path);
-
-        index_attr.insert("name".to_string(), "index".to_string());
-
-        Document::new(
-            index_attr,
-            Runner::parse_file(index_path),
-            path.filestem_str().unwrap().to_string() + ".html",
-        )
-    }
-
     fn create_dirs(build_path: &str) -> String {
-        let postpath = (build_path.to_string() + "posts/");
+        let postpath = build_path.to_string() + "posts/";
 
         fs::mkdir(&Path::new(build_path), io::USER_RWX);
         fs::mkdir(&Path::new(postpath.as_slice()), io::USER_RWX);
@@ -96,12 +85,11 @@ impl Runner {
         return postpath;
     }
 
-    fn create_files(index_path: &str, document_path: &str, index: Document, documents: Vec<Document>, layout: &str) {
-        // TODO: use different layout than for posts..
-        index.create_file(layout, index_path);
+    fn create_files(index_path: &str, document_path: &str, layout_path: &str, index: Document, documents: Vec<Document>) {
+        index.create_file(index_path, layout_path);
 
         for document in documents.iter() {
-            document.create_file(layout, document_path);
+            document.create_file(document_path, layout_path);
         }
     }
 
@@ -113,21 +101,23 @@ impl Runner {
 
         let content = Runner::parse_file(document_path);
 
-        let mut content_splits = content.as_slice().split_str("---");
+        if content.as_slice().contains("---") {
+            let mut content_splits = content.as_slice().split_str("---");
 
-        let attribute_string = content_splits.nth(0u).unwrap();
+            let attribute_string = content_splits.nth(0u).unwrap();
 
-        for attribute_line in attribute_string.split_str("\n") {
-            if !attribute_line.contains_char(':') {
-                continue;
+            for attribute_line in attribute_string.split_str("\n") {
+                if !attribute_line.contains_char(':') {
+                    continue;
+                }
+
+                let mut attribute_split = attribute_line.split(':');
+
+                let key   = attribute_split.nth(0u).unwrap().trim_chars(' ').to_string().clone();
+                let value = attribute_split.nth(0u).unwrap().trim_chars(' ').to_string().clone();
+
+                attributes.insert(key, value);
             }
-
-            let mut attribute_split = attribute_line.split(':');
-
-            let key   = attribute_split.nth(0u).unwrap().trim_chars(' ').to_string().clone();
-            let value = attribute_split.nth(0u).unwrap().trim_chars(' ').to_string().clone();
-
-            attributes.insert(key, value);
         }
 
         return attributes;
@@ -136,8 +126,12 @@ impl Runner {
     fn extract_content(document_path: &str) -> String {
         let content = Runner::parse_file(document_path);
 
-        let mut content_splits = content.as_slice().split_str("---");
+        if content.as_slice().contains("---") {
+            let mut content_splits = content.as_slice().split_str("---");
 
-        content_splits.nth(1u).unwrap().to_string()
+            return content_splits.nth(1u).unwrap().to_string();
+        }
+
+        return content;
     }
 }
