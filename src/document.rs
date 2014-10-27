@@ -7,15 +7,17 @@ use std::io::File;
 use mustache;
 
 pub struct Document {
-    attributes: HashMap<String, String>,
-    content: String,
+    pub attributes: HashMap<String, String>,
+    pub content: String,
+    pub filename: String,
 }
 
 impl Document {
-    pub fn new(attributes: HashMap<String, String>, content: String) -> Document {
+    pub fn new(attributes: HashMap<String, String>, content: String, filename: String) -> Document {
         Document {
             attributes: attributes,
             content: content,
+            filename: filename,
         }
     }
 
@@ -30,43 +32,32 @@ impl Document {
 
         // why do I have to say &mut here
         // mutable reference?!?!
+        //
+        // TODO: pass in documents as template data if as_html is called on Index Document..
         template.render(&mut w, &self.attributes);
 
         w.unwrap().into_ascii().into_string()
         /* and end it here, I don't know whats going on here... WAT */
     }
 
-    pub fn create_file(&self, build_path: &str, document_path: &str, layout: String) {
-        if self.attributes.get_copy(&"name".to_string()) == "index".to_string() {
-            let mut file = File::create(&Path::new((build_path.to_string() + "/index.html").as_slice()));
+    pub fn create_file(&self, layout: &str, path: &str) {
+        let file_path = (path.to_string() + self.filename);
 
-            let mut data = HashMap::new();
-            data.insert("content", self.as_html());
+        let mut file = File::create(&Path::new(file_path.as_slice()));
+        let mut data = HashMap::new();
 
-            let template = mustache::compile_str(layout.as_slice());
+        data.insert("content", self.as_html());
 
-            template.render(&mut file, &data);
-        } else {
-            let mut file = File::create(
-                &Path::new(
-                    (document_path.to_string() + "/" + self.attributes.get_copy(&"name".to_string()) + ".html").as_slice()
-                )
-            );
+        let template = mustache::compile_str(layout);
 
-            let mut data = HashMap::new();
-            data.insert("content", self.as_html());
+        template.render(&mut file, &data);
 
-            let template = mustache::compile_str(layout.as_slice());
-
-            template.render(&mut file, &data);
-        }
-
-        println!("Created {}", self.attributes.get_copy(&"name".to_string()));
+        println!("Created {}{}", path, self.filename);
     }
 }
 
 impl fmt::Show for Document {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Attributes: {}\nContent: {}", self.attributes, self.content)
+        write!(f, "Attributes: {}\nContent: {}\n\nFilename: {}", self.attributes, self.content, self.filename)
     }
 }

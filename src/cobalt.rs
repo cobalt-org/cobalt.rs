@@ -12,19 +12,20 @@ pub struct Runner;
 
 impl Runner {
     pub fn run(path_string: &str) {
-        let documents_path = path_string.to_string() + "/_posts";
-        let layout_path    = path_string.to_string() + "/_layouts/default.tpl";
-        let index_path     = path_string.to_string() + "/index.tpl";
-        let build_path     = path_string.to_string() + "/build";
-        let post_path      = path_string.to_string() + "/build/posts";
+        let base_path      = &Path::new(path_string);
+        let documents_path = base_path.as_str().unwrap().to_string() + "/_posts";
+        let layout_path    = base_path.as_str().unwrap().to_string() + "/_layouts/default.tpl";
+        let index_path     = base_path.as_str().unwrap().to_string() + "/index.tpl";
+        let build_path     = base_path.as_str().unwrap().to_string() + "/build/";
 
         println!("Generating site in {}\n", path_string);
 
         let posts     = Runner::parse_documents(documents_path.as_slice());
         let layout    = Runner::parse_file(layout_path.as_slice());
-        let documents = Runner::parse_index(index_path.as_slice(), posts);
+        let index     = Runner::parse_index(index_path.as_slice());
+        let post_path = Runner::create_dirs(build_path.as_slice());
 
-        Runner::create_build(build_path.as_slice(), post_path.as_slice(), documents, layout);
+        Runner::create_files(build_path.as_slice(), post_path.as_slice(), index, posts, layout.as_slice());
     }
 
     fn parse_documents(documents_path: &str) -> Vec<Document> {
@@ -42,7 +43,13 @@ impl Runner {
                 let attributes = Runner::extract_attributes(path.as_str().unwrap());
                 let content    = Runner::extract_content(path.as_str().unwrap());
 
-                documents.push(Document::new(attributes, content));
+                documents.push(
+                    Document::new(
+                        attributes,
+                        content,
+                        path.filestem_str().unwrap().to_string() + ".html",
+                    )
+                );
             }
         } else {
             println!("Path {} doesn't exist\n", documents_path);
@@ -63,32 +70,38 @@ impl Runner {
         }
     }
 
-    fn parse_index(index_path: &str, posts: Vec<Document>) -> Vec<Document> {
+    fn parse_index(index_path: &str) -> Document {
         let mut index_attr = HashMap::new();
+        let path = Path::new(index_path);
+
         index_attr.insert("name".to_string(), "index".to_string());
 
-        let index     = Document::new(
+        Document::new(
             index_attr,
-            Runner::parse_file(index_path)
-        );
-
-        let mut documents = posts;
-        documents.insert(0, index);
-
-        println!("{}", documents);
-
-        return documents;
+            Runner::parse_file(index_path),
+            path.filestem_str().unwrap().to_string() + ".html",
+        )
     }
 
-    fn create_build(build_path: &str, post_path: &str, documents: Vec<Document>, layout: String) {
+    fn create_dirs(build_path: &str) -> String {
+        let postpath = (build_path.to_string() + "posts/");
+
         fs::mkdir(&Path::new(build_path), io::USER_RWX);
-        fs::mkdir(&Path::new(post_path), io::USER_RWX);
+        fs::mkdir(&Path::new(postpath.as_slice()), io::USER_RWX);
+
+        // TODO: copy non cobalt relevant folders into /build folder (assets, stylesheets, etc...)
+
+        println!("Directory {} created\n", build_path);
+
+        return postpath;
+    }
+
+    fn create_files(index_path: &str, document_path: &str, index: Document, documents: Vec<Document>, layout: &str) {
+        index.create_file(layout, index_path);
 
         for document in documents.iter() {
-            document.create_file(build_path, post_path, layout.clone());
+            document.create_file(layout, document_path);
         }
-
-        println!("Directory {} created", build_path);
     }
 
 
