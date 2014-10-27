@@ -4,7 +4,7 @@ A static site generator written in [rust](http://www.rust-lang.org/).
 
 Note: This is my first rust project, so it's possible that you wanna shoot me down for the code you will see here...
 
-## Usage (not implemented yet)
+## Usage
 
 ### Layout / Design
 
@@ -19,6 +19,8 @@ Posts live in ```_posts``` and are written in .tpl format and use mustache under
 Example:
 
 ```text
+@extends: posts.tpl
+
 title:   My first Blogpost
 date:    24/08/2014 at 15:36
 ---
@@ -29,7 +31,9 @@ My Blog is lorem ipsum like, yes it is..
 
 The content before ```---``` are meta attributes and accessible via their key.
 
-In the post layout file title is accessible via ```{{ title }}``` and the date via ```{{ date }}```
+Via ```@extends``` attribute you speficy which layout will be used.
+
+In the specific layout file title is accessible via ```{{ title }}``` and the date via ```{{ date }}``` (Attributes are also accessible in the post content itself).
 
 Also there is one standard attribute which is named statically - ```{{ content }}``` which is the whole text under the ```---``` block.
 
@@ -42,7 +46,7 @@ For this given site layout:
         * index.tpl
         * _layouts/
             * default.tpl
-            * post.tpl
+            * posts.tpl
         * _posts/
             * 2014-08-24-my-first-blogpost.tpl
             * 2014-09-05-my-second-blogpost.tpl
