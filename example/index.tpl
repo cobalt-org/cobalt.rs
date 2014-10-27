@@ -1,1 +1,3 @@
-<h1>Index</h1>
+@extends: default.tpl
+---
+This is my Index page
