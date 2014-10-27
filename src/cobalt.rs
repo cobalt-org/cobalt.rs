@@ -97,6 +97,7 @@ impl Runner {
     }
 
     fn create_files(index_path: &str, document_path: &str, index: Document, documents: Vec<Document>, layout: &str) {
+        // TODO: use different layout than for posts..
         index.create_file(layout, index_path);
 
         for document in documents.iter() {
