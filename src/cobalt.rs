@@ -113,6 +113,9 @@ impl Runner {
 
                 let mut attribute_split = attribute_line.split(':');
 
+                // TODO: Refactor, find a better way for doing this
+                // .nth() method is consuming the iterator and therefore the 0th index on the second method
+                // is in real index 1
                 let key   = attribute_split.nth(0u).unwrap().trim_chars(' ').to_string().clone();
                 let value = attribute_split.nth(0u).unwrap().trim_chars(' ').to_string().clone();
 
