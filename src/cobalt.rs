@@ -11,14 +11,13 @@ use document::Document;
 pub struct Runner;
 
 impl Runner {
-    pub fn run(path_string: &str) {
-        let base_path      = Path::new(path_string);
-        let documents_path = base_path.join("_posts");
-        let layout_path    = base_path.join("_layouts");
-        let index_path     = base_path.join("index.tpl");
-        let build_path     = base_path.join("build");
+    pub fn build(source_path: Path, dest_path: Path) {
+        let documents_path = source_path.join("_posts");
+        let layout_path    = source_path.join("_layouts");
+        let index_path     = source_path.join("index.tpl");
+        let build_path     = dest_path.join("build");
 
-        println!("Generating site in {}\n", path_string);
+        // println!("Generating site in {}\n", dest_path.display());
 
         let index     = Runner::parse_document(&index_path);
         let posts     = Runner::parse_documents(&documents_path);
