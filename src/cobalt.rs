@@ -41,8 +41,8 @@ impl Runner {
                 documents.push(Runner::parse_document(path));
             }
         } else {
-            println!("Path {} doesn't exist\n", path.display());
-            unsafe { libc::exit(1 as libc::c_int); }
+            // TODO panic!
+            fail!("Path {} doesn't exist\n", path.display());
         }
 
         return documents;
@@ -63,11 +63,8 @@ impl Runner {
         match File::open(path) {
             // TODO handle IOResult
             Ok(mut x) => x.read_to_string().unwrap(),
-            Err(e) => {
-                println!("File {} doesn't exist\n", path.display());
-                // TODO panic!
-                fail!();
-            }
+            // TODO panic!
+            Err(e) => fail!("File {} doesn't exist\n", path.display())
         }
     }
 
