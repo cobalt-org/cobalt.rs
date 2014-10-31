@@ -37,7 +37,7 @@ impl Runner {
                     }
                 ).collect(),
             // TODO panic!
-            Err(e) => fail!("Path {} doesn't exist\n", path.display())
+            Err(_) => fail!("Path {} doesn't exist\n", path.display())
         }
     }
 
@@ -57,7 +57,7 @@ impl Runner {
             // TODO handle IOResult
             Ok(mut x) => x.read_to_string().unwrap(),
             // TODO panic!
-            Err(e) => fail!("File {} doesn't exist\n", path.display())
+            Err(_) => fail!("File {} doesn't exist\n", path.display())
         }
     }
 
