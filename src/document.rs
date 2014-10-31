@@ -36,12 +36,12 @@ impl Document {
         w.unwrap().into_ascii().into_string()
     }
 
-    pub fn create_file(&self, path: &str, layout_path: &str) {
-        let layout_path_string = layout_path.to_string() + self.attributes.get_copy(&"@extends".into_string());
-        let layout             = File::open(&Path::new(layout_path_string)).read_to_string().unwrap();
-        let file_path          = path.to_string() + self.filename;
+    pub fn create_file(&self, path: &Path, layout_root: &Path) {
+        let layout_path = layout_root.join(self.attributes.get_copy(&"@extends".to_string()));
+        let layout      = File::open(&layout_path).read_to_string().unwrap();
+        let file_path   = path.join(self.filename.as_slice());
 
-        let mut file = File::create(&Path::new(file_path.as_slice()));
+        let mut file = File::create(&file_path);
         let mut data = HashMap::new();
 
         data.insert("content", self.as_html());
@@ -55,7 +55,7 @@ impl Document {
 
         template.render(&mut file, &data);
 
-        println!("Created {}{}", path, self.filename);
+        println!("Created {}{}", path.display(), self.filename);
     }
 }
 
