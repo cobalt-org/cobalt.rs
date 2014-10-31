@@ -28,24 +28,17 @@ impl Runner {
     }
 
     fn parse_documents(path: &Path) -> Vec<Document> {
-
-        let paths = fs::readdir(path);
-        let mut documents = vec!();
-
-        if paths.is_ok() {
-            for path in paths.unwrap().iter() {
-                if path.extension_str().unwrap() != "tpl" {
-                    continue;
-                }
-
-                documents.push(Runner::parse_document(path));
-            }
-        } else {
+        match fs::readdir(path) {
+            Ok(paths) => paths.iter().filter_map( |path|
+                    if path.extension_str().unwrap() == "tpl" {
+                        Some(Runner::parse_document(path))
+                    }else{
+                        None
+                    }
+                ).collect(),
             // TODO panic!
-            fail!("Path {} doesn't exist\n", path.display());
+            Err(e) => fail!("Path {} doesn't exist\n", path.display())
         }
-
-        return documents;
     }
 
     fn parse_document(path: &Path) -> Document {
