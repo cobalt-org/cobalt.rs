@@ -15,15 +15,12 @@ impl Runner {
         let documents_path = source_path.join("_posts");
         let layout_path    = source_path.join("_layouts");
         let index_path     = source_path.join("index.tpl");
-        let build_path     = dest_path.join("build");
-
-        // println!("Generating site in {}\n", dest_path.display());
 
         let index     = Runner::parse_document(&index_path);
         let posts     = Runner::parse_documents(&documents_path);
-        let post_path = Runner::create_dirs(&build_path);
+        let post_path = Runner::create_dirs(&dest_path);
 
-        Runner::create_files(&build_path, &post_path, &layout_path, index, posts);
+        Runner::create_files(&dest_path, &post_path, &layout_path, index, posts);
     }
 
     fn parse_documents(path: &Path) -> Vec<Document> {

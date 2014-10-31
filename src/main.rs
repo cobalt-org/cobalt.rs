@@ -59,7 +59,7 @@ fn main() {
 
     match command.as_slice() {
         "build" => {
-            println!("building from {} into {}", source.display(), dest.join("build").display());
+            println!("building from {} into {}", source.display(), dest.display());
             Runner::build(source, dest);
         },
 
