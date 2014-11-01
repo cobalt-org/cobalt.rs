@@ -6,5 +6,6 @@ pub use cobalt::Runner;
 // with this approach you can explicitly say which part of a module is public and which not
 
 // modules
+mod util;
 mod cobalt;
 mod document;

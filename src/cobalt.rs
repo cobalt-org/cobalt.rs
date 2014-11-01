@@ -3,24 +3,48 @@ extern crate libc;
 use std::io;
 use std::io::fs;
 use std::io::File;
+use std::io::IoResult;
 use std::path::Path;
 use std::collections::HashMap;
 
 use document::Document;
+use util;
 
 pub struct Runner;
 
 impl Runner {
-    pub fn build(source_path: Path, dest_path: Path) {
-        let documents_path = source_path.join("_posts");
-        let layout_path    = source_path.join("_layouts");
-        let index_path     = source_path.join("index.tpl");
+    pub fn build(source: &Path, dest: &Path) -> IoResult<()>{
+        let posts_source      = source.join("_posts");
+        let posts_destination = dest.join("posts");
 
-        let index     = Runner::parse_document(&index_path);
-        let posts     = Runner::parse_documents(&documents_path);
-        let post_path = Runner::create_dirs(&dest_path);
+        let layouts = source.join("_layouts");
 
-        Runner::create_files(&dest_path, &post_path, &layout_path, index, posts);
+        // create target directories
+        try!(fs::mkdir_recursive(&posts_destination, io::USER_RWX));
+
+        // create index
+        let index_source = source.join("index.tpl");
+        let index = Runner::parse_document(&index_source);
+        try!(index.create_file(dest, &layouts));
+
+        // create posts
+        let posts = Runner::parse_documents(&posts_source);
+        for post in posts.iter() {
+            try!(post.create_file(&posts_destination, &layouts));
+        }
+
+        // copy everything
+        if source != dest {
+            try!(util::copy_recursive_filter(source, dest, |p| -> bool {
+                !p.filename_str().unwrap().starts_with(".")
+                && p != dest
+                && p != &index_source
+                && p != &posts_source
+                && p != &layouts
+            }));
+        }
+
+        Ok(())
     }
 
     fn parse_documents(path: &Path) -> Vec<Document> {
@@ -56,28 +80,6 @@ impl Runner {
             Err(_) => fail!("File {} doesn't exist\n", path.display())
         }
     }
-
-    fn create_dirs(build_path: &Path) -> Path {
-        let postpath = build_path.join("posts");
-
-        fs::mkdir(build_path, io::USER_RWX);
-        fs::mkdir(&postpath, io::USER_RWX);
-
-        // TODO: copy non cobalt relevant folders into /build folder (assets, stylesheets, etc...)
-
-        println!("Directory {} created\n", build_path.display());
-
-        return postpath;
-    }
-
-    fn create_files(index_path: &Path, document_path: &Path, layout_path: &Path, index: Document, documents: Vec<Document>) {
-        index.create_file(index_path, layout_path);
-
-        for document in documents.iter() {
-            document.create_file(document_path, layout_path);
-        }
-    }
-
 
     fn extract_attributes(path: &Path) -> HashMap<String, String> {
         let mut attributes = HashMap::new();

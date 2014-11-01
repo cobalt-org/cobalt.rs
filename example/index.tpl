@@ -1,3 +1,3 @@
 @extends: default.tpl
 ---
-This is my Index page
+This is my Index page!

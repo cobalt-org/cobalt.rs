@@ -60,7 +60,11 @@ fn main() {
     match command.as_slice() {
         "build" => {
             println!("building from {} into {}", source.display(), dest.display());
-            Runner::build(source, dest);
+            match Runner::build(&source, &dest){
+                Ok(_) => {},
+                // TODO panic!
+                Err(e) => fail!("{}", e)
+            };
         },
 
         _ => {
