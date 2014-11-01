@@ -54,7 +54,7 @@ fn parse_documents(path: &Path) -> Vec<Document> {
                 }
             ).collect(),
         // TODO panic!
-        Err(_) => fail!("Path {} doesn't exist\n", path.display())
+        Err(_) => panic!("Path {} doesn't exist\n", path.display())
     }
 }
 
@@ -74,7 +74,7 @@ fn parse_file(path: &Path) -> String {
         // TODO handle IOResult
         Ok(mut x) => x.read_to_string().unwrap(),
         // TODO panic!
-        Err(_) => fail!("File {} doesn't exist\n", path.display())
+        Err(_) => panic!("File {} doesn't exist\n", path.display())
     }
 }
 
