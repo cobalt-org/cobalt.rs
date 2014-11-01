@@ -1,7 +1,6 @@
 extern crate cobalt;
 extern crate getopts;
 
-use cobalt::Runner;
 use getopts::{optopt, optflag, getopts, usage};
 use std::os;
 
@@ -60,7 +59,7 @@ fn main() {
     match command.as_slice() {
         "build" => {
             println!("building from {} into {}", source.display(), dest.display());
-            match Runner::build(&source, &dest){
+            match cobalt::build(&source, &dest){
                 Ok(_) => {},
                 // TODO panic!
                 Err(e) => fail!("{}", e)
