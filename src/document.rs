@@ -2,6 +2,7 @@ use std::fmt;
 use std::io;
 use std::collections::HashMap;
 use std::io::File;
+use std::io::IoResult;
 
 use mustache;
 
@@ -36,8 +37,9 @@ impl Document {
         w.unwrap().into_ascii().into_string()
     }
 
-    pub fn create_file(&self, path: &Path, layout_root: &Path) {
+    pub fn create_file(&self, path: &Path, layout_root: &Path) -> IoResult<()>{
         let layout_path = layout_root.join(self.attributes.get_copy(&"@extends".to_string()));
+        // TODO this is super inefficient
         let layout      = File::open(&layout_path).read_to_string().unwrap();
         let file_path   = path.join(self.filename.as_slice());
 
@@ -53,9 +55,11 @@ impl Document {
 
         let template = mustache::compile_str(layout.as_slice());
 
+        // TODO: wrap with try!, mustache.rs uses its own error format :/
         template.render(&mut file, &data);
 
-        println!("Created {}{}", path.display(), self.filename);
+        println!("Created {}/{}", path.display(), self.filename);
+        Ok(())
     }
 }
 
