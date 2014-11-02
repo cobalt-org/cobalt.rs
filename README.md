@@ -1,4 +1,4 @@
-# Cobalt ![alt tag](https://raw.githubusercontent.com/cobalt-org/logos/master/cobald.logo.02.png)
+#![Cobalt](https://raw.githubusercontent.com/cobalt-org/logos/master/cobald.logo.02.resize.png)
 
 A static site generator written in [rust](http://www.rust-lang.org/).
 
