@@ -24,7 +24,7 @@ fn main() {
     // TODO: panic!()
     let matches = match getopts(args.tail(), opts) {
         Ok(m) => { m }
-        Err(f) => { fail!(f.to_string()) }
+        Err(f) => { panic!(f.to_string()) }
     };
 
     let source = if matches.opt_present("s") {
@@ -62,7 +62,7 @@ fn main() {
             match cobalt::build(&source, &dest){
                 Ok(_) => {},
                 // TODO panic!
-                Err(e) => fail!("{}", e)
+                Err(e) => panic!("{}", e)
             };
         },
 
