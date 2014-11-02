@@ -21,7 +21,6 @@ fn main() {
         optflag("v", "version", "Display version")
     ];
 
-    // TODO: panic!()
     let matches = match getopts(args.tail(), opts) {
         Ok(m) => { m }
         Err(f) => { panic!(f.to_string()) }
@@ -40,7 +39,7 @@ fn main() {
     };
 
     if matches.opt_present("h") {
-        println!("{}", usage("cobalt", opts));
+        println!("{}", usage("\n\tcobalt build", opts));
         return;
     }
 
@@ -52,7 +51,7 @@ fn main() {
     let command = if !matches.free.is_empty() {
         matches.free[0].clone()
     } else {
-        println!("{}", usage("cobalt", opts));
+        println!("{}", usage("\n\tcobalt build", opts));
         return;
     };
 
@@ -61,13 +60,12 @@ fn main() {
             println!("building from {} into {}", source.display(), dest.display());
             match cobalt::build(&source, &dest){
                 Ok(_) => {},
-                // TODO panic!
                 Err(e) => panic!("{}", e)
             };
         },
 
         _ => {
-            println!("{}", usage("cobalt", opts));
+            println!("{}", usage("\n\tcobalt build", opts));
             return;
         }
     }
