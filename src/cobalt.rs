@@ -53,7 +53,6 @@ fn parse_documents(path: &Path) -> Vec<Document> {
                     None
                 }
             ).collect(),
-        // TODO panic!
         Err(_) => panic!("Path {} doesn't exist\n", path.display())
     }
 }
@@ -73,7 +72,6 @@ fn parse_file(path: &Path) -> String {
     match File::open(path) {
         // TODO handle IOResult
         Ok(mut x) => x.read_to_string().unwrap(),
-        // TODO panic!
         Err(_) => panic!("File {} doesn't exist\n", path.display())
     }
 }
