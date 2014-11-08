@@ -1,6 +1,7 @@
 extern crate libc;
 
 use std::io::fs;
+use std::io::fs::PathExtensions;
 use std::io::File;
 use std::io::IoResult;
 use std::path::Path;
@@ -13,13 +14,24 @@ pub fn build(source: &Path, dest: &Path) -> IoResult<()>{
     // TODO make configurable
     let template_extensions = ["tpl", "md"];
 
-    let layouts = source.join("_layouts");
+    let layouts_path = source.join("_layouts");
+    let mut layouts = HashMap::new();
+
+    match fs::walk_dir(&layouts_path) {
+        Ok(mut files) => for layout in files {
+            if(layout.is_file()){
+                let text = File::open(&layout).read_to_string().unwrap();
+                layouts.insert(layout.filename_str().unwrap().to_string(), text);
+            }
+        },
+        Err(_) => println!("Warning: No layout path found ({})\n", source.display())
+    };
 
     // create posts
     let posts : Vec<Document> = match fs::walk_dir(source) {
         Ok(directories) => directories.filter_map(|p|
                 if template_extensions.contains(&p.extension_str().unwrap_or(""))
-                && p.dir_path() != layouts {
+                && p.dir_path() != layouts_path {
                     Some(parse_document(&p, source))
                 }else{
                     None
@@ -38,7 +50,7 @@ pub fn build(source: &Path, dest: &Path) -> IoResult<()>{
             !p.filename_str().unwrap().starts_with(".")
             && !template_extensions.contains(&p.extension_str().unwrap_or(""))
             && p != dest
-            && p != &layouts
+            && p != &layouts_path
         }));
     }
 
