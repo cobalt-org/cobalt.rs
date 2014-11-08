@@ -1,6 +1,5 @@
 extern crate libc;
 
-use std::io;
 use std::io::fs;
 use std::io::File;
 use std::io::IoResult;
@@ -11,32 +10,34 @@ use document::Document;
 use util;
 
 pub fn build(source: &Path, dest: &Path) -> IoResult<()>{
-    let posts_source      = source.join("_posts");
-    let posts_destination = dest.join("posts");
+    // TODO make configurable
+    let template_extensions = ["tpl", "md"];
 
     let layouts = source.join("_layouts");
 
-    // create target directories
-    try!(fs::mkdir_recursive(&posts_destination, io::USER_RWX));
-
-    // create index
-    let index_source = source.join("index.tpl");
-    let index = parse_document(&index_source);
-    try!(index.create_file(dest, &layouts));
-
     // create posts
-    let posts = parse_documents(&posts_source);
+    let posts : Vec<Document> = match fs::walk_dir(source) {
+        Ok(directories) => directories.filter_map(|p|
+                if template_extensions.contains(&p.extension_str().unwrap_or(""))
+                && p.dir_path() != layouts {
+                    Some(parse_document(&p, source))
+                }else{
+                    None
+                }
+            ).collect(),
+        Err(_) => panic!("Path {} doesn't exist\n", source.display())
+    };
+
     for post in posts.iter() {
-        try!(post.create_file(&posts_destination, &layouts));
+        try!(post.create_file(dest, &layouts));
     }
 
     // copy everything
     if source != dest {
         try!(util::copy_recursive_filter(source, dest, |p| -> bool {
             !p.filename_str().unwrap().starts_with(".")
+            && !template_extensions.contains(&p.extension_str().unwrap_or(""))
             && p != dest
-            && p != &index_source
-            && p != &posts_source
             && p != &layouts
         }));
     }
@@ -44,27 +45,16 @@ pub fn build(source: &Path, dest: &Path) -> IoResult<()>{
     Ok(())
 }
 
-fn parse_documents(path: &Path) -> Vec<Document> {
-    match fs::readdir(path) {
-        Ok(paths) => paths.iter().filter_map( |path|
-                if path.extension_str().unwrap() == "tpl" {
-                    Some(parse_document(path))
-                }else{
-                    None
-                }
-            ).collect(),
-        Err(_) => panic!("Path {} doesn't exist\n", path.display())
-    }
-}
-
-fn parse_document(path: &Path) -> Document {
-    let attributes = extract_attributes(path);
-    let content    = extract_content(path);
+fn parse_document(path: &Path, source: &Path) -> Document {
+    let attributes   = extract_attributes(path);
+    let content      = extract_content(path);
+    let mut new_path = path.path_relative_from(source).unwrap();
+    new_path.set_extension("html");
 
     Document::new(
         attributes,
         content,
-        path.filestem_str().unwrap().to_string() + ".html",
+        new_path
     )
 }
 

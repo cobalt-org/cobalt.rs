@@ -10,7 +10,7 @@ pub fn copy_recursive_filter(source: &Path, dest: &Path, valid: |&Path| -> bool)
             if entry.is_dir() {
                 if valid(entry) {
                     let new_dest = &dest.join(entry.path_relative_from(source).unwrap());
-                    try!(fs::mkdir(new_dest, io::USER_READ));
+                    try!(fs::mkdir_recursive(new_dest, io::USER_RWX));
                     try!(copy_recursive_filter(entry, new_dest, |p| valid(p)));
                 }
             } else {
