@@ -29,20 +29,17 @@ impl Document {
         // StringWriter doesn't exist yet, therefore I have to use a MemWriter
         let mut w = io::MemWriter::new();
 
-        // why do I have to say &mut here
-        // mutable reference?!?!
-        //
         // TODO: pass in documents as template data if as_html is called on Index Document..
         template.render(&mut w, &self.attributes);
 
         w.unwrap().into_ascii().into_string()
     }
 
-    pub fn create_file(&self, dest: &Path, layout_root: &Path) -> IoResult<()>{
-        let layout_path = layout_root.join(self.attributes.get_copy(&"@extends".to_string()));
-        // TODO this is super inefficient
-        let layout      = File::open(&layout_path).read_to_string().unwrap();
+    pub fn create_file(&self, dest: &Path, layouts: &HashMap<String, String>) -> IoResult<()>{
         let file_path   = dest.join(&self.path);
+
+        let layout_path = self.attributes.find(&"@extends".to_string()).unwrap();
+        let layout = layouts.find(layout_path).unwrap();
 
         // create target directories
         try!(fs::mkdir_recursive(&file_path.dir_path(), io::USER_RWX));
