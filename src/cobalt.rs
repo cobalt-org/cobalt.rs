@@ -4,7 +4,6 @@ use std::io::fs;
 use std::io::fs::PathExtensions;
 use std::io::File;
 use std::io::IoResult;
-use std::path::Path;
 use std::collections::HashMap;
 
 use document::Document;
