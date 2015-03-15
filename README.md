@@ -2,6 +2,10 @@
 
 A static site generator written in [rust](http://www.rust-lang.org/).
 
+## NOTE:
+
+Needs to be updated to rust 1.0.0
+
 [![Build Status](https://travis-ci.org/cobalt-org/cobalt.rs.svg?branch=master)](https://travis-ci.org/cobalt-org/cobalt.rs)
 
 ## Usage
