@@ -2,6 +2,8 @@
 
 A static site generator written in [rust](http://www.rust-lang.org/).
 
+[![Build Status](https://travis-ci.org/cobalt-org/cobalt.rs.svg?branch=master)](https://travis-ci.org/cobalt-org/cobalt.rs)
+
 ## Usage
 
 ### Layout / Design
