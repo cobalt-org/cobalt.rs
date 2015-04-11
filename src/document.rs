@@ -1,71 +1,92 @@
-use std::fmt;
 use std::io;
 use std::collections::HashMap;
-use std::io::fs;
-use std::io::File;
-use std::io::IoResult;
+use std::fs;
+use std::fs::File;
+use std::path::Path;
+use std::path::PathBuf;
+use std::default::Default;
+use liquid::Renderable;
+use liquid::LiquidOptions;
+use liquid::Context;
+use liquid::value::Value;
+use std::io::Write;
 
-use mustache;
+use liquid;
 
 pub struct Document {
+    pub name: String,
     pub attributes: HashMap<String, String>,
     pub content: String,
-    pub path: Path,
 }
 
 impl Document {
-    pub fn new(attributes: HashMap<String, String>, content: String, path: Path) -> Document {
+    pub fn new(name: String, attributes: HashMap<String, String>, content: String) -> Document {
         Document {
+            name: name,
             attributes: attributes,
             content: content,
-            path: path,
         }
     }
 
     pub fn as_html(&self) -> String {
-        let template = mustache::compile_str(self.content.as_slice());
-
-        // a Writer which impl Writer is needed here (could be file, could be socket or any other writer)
-        // StringWriter doesn't exist yet, therefore I have to use a MemWriter
-        let mut w = io::MemWriter::new();
+        let mut options : LiquidOptions = Default::default();
+        let template = liquid::parse(&self.content, &mut options).unwrap();
 
         // TODO: pass in documents as template data if as_html is called on Index Document..
-        template.render(&mut w, &self.attributes);
+        let mut data = Context{
+            values: HashMap::new(),
+            filters: Default::default()
+        };
+        let w = template.render(&mut data);
 
-        w.unwrap().into_ascii().into_string()
+        w.unwrap()
     }
 
-    pub fn create_file(&self, dest: &Path, layouts: &HashMap<String, String>) -> IoResult<()>{
-        let file_path   = dest.join(&self.path);
+    pub fn create_file(&self, dest: &Path, layouts: &HashMap<String, String>) -> io::Result<()>{
+        // construct target path
+        let mut file_path_buf = PathBuf::new();
+        file_path_buf.push(dest);
+        file_path_buf.push(&self.name);
+        file_path_buf.set_extension("html");
 
-        let layout_path = self.attributes.find(&"@extends".to_string()).unwrap();
-        let layout = layouts.find(layout_path).unwrap();
+        let file_path = file_path_buf.as_path();
 
-        // create target directories
-        try!(fs::mkdir_recursive(&file_path.dir_path(), io::USER_RWX));
+        let layout_path = self.attributes.get(&"@extends".to_string()).unwrap();
+        let layout = layouts.get(layout_path).unwrap();
 
-        let mut file = File::create(&file_path);
-        let mut data = HashMap::new();
+        // create target directories if any exist
+        match file_path.parent() {
+            Some(ref parents) => try!(fs::create_dir_all(parents)),
+            None => ()
+        };
+        
 
-        data.insert("content", self.as_html());
+        let mut file = try!(File::create(&file_path));
+
+        let mut data = Context {
+            values: HashMap::new(),
+            filters: Default::default()
+        };
+
+        data.values.insert("content".to_string(), Value::Str(self.as_html()));
 
         // Insert the attributes into the layout template
         for key in self.attributes.keys() {
-            data.insert(key.as_slice(), self.attributes.get_copy(key));
+            data.values.insert(key.clone(), Value::Str(self.attributes.get(key).unwrap().clone()));
         }
 
-        let template = mustache::compile_str(layout.as_slice());
+        let mut options : LiquidOptions = Default::default();
+        let template = liquid::parse(&layout, &mut options).unwrap();
 
-        // TODO: wrap with try!, mustache.rs uses its own error format :/
-        template.render(&mut file, &data);
+        let res = template.render(&mut data).unwrap();
 
         println!("Created {}", file_path.display());
-        Ok(())
+        file.write_all(&res.into_bytes())
     }
 }
 
-impl fmt::Show for Document {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Attributes: {}\nContent: {}\n\nFilename: {}", self.attributes, self.content, self.path.display())
-    }
-}
+//impl fmt::Show for Document {
+    //fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        //write!(f, "Attributes: {}\nContent: {}\n\nFilename: {}", self.attributes, self.content, self.path.display())
+    //}
+//}

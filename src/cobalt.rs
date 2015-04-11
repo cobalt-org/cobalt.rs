@@ -1,43 +1,50 @@
-extern crate libc;
+extern crate core;
 
-use std::io::fs;
-use std::io::fs::PathExtensions;
-use std::io::File;
-use std::io::IoResult;
+use std::io;
+use std::fs;
+use std::fs::PathExt;
+use std::fs::File;
+use std::io::Read;
+use std::path::Path;
 use std::collections::HashMap;
+use self::core::str::StrExt;
 
 use document::Document;
 use util;
 
-pub fn build(source: &Path, dest: &Path) -> IoResult<()>{
+pub fn build(source: &Path, dest: &Path) -> io::Result<()>{
     // TODO make configurable
     let template_extensions = ["tpl", "md"];
 
     let layouts_path = source.join("_layouts");
-    let mut layouts = HashMap::new();
+    let mut layouts : HashMap<String, String> = HashMap::new();
 
+    // go through the layout directory and add
+    // filename -> text content to the layout map
     match fs::walk_dir(&layouts_path) {
-        Ok(mut files) => for layout in files {
-            if(layout.is_file()){
-                let text = File::open(&layout).read_to_string().unwrap();
-                layouts.insert(layout.filename_str().unwrap().to_string(), text);
+        Ok(files) => for layout in files {
+            let layout = try!(layout).path();
+            if layout.is_file() {
+                let mut text = String::new();
+                try!(try!(File::open(&layout)).read_to_string(&mut text));
+                layouts.insert(layout.as_path().file_name().unwrap().to_str().unwrap().to_string(), text);
             }
         },
         Err(_) => println!("Warning: No layout path found ({})\n", source.display())
     };
 
     // create posts
-    let posts : Vec<Document> = match fs::walk_dir(source) {
-        Ok(directories) => directories.filter_map(|p|
-                if template_extensions.contains(&p.extension_str().unwrap_or(""))
-                && p.dir_path() != layouts_path {
-                    Some(parse_document(&p, source))
-                }else{
-                    None
-                }
-            ).collect(),
-        Err(_) => panic!("Path {} doesn't exist\n", source.display())
-    };
+    let directories = try!(fs::walk_dir(source));
+    let posts : Vec<Document> = directories.filter_map(|p| {
+        let p = p.unwrap().path();
+        let path = p.as_path();
+        if template_extensions.contains(&path.extension().unwrap().to_str().unwrap_or(""))
+        && path.parent() != Some(layouts_path.as_path()) {
+            Some(parse_document(&path, source))
+        }else{
+            None
+        }
+    }).collect();
 
     for post in posts.iter() {
         try!(post.create_file(dest, &layouts));
@@ -45,11 +52,11 @@ pub fn build(source: &Path, dest: &Path) -> IoResult<()>{
 
     // copy everything
     if source != dest {
-        try!(util::copy_recursive_filter(source, dest, |p| -> bool {
-            !p.filename_str().unwrap().starts_with(".")
-            && !template_extensions.contains(&p.extension_str().unwrap_or(""))
+        try!(util::copy_recursive_filter(source, dest, &|p| -> bool {
+            !p.parent().unwrap().starts_with(".")
+            && !template_extensions.contains(&p.extension().unwrap().to_str().unwrap_or(""))
             && p != dest
-            && p != &layouts_path
+            && p != layouts_path.as_path()
         }));
     }
 
@@ -57,38 +64,36 @@ pub fn build(source: &Path, dest: &Path) -> IoResult<()>{
 }
 
 fn parse_document(path: &Path, source: &Path) -> Document {
-    let attributes   = extract_attributes(path);
-    let content      = extract_content(path);
-    let mut new_path = path.path_relative_from(source).unwrap();
-    new_path.set_extension("html");
+    let attributes = extract_attributes(path);
+    let content    = extract_content(path).unwrap();
+    let new_path   = path.relative_from(source).unwrap();
 
     Document::new(
+        new_path.to_str().unwrap().to_string(),
         attributes,
-        content,
-        new_path
+        content
     )
 }
 
-fn parse_file(path: &Path) -> String {
-    match File::open(path) {
-        // TODO handle IOResult
-        Ok(mut x) => x.read_to_string().unwrap(),
-        Err(_) => panic!("File {} doesn't exist\n", path.display())
-    }
+fn parse_file(path: &Path) -> io::Result<String> {
+    let mut file = try!(File::open(path));
+    let mut text = String::new();
+    file.read_to_string(&mut text);
+    Ok(text)
 }
 
 fn extract_attributes(path: &Path) -> HashMap<String, String> {
     let mut attributes = HashMap::new();
-    attributes.insert("name".to_string(), path.filestem_str().unwrap().to_string());
+    attributes.insert("name".to_string(), path.file_stem().unwrap().to_str().unwrap().to_string());
 
-    let content = parse_file(path);
+    let content = parse_file(path).unwrap();
 
-    if content.as_slice().contains("---") {
-        let mut content_splits = content.as_slice().split_str("---");
+    if content.contains("---") {
+        let mut content_splits = content.split("---");
 
-        let attribute_string = content_splits.nth(0u).unwrap();
+        let attribute_string = content_splits.nth(0).unwrap();
 
-        for attribute_line in attribute_string.split_str("\n") {
+        for attribute_line in attribute_string.split("\n") {
             if !attribute_line.contains_char(':') {
                 continue;
             }
@@ -98,8 +103,8 @@ fn extract_attributes(path: &Path) -> HashMap<String, String> {
             // TODO: Refactor, find a better way for doing this
             // .nth() method is consuming the iterator and therefore the 0th index on the second method
             // is in real index 1
-            let key   = attribute_split.nth(0u).unwrap().trim_chars(' ').to_string().clone();
-            let value = attribute_split.nth(0u).unwrap().trim_chars(' ').to_string().clone();
+            let key   = attribute_split.nth(0).unwrap().trim_matches(' ').to_string().clone();
+            let value = attribute_split.nth(0).unwrap().trim_matches(' ').to_string().clone();
 
             attributes.insert(key, value);
         }
@@ -108,14 +113,14 @@ fn extract_attributes(path: &Path) -> HashMap<String, String> {
     return attributes;
 }
 
-fn extract_content(path: &Path) -> String {
-    let content = parse_file(path);
+fn extract_content(path: &Path) -> io::Result<String> {
+    let content = try!(parse_file(path));
 
-    if content.as_slice().contains("---") {
-        let mut content_splits = content.as_slice().split_str("---");
+    if content.contains("---") {
+        let mut content_splits = content.split("---");
 
-        return content_splits.nth(1u).unwrap().to_string();
+        return Ok(content_splits.nth(1).unwrap().to_string());
     }
 
-    return content;
+    return Ok(content);
 }

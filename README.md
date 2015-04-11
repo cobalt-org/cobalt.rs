@@ -65,3 +65,4 @@ Cobalt will generate:
                 * 2014-09-05-my-second-blogpost.html
 
 README will be completed soon...
+
