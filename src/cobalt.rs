@@ -8,6 +8,7 @@ use std::io::Read;
 use std::path::Path;
 use std::collections::HashMap;
 use self::core::str::StrExt;
+use std::ffi::OsStr;
 
 use document::Document;
 use util;
@@ -33,12 +34,17 @@ pub fn build(source: &Path, dest: &Path) -> io::Result<()>{
         Err(_) => println!("Warning: No layout path found ({})\n", source.display())
     };
 
-    // create posts
+    // TODO! differentiate between _posts/ and other template files
+
+    // walk source directory and find files that are written in
+    // a file extension we accept
     let directories = try!(fs::walk_dir(source));
     let posts : Vec<Document> = directories.filter_map(|p| {
         let p = p.unwrap().path();
         let path = p.as_path();
-        if template_extensions.contains(&path.extension().unwrap().to_str().unwrap_or(""))
+        // check for file extensions
+        if template_extensions.contains(&path.extension().unwrap_or(OsStr::new("")).to_str().unwrap_or(""))
+        // check that file is not in the layouts folder
         && path.parent() != Some(layouts_path.as_path()) {
             Some(parse_document(&path, source))
         }else{
@@ -53,8 +59,8 @@ pub fn build(source: &Path, dest: &Path) -> io::Result<()>{
     // copy everything
     if source != dest {
         try!(util::copy_recursive_filter(source, dest, &|p| -> bool {
-            !p.parent().unwrap().starts_with(".")
-            && !template_extensions.contains(&p.extension().unwrap().to_str().unwrap_or(""))
+            !p.file_name().unwrap().to_str().unwrap_or("").starts_with(".")
+            && !template_extensions.contains(&p.extension().unwrap_or(OsStr::new("")).to_str().unwrap_or(""))
             && p != dest
             && p != layouts_path.as_path()
         }));

@@ -69,7 +69,7 @@ fn main() {
         "build" => {
             println!("building from {} into {}", source.display(), dest.display());
             match cobalt::build(&source, &dest){
-                Ok(_) => {},
+                Ok(_) => println!("Build successful"),
                 Err(e) => println!("Error: {}", e)
             };
         },

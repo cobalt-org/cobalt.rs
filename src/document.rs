@@ -28,18 +28,23 @@ impl Document {
         }
     }
 
-    pub fn as_html(&self) -> String {
+    pub fn as_html(&self) -> Result<String, String> {
         let mut options : LiquidOptions = Default::default();
-        let template = liquid::parse(&self.content, &mut options).unwrap();
+        let template = try!(liquid::parse(&self.content, &mut options));
 
         // TODO: pass in documents as template data if as_html is called on Index Document..
         let mut data = Context{
             values: HashMap::new(),
             filters: Default::default()
         };
-        let w = template.render(&mut data);
+        // Insert the attributes into the layout template
+        for key in self.attributes.keys() {
+            if let Some(val) = self.attributes.get(key){
+                data.values.insert(key.clone(), Value::Str(val.clone()));
+            }
+        }
 
-        w.unwrap()
+        Ok(template.render(&mut data).unwrap_or("".to_string()))
     }
 
     pub fn create_file(&self, dest: &Path, layouts: &HashMap<String, String>) -> io::Result<()>{
@@ -59,7 +64,6 @@ impl Document {
             Some(ref parents) => try!(fs::create_dir_all(parents)),
             None => ()
         };
-        
 
         let mut file = try!(File::create(&file_path));
 
@@ -68,17 +72,33 @@ impl Document {
             filters: Default::default()
         };
 
-        data.values.insert("content".to_string(), Value::Str(self.as_html()));
+        // TODO: improve error handling for liquid errors
+        let html = match self.as_html() {
+            Ok(x) => x,
+            Err(e) => {
+                println!("Warning, liquid failed: {}", e);
+                "".to_string()
+            }
+        };
+        data.values.insert("content".to_string(), Value::Str(html));
 
         // Insert the attributes into the layout template
         for key in self.attributes.keys() {
-            data.values.insert(key.clone(), Value::Str(self.attributes.get(key).unwrap().clone()));
+            if let Some(val) = self.attributes.get(key){
+                data.values.insert(key.clone(), Value::Str(val.clone()));
+            }
         }
 
         let mut options : LiquidOptions = Default::default();
-        let template = liquid::parse(&layout, &mut options).unwrap();
+        // TODO: improve error handling for liquid errors
+        let template = match liquid::parse(&layout, &mut options) {
+            Ok(x) => x,
+            Err(e) => {
+                panic!("Warning, liquid failed: {}", e);
+            }
+        };
 
-        let res = template.render(&mut data).unwrap();
+        let res = template.render(&mut data).unwrap_or("".to_string());
 
         println!("Created {}", file_path.display());
         file.write_all(&res.into_bytes())
