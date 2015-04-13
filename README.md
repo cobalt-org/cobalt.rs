@@ -1,6 +1,6 @@
 #![Cobalt](https://raw.githubusercontent.com/cobalt-org/logos/master/cobald.logo.02.resize.png)
 
-A static site generator written in [rust](http://www.rust-lang.org/).
+A static site generator written in [Rust](http://www.rust-lang.org/).
 
 ## NOTE:
 
@@ -10,15 +10,15 @@ Needs to be updated to rust 1.0.0
 
 ## Usage
 
-### Layout / Design
+### Layouts
 
-You can have a custom layout in the ```_layouts``` Directory.
+You can have custom layouts in the ```_layouts``` directory.
 
-Same as Post files Layout files are written as [mustache](https://github.com/erickt/rust-mustache) templates.
+Layouts will be compiled as [liquid](https://github.com/cobalt-org/liquid-rust) templates.
 
 ### Posts
 
-Posts live in ```_posts``` and are written in .tpl format and use mustache under the hood.
+Posts live in ```_posts```.
 
 Example:
 
@@ -33,14 +33,25 @@ Hey there this is my first blogpost and this is super awesome.
 My Blog is lorem ipsum like, yes it is..
 ```
 
-The content before ```---``` are meta attributes and accessible via their key.
+The content before ```---``` are meta attributes made accessible to the template via their key (see below).
 
-Via ```@extends``` attribute you speficy which layout will be used.
+The ```@extends``` attribute specifies which layout will be used.
 
-In the specific layout file title is accessible via ```{{ title }}``` and the date via ```{{ date }}``` (Attributes are also accessible in the post content itself).
+### Other files
 
-Also there is one standard attribute which is named statically - ```{{ content }}``` which is the whole text under the ```---``` block.
+Any file with the .tpl file extension will be parsed for metadata and compiled using liquid, like a post.
 
+Unlike posts, files outside the ``_posts`` directory will not be indexed as blog posts and not passed to the index file in the list of contents.
+
+All other files and directories in the source folder will be recursively added to your destination folder.
+
+### Attributes
+
+All template files have access to a set of attributes.
+
+In example above _title_ is accessible via ```{{ title }}``` and _date_ via ```{{ date }}```, for the layout template as well as the post template.
+
+There is one special attribute accessible only to layouts which is named ```{{ content }}``` and is the whole text under the ```---``` block of the post.
 
 ### Generate
 
@@ -64,5 +75,9 @@ Cobalt will generate:
                 * 2014-08-24-my-first-blogpost.html
                 * 2014-09-05-my-second-blogpost.html
 
-README will be completed soon...
+TODO:
+
+- [ ] Improve Documention
+- [ ] Fill index file with post list
+- [ ] Draft Support
 
