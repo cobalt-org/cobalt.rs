@@ -1,11 +1,12 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>Post test</title>
+        <title>My blog - {{ title }}</title>
     </head>
     <body>
         <h1>{{ name }}</h1>
 
-        {{{ content }}}
+        {{ content }}
     </body>
 </html>
+
