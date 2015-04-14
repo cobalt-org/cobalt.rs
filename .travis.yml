@@ -1,7 +1,4 @@
 language: rust
 
 rust:
-  - 0.11.0
-  - 0.12.0
-  - 1.0.0-alpha.2
   - nightly
