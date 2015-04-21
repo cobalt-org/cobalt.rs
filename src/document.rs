@@ -8,7 +8,7 @@ use std::default::Default;
 use liquid::Renderable;
 use liquid::LiquidOptions;
 use liquid::Context;
-use liquid::value::Value;
+use liquid::Value;
 use std::io::Write;
 
 use liquid;
@@ -33,14 +33,11 @@ impl Document {
         let template = try!(liquid::parse(&self.content, &mut options));
 
         // TODO: pass in documents as template data if as_html is called on Index Document..
-        let mut data = Context{
-            values: HashMap::new(),
-            filters: Default::default()
-        };
+        let mut data = Context::new();
         // Insert the attributes into the layout template
         for key in self.attributes.keys() {
             if let Some(val) = self.attributes.get(key){
-                data.values.insert(key.clone(), Value::Str(val.clone()));
+                data.set_val(key, Value::Str(val.clone()));
             }
         }
 
@@ -67,10 +64,7 @@ impl Document {
 
         let mut file = try!(File::create(&file_path));
 
-        let mut data = Context {
-            values: HashMap::new(),
-            filters: Default::default()
-        };
+        let mut data = Context::new();
 
         // TODO: improve error handling for liquid errors
         let html = match self.as_html() {
@@ -80,12 +74,12 @@ impl Document {
                 "".to_string()
             }
         };
-        data.values.insert("content".to_string(), Value::Str(html));
+        data.set_val("content", Value::Str(html));
 
         // Insert the attributes into the layout template
         for key in self.attributes.keys() {
             if let Some(val) = self.attributes.get(key){
-                data.values.insert(key.clone(), Value::Str(val.clone()));
+                data.set_val(key, Value::Str(val.clone()));
             }
         }
 
