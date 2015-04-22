@@ -9,15 +9,17 @@ use std::path::Path;
 use std::collections::HashMap;
 use self::core::str::StrExt;
 use std::ffi::OsStr;
+use liquid::Value;
 
 use document::Document;
 use util;
 
 pub fn build(source: &Path, dest: &Path) -> io::Result<()>{
     // TODO make configurable
-    let template_extensions = ["tpl", "md"];
-
+    let template_extensions = [OsStr::new("tpl"), OsStr::new("md")];
     let layouts_path = source.join("_layouts");
+    let posts_path = source.join("_posts");
+
     let mut layouts : HashMap<String, String> = HashMap::new();
 
     // go through the layout directory and add
@@ -34,33 +36,35 @@ pub fn build(source: &Path, dest: &Path) -> io::Result<()>{
         Err(_) => println!("Warning: No layout path found ({})\n", source.display())
     };
 
-    // TODO! differentiate between _posts/ and other template files
+    let mut documents = vec![];
+    let mut post_data = vec![];
 
     // walk source directory and find files that are written in
-    // a file extension we accept
-    let directories = try!(fs::walk_dir(source));
-    let posts : Vec<Document> = directories.filter_map(|p| {
+    // a template file extension
+    for p in try!(fs::walk_dir(source)) {
         let p = p.unwrap().path();
         let path = p.as_path();
         // check for file extensions
-        if template_extensions.contains(&path.extension().unwrap_or(OsStr::new("")).to_str().unwrap_or(""))
+        if template_extensions.contains(&path.extension().unwrap_or(OsStr::new("")))
         // check that file is not in the layouts folder
         && path.parent() != Some(layouts_path.as_path()) {
-            Some(parse_document(&path, source))
-        }else{
-            None
+            let doc = parse_document(&path, source);
+            if path.parent() == Some(posts_path.as_path()){
+                post_data.push(Value::Object(doc.get_attributes()));
+            }
+            documents.push(doc);
         }
-    }).collect();
+    }
 
-    for post in posts.iter() {
-        try!(post.create_file(dest, &layouts));
+    for doc in documents.iter() {
+        try!(doc.create_file(dest, &layouts, &post_data));
     }
 
     // copy everything
     if source != dest {
         try!(util::copy_recursive_filter(source, dest, &|p| -> bool {
             !p.file_name().unwrap().to_str().unwrap_or("").starts_with(".")
-            && !template_extensions.contains(&p.extension().unwrap_or(OsStr::new("")).to_str().unwrap_or(""))
+            && !template_extensions.contains(&p.extension().unwrap_or(OsStr::new("")))
             && p != dest
             && p != layouts_path.as_path()
         }));

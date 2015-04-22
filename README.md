@@ -45,7 +45,15 @@ All template files have access to a set of attributes.
 
 In example above _title_ is accessible via ```{{ title }}``` and _date_ via ```{{ date }}```, for the layout template as well as the post template.
 
-There is one special attribute accessible only to layouts which is named ```{{ content }}``` and is the whole text under the ```---``` block of the post.
+### Special Attributes
+
+#### content
+
+`{{ content }}` is accessible only to layouts and contains the compiled text below the ```---``` block of the post.
+
+#### posts
+
+`{{ posts }}` is a list of the attributes of all templates in the `_posts` directory. Example:
 
 ### Generate
 
@@ -71,7 +79,7 @@ Cobalt will generate:
 
 TODO:
 
+- [x] Fill index file with post list
 - [ ] Improve Documention
-- [ ] Fill index file with post list
 - [ ] Draft Support
 

@@ -28,23 +28,28 @@ impl Document {
         }
     }
 
-    pub fn as_html(&self) -> Result<String, String> {
+    pub fn get_attributes(&self) -> HashMap<String, Value> {
+        let mut data = HashMap::new();
+        for key in self.attributes.keys() {
+            if let Some(val) = self.attributes.get(key){
+                data.insert(key.to_string(), Value::Str(val.clone()));
+            }
+        }
+        data
+    }
+
+    pub fn as_html(&self, post_data: &Vec<Value>) -> Result<String, String> {
         let mut options : LiquidOptions = Default::default();
         let template = try!(liquid::parse(&self.content, &mut options));
 
         // TODO: pass in documents as template data if as_html is called on Index Document..
-        let mut data = Context::new();
-        // Insert the attributes into the layout template
-        for key in self.attributes.keys() {
-            if let Some(val) = self.attributes.get(key){
-                data.set_val(key, Value::Str(val.clone()));
-            }
-        }
+        let mut data = Context::with_values(self.get_attributes());
+        data.set_val("posts", Value::Array(post_data.clone()));
 
         Ok(template.render(&mut data).unwrap_or("".to_string()))
     }
 
-    pub fn create_file(&self, dest: &Path, layouts: &HashMap<String, String>) -> io::Result<()>{
+    pub fn create_file(&self, dest: &Path, layouts: &HashMap<String, String>, post_data: &Vec<Value>) -> io::Result<()>{
         // construct target path
         let mut file_path_buf = PathBuf::new();
         file_path_buf.push(dest);
@@ -67,7 +72,7 @@ impl Document {
         let mut data = Context::new();
 
         // TODO: improve error handling for liquid errors
-        let html = match self.as_html() {
+        let html = match self.as_html(post_data) {
             Ok(x) => x,
             Err(e) => {
                 println!("Warning, liquid failed: {}", e);
