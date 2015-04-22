@@ -2,6 +2,14 @@
 
 A static site generator written in [Rust](http://www.rust-lang.org/).
 
+## Installation
+
+Using [rustle](https://github.com/brson/rustle) (recommended)
+
+```
+curl -sf https://raw.githubusercontent.com/brson/rustle/master/rustle.sh | sh -s -- https://github.com/cobalt-org/cobalt.rs
+```
+
 ## Usage
 
 ### Layouts
