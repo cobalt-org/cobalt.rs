@@ -3,12 +3,22 @@ name = "cobalt"
 version = "0.0.1"
 dependencies = [
  "liquid 0.1.0 (git+https://github.com/cobalt-org/liquid-rust)",
+ "markdown 0.0.1 (git+https://github.com/johannhof/markdown.rs.git)",
 ]
 
 [[package]]
 name = "liquid"
 version = "0.1.0"
 source = "git+https://github.com/cobalt-org/liquid-rust#3089bda8f8e1018dc2834413f5738624744fc707"
+dependencies = [
+ "regex 0.1.30 (registry+https://github.com/rust-lang/crates.io-index)",
+ "regex_macros 0.1.17 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "markdown"
+version = "0.0.1"
+source = "git+https://github.com/johannhof/markdown.rs.git#a2ee8119536b53244baa0aaefc25ddeeec339b7c"
 dependencies = [
  "regex 0.1.30 (registry+https://github.com/rust-lang/crates.io-index)",
  "regex_macros 0.1.17 (registry+https://github.com/rust-lang/crates.io-index)",

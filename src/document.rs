@@ -11,20 +11,23 @@ use liquid::Context;
 use liquid::Value;
 use std::io::Write;
 
+use markdown;
 use liquid;
 
 pub struct Document {
     pub name: String,
     pub attributes: HashMap<String, String>,
     pub content: String,
+    markdown: bool
 }
 
 impl Document {
-    pub fn new(name: String, attributes: HashMap<String, String>, content: String) -> Document {
+    pub fn new(name: String, attributes: HashMap<String, String>, content: String, markdown: bool) -> Document {
         Document {
             name: name,
             attributes: attributes,
             content: content,
+            markdown: markdown
         }
     }
 
@@ -72,13 +75,16 @@ impl Document {
         let mut data = Context::new();
 
         // TODO: improve error handling for liquid errors
-        let html = match self.as_html(post_data) {
+        let mut html = match self.as_html(post_data) {
             Ok(x) => x,
             Err(e) => {
                 println!("Warning, liquid failed: {}", e);
                 "".to_string()
             }
         };
+        if self.markdown {
+            html = markdown::to_html(&html);
+        }
         data.set_val("content", Value::Str(html));
 
         // Insert the attributes into the layout template
