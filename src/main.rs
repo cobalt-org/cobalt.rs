@@ -19,6 +19,8 @@ fn main() {
     let opts = [
         optopt("s", "source", "Build from example/folder", "[example/folder]"),
         optopt("d", "destination", "Build into example/folder/build", "[example/folder]"),
+        optopt("", "layouts", "Folder to get layouts from", "[_layouts]"),
+        optopt("", "posts", "Folder to get posts from", "[_posts]"),
         optflag("h", "help", "Print this help menu"),
         optflag("v", "version", "Display version")
     ];
@@ -27,6 +29,16 @@ fn main() {
         Ok(m) => { m }
         Err(f) => { panic!(f.to_string()) }
     };
+
+    if matches.opt_present("h") {
+        println!("{}", usage("\n\tcobalt build", &opts));
+        return;
+    }
+
+    if matches.opt_present("v") {
+        print_version();
+        return;
+    }
 
     let mut source_buf = PathBuf::new();
 
@@ -48,15 +60,15 @@ fn main() {
 
     let dest = dest_buf.as_path();
 
-    if matches.opt_present("h") {
-        println!("{}", usage("\n\tcobalt build", &opts));
-        return;
-    }
+    let layouts = match matches.opt_str("layouts") {
+        Some(x) => x,
+        None => "_layouts".to_string(),
+    };
 
-    if matches.opt_present("v") {
-        print_version();
-        return;
-    }
+    let posts = match matches.opt_str("posts") {
+        Some(x) => x,
+        None => "_posts".to_string(),
+    };
 
     let command = if !matches.free.is_empty() {
         matches.free[0].clone()
@@ -68,7 +80,7 @@ fn main() {
     match command.as_ref() {
         "build" => {
             println!("building from {} into {}", source.display(), dest.display());
-            match cobalt::build(&source, &dest){
+            match cobalt::build(&source, &dest, &layouts, &posts){
                 Ok(_) => println!("Build successful"),
                 Err(e) => println!("Error: {}", e)
             };

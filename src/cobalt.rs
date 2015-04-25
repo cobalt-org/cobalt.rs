@@ -14,11 +14,12 @@ use liquid::Value;
 use document::Document;
 use util;
 
-pub fn build(source: &Path, dest: &Path) -> io::Result<()>{
+pub fn build(source: &Path, dest: &Path, layout_str: &str, posts_str: &str) -> io::Result<()>{
     // TODO make configurable
     let template_extensions = [OsStr::new("tpl"), OsStr::new("md")];
-    let layouts_path = source.join("_layouts");
-    let posts_path = source.join("_posts");
+
+    let layouts_path = source.join(layout_str);
+    let posts_path = source.join(posts_str);
 
     let mut layouts : HashMap<String, String> = HashMap::new();
 
