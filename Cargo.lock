@@ -18,7 +18,7 @@ dependencies = [
 [[package]]
 name = "markdown"
 version = "0.0.1"
-source = "git+https://github.com/johannhof/markdown.rs.git#a2ee8119536b53244baa0aaefc25ddeeec339b7c"
+source = "git+https://github.com/johannhof/markdown.rs.git#1839b1a93cd39d14258a121b96b3acf5841f5da6"
 dependencies = [
  "regex 0.1.30 (registry+https://github.com/rust-lang/crates.io-index)",
  "regex_macros 0.1.17 (registry+https://github.com/rust-lang/crates.io-index)",
