@@ -11,6 +11,10 @@ curl -sf https://raw.githubusercontent.com/brson/rustle/master/rustle.sh | sh -s
 ```
 
 ## Usage
+To generate site for provided example (explained below):
+```
+cargo run -- build -s example/ -d output_directory/
+```
 
 ### Layouts
 
@@ -90,4 +94,3 @@ TODO:
 - [x] Fill index file with post list
 - [ ] Improve Documention
 - [ ] Draft Support
-
