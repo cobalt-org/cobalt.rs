@@ -2,17 +2,16 @@
 name = "cobalt"
 version = "0.0.1"
 dependencies = [
- "liquid 0.1.0 (git+https://github.com/cobalt-org/liquid-rust)",
+ "liquid 0.1.1 (git+https://github.com/cobalt-org/liquid-rust)",
  "markdown 0.0.1 (git+https://github.com/johannhof/markdown.rs.git)",
 ]
 
 [[package]]
 name = "liquid"
-version = "0.1.0"
-source = "git+https://github.com/cobalt-org/liquid-rust#3089bda8f8e1018dc2834413f5738624744fc707"
+version = "0.1.1"
+source = "git+https://github.com/cobalt-org/liquid-rust#96df471692c32b497316200273fdf908b3dadfc4"
 dependencies = [
- "regex 0.1.30 (registry+https://github.com/rust-lang/crates.io-index)",
- "regex_macros 0.1.17 (registry+https://github.com/rust-lang/crates.io-index)",
+ "regex 0.1.32 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -20,20 +19,28 @@ name = "markdown"
 version = "0.0.1"
 source = "git+https://github.com/johannhof/markdown.rs.git#1839b1a93cd39d14258a121b96b3acf5841f5da6"
 dependencies = [
- "regex 0.1.30 (registry+https://github.com/rust-lang/crates.io-index)",
- "regex_macros 0.1.17 (registry+https://github.com/rust-lang/crates.io-index)",
+ "regex 0.1.32 (registry+https://github.com/rust-lang/crates.io-index)",
+ "regex_macros 0.1.19 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
 name = "regex"
-version = "0.1.30"
+version = "0.1.32"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "regex-syntax 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "regex-syntax"
+version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "regex_macros"
-version = "0.1.17"
+version = "0.1.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "regex 0.1.30 (registry+https://github.com/rust-lang/crates.io-index)",
+ "regex 0.1.32 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
