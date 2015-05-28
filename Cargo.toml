@@ -7,5 +7,5 @@ authors = ["Benny Klotz <r3qnbenni@gmail.com>", "Johann Hofmann"]
 [dependencies.liquid]
 git = "https://github.com/cobalt-org/liquid-rust"
 
-[dependencies.markdown]
-git = "https://github.com/johannhof/markdown.rs.git"
+# [dependencies.markdown]
+# git = "https://github.com/cobalt-org/markdown.rs.git"

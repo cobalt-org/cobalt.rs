@@ -78,13 +78,13 @@ fn parse_document(path: &Path, source: &Path) -> Document {
     let attributes = extract_attributes(path);
     let content    = extract_content(path).unwrap();
     let new_path   = path.relative_from(source).unwrap();
-    let markdown   = path.extension().unwrap_or(OsStr::new("")) == OsStr::new("md");
+    // let markdown   = path.extension().unwrap_or(OsStr::new("")) == OsStr::new("md");
 
     Document::new(
         new_path.to_str().unwrap().to_string(),
         attributes,
         content,
-        markdown
+        // markdown
     )
 }
 
