@@ -111,13 +111,10 @@ fn extract_attributes(path: &Path) -> HashMap<String, String> {
                 continue;
             }
 
-            let mut attribute_split = attribute_line.split(':');
+            let attribute_split: Vec<&str> = attribute_line.split(':').collect();
 
-            // TODO: Refactor, find a better way for doing this
-            // .nth() method is consuming the iterator and therefore the 0th index on the second method
-            // is in real index 1
-            let key   = attribute_split.nth(0).unwrap().trim_matches(' ').to_string().clone();
-            let value = attribute_split.nth(0).unwrap().trim_matches(' ').to_string().clone();
+            let key   = attribute_split[0].trim_matches(' ').to_string().clone();
+            let value = attribute_split[1].trim_matches(' ').to_string().clone();
 
             attributes.insert(key, value);
         }
