@@ -113,8 +113,8 @@ fn extract_attributes(path: &Path) -> HashMap<String, String> {
 
             let attribute_split: Vec<&str> = attribute_line.split(':').collect();
 
-            let key   = attribute_split[0].trim_matches(' ').to_string().clone();
-            let value = attribute_split[1].trim_matches(' ').to_string().clone();
+            let key   = attribute_split[0].trim_matches(' ').to_string();
+            let value = attribute_split[1].trim_matches(' ').to_string();
 
             attributes.insert(key, value);
         }
