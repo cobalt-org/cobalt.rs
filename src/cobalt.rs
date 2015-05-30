@@ -91,7 +91,7 @@ fn parse_document(path: &Path, source: &Path) -> Document {
 fn parse_file(path: &Path) -> io::Result<String> {
     let mut file = try!(File::open(path));
     let mut text = String::new();
-    file.read_to_string(&mut text);
+    try!(file.read_to_string(&mut text));
     Ok(text)
 }
 
