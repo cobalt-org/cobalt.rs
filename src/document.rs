@@ -75,7 +75,7 @@ impl Document {
         let mut data = Context::new();
 
         // TODO: improve error handling for liquid errors
-        let mut html = match self.as_html(post_data) {
+        let /*mut*/ html = match self.as_html(post_data) {
             Ok(x) => x,
             Err(e) => {
                 println!("Warning, liquid failed: {}", e);

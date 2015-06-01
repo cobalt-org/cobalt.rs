@@ -16,7 +16,7 @@ use util;
 
 pub fn build(source: &Path, dest: &Path, layout_str: &str, posts_str: &str) -> io::Result<()>{
     // TODO make configurable
-    let template_extensions = [OsStr::new("tpl"), OsStr::new("md")];
+    let template_extensions = [OsStr::new("tpl") /*, OsStr::new("md")*/];
 
     let layouts_path = source.join(layout_str);
     let posts_path = source.join(posts_str);
@@ -91,7 +91,7 @@ fn parse_document(path: &Path, source: &Path) -> Document {
 fn parse_file(path: &Path) -> io::Result<String> {
     let mut file = try!(File::open(path));
     let mut text = String::new();
-    file.read_to_string(&mut text);
+    try!(file.read_to_string(&mut text));
     Ok(text)
 }
 
@@ -111,13 +111,10 @@ fn extract_attributes(path: &Path) -> HashMap<String, String> {
                 continue;
             }
 
-            let mut attribute_split = attribute_line.split(':');
+            let attribute_split: Vec<&str> = attribute_line.split(':').collect();
 
-            // TODO: Refactor, find a better way for doing this
-            // .nth() method is consuming the iterator and therefore the 0th index on the second method
-            // is in real index 1
-            let key   = attribute_split.nth(0).unwrap().trim_matches(' ').to_string().clone();
-            let value = attribute_split.nth(0).unwrap().trim_matches(' ').to_string().clone();
+            let key   = attribute_split[0].trim_matches(' ').to_string();
+            let value = attribute_split[1].trim_matches(' ').to_string();
 
             attributes.insert(key, value);
         }
