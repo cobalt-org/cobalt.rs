@@ -10,6 +10,9 @@ Using [rustle](https://github.com/brson/rustle) (recommended)
 curl -sf https://raw.githubusercontent.com/brson/rustle/master/rustle.sh | sh -s -- https://github.com/cobalt-org/cobalt.rs
 ```
 
+If you want to build cobalt manually, use a development tool-chain (nightly).
+Rust 1.0 will not work currently.
+
 ## Usage
 
 ### Layouts
@@ -90,4 +93,3 @@ TODO:
 - [x] Fill index file with post list
 - [ ] Improve Documention
 - [ ] Draft Support
-
