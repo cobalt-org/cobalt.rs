@@ -4,14 +4,14 @@ A static site generator written in [Rust](http://www.rust-lang.org/).
 
 ## Installation
 
-Using [rustle](https://github.com/brson/rustle) (recommended)
+Cobalt is currently in development therefore installation requires to have the development toolchain.
+Also cobalt currently uses unstable features therefore a nightly toolchain is needed.
 
-```
-curl -sf https://raw.githubusercontent.com/brson/rustle/master/rustle.sh | sh -s -- https://github.com/cobalt-org/cobalt.rs
-```
+It is recommended to use multirust:
 
-If you want to build cobalt manually, use a development tool-chain (nightly).
-Rust 1.0 will not work currently.
+  $ git clone git@github.com:cobalt-org/cobalt.rs.git && cd cobalt.rs
+  $ multirust override nightly-2015-10-01
+  $ cargo build
 
 ## Usage
 
