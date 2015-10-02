@@ -9,9 +9,11 @@ Also cobalt currently uses unstable features therefore a nightly toolchain is ne
 
 It is recommended to use multirust:
 
+```
   $ git clone git@github.com:cobalt-org/cobalt.rs.git && cd cobalt.rs
   $ multirust override nightly-2015-10-01
   $ cargo build
+```
 
 ## Usage
 
