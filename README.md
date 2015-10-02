@@ -68,31 +68,3 @@ In example above _title_ is accessible via ```{{ title }}``` and _date_ via ```{
 #### posts
 
 `{{ posts }}` is a list of the attributes of all templates in the `_posts` directory. Example:
-
-### Generate
-
-For this given site layout:
-
-    * path/to/repo/
-        * index.tpl
-        * _layouts/
-            * default.tpl
-            * posts.tpl
-        * _posts/
-            * 2014-08-24-my-first-blogpost.tpl
-            * 2014-09-05-my-second-blogpost.tpl
-
-Cobalt will generate:
-
-    * path/to/repo/
-        * build/
-            * index.html
-            * posts/
-                * 2014-08-24-my-first-blogpost.html
-                * 2014-09-05-my-second-blogpost.html
-
-TODO:
-
-- [x] Fill index file with post list
-- [ ] Improve Documention
-- [ ] Draft Support
