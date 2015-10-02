@@ -5,9 +5,10 @@ A static site generator written in [Rust](http://www.rust-lang.org/).
 ## Installation
 
 Cobalt is currently in development therefore installation requires to have the development toolchain.
+
 Also cobalt currently uses unstable features therefore a nightly toolchain is needed.
 
-It is recommended to use multirust:
+It is recommended to use [multirust](http://www.github.com/brson/multirust):
 
 ```
   $ git clone git@github.com:cobalt-org/cobalt.rs.git && cd cobalt.rs
