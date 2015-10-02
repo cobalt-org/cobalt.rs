@@ -1,5 +1,5 @@
 #![feature(rustc_private)]
-#![feature(collections)]
+#![feature(slice_splits)]
 
 extern crate cobalt;
 extern crate getopts;
@@ -25,7 +25,9 @@ fn main() {
         optflag("v", "version", "Display version")
     ];
 
-    let matches = match getopts(args.tail(), &opts) {
+    let tail = args.split_first().unwrap().1;
+
+    let matches = match getopts(&tail, &opts) {
         Ok(m) => { m }
         Err(f) => { panic!(f.to_string()) }
     };
