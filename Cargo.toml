@@ -4,6 +4,9 @@ name = "cobalt"
 version = "0.0.1"
 authors = ["Benny Klotz <r3qnbenni@gmail.com>", "Johann Hofmann"]
 
+[dependencies]
+getopts = "0.2.14"
+
 [dependencies.liquid]
 git = "https://github.com/cobalt-org/liquid-rust"
 
