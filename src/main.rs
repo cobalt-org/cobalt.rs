@@ -3,7 +3,7 @@ extern crate getopts;
 
 use getopts::Options;
 use std::env;
-use std::path::{PathBuf};
+use std::path::PathBuf;
 
 fn print_version() {
     // TODO parse this from Cargo.toml
