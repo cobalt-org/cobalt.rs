@@ -6,7 +6,5 @@ authors = ["Benny Klotz <r3qnbenni@gmail.com>", "Johann Hofmann"]
 
 [dependencies]
 getopts = "0.2.14"
-markdown = "0.1.1"
-
-[dependencies.liquid]
-git = "https://github.com/cobalt-org/liquid-rust"
+markdown = "0.1"
+liquid = "0.1"

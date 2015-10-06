@@ -6,6 +6,7 @@ use std::default::Default;
 use std::io::Write;
 
 use liquid::{Renderable, LiquidOptions, Context, Value};
+
 use markdown;
 use liquid;
 
