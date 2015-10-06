@@ -1,16 +1,11 @@
-use std::io;
-use std::collections::HashMap;
-use std::fs;
+use std::{io, fs};
 use std::fs::File;
-use std::path::Path;
-use std::path::PathBuf;
+use std::collections::HashMap;
+use std::path::{Path, PathBuf};
 use std::default::Default;
-use liquid::Renderable;
-use liquid::LiquidOptions;
-use liquid::Context;
-use liquid::Value;
 use std::io::Write;
 
+use liquid::{Renderable, LiquidOptions, Context, Value};
 use markdown;
 use liquid;
 

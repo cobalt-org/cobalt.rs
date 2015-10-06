@@ -1,5 +1,4 @@
-use std::io;
-use std::fs;
+use std::{io, fs};
 use std::fs::PathExt;
 use std::path::Path;
 

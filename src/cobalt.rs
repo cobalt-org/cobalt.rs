@@ -1,9 +1,7 @@
 extern crate core;
 
-use std::io;
-use std::fs;
-use std::fs::PathExt;
-use std::fs::File;
+use std::{io, fs};
+use std::fs::{PathExt, File};
 use std::io::Read;
 use std::path::Path;
 use std::collections::HashMap;
