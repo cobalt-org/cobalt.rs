@@ -1,11 +1,8 @@
-extern crate core;
-
 use std::{io, fs};
 use std::fs::{PathExt, File};
 use std::io::Read;
 use std::path::Path;
 use std::collections::HashMap;
-use self::core::str::StrExt;
 use std::ffi::OsStr;
 use liquid::Value;
 
@@ -105,7 +102,7 @@ fn extract_attributes(path: &Path) -> HashMap<String, String> {
         let attribute_string = content_splits.nth(0).unwrap();
 
         for attribute_line in attribute_string.split("\n") {
-            if !attribute_line.contains_char(':') {
+            if !attribute_line.contains(':') {
                 continue;
             }
 
