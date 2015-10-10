@@ -1,6 +1,4 @@
-#![feature(path_ext)]
 #![feature(fs_walk)]
-#![feature(path_relative_from)]
 
 extern crate liquid;
 extern crate markdown;

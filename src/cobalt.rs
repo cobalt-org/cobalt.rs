@@ -1,5 +1,5 @@
 use std::{io, fs};
-use std::fs::{PathExt, File};
+use std::fs::{File, metadata};
 use std::io::Read;
 use std::path::Path;
 use std::collections::HashMap;
@@ -23,7 +23,7 @@ pub fn build(source: &Path, dest: &Path, layout_str: &str, posts_str: &str) -> i
     match fs::walk_dir(&layouts_path) {
         Ok(files) => for layout in files {
             let layout = try!(layout).path();
-            if layout.is_file() {
+            if metadata(&layout).unwrap().is_file() {
                 let mut text = String::new();
                 try!(try!(File::open(&layout)).read_to_string(&mut text));
                 layouts.insert(layout.as_path().file_name().unwrap().to_str().unwrap().to_string(), text);
@@ -72,11 +72,11 @@ pub fn build(source: &Path, dest: &Path, layout_str: &str, posts_str: &str) -> i
 fn parse_document(path: &Path, source: &Path) -> Document {
     let attributes = extract_attributes(path);
     let content    = extract_content(path).unwrap();
-    let new_path   = path.relative_from(source).unwrap();
+    let new_path   = path.to_str().unwrap().split(source.to_str().unwrap()).last().unwrap();
     let markdown   = path.extension().unwrap_or(OsStr::new("")) == OsStr::new("md");
 
     Document::new(
-        new_path.to_str().unwrap().to_string(),
+        new_path.to_string(),
         attributes,
         content,
         markdown
