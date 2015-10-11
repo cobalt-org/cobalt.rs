@@ -1,9 +1,10 @@
-use std::{io, fs};
-use std::fs::{File, metadata};
+use std::io;
+use std::fs::File;
 use std::io::Read;
 use std::path::Path;
 use std::collections::HashMap;
 use std::ffi::OsStr;
+use std::sync::{Arc, Mutex};
 use liquid::Value;
 
 use document::Document;
@@ -16,41 +17,38 @@ pub fn build(source: &Path, dest: &Path, layout_str: &str, posts_str: &str) -> i
     let layouts_path = source.join(layout_str);
     let posts_path = source.join(posts_str);
 
-    let mut layouts : HashMap<String, String> = HashMap::new();
+    // TODO: find a better way than this
+    // Have to wrap the hash map in a mutex because of http://stackoverflow.com/a/30560208
+    let layouts : Arc<Mutex<HashMap<String, String>>> = Arc::new(Mutex::new(HashMap::new()));
 
     // go through the layout directory and add
     // filename -> text content to the layout map
-    match fs::walk_dir(&layouts_path) {
-        Ok(files) => for layout in files {
-            let layout = try!(layout).path();
-            if metadata(&layout).unwrap().is_file() {
-                let mut text = String::new();
-                try!(try!(File::open(&layout)).read_to_string(&mut text));
-                layouts.insert(layout.as_path().file_name().unwrap().to_str().unwrap().to_string(), text);
-            }
-        },
-        Err(_) => println!("Warning: No layout path found ({})\n", source.display())
-    };
+    util::walk_dir(&layouts_path, &|entry| {
+        let mut text = String::new();
+        File::open(entry.path()).unwrap().read_to_string(&mut text);
+        layouts.lock().unwrap().insert(entry.path().file_name().unwrap().to_str().unwrap().to_string(), text);
+    });
 
-    let mut documents = vec![];
-    let mut post_data = vec![];
+    let layouts   = layouts.lock().unwrap();
 
-    // walk source directory and find files that are written in
-    // a template file extension
-    for p in try!(fs::walk_dir(source)) {
-        let p = p.unwrap().path();
-        let path = p.as_path();
-        // check for file extensions
-        if template_extensions.contains(&path.extension().unwrap_or(OsStr::new("")))
-        // check that file is not in the layouts folder
-        && path.parent() != Some(layouts_path.as_path()) {
-            let doc = parse_document(&path, source);
-            if path.parent() == Some(posts_path.as_path()){
-                post_data.push(Value::Object(doc.get_attributes()));
+    // TODO: same as above
+    // Have to wrap Vecs in a mutex because of modifying the vecs in the closure
+    let documents = Arc::new(Mutex::new(vec![]));
+    let post_data = Arc::new(Mutex::new(vec![]));
+
+    util::walk_dir(&source, &|entry| {
+        if template_extensions.contains(&entry.path().extension().unwrap_or(OsStr::new("")))
+            && entry.path().parent() != Some(layouts_path.as_path()) {
+                let doc = parse_document(&entry.path(), source);
+                if entry.path().parent() == Some(posts_path.as_path()) {
+                   post_data.lock().unwrap().push(Value::Object(doc.get_attributes()));
+                }
+                documents.lock().unwrap().push(doc);
             }
-            documents.push(doc);
-        }
-    }
+    });
+
+    let documents = documents.lock().unwrap();
+    let post_data = post_data.lock().unwrap();
 
     for doc in documents.iter() {
         try!(doc.create_file(dest, &layouts, &post_data));

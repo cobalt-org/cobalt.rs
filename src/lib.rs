@@ -1,5 +1,3 @@
-#![feature(fs_walk)]
-
 extern crate liquid;
 extern crate markdown;
 

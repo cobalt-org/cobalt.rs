@@ -1,4 +1,5 @@
-use std::{io, fs};
+use std::io;
+use std::fs::{self, DirEntry};
 use std::path::Path;
 use std::fs::metadata;
 
@@ -24,4 +25,19 @@ pub fn copy_recursive_filter<F>(source: &Path, dest: &Path, valid: &F) -> io::Re
     } else {
         Err(io::Error::new(io::ErrorKind::Other, "source parameter needs to be a directory"))
     }
+}
+
+// one possible implementation of fs::walk_dir only visiting files
+pub fn walk_dir(dir: &Path, cb: &Fn(&DirEntry)) -> io::Result<()> {
+    if try!(fs::metadata(dir)).is_dir() {
+        for entry in try!(fs::read_dir(dir)) {
+            let entry = try!(entry);
+            if try!(fs::metadata(entry.path())).is_dir() {
+                try!(walk_dir(&entry.path(), cb));
+            } else {
+                cb(&entry);
+            }
+        }
+    }
+    Ok(())
 }
