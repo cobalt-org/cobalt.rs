@@ -4,15 +4,10 @@ A static site generator written in [Rust](http://www.rust-lang.org/).
 
 ## Installation
 
-Cobalt is currently in development therefore installation requires to have the development toolchain.
-
-Also cobalt currently uses unstable features therefore a nightly toolchain is needed.
-
-It is recommended to use [multirust](http://www.github.com/brson/multirust):
+Cobalt is currently in development therefore installation requires to have the development toolchain. It compiles with any recent Rust compiler.
 
 ```
   $ git clone git@github.com:cobalt-org/cobalt.rs.git && cd cobalt.rs
-  $ multirust override nightly-2015-10-01
   $ cargo build
 ```
 
