@@ -19,6 +19,7 @@ fn run_test(name: &str) {
 
     let walker = WalkDir::new(&target).into_iter();
 
+    // walk through fixture and created tmp directory and compare files
     for entry in walker.filter_map(|e| e.ok()).filter(|e| e.file_type().is_file()) {
         let relative = entry.path().to_str().unwrap().split(&target).last().unwrap();
 
@@ -32,6 +33,7 @@ fn run_test(name: &str) {
         difference::assert_diff(&original, &created, " ", 0);
     }
 
+    // clean up
     fs::remove_dir_all(dest).unwrap();
 }
 
