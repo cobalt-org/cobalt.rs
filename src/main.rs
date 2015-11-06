@@ -7,7 +7,7 @@ use std::path::PathBuf;
 
 fn print_version() {
     // TODO parse this from Cargo.toml
-    println!("0.0.1");
+    println!("0.1.0");
 }
 
 fn main() {

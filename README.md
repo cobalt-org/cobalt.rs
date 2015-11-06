@@ -4,14 +4,21 @@ A static site generator written in [Rust](http://www.rust-lang.org/).
 
 ## Installation
 
-Cobalt is currently in development therefore installation requires to have the development toolchain. It compiles with any recent Rust compiler.
-
 ```
-  $ git clone git@github.com:cobalt-org/cobalt.rs.git && cd cobalt.rs
-  $ cargo build
+  $ cargo install --git https://github.com/cobalt-org/cobalt.rs
 ```
 
 ## Usage
+
+```
+  $ cobalt build -s path/to/your/source -d path/to/your/destination
+```
+
+See more options with
+
+```
+  $ cobalt -h
+```
 
 ### Layouts
 
