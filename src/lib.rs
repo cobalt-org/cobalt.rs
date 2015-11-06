@@ -7,6 +7,5 @@ extern crate walkdir;
 pub use cobalt::build;
 
 // modules
-mod util;
 mod cobalt;
 mod document;

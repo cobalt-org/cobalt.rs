@@ -1,15 +1,12 @@
 use std::io;
-use std::fs::File;
+use std::fs::{self, File};
 use std::io::Read;
 use std::path::Path;
 use std::collections::HashMap;
 use std::ffi::OsStr;
 use liquid::Value;
-
 use walkdir::WalkDir;
-
 use document::Document;
-use util;
 
 pub fn build(source: &Path, dest: &Path, layout_str: &str, posts_str: &str) -> io::Result<()> {
     // TODO make configurable
@@ -26,7 +23,7 @@ pub fn build(source: &Path, dest: &Path, layout_str: &str, posts_str: &str) -> i
     // filename -> text content to the layout map
     for entry in walker.filter_map(|e| e.ok()).filter(|e| e.file_type().is_file()) {
         let mut text = String::new();
-        File::open(entry.path()).unwrap().read_to_string(&mut text);
+        try!(File::open(entry.path()).unwrap().read_to_string(&mut text));
         layouts.insert(entry.path()
                             .file_name()
                             .unwrap()
@@ -58,14 +55,36 @@ pub fn build(source: &Path, dest: &Path, layout_str: &str, posts_str: &str) -> i
         try!(doc.create_file(dest, &layouts, &post_data));
     }
 
-    // copy everything
+    // copy all remaining files in the source to the destination
     if source != dest {
-        try!(util::copy_recursive_filter(source, dest, &|p| -> bool {
-            !p.file_name().unwrap().to_str().unwrap_or("").starts_with(".")
-                && !template_extensions.contains(&p.extension().unwrap_or(OsStr::new("")))
-                && p != dest
-                && p != layouts_path.as_path()
-        }));
+        let walker = WalkDir::new(&source)
+                         .into_iter()
+                         .filter_map(|e| e.ok())
+                         // filter out files to not copy
+                         .filter(|f| {
+                             let p = f.path();
+                             // don't copy hidden files
+                             !p.file_name().unwrap().to_str().unwrap_or("").starts_with(".") &&
+                             // don't copy templates
+                             !template_extensions.contains(&p.extension().unwrap_or(OsStr::new(""))) &&
+                             // this is madness
+                             p != dest &&
+                             // don't copy from the layouts folder
+                             p != layouts_path.as_path()
+                         });
+
+        for entry in walker {
+            let relative = entry.path()
+                                .to_str().unwrap()
+                                .split(source.to_str().unwrap())
+                                .last().unwrap();
+
+            if try!(entry.metadata()).is_dir() {
+                try!(fs::create_dir_all(&dest.join(relative)));
+            } else {
+                try!(fs::copy(entry.path(), &dest.join(relative)));
+            }
+        }
     }
 
     Ok(())
@@ -89,8 +108,8 @@ fn parse_file(path: &Path) -> io::Result<String> {
 
 fn extract_attributes(path: &Path) -> HashMap<String, String> {
     let mut attributes = HashMap::new();
-    attributes.insert("name".to_string(),
-                      path.file_stem().unwrap().to_str().unwrap().to_string());
+    attributes.insert("name".to_owned(),
+                      path.file_stem().unwrap().to_str().unwrap().to_owned());
 
     let content = parse_file(path).unwrap();
 
@@ -106,8 +125,8 @@ fn extract_attributes(path: &Path) -> HashMap<String, String> {
 
             let attribute_split: Vec<&str> = attribute_line.split(':').collect();
 
-            let key = attribute_split[0].trim_matches(' ').to_string();
-            let value = attribute_split[1].trim_matches(' ').to_string();
+            let key = attribute_split[0].trim_matches(' ').to_owned();
+            let value = attribute_split[1].trim_matches(' ').to_owned();
 
             attributes.insert(key, value);
         }
@@ -122,7 +141,7 @@ fn extract_content(path: &Path) -> io::Result<String> {
     if content.contains("---") {
         let mut content_splits = content.split("---");
 
-        return Ok(content_splits.nth(1).unwrap().to_string());
+        return Ok(content_splits.nth(1).unwrap().to_owned());
     }
 
     return Ok(content);

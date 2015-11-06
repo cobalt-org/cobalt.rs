@@ -1,3 +1,5 @@
+#![deny(warnings)]
+
 extern crate cobalt;
 extern crate getopts;
 
