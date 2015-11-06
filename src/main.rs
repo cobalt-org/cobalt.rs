@@ -46,8 +46,9 @@ fn main() {
         return;
     }
 
-    let source = PathBuf::from(&matches.opt_str("s").unwrap_or("./".to_string()));
-    let dest = PathBuf::from(&matches.opt_str("d").unwrap_or("./".to_string()));
+    // join("") makes sure path has a trailing slash
+    let source = PathBuf::from(&matches.opt_str("s").unwrap_or("./".to_string())).join("");
+    let dest = PathBuf::from(&matches.opt_str("d").unwrap_or("./".to_string())).join("");
     let layouts = matches.opt_str("layouts").unwrap_or("_layouts".to_string());
     let posts = matches.opt_str("posts").unwrap_or("_posts".to_string());
 
@@ -63,8 +64,8 @@ fn main() {
             println!("building from {} into {}", source.display(), dest.display());
             match cobalt::build(&source, &dest, &layouts, &posts) {
                 Ok(_) => println!("Build successful"),
-                Err(e) => println!("Error: {}", e),
-            };
+                Err(e) => panic!("Error: {}", e),
+            }
         }
 
         _ => {

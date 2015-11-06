@@ -1,10 +1,14 @@
 [package]
 
 name = "cobalt"
-version = "0.0.1"
+version = "0.1.0"
 authors = ["Benny Klotz <r3qnbenni@gmail.com>", "Johann Hofmann"]
 
 [dependencies]
 getopts = "0.2.14"
 markdown = "0.1"
 liquid = "0.1"
+walkdir = "0.1"
+
+[dev-dependencies]
+difference = "0.4"

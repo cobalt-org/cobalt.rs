@@ -10,6 +10,7 @@ use liquid::{Renderable, LiquidOptions, Context, Value};
 use markdown;
 use liquid;
 
+#[derive(Debug)]
 pub struct Document {
     pub name: String,
     pub attributes: HashMap<String, String>,
