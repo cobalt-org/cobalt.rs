@@ -1,9 +1,32 @@
+sudo: false
 language: rust
 
 rust:
   - stable
   - beta
   - nightly
+
+matrix:
+  allow_failures:
+    - rust: nightly
+
+before_script:
+  - |
+    pip install 'travis-cargo<0.2' --user &&
+    export PATH=$HOME/.local/bin:$PATH
+script:
+  - |
+    travis-cargo build &&
+    travis-cargo test &&
+    travis-cargo bench
+addons:
+  apt:
+    packages:
+      - libcurl4-openssl-dev
+    - libelf-dev
+    - libdw-dev
+after_success:
+  - travis-cargo coveralls --no-sudo
 
 notifications:
   webhooks:

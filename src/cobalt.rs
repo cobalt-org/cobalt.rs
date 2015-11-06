@@ -4,8 +4,9 @@ use std::io::Read;
 use std::path::Path;
 use std::collections::HashMap;
 use std::ffi::OsStr;
-use std::sync::{Arc, Mutex};
 use liquid::Value;
+
+use walkdir::WalkDir;
 
 use document::Document;
 use util;
@@ -17,48 +18,41 @@ pub fn build(source: &Path, dest: &Path, layout_str: &str, posts_str: &str) -> i
     let layouts_path = source.join(layout_str);
     let posts_path = source.join(posts_str);
 
-    // TODO: find a better way than this
-    // Have to wrap the hash map in a mutex because of http://stackoverflow.com/a/30560208
-    let layouts: Arc<Mutex<HashMap<String, String>>> = Arc::new(Mutex::new(HashMap::new()));
+    let mut layouts: HashMap<String, String> = HashMap::new();
+
+    let walker = WalkDir::new(&layouts_path).into_iter();
 
     // go through the layout directory and add
     // filename -> text content to the layout map
-    util::walk_dir(&layouts_path,
-                   &|entry| {
-                       let mut text = String::new();
-                       File::open(entry.path()).unwrap().read_to_string(&mut text);
-                       layouts.lock().unwrap().insert(entry.path()
-                                                           .file_name()
-                                                           .unwrap()
-                                                           .to_str()
-                                                           .unwrap()
-                                                           .to_string(),
-                                                      text);
-                   });
+    for entry in walker.filter_map(|e| e.ok()).filter(|e| e.file_type().is_file()) {
+        let mut text = String::new();
+        File::open(entry.path()).unwrap().read_to_string(&mut text);
+        layouts.insert(entry.path()
+                            .file_name()
+                            .unwrap()
+                            .to_str()
+                            .unwrap()
+                            .to_string(),
+                       text);
+    }
 
-    let layouts = layouts.lock().unwrap();
+    let mut documents = vec![];
+    let mut post_data = vec![];
 
-    // TODO: same as above
-    // Have to wrap Vecs in a mutex because of modifying the vecs in the closure
-    let documents = Arc::new(Mutex::new(vec![]));
-    let post_data = Arc::new(Mutex::new(vec![]));
+    let walker = WalkDir::new(&source).into_iter();
 
-    util::walk_dir(&source,
-                   &|entry| {
-                       if template_extensions.contains(&entry.path()
-                                                             .extension()
-                                                             .unwrap_or(OsStr::new(""))) &&
-                          entry.path().parent() != Some(layouts_path.as_path()) {
-                           let doc = parse_document(&entry.path(), source);
-                           if entry.path().parent() == Some(posts_path.as_path()) {
-                               post_data.lock().unwrap().push(Value::Object(doc.get_attributes()));
-                           }
-                           documents.lock().unwrap().push(doc);
-                       }
-                   });
-
-    let documents = documents.lock().unwrap();
-    let post_data = post_data.lock().unwrap();
+    for entry in walker.filter_map(|e| e.ok()).filter(|e| e.file_type().is_file()) {
+        if template_extensions.contains(&entry.path()
+                                              .extension()
+                                              .unwrap_or(OsStr::new(""))) &&
+           entry.path().parent() != Some(layouts_path.as_path()) {
+            let doc = parse_document(&entry.path(), source);
+            if entry.path().parent() == Some(posts_path.as_path()) {
+                post_data.push(Value::Object(doc.get_attributes()));
+            }
+            documents.push(doc);
+        }
+    }
 
     for doc in documents.iter() {
         try!(doc.create_file(dest, &layouts, &post_data));
@@ -68,9 +62,9 @@ pub fn build(source: &Path, dest: &Path, layout_str: &str, posts_str: &str) -> i
     if source != dest {
         try!(util::copy_recursive_filter(source, dest, &|p| -> bool {
             !p.file_name().unwrap().to_str().unwrap_or("").starts_with(".")
-            && !template_extensions.contains(&p.extension().unwrap_or(OsStr::new("")))
-            && p != dest
-            && p != layouts_path.as_path()
+                && !template_extensions.contains(&p.extension().unwrap_or(OsStr::new("")))
+                && p != dest
+                && p != layouts_path.as_path()
         }));
     }
 
