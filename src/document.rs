@@ -66,8 +66,8 @@ impl Document {
 
         let file_path = file_path_buf.as_path();
 
-        let layout_path = self.attributes.get(&"@extends".to_string()).unwrap();
-        let layout = layouts.get(layout_path).unwrap();
+        let layout_path = self.attributes.get(&"@extends".to_string()).expect(&format!("No @extends line creating {:?}", self.name));
+        let layout = layouts.get(layout_path).expect(&format!("No layout path {:?} creating {:?}", layout_path, self.name));
 
         // create target directories if any exist
         match file_path.parent() {

@@ -23,12 +23,12 @@ pub fn build(source: &Path, dest: &Path, layout_str: &str, posts_str: &str) -> i
     // filename -> text content to the layout map
     for entry in walker.filter_map(|e| e.ok()).filter(|e| e.file_type().is_file()) {
         let mut text = String::new();
-        try!(File::open(entry.path()).unwrap().read_to_string(&mut text));
+        try!(File::open(entry.path()).expect(&format!("Failed to open file {:?}", entry)).read_to_string(&mut text));
         layouts.insert(entry.path()
                             .file_name()
-                            .unwrap()
+                            .expect(&format!("No file name from {:?}", entry))
                             .to_str()
-                            .unwrap()
+                            .expect(&format!("Invalid UTF-8 in {:?}", entry))
                             .to_string(),
                        text);
     }
@@ -64,7 +64,11 @@ pub fn build(source: &Path, dest: &Path, layout_str: &str, posts_str: &str) -> i
                          .filter(|f| {
                              let p = f.path();
                              // don't copy hidden files
-                             !p.file_name().unwrap().to_str().unwrap_or("").starts_with(".") &&
+                             !p.file_name()
+                               .expect(&format!("No file name for {:?}", p))
+                               .to_str()
+                               .unwrap_or("")
+                               .starts_with(".") &&
                              // don't copy templates
                              !template_extensions.contains(&p.extension().unwrap_or(OsStr::new(""))) &&
                              // this is madness
@@ -75,9 +79,9 @@ pub fn build(source: &Path, dest: &Path, layout_str: &str, posts_str: &str) -> i
 
         for entry in walker {
             let relative = entry.path()
-                                .to_str().unwrap()
-                                .split(source.to_str().unwrap())
-                                .last().unwrap();
+                                .to_str().expect(&format!("Invalid UTF-8 in {:?}", entry))
+                                .split(source.to_str().expect(&format!("Invalid UTF-8 in {:?}", source)))
+                                .last().expect(&format!("Empty path"));
 
             if try!(entry.metadata()).is_dir() {
                 try!(fs::create_dir_all(&dest.join(relative)));
@@ -92,8 +96,13 @@ pub fn build(source: &Path, dest: &Path, layout_str: &str, posts_str: &str) -> i
 
 fn parse_document(path: &Path, source: &Path) -> Document {
     let attributes = extract_attributes(path);
-    let content = extract_content(path).unwrap();
-    let new_path = path.to_str().unwrap().split(source.to_str().unwrap()).last().unwrap();
+    let content = extract_content(path).expect(&format!("No content in {:?}", path));
+    let new_path = path.to_str()
+                       .expect(&format!("Invalid UTF-8 in {:?}", path))
+                       .split(source.to_str()
+                                    .expect(&format!("Invalid UTF-8 in {:?}", source)))
+                       .last()
+                       .expect(&format!("Empty path"));
     let markdown = path.extension().unwrap_or(OsStr::new("")) == OsStr::new("md");
 
     Document::new(new_path.to_string(), attributes, content, markdown)
@@ -109,14 +118,18 @@ fn parse_file(path: &Path) -> io::Result<String> {
 fn extract_attributes(path: &Path) -> HashMap<String, String> {
     let mut attributes = HashMap::new();
     attributes.insert("name".to_owned(),
-                      path.file_stem().unwrap().to_str().unwrap().to_owned());
+                      path.file_stem()
+                          .expect(&format!("No file stem for {:?}", path))
+                          .to_str()
+                          .expect(&format!("Invalid UTF-8 in file stem for {:?}", path))
+                          .to_owned());
 
-    let content = parse_file(path).unwrap();
+    let content = parse_file(path).expect(&format!("Failed to parse {:?}", path));
 
     if content.contains("---") {
         let mut content_splits = content.split("---");
 
-        let attribute_string = content_splits.nth(0).unwrap();
+        let attribute_string = content_splits.nth(0).expect(&format!("Empty content"));
 
         for attribute_line in attribute_string.split("\n") {
             if !attribute_line.contains(':') {
@@ -141,7 +154,7 @@ fn extract_content(path: &Path) -> io::Result<String> {
     if content.contains("---") {
         let mut content_splits = content.split("---");
 
-        return Ok(content_splits.nth(1).unwrap().to_owned());
+        return Ok(content_splits.nth(1).expect(&format!("No content after header")).to_owned());
     }
 
     return Ok(content);
