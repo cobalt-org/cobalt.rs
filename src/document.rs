@@ -36,7 +36,7 @@ impl Document {
         let mut data = HashMap::new();
         for key in self.attributes.keys() {
             if let Some(val) = self.attributes.get(key) {
-                data.insert(key.to_string(), Value::Str(val.clone()));
+                data.insert(key.to_owned(), Value::Str(val.clone()));
             }
         }
         data
@@ -50,7 +50,7 @@ impl Document {
         let mut data = Context::with_values(self.get_attributes());
         data.set_val("posts", Value::Array(post_data.clone()));
 
-        Ok(template.render(&mut data).unwrap_or("".to_string()))
+        Ok(template.render(&mut data).unwrap_or(String::new()))
     }
 
     pub fn create_file(&self,
@@ -66,7 +66,7 @@ impl Document {
 
         let file_path = file_path_buf.as_path();
 
-        let layout_path = self.attributes.get(&"@extends".to_string()).expect(&format!("No @extends line creating {:?}", self.name));
+        let layout_path = self.attributes.get(&"@extends".to_owned()).expect(&format!("No @extends line creating {:?}", self.name));
         let layout = layouts.get(layout_path).expect(&format!("No layout path {:?} creating {:?}", layout_path, self.name));
 
         // create target directories if any exist
@@ -84,7 +84,7 @@ impl Document {
             Ok(x) => x,
             Err(e) => {
                 println!("Warning, liquid failed: {}", e);
-                "".to_string()
+                String::new()
             }
         };
         if self.markdown {
@@ -108,7 +108,7 @@ impl Document {
             }
         };
 
-        let res = template.render(&mut data).unwrap_or("".to_string());
+        let res = template.render(&mut data).unwrap_or(String::new());
 
         println!("Created {}", file_path.display());
         file.write_all(&res.into_bytes())
