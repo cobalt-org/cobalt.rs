@@ -1,6 +1,8 @@
-use std::io;
+use crossbeam;
+
+use std::sync::Arc;
 use std::fs::{self, File};
-use std::io::Read;
+use std::io::{self, Read};
 use std::path::Path;
 use std::collections::HashMap;
 use std::ffi::OsStr;
@@ -29,7 +31,7 @@ pub fn build(source: &Path, dest: &Path, layout_str: &str, posts_str: &str) -> i
                             .expect(&format!("No file name from {:?}", entry))
                             .to_str()
                             .expect(&format!("Invalid UTF-8 in {:?}", entry))
-                            .to_string(),
+                            .to_owned(),
                        text);
     }
 
@@ -51,8 +53,25 @@ pub fn build(source: &Path, dest: &Path, layout_str: &str, posts_str: &str) -> i
         }
     }
 
-    for doc in documents.iter() {
-        try!(doc.create_file(dest, &layouts, &post_data));
+    let mut handles = vec![];
+
+    // generate documents (in parallel)
+    // TODO I'm probably underutilizing crossbeam
+    crossbeam::scope(|scope| {
+        let post_data = Arc::new(post_data);
+        let layouts = Arc::new(layouts);
+        for doc in &documents {
+            let post_data = post_data.clone();
+            let layouts = layouts.clone();
+            let handle = scope.spawn(move || {
+                doc.create_file(dest, &layouts, &post_data)
+            });
+            handles.push(handle);
+        }
+    });
+
+    for handle in handles {
+        try!(handle.join());
     }
 
     // copy all remaining files in the source to the destination
@@ -105,7 +124,7 @@ fn parse_document(path: &Path, source: &Path) -> Document {
                        .expect(&format!("Empty path"));
     let markdown = path.extension().unwrap_or(OsStr::new("")) == OsStr::new("md");
 
-    Document::new(new_path.to_string(), attributes, content, markdown)
+    Document::new(new_path.to_owned(), attributes, content, markdown)
 }
 
 fn parse_file(path: &Path) -> io::Result<String> {

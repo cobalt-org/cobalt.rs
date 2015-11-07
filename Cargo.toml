@@ -9,6 +9,7 @@ getopts = "0.2.14"
 markdown = "0.1"
 liquid = "0.1"
 walkdir = "0.1"
+crossbeam = "0.1.5"
 
 [dev-dependencies]
 difference = "0.4"
