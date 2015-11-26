@@ -1,9 +1,9 @@
-use std::{io, fs};
-use std::fs::File;
+use std::fs::{self, File};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::default::Default;
 use std::io::Write;
+use error::Result;
 
 use liquid::{Renderable, LiquidOptions, Context, Value};
 
@@ -42,22 +42,23 @@ impl Document {
         data
     }
 
-    pub fn as_html(&self, post_data: &Vec<Value>) -> Result<String, String> {
+    pub fn as_html(&self, post_data: &Vec<Value>) -> Result<String> {
         let mut options: LiquidOptions = Default::default();
         let template = try!(liquid::parse(&self.content, &mut options));
 
-        // TODO: pass in documents as template data if as_html is called on Index Document..
+        // TODO: pass in documents as template data if as_html is called on Index
+        // Document..
         let mut data = Context::with_values(self.get_attributes());
         data.set_val("posts", Value::Array(post_data.clone()));
 
-        Ok(template.render(&mut data).unwrap_or(String::new()))
+        Ok(try!(template.render(&mut data)).unwrap_or(String::new()))
     }
 
     pub fn create_file(&self,
                        dest: &Path,
                        layouts: &HashMap<String, String>,
                        post_data: &Vec<Value>)
-                       -> io::Result<()> {
+                       -> Result<()> {
         // construct target path
         let mut file_path_buf = PathBuf::new();
         file_path_buf.push(dest);
@@ -66,30 +67,29 @@ impl Document {
 
         let file_path = file_path_buf.as_path();
 
-        let layout_path = self.attributes.get(&"@extends".to_owned()).expect(&format!("No @extends line creating {:?}", self.name));
-        let layout = layouts.get(layout_path).expect(&format!("No layout path {:?} creating {:?}", layout_path, self.name));
+        let layout_path = try!(self.attributes
+                                   .get(&"@extends".to_owned())
+                                   .ok_or(format!("No @extends line creating {}", self.name)));
+
+        let layout = try!(layouts.get(layout_path)
+                                 .ok_or(format!("No layout path {} creating {}",
+                                                layout_path,
+                                                self.name)));
 
         // create target directories if any exist
-        match file_path.parent() {
-            Some(ref parents) => try!(fs::create_dir_all(parents)),
-            None => (),
-        };
+        file_path.parent().map(|p| fs::create_dir_all(p));
 
         let mut file = try!(File::create(&file_path));
 
         let mut data = Context::new();
 
-        // TODO: improve error handling for liquid errors
-        let mut html = match self.as_html(post_data) {
-            Ok(x) => x,
-            Err(e) => {
-                println!("Warning, liquid failed: {}", e);
-                String::new()
-            }
-        };
+        // compile with liquid
+        let mut html = try!(self.as_html(post_data));
+
         if self.markdown {
             html = markdown::to_html(&html);
         }
+
         data.set_val("content", Value::Str(html));
 
         // Insert the attributes into the layout template
@@ -100,17 +100,13 @@ impl Document {
         }
 
         let mut options: LiquidOptions = Default::default();
-        // TODO: improve error handling for liquid errors
-        let template = match liquid::parse(&layout, &mut options) {
-            Ok(x) => x,
-            Err(e) => {
-                panic!("Warning, liquid failed: {}", e);
-            }
-        };
 
-        let res = template.render(&mut data).unwrap_or(String::new());
+        let template = try!(liquid::parse(&layout, &mut options));
 
+        let res = try!(template.render(&mut data)).unwrap_or(String::new());
+
+        try!(file.write_all(&res.into_bytes()));
         println!("Created {}", file_path.display());
-        file.write_all(&res.into_bytes())
+        Ok(())
     }
 }
