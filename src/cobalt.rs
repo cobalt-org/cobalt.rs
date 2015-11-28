@@ -2,7 +2,7 @@ use crossbeam;
 
 use std::sync::Arc;
 use std::fs::{self, File};
-use std::io::{Read};
+use std::io::Read;
 use std::path::Path;
 use std::collections::HashMap;
 use std::ffi::OsStr;
@@ -60,6 +60,10 @@ pub fn build(source: &Path, dest: &Path, layout_str: &str, posts_str: &str) -> R
 
     // copy all remaining files in the source to the destination
     if source != dest {
+        let source_str = try!(source.to_str()
+                                    .ok_or(format!("Cannot convert pathname {:?} to UTF-8",
+                                                   source)));
+
         let walker = WalkDir::new(&source)
                          .into_iter()
                          .filter_map(|e| e.ok())
@@ -67,9 +71,8 @@ pub fn build(source: &Path, dest: &Path, layout_str: &str, posts_str: &str) -> R
                              let p = f.path();
                              // don't copy hidden files
                              !p.file_name()
-                               .expect(&format!("No file name for {:?}", p))
-                               .to_str()
-                               .unwrap_or("")
+                               .and_then(|name| name.to_str())
+                               .unwrap_or(".")
                                .starts_with(".") &&
                              !template_extensions.contains(&p.extension()
                                                              .unwrap_or(OsStr::new(""))) &&
@@ -77,13 +80,14 @@ pub fn build(source: &Path, dest: &Path, layout_str: &str, posts_str: &str) -> R
                          });
 
         for entry in walker {
-            let relative = entry.path()
-                                .to_str()
-                                .expect(&format!("Invalid UTF-8 in {:?}", entry))
-                                .split(source.to_str()
-                                             .expect(&format!("Invalid UTF-8 in {:?}", source)))
-                                .last()
-                                .expect(&format!("Empty path"));
+            let entry_path = try!(entry.path()
+                                       .to_str()
+                                       .ok_or(format!("Cannot convert pathname {:?} to UTF-8",
+                                                      entry.path())));
+
+            let relative = try!(entry_path.split(source_str)
+                                          .last()
+                                          .ok_or(format!("Empty path")));
 
             if try!(entry.metadata()).is_dir() {
                 try!(fs::create_dir_all(&dest.join(relative)));
@@ -129,12 +133,17 @@ fn parse_document(path: &Path, source: &Path) -> Result<Document> {
     let attributes = try!(extract_attributes(path));
     let content = try!(extract_content(path));
 
-    let new_path = path.to_str()
-                       .expect(&format!("Invalid UTF-8 in {:?}", path))
-                       .split(source.to_str()
-                                    .expect(&format!("Invalid UTF-8 in {:?}", source)))
-                       .last()
-                       .expect(&format!("Empty path"));
+    let path_str = try!(path.to_str()
+                            .ok_or(format!("Cannot convert pathname {:?} to UTF-8", path)));
+
+    let source_str = try!(source.to_str()
+                                .ok_or(format!("Cannot convert pathname {:?} to UTF-8", source)));
+
+
+    let new_path = try!(path_str.split(source_str)
+                                .last()
+                                .ok_or(format!("Empty path")));
+
     let markdown = path.extension().unwrap_or(OsStr::new("")) == OsStr::new("md");
 
     Ok(Document::new(new_path.to_owned(), attributes, content, markdown))
@@ -150,13 +159,12 @@ fn parse_file(path: &Path) -> Result<String> {
 fn extract_attributes(path: &Path) -> Result<HashMap<String, String>> {
     let mut attributes = HashMap::new();
     attributes.insert("name".to_owned(),
-                      path.file_stem()
-                          .expect(&format!("No file stem for {:?}", path))
-                          .to_str()
-                          .expect(&format!("Invalid UTF-8 in file stem for {:?}", path))
+                      try!(path.file_stem()
+                               .and_then(|stem| stem.to_str())
+                               .ok_or(format!("Invalid UTF-8 in file stem for {:?}", path)))
                           .to_owned());
 
-    let content = parse_file(path).expect(&format!("Failed to parse {:?}", path));
+    let content = try!(parse_file(path));
 
     if content.contains("---") {
         let mut content_splits = content.split("---");
