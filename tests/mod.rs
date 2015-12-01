@@ -47,6 +47,11 @@ pub fn example() {
 }
 
 #[test]
+pub fn dotfiles() {
+    assert!(run_test("dotfiles").is_ok());
+}
+
+#[test]
 pub fn liquid_error() {
     let err = run_test("liquid_error");
     assert!(err.is_err());
