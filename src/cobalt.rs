@@ -11,6 +11,25 @@ use walkdir::WalkDir;
 use document::Document;
 use error::Result;
 
+macro_rules! walker {
+    ($dir:expr) => {
+        WalkDir::new($dir)
+            .into_iter()
+            .filter_map(|e| e.ok())
+            .filter(|f| {
+                // skip directories
+                f.file_type().is_file()
+                &&
+                // don't copy hidden files
+                !f.path()
+                  .file_name()
+                  .and_then(|name| name.to_str())
+                  .unwrap_or(".")
+                  .starts_with(".")
+            })
+    }
+}
+
 /// The primary build function that tranforms a directory into a site
 pub fn build(source: &Path, dest: &Path, layout_str: &str, posts_str: &str) -> Result<()> {
     // TODO make configurable
@@ -24,9 +43,7 @@ pub fn build(source: &Path, dest: &Path, layout_str: &str, posts_str: &str) -> R
     let mut documents = vec![];
     let mut post_data = vec![];
 
-    let walker = WalkDir::new(&source).into_iter();
-
-    for entry in walker.filter_map(|e| e.ok()).filter(|e| e.file_type().is_file()) {
+    for entry in walker!(&source) {
         if template_extensions.contains(&entry.path()
                                               .extension()
                                               .unwrap_or(OsStr::new(""))) &&
@@ -64,22 +81,11 @@ pub fn build(source: &Path, dest: &Path, layout_str: &str, posts_str: &str) -> R
                                     .ok_or(format!("Cannot convert pathname {:?} to UTF-8",
                                                    source)));
 
-        let walker = WalkDir::new(&source)
-                         .into_iter()
-                         .filter_map(|e| e.ok())
-                         .filter(|f| {
-                             let p = f.path();
-                             // don't copy hidden files
-                             !p.file_name()
-                               .and_then(|name| name.to_str())
-                               .unwrap_or(".")
-                               .starts_with(".") &&
-                             !template_extensions.contains(&p.extension()
-                                                             .unwrap_or(OsStr::new(""))) &&
-                             p != dest && p != layouts_path.as_path()
-                         });
-
-        for entry in walker {
+        for entry in walker!(&source).filter(|f| !template_extensions.contains(&f.path()
+                                                                                 .extension()
+                                                                                 .unwrap_or(OsStr::new("")))
+                                                 && f.path() != dest
+                                                 && f.path() != layouts_path.as_path()) {
             let entry_path = try!(entry.path()
                                        .to_str()
                                        .ok_or(format!("Cannot convert pathname {:?} to UTF-8",
@@ -107,11 +113,9 @@ pub fn build(source: &Path, dest: &Path, layout_str: &str, posts_str: &str) -> R
 fn get_layouts(layouts_path: &Path) -> Result<HashMap<String, String>> {
     let mut layouts = HashMap::new();
 
-    let walker = WalkDir::new(layouts_path).into_iter();
-
     // go through the layout directory and add
     // filename -> text content to the layout map
-    for entry in walker.filter_map(|e| e.ok()).filter(|e| e.file_type().is_file()) {
+    for entry in walker!(layouts_path) {
         let mut text = String::new();
         let mut file = try!(File::open(entry.path()));
         try!(file.read_to_string(&mut text));
