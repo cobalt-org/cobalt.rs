@@ -10,6 +10,7 @@ markdown = "0.1"
 liquid = "0.2"
 walkdir = "0.1"
 crossbeam = "0.1.5"
+yaml-rust = "0.2.2"
 
 [dev-dependencies]
 difference = "0.4"

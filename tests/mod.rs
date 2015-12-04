@@ -64,3 +64,4 @@ pub fn no_extends_error() {
     assert!(err.is_err());
     assert_eq!(err.unwrap_err().description(), "No @extends line creating _posts/2014-08-24-my-first-blogpost.md");
 }
+
