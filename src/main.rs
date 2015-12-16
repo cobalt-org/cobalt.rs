@@ -55,7 +55,7 @@ fn main() {
     }
 
     // Fetch config information if available
-    let config_contents_result = get_config_contents("./config.yml");
+    let config_contents_result = get_config_contents("./.config.yml");
     let yaml = if let Ok(config_contents) = config_contents_result {
         match parse_yaml(config_contents) {
             Ok(y) => {
@@ -133,7 +133,7 @@ fn parse_yaml(file_contents: String) -> Result<Yaml, ScanError> {
 
 #[test]
 fn get_config_contents_ok() {
-    let result = get_config_contents("tests/fixtures/config_example/config.yml");
+    let result = get_config_contents("tests/fixtures/config_example/.config.yml");
     assert!(result.is_ok());
     assert!(result.unwrap().len() != 0);
 }
