@@ -14,8 +14,7 @@ use yaml_rust::Yaml;
 use yaml_rust::scanner::ScanError;
 
 fn print_version() {
-    // TODO parse this from Cargo.toml
-    println!("0.1.0");
+    println!("0.1.2");
 }
 
 fn main() {
