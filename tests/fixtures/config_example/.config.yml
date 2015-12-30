@@ -1,0 +1,5 @@
+dest: ../../target/config_example
+
+layouts: _my_layouts
+
+posts: _my_posts
