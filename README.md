@@ -37,7 +37,7 @@ Posts live in ```_posts```.
 Example:
 
 ```text
-@extends: posts.tpl
+extends: posts.tpl
 
 title:   My first Blogpost
 date:    24/08/2014 at 15:36
@@ -49,7 +49,7 @@ My Blog is lorem ipsum like, yes it is..
 
 The content before ```---``` are meta attributes made accessible to the template via their key (see below).
 
-The ```@extends``` attribute specifies which layout will be used.
+The ```extends``` attribute specifies which layout will be used.
 
 ### Other files
 

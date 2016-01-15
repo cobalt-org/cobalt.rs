@@ -10,6 +10,7 @@ use liquid::Value;
 use walkdir::WalkDir;
 use document::Document;
 use error::Result;
+use yaml_rust::YamlLoader;
 
 macro_rules! walker {
     ($dir:expr) => {
@@ -41,22 +42,25 @@ pub fn build(source: &Path, dest: &Path, layout_str: &str, posts_str: &str) -> R
     let layouts = try!(get_layouts(&layouts_path));
 
     let mut documents = vec![];
-    let mut post_data = vec![];
 
     for entry in walker!(&source) {
         if template_extensions.contains(&entry.path()
                                               .extension()
                                               .unwrap_or(OsStr::new(""))) &&
            entry.path().parent() != Some(layouts_path.as_path()) {
-            let doc = try!(parse_document(&entry.path(), source));
+            let mut doc = try!(parse_document(&entry.path(), source));
             if entry.path().parent() == Some(posts_path.as_path()) {
-                post_data.push(Value::Object(doc.get_attributes()));
+                doc.is_post = true;
             }
             documents.push(doc);
         }
     }
 
     let mut handles = vec![];
+    let post_data: Vec<Value> = documents.iter()
+                                         .filter(|x| x.is_post)
+                                         .map(|x| Value::Object(x.get_attributes()))
+                                         .collect();
 
     // generate documents (in parallel)
     // TODO I'm probably underutilizing crossbeam
@@ -81,11 +85,12 @@ pub fn build(source: &Path, dest: &Path, layout_str: &str, posts_str: &str) -> R
                                     .ok_or(format!("Cannot convert pathname {:?} to UTF-8",
                                                    source)));
 
-        for entry in walker!(&source).filter(|f| !template_extensions.contains(&f.path()
-                                                                                 .extension()
-                                                                                 .unwrap_or(OsStr::new("")))
-                                                 && f.path() != dest
-                                                 && f.path() != layouts_path.as_path()) {
+        for entry in walker!(&source).filter(|f| {
+            !template_extensions.contains(&f.path()
+                                            .extension()
+                                            .unwrap_or(OsStr::new(""))) &&
+            f.path() != dest && f.path() != layouts_path.as_path()
+        }) {
             let entry_path = try!(entry.path()
                                        .to_str()
                                        .ok_or(format!("Cannot convert pathname {:?} to UTF-8",
@@ -132,10 +137,37 @@ fn get_layouts(layouts_path: &Path) -> Result<HashMap<String, String>> {
     Ok(layouts)
 }
 
-
 fn parse_document(path: &Path, source: &Path) -> Result<Document> {
-    let attributes = try!(extract_attributes(path));
-    let content = try!(extract_content(path));
+    let mut attributes = HashMap::new();
+    attributes.insert("name".to_owned(),
+                      try!(path.file_stem()
+                               .and_then(|stem| stem.to_str())
+                               .ok_or(format!("Invalid UTF-8 in file stem for {:?}", path)))
+                          .to_owned());
+
+    let mut content = try!(parse_file(path));
+
+    // if there is front matter, split the file and parse it
+    if content.contains("---") {
+        let content2 = content.clone();
+        let mut content_splits = content2.split("---");
+
+        // above the split are the attributes
+        let attribute_string = content_splits.next().unwrap_or("");
+
+        // everything below the split becomes the new content
+        content = content_splits.next().unwrap_or("").to_owned();
+
+        let yaml_result = try!(YamlLoader::load_from_str(attribute_string));
+
+        let yaml_attributes = try!(yaml_result[0].as_hash().ok_or(format!("Incorrect front matter format in {:?}", path)));
+
+        for (key, value) in yaml_attributes {
+            // TODO is unwrap_or the best way to handle this?
+            attributes.insert(key.as_str().unwrap_or("").to_owned(),
+                              value.as_str().unwrap_or("").to_owned());
+        }
+    }
 
     let path_str = try!(path.to_str()
                             .ok_or(format!("Cannot convert pathname {:?} to UTF-8", path)));
@@ -150,7 +182,12 @@ fn parse_document(path: &Path, source: &Path) -> Result<Document> {
 
     let markdown = path.extension().unwrap_or(OsStr::new("")) == OsStr::new("md");
 
-    Ok(Document::new(new_path.to_owned(), attributes, content, markdown))
+    Ok(Document::new(new_path.to_owned(),
+                     attributes,
+                     content,
+                     false,
+                     None,
+                     markdown))
 }
 
 fn parse_file(path: &Path) -> Result<String> {
@@ -158,48 +195,4 @@ fn parse_file(path: &Path) -> Result<String> {
     let mut text = String::new();
     try!(file.read_to_string(&mut text));
     Ok(text)
-}
-
-fn extract_attributes(path: &Path) -> Result<HashMap<String, String>> {
-    let mut attributes = HashMap::new();
-    attributes.insert("name".to_owned(),
-                      try!(path.file_stem()
-                               .and_then(|stem| stem.to_str())
-                               .ok_or(format!("Invalid UTF-8 in file stem for {:?}", path)))
-                          .to_owned());
-
-    let content = try!(parse_file(path));
-
-    if content.contains("---") {
-        let mut content_splits = content.split("---");
-
-        let attribute_string = try!(content_splits.nth(0).ok_or("Empty content"));
-
-        for attribute_line in attribute_string.split("\n") {
-            if !attribute_line.contains(':') {
-                continue;
-            }
-
-            let attribute_split: Vec<&str> = attribute_line.split(':').collect();
-
-            let key = attribute_split[0].trim_matches(' ').to_owned();
-            let value = attribute_split[1].trim_matches(' ').to_owned();
-
-            attributes.insert(key, value);
-        }
-    }
-
-    Ok(attributes)
-}
-
-fn extract_content(path: &Path) -> Result<String> {
-    let content = try!(parse_file(path));
-
-    if content.contains("---") {
-        let mut content_splits = content.split("---");
-
-        return Ok(try!(content_splits.nth(1).ok_or("No content after header")).to_owned());
-    }
-
-    return Ok(content);
 }

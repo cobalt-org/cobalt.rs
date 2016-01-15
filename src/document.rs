@@ -4,6 +4,7 @@ use std::path::{Path, PathBuf};
 use std::default::Default;
 use std::io::Write;
 use error::Result;
+use chrono::{DateTime, Local};
 
 use liquid::{Renderable, LiquidOptions, Context, Value};
 
@@ -15,6 +16,8 @@ pub struct Document {
     pub name: String,
     pub attributes: HashMap<String, String>,
     pub content: String,
+    pub is_post: bool,
+    pub date: Option<DateTime<Local>>,
     markdown: bool,
 }
 
@@ -22,12 +25,16 @@ impl Document {
     pub fn new(name: String,
                attributes: HashMap<String, String>,
                content: String,
+               is_post: bool,
+               date: Option<DateTime<Local>>,
                markdown: bool)
                -> Document {
         Document {
             name: name,
             attributes: attributes,
             content: content,
+            is_post: is_post,
+            date: date,
             markdown: markdown,
         }
     }
@@ -68,8 +75,8 @@ impl Document {
         let file_path = file_path_buf.as_path();
 
         let layout_path = try!(self.attributes
-                                   .get(&"@extends".to_owned())
-                                   .ok_or(format!("No @extends line creating {}", self.name)));
+                                   .get(&"extends".to_owned())
+                                   .ok_or(format!("No extends property creating {}", self.name)));
 
         let layout = try!(layouts.get(layout_path)
                                  .ok_or(format!("No layout path {} creating {}",
