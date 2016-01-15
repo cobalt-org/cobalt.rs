@@ -52,6 +52,11 @@ pub fn dotfiles() {
 }
 
 #[test]
+pub fn sort_posts() {
+    assert!(run_test("sort_posts").is_ok());
+}
+
+#[test]
 pub fn liquid_error() {
     let err = run_test("liquid_error");
     assert!(err.is_err());

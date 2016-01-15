@@ -4,7 +4,7 @@ use std::path::{Path, PathBuf};
 use std::default::Default;
 use std::io::Write;
 use error::Result;
-use chrono::{DateTime, Local};
+use chrono::{DateTime, FixedOffset};
 
 use liquid::{Renderable, LiquidOptions, Context, Value};
 
@@ -17,7 +17,7 @@ pub struct Document {
     pub attributes: HashMap<String, String>,
     pub content: String,
     pub is_post: bool,
-    pub date: Option<DateTime<Local>>,
+    pub date: Option<DateTime<FixedOffset>>,
     markdown: bool,
 }
 
@@ -26,7 +26,7 @@ impl Document {
                attributes: HashMap<String, String>,
                content: String,
                is_post: bool,
-               date: Option<DateTime<Local>>,
+               date: Option<DateTime<FixedOffset>>,
                markdown: bool)
                -> Document {
         Document {

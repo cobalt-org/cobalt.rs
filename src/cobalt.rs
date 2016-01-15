@@ -11,6 +11,8 @@ use walkdir::WalkDir;
 use document::Document;
 use error::Result;
 use yaml_rust::YamlLoader;
+use chrono::{DateTime, UTC, FixedOffset};
+use chrono::offset::TimeZone;
 
 macro_rules! walker {
     ($dir:expr) => {
@@ -49,18 +51,34 @@ pub fn build(source: &Path, dest: &Path, layout_str: &str, posts_str: &str) -> R
                                               .unwrap_or(OsStr::new(""))) &&
            entry.path().parent() != Some(layouts_path.as_path()) {
             let mut doc = try!(parse_document(&entry.path(), source));
+
+            // if the document is in the posts folder it's considered a post
             if entry.path().parent() == Some(posts_path.as_path()) {
                 doc.is_post = true;
             }
+
             documents.push(doc);
         }
     }
 
-    let mut handles = vec![];
+    // January 1, 1970 0:00:00 UTC, the beginning of time
+    let default_date = UTC.timestamp(0, 0).with_timezone(&FixedOffset::east(0));
+
+    // sort documents by date, if there's no date (none was provided or it couldn't be read) then
+    // fall back to the default date
+    documents.sort_by(|a, b| {
+        b.date.unwrap_or(default_date.clone()).cmp(&a.date.unwrap_or(default_date.clone()))
+    });
+
+    // these are the attributes of all documents that are posts, so that they can be
+    // passed to the renderer
     let post_data: Vec<Value> = documents.iter()
                                          .filter(|x| x.is_post)
                                          .map(|x| Value::Object(x.get_attributes()))
                                          .collect();
+
+    // thread handles to join later
+    let mut handles = vec![];
 
     // generate documents (in parallel)
     // TODO I'm probably underutilizing crossbeam
@@ -160,7 +178,10 @@ fn parse_document(path: &Path, source: &Path) -> Result<Document> {
 
         let yaml_result = try!(YamlLoader::load_from_str(attribute_string));
 
-        let yaml_attributes = try!(yaml_result[0].as_hash().ok_or(format!("Incorrect front matter format in {:?}", path)));
+        let yaml_attributes = try!(yaml_result[0]
+                                       .as_hash()
+                                       .ok_or(format!("Incorrect front matter format in {:?}",
+                                                      path)));
 
         for (key, value) in yaml_attributes {
             // TODO is unwrap_or the best way to handle this?
@@ -168,6 +189,9 @@ fn parse_document(path: &Path, source: &Path) -> Result<Document> {
                               value.as_str().unwrap_or("").to_owned());
         }
     }
+
+    let date = attributes.get("date")
+                         .and_then(|d| DateTime::parse_from_str(d, "%d %B %Y %H:%M:%S %z").ok());
 
     let path_str = try!(path.to_str()
                             .ok_or(format!("Cannot convert pathname {:?} to UTF-8", path)));
@@ -186,7 +210,7 @@ fn parse_document(path: &Path, source: &Path) -> Result<Document> {
                      attributes,
                      content,
                      false,
-                     None,
+                     date,
                      markdown))
 }
 
