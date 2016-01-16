@@ -199,7 +199,6 @@ fn parse_document(path: &Path, source: &Path) -> Result<Document> {
     let source_str = try!(source.to_str()
                                 .ok_or(format!("Cannot convert pathname {:?} to UTF-8", source)));
 
-
     let new_path = try!(path_str.split(source_str)
                                 .last()
                                 .ok_or(format!("Empty path")));

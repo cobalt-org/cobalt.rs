@@ -64,6 +64,13 @@ pub fn liquid_error() {
 }
 
 #[test]
+pub fn yaml_error() {
+    let err = run_test("yaml_error");
+    assert!(err.is_err());
+    assert_eq!(err.unwrap_err().description(), "unexpected character: `@'");
+}
+
+#[test]
 pub fn no_extends_error() {
     let err = run_test("no_extends_error");
     assert!(err.is_err());
