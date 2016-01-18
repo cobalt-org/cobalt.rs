@@ -52,6 +52,11 @@ pub fn dotfiles() {
 }
 
 #[test]
+pub fn sort_posts() {
+    assert!(run_test("sort_posts").is_ok());
+}
+
+#[test]
 pub fn liquid_error() {
     let err = run_test("liquid_error");
     assert!(err.is_err());
@@ -59,8 +64,15 @@ pub fn liquid_error() {
 }
 
 #[test]
+pub fn yaml_error() {
+    let err = run_test("yaml_error");
+    assert!(err.is_err());
+    assert_eq!(err.unwrap_err().description(), "unexpected character: `@'");
+}
+
+#[test]
 pub fn no_extends_error() {
     let err = run_test("no_extends_error");
     assert!(err.is_err());
-    assert_eq!(err.unwrap_err().description(), "No @extends line creating _posts/2014-08-24-my-first-blogpost.md");
+    assert_eq!(err.unwrap_err().description(), "No extends property creating _posts/2014-08-24-my-first-blogpost.md");
 }

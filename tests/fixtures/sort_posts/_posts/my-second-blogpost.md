@@ -1,6 +1,7 @@
 extends: posts.tpl
-title:   My first Blogpost
-date:    24/08/2014 at 15:36
+
+title:   My second Blogpost
+date:    02 Jan 2016 10:00:00 +0100
 ---
 # {{ title }}
 

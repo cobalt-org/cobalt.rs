@@ -2,6 +2,7 @@ use std::result;
 use std::io;
 use std::error;
 use std::fmt;
+use yaml_rust::scanner;
 use walkdir;
 use liquid;
 
@@ -13,6 +14,7 @@ pub enum Error {
     Io(io::Error),
     Liquid(liquid::Error),
     WalkDir(walkdir::Error),
+    Yaml(scanner::ScanError),
     Other(String),
 }
 
@@ -34,6 +36,12 @@ impl From<walkdir::Error> for Error {
     }
 }
 
+impl From<scanner::ScanError> for Error {
+    fn from(err: scanner::ScanError) -> Error {
+        Error::Yaml(err)
+    }
+}
+
 impl From<String> for Error {
     fn from(err: String) -> Error {
         Error::Other(err)
@@ -52,6 +60,7 @@ impl fmt::Display for Error {
             Error::Io(ref err) => write!(f, "IO error: {}", err),
             Error::Liquid(ref err) => write!(f, "Liquid error: {}", err),
             Error::WalkDir(ref err) => write!(f, "walkdir error: {}", err),
+            Error::Yaml(ref err) => write!(f, "yaml parsing error: {}", err),
             Error::Other(ref err) => write!(f, "error: {}", err),
         }
     }
@@ -63,6 +72,7 @@ impl error::Error for Error {
             Error::Io(ref err) => err.description(),
             Error::Liquid(ref err) => err.description(),
             Error::WalkDir(ref err) => err.description(),
+            Error::Yaml(ref err) => err.description(),
             Error::Other(ref err) => err,
         }
     }
@@ -72,6 +82,7 @@ impl error::Error for Error {
             Error::Io(ref err) => Some(err),
             Error::Liquid(ref err) => Some(err),
             Error::WalkDir(ref err) => Some(err),
+            Error::Yaml(ref err) => Some(err),
             Error::Other(_) => None,
         }
     }

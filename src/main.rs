@@ -7,11 +7,11 @@ extern crate yaml_rust;
 use getopts::{ Matches, Options };
 use std::env;
 use std::fs::File;
-use std::io::Result as IoResult;
 use std::io::prelude::*;
 use std::path::{ Path, PathBuf };
 use yaml_rust::Yaml;
-use yaml_rust::scanner::ScanError;
+use yaml_rust::YamlLoader;
+use cobalt::error::Result;
 
 fn print_version() {
     println!("0.1.2");
@@ -56,10 +56,9 @@ fn main() {
     // Fetch config information if available
     let config_contents_result = get_config_contents("./.cobalt.yml");
     let yaml = if let Ok(config_contents) = config_contents_result {
-        match parse_yaml(config_contents) {
-            Ok(y) => {
-                y
-            }
+        // TODO: call yaml.to_hash
+        match YamlLoader::load_from_str(&config_contents) {
+            Ok(y) => y[0].clone(),
             Err(e) => {
                 // Trouble parsing yaml file
                 panic!(e.to_string())
@@ -110,23 +109,12 @@ fn get_setting(arg_str: &str, config_str: &str, default: &str, matches: &Matches
     }
 }
 
-fn get_config_contents<P: AsRef<Path>>(config_file: P) -> IoResult<String> {
+fn get_config_contents<P: AsRef<Path>>(config_file: P) -> Result<String> {
     let mut buffer = String::new();
     let mut f = try!(File::open(config_file));
     try!(f.read_to_string(&mut buffer));
     Ok(buffer)
 }
-
-fn parse_yaml(file_contents: String) -> Result<Yaml, ScanError> {
-    use yaml_rust::YamlLoader;
-
-    let doc_list = try!(YamlLoader::load_from_str(&file_contents));
-
-    // Cannot return parsed document directly as list goes out of scope
-    // Cloning as of now
-    Ok(doc_list[0].clone())
-}
-
 
 // Private method tests
 
@@ -140,31 +128,6 @@ fn get_config_contents_ok() {
 #[test]
 fn get_config_contents_err() {
     let result = get_config_contents("tests/fixtures/config_example/config_does_not_exist.yml");
-    assert!(result.is_err());
-}
-
-#[test]
-fn parse_yaml_ok() {
-    let source = "test_source";
-    let dest = "test_dest";
-    let posts = "test_posts";
-    let layouts = "test_layouts";
-
-    let file_contents = format!("source: {}\r\ndest: {}\r\nposts: {}\r\nlayouts: {}\r",
-                                source,
-                                dest,
-                                posts,
-                                layouts);
-    let result = parse_yaml(file_contents);
-    assert!(result.is_ok());
-    let doc = result.unwrap();
-    assert_eq!(doc["source"].as_str(), Some(source));
-}
-
-#[test]
-fn parse_yaml_err() {
-    let file_contents = "!@%!\\@#%!\r\n#ASDF@#%".to_string();
-    let result = parse_yaml(file_contents);
     assert!(result.is_err());
 }
 
