@@ -3,6 +3,10 @@
 extern crate cobalt;
 extern crate getopts;
 extern crate yaml_rust;
+extern crate env_logger;
+
+#[macro_use]
+extern crate log;
 
 use getopts::{ Matches, Options };
 use std::env;
@@ -12,6 +16,8 @@ use std::path::{ Path, PathBuf };
 use yaml_rust::Yaml;
 use yaml_rust::YamlLoader;
 use cobalt::error::Result;
+use log::{LogRecord, LogLevelFilter};
+use env_logger::LogBuilder;
 
 fn print_version() {
     println!("0.1.2");
@@ -31,6 +37,9 @@ fn main() {
                 "[example/folder]");
     opts.optopt("", "layouts", "Folder to get layouts from", "[_layouts]");
     opts.optopt("", "posts", "Folder to get posts from", "[_posts]");
+    opts.optflag("", "debug", "Log verbose (debug level) information");
+    opts.optflag("", "trace", "Log ultra-verbose (trace level) information");
+    opts.optflag("", "silent", "Suppress all output");
     opts.optflag("h", "help", "Print this help menu");
     opts.optflag("v", "version", "Display version");
 
@@ -48,10 +57,33 @@ fn main() {
         return;
     }
 
-    if matches.opt_present("v") {
+    if matches.opt_present("version") {
         print_version();
         return;
     }
+
+    let format = |record: &LogRecord| {
+        let level = format!("[{}]", record.level()).to_lowercase();
+        format!("{:8} {}", level, record.args())
+    };
+
+    let mut builder = LogBuilder::new();
+    builder.format(format);
+    builder.filter(None, LogLevelFilter::Info);
+
+    if matches.opt_present("debug") {
+        builder.filter(None, LogLevelFilter::Debug);
+    }
+
+    if matches.opt_present("trace") {
+        builder.filter(None, LogLevelFilter::Trace);
+    }
+
+    if matches.opt_present("silent") {
+        builder.filter(None, LogLevelFilter::Off);
+    }
+
+    builder.init().unwrap();
 
     // Fetch config information if available
     let config_contents_result = get_config_contents("./.cobalt.yml");
@@ -85,10 +117,14 @@ fn main() {
 
     match command.as_ref() {
         "build" => {
-            println!("building from {} into {}", source.display(), dest.display());
+            info!("Building from {} into {}", source.display(), dest.display());
             match cobalt::build(&source, &dest, &layouts, &posts) {
-                Ok(_) => println!("Build successful"),
-                Err(e) => panic!("Error: {}", e),
+                Ok(_) => info!("Build successful"),
+                Err(e) => {
+                    error!("{}", e);
+                    error!("Build not successful");
+                    std::process::exit(1);
+                }
             }
         }
 

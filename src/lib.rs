@@ -7,6 +7,9 @@ extern crate crossbeam;
 extern crate chrono;
 extern crate yaml_rust;
 
+#[macro_use]
+extern crate log;
+
 pub use cobalt::build;
 pub use error::Error;
 

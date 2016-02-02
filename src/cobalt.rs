@@ -41,6 +41,9 @@ pub fn build(source: &Path, dest: &Path, layout_str: &str, posts_str: &str) -> R
     let layouts_path = source.join(layout_str);
     let posts_path = source.join(posts_str);
 
+    debug!("Layouts directory: {:?}", layouts_path);
+    debug!("Posts directory: {:?}", posts_path);
+
     let layouts = try!(get_layouts(&layouts_path));
 
     let mut documents = vec![];
@@ -86,6 +89,7 @@ pub fn build(source: &Path, dest: &Path, layout_str: &str, posts_str: &str) -> R
         let post_data = Arc::new(post_data);
         let layouts = Arc::new(layouts);
         for doc in &documents {
+            trace!("Generating {}", doc.name);
             let post_data = post_data.clone();
             let layouts = layouts.clone();
             let handle = scope.spawn(move || doc.create_file(dest, &layouts, &post_data));
@@ -99,6 +103,7 @@ pub fn build(source: &Path, dest: &Path, layout_str: &str, posts_str: &str) -> R
 
     // copy all remaining files in the source to the destination
     if source != dest {
+        info!("Copying remaining assets");
         let source_str = try!(source.to_str()
                                     .ok_or(format!("Cannot convert pathname {:?} to UTF-8",
                                                    source)));
@@ -120,8 +125,11 @@ pub fn build(source: &Path, dest: &Path, layout_str: &str, posts_str: &str) -> R
 
             if try!(entry.metadata()).is_dir() {
                 try!(fs::create_dir_all(&dest.join(relative)));
+                debug!("Created new directory {:?}", dest.join(relative));
             } else {
-                try!(fs::copy(entry.path(), &dest.join(relative)));
+                try!(fs::copy(entry.path(), &dest.join(relative))
+                         .map_err(|_| format!("Could not copy {:?}", entry.path())));
+                debug!("Copied {:?} to {:?}", entry.path(), dest.join(relative));
             }
         }
     }
