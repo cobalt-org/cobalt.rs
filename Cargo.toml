@@ -12,6 +12,8 @@ walkdir = "0.1"
 crossbeam = "0.1.5"
 yaml-rust = "0.2.2"
 chrono = "0.2"
+log = "0.3"
+env_logger = "0.3"
 
 [dev-dependencies]
 difference = "0.4"

@@ -113,7 +113,7 @@ impl Document {
         let res = try!(template.render(&mut data)).unwrap_or(String::new());
 
         try!(file.write_all(&res.into_bytes()));
-        println!("Created {}", file_path.display());
+        info!("Created {}", file_path.display());
         Ok(())
     }
 }
