@@ -50,8 +50,8 @@ impl Document {
     }
 
     pub fn as_html(&self, post_data: &Vec<Value>) -> Result<String> {
-        let mut options: LiquidOptions = Default::default();
-        let template = try!(liquid::parse(&self.content, &mut options));
+        let options: LiquidOptions = Default::default();
+        let template = try!(liquid::parse(&self.content, options));
 
         // TODO: pass in documents as template data if as_html is called on Index
         // Document..
@@ -106,9 +106,9 @@ impl Document {
             }
         }
 
-        let mut options: LiquidOptions = Default::default();
+        let options: LiquidOptions = Default::default();
 
-        let template = try!(liquid::parse(&layout, &mut options));
+        let template = try!(liquid::parse(&layout, options));
 
         let res = try!(template.render(&mut data)).unwrap_or(String::new());
 
