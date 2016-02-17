@@ -7,53 +7,60 @@ use std::fs::{self, File};
 use std::io::Read;
 use walkdir::WalkDir;
 use std::error::Error;
+use cobalt::Config;
 
 fn run_test(name: &str) -> Result<(), cobalt::Error> {
-    let source = format!("tests/fixtures/{}/", name);
     let target = format!("tests/target/{}/", name);
-    let dest = format!("tests/tmp/{}/", name);
+    let mut config = Config::from_file(format!("tests/fixtures/{}/.cobalt.yml", name)).unwrap_or(Default::default());
 
-    let result = cobalt::build(&Path::new(&source), &Path::new(&dest), "_layouts", "_posts");
+    config.source = format!("tests/fixtures/{}/", name);
+    config.dest = format!("tests/tmp/{}/", name);
+
+    fs::create_dir_all(&config.dest).expect("Create dir failed");
+
+    let result = cobalt::build(&config);
 
     if result.is_ok() {
         let walker = WalkDir::new(&target).into_iter();
 
         // walk through fixture and created tmp directory and compare files
         for entry in walker.filter_map(|e| e.ok()).filter(|e| e.file_type().is_file()) {
-            let relative = entry.path().to_str().unwrap().split(&target).last().unwrap();
+            let relative = entry.path().to_str().unwrap().split(&target).last().expect("Comparison error");
 
             let mut original = String::new();
-            File::open(entry.path()).unwrap().read_to_string(&mut original).unwrap();
+            File::open(entry.path()).expect("Comparison error").read_to_string(&mut original).unwrap();
 
             let mut created = String::new();
-            File::open(&Path::new(&dest).join(&relative))
-                .unwrap()
+            File::open(&Path::new(&config.dest).join(&relative))
+                .expect("Comparison error")
                 .read_to_string(&mut created)
                 .unwrap();
 
             difference::assert_diff(&original, &created, " ", 0);
         }
-
-        // clean up
-        fs::remove_dir_all(dest).expect("Cleanup failed");
     }
+
+    // clean up
+    fs::remove_dir_all(&config.dest).is_err();
 
     result
 }
 
 #[test]
-pub fn example() {
-    assert!(run_test("example").is_ok());
-}
-
-#[test]
 pub fn dotfiles() {
-    assert!(run_test("dotfiles").is_ok());
+    run_test("dotfiles").expect("Build error");
 }
 
 #[test]
-pub fn sort_posts() {
-    assert!(run_test("sort_posts").is_ok());
+pub fn example() {
+    run_test("example").expect("Build error");
+}
+
+#[test]
+pub fn incomplete_rss() {
+    let err = run_test("incomplete_rss");
+    assert!(err.is_err());
+    assert_eq!(err.unwrap_err().description(), "name, description and link need to be defined in the config file to generate RSS");
 }
 
 #[test]
@@ -64,15 +71,25 @@ pub fn liquid_error() {
 }
 
 #[test]
+pub fn no_extends_error() {
+    let err = run_test("no_extends_error");
+    assert!(err.is_err());
+    assert_eq!(err.unwrap_err().description(), "No extends property in 2014-08-24-my-first-blogpost");
+}
+
+#[test]
+pub fn sort_posts() {
+    run_test("sort_posts").expect("Build error");
+}
+
+#[test]
+pub fn rss() {
+    run_test("rss").expect("Build error");
+}
+
+#[test]
 pub fn yaml_error() {
     let err = run_test("yaml_error");
     assert!(err.is_err());
     assert_eq!(err.unwrap_err().description(), "unexpected character: `@'");
-}
-
-#[test]
-pub fn no_extends_error() {
-    let err = run_test("no_extends_error");
-    assert!(err.is_err());
-    assert_eq!(err.unwrap_err().description(), "No extends property creating _posts/2014-08-24-my-first-blogpost.md");
 }

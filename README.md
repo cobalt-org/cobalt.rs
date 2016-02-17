@@ -47,7 +47,7 @@ Hey there this is my first blogpost and this is super awesome.
 My Blog is lorem ipsum like, yes it is..
 ```
 
-The content before ```---``` are meta attributes made accessible to the template via their key (see below).
+The content before ```---``` are meta attributes ("front matter") made accessible to the template via their key (see below).
 
 The ```extends``` attribute specifies which layout will be used.
 
@@ -82,3 +82,20 @@ In example above _title_ is accessible via ```{{ title }}``` and _date_ via ```{
  <a href="blog/{{post.name}}.html">{{ post.title }}</a>
 {% endfor %}
 ```
+
+### RSS
+
+To generate an RSS file from the metadata of your `_posts`, you need to provide the following data in your config.file:
+
+```yaml
+# path where the RSS file should be generated
+rss: rss.xml
+name: My blog!
+description: Blog description
+link: http://example.com
+```
+
+None of these fields are optional, as by the [RSS 2.0 spec]().
+
+Make sure to also provide the fields `title`, `date` and `description` in the front matter of your posts.
+

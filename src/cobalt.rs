@@ -2,17 +2,19 @@ use crossbeam;
 
 use std::sync::Arc;
 use std::fs::{self, File};
-use std::io::Read;
-use std::path::Path;
+use std::io::{Read, Write};
+use std::path::{Path, PathBuf};
 use std::collections::HashMap;
 use std::ffi::OsStr;
 use liquid::Value;
 use walkdir::WalkDir;
 use document::Document;
-use error::Result;
+use error::{Error, Result};
+use config::Config;
 use yaml_rust::YamlLoader;
 use chrono::{DateTime, UTC, FixedOffset};
 use chrono::offset::TimeZone;
+use rss::{Channel, Rss};
 
 macro_rules! walker {
     ($dir:expr) => {
@@ -22,24 +24,32 @@ macro_rules! walker {
             .filter(|f| {
                 // skip directories
                 f.file_type().is_file()
-                &&
-                // don't copy hidden files
-                !f.path()
-                  .file_name()
-                  .and_then(|name| name.to_str())
-                  .unwrap_or(".")
-                  .starts_with(".")
+                    &&
+                    // don't copy hidden files
+                    !f.path()
+                    .file_name()
+                    .and_then(|name| name.to_str())
+                    .unwrap_or(".")
+                    .starts_with(".")
             })
     }
 }
 
 /// The primary build function that tranforms a directory into a site
-pub fn build(source: &Path, dest: &Path, layout_str: &str, posts_str: &str) -> Result<()> {
+pub fn build(config: &Config) -> Result<()> {
+    trace!("Build configuration: {:?}", config);
+
+    // join("") makes sure path has a trailing slash
+    let source = PathBuf::from(&config.source).join("");
+    let source = source.as_path();
+    let dest = PathBuf::from(&config.dest).join("");
+    let dest = dest.as_path();
+
     // TODO make configurable
     let template_extensions = [OsStr::new("tpl"), OsStr::new("md")];
 
-    let layouts_path = source.join(layout_str);
-    let posts_path = source.join(posts_str);
+    let layouts_path = source.join(&config.layouts);
+    let posts_path = source.join(&config.posts);
 
     debug!("Layouts directory: {:?}", layouts_path);
     debug!("Posts directory: {:?}", posts_path);
@@ -53,7 +63,7 @@ pub fn build(source: &Path, dest: &Path, layout_str: &str, posts_str: &str) -> R
                                               .extension()
                                               .unwrap_or(OsStr::new(""))) &&
            entry.path().parent() != Some(layouts_path.as_path()) {
-            let mut doc = try!(parse_document(&entry.path(), source));
+            let mut doc = try!(parse_document(&entry.path(), &source));
 
             // if the document is in the posts folder it's considered a post
             if entry.path().parent() == Some(posts_path.as_path()) {
@@ -62,6 +72,11 @@ pub fn build(source: &Path, dest: &Path, layout_str: &str, posts_str: &str) -> R
 
             documents.push(doc);
         }
+    }
+
+    // check if we should create an RSS file and create it!
+    if let &Some(ref path) = &config.rss {
+        try!(create_rss(path, dest, &config, &documents));
     }
 
     // January 1, 1970 0:00:00 UTC, the beginning of time
@@ -89,10 +104,10 @@ pub fn build(source: &Path, dest: &Path, layout_str: &str, posts_str: &str) -> R
         let post_data = Arc::new(post_data);
         let layouts = Arc::new(layouts);
         for doc in &documents {
-            trace!("Generating {}", doc.name);
+            trace!("Generating {}", doc.path);
             let post_data = post_data.clone();
             let layouts = layouts.clone();
-            let handle = scope.spawn(move || doc.create_file(dest, &layouts, &post_data));
+            let handle = scope.spawn(move || doc.create_file(&dest, &layouts, &post_data));
             handles.push(handle);
         }
     });
@@ -163,14 +178,47 @@ fn get_layouts(layouts_path: &Path) -> Result<HashMap<String, String>> {
     Ok(layouts)
 }
 
+// creates a new RSS file with the contents of the site blog
+fn create_rss(path: &str, dest: &Path, config: &Config, documents: &[Document]) -> Result<()> {
+    match (&config.name, &config.description, &config.link) {
+        // these three fields are mandatory in the RSS standard
+        (&Some(ref name), &Some(ref description), &Some(ref link)) => {
+            trace!("Generating RSS data");
+
+            let items = documents.iter()
+                                 .filter(|x| x.is_post)
+                                 .map(|doc| doc.to_rss(link))
+                                 .collect();
+
+            let channel = Channel {
+                title: name.to_owned(),
+                link: link.to_owned(),
+                description: description.to_owned(),
+                items: items,
+                ..Default::default()
+            };
+
+            let rss = Rss(channel);
+            let rss_string = rss.to_string();
+            trace!("RSS data: {}", rss_string);
+
+            let rss_path = dest.join(path);
+
+            let mut rss_file = try!(File::create(&rss_path));
+            try!(rss_file.write_all(&rss_string.into_bytes()));
+
+            info!("Created RSS file at {}", rss_path.display());
+            Ok(())
+        }
+        _ => {
+            Err(Error::from("name, description and link need to be defined in the config file to \
+                             generate RSS"))
+        }
+    }
+}
+
 fn parse_document(path: &Path, source: &Path) -> Result<Document> {
     let mut attributes = HashMap::new();
-    attributes.insert("name".to_owned(),
-                      try!(path.file_stem()
-                               .and_then(|stem| stem.to_str())
-                               .ok_or(format!("Invalid UTF-8 in file stem for {:?}", path)))
-                          .to_owned());
-
     let mut content = try!(parse_file(path));
 
     // if there is front matter, split the file and parse it
@@ -211,9 +259,21 @@ fn parse_document(path: &Path, source: &Path) -> Result<Document> {
                                 .last()
                                 .ok_or(format!("Empty path")));
 
+    // construct path
+    let mut path_buf = PathBuf::from(new_path);
+    path_buf.set_extension("html");
+
+    let path_str = try!(path_buf.to_str()
+                                .ok_or(format!("Cannot convert pathname {:?} to UTF-8", path_str)));
+
     let markdown = path.extension().unwrap_or(OsStr::new("")) == OsStr::new("md");
 
-    Ok(Document::new(new_path.to_owned(),
+    let name = try!(path.file_stem()
+                        .and_then(|stem| stem.to_str())
+                        .ok_or(format!("Invalid UTF-8 in file stem for {:?}", path)));
+
+    Ok(Document::new(name.to_owned(),
+                     path_str.to_owned(),
                      attributes,
                      content,
                      false,
