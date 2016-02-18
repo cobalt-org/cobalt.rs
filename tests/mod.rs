@@ -16,7 +16,8 @@ fn run_test(name: &str) -> Result<(), cobalt::Error> {
     config.source = format!("tests/fixtures/{}/", name);
     config.dest = format!("tests/tmp/{}/", name);
 
-    fs::create_dir_all(&config.dest).expect("Create dir failed");
+    // try to create the target directory, ignore errors
+    fs::create_dir_all(&config.dest).is_err();
 
     let result = cobalt::build(&config);
 
