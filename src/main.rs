@@ -2,20 +2,15 @@
 
 extern crate cobalt;
 extern crate getopts;
-extern crate yaml_rust;
 extern crate env_logger;
 
 #[macro_use]
 extern crate log;
 
-use getopts::{ Matches, Options };
+use getopts::Options;
 use std::env;
-use std::fs::File;
-use std::io::prelude::*;
-use std::path::{ Path, PathBuf };
-use yaml_rust::Yaml;
-use yaml_rust::YamlLoader;
-use cobalt::error::Result;
+use std::fs;
+use cobalt::Config;
 use log::{LogRecord, LogLevelFilter};
 use env_logger::LogBuilder;
 
@@ -35,6 +30,7 @@ fn main() {
                 "destination",
                 "Build into example/folder/build",
                 "[example/folder]");
+    opts.optopt("", "config", "Config file to use", "[.cobalt.yml]");
     opts.optopt("", "layouts", "Folder to get layouts from", "[_layouts]");
     opts.optopt("", "posts", "Folder to get posts from", "[_posts]");
     opts.optflag("", "debug", "Log verbose (debug level) information");
@@ -44,12 +40,8 @@ fn main() {
     opts.optflag("v", "version", "Display version");
 
     let matches = match opts.parse(&args[1..]) {
-        Ok(m) => {
-            m
-        }
-        Err(f) => {
-            panic!(f.to_string())
-        }
+        Ok(m) => m,
+        Err(f) => panic!(f.to_string()),
     };
 
     if matches.opt_present("h") {
@@ -85,28 +77,42 @@ fn main() {
 
     builder.init().unwrap();
 
+    let config_path = match matches.opt_str("config") {
+        Some(config) => config,
+        None => "./.cobalt.yml".to_owned(),
+    };
+
     // Fetch config information if available
-    let config_contents_result = get_config_contents("./.cobalt.yml");
-    let yaml = if let Ok(config_contents) = config_contents_result {
-        // TODO: call yaml.to_hash
-        match YamlLoader::load_from_str(&config_contents) {
-            Ok(y) => y[0].clone(),
+    let mut config: Config = if fs::metadata(&config_path).is_ok() {
+        info!("Using config file {}", &config_path);
+
+        match Config::from_file(&config_path) {
+            Ok(config) => config,
             Err(e) => {
-                // Trouble parsing yaml file
-                panic!(e.to_string())
+                error!("Error reading config file:");
+                error!("{}", e);
+                std::process::exit(1);
             }
         }
     } else {
-        // No config file or error reading it.
-        Yaml::from_str("")
+        Default::default()
     };
 
+    if let Some(source) = matches.opt_str("s") {
+        config.source = source;
+    };
 
-    // join("") makes sure path has a trailing slash
-    let source = PathBuf::from(&get_setting("s", "source", "./", &matches, &yaml)).join("");
-    let dest = PathBuf::from(&get_setting("d", "dest", "./", &matches, &yaml)).join("");
-    let layouts = get_setting("layouts", "layouts", "_layouts", &matches, &yaml);
-    let posts = get_setting("posts", "posts", "_posts", &matches, &yaml);
+    if let Some(dest) = matches.opt_str("d") {
+        config.dest = dest;
+    };
+
+    if let Some(layouts) = matches.opt_str("layouts") {
+        config.layouts = layouts;
+    };
+
+    if let Some(posts) = matches.opt_str("posts") {
+        config.posts = posts;
+    };
 
     let command = if !matches.free.is_empty() {
         matches.free[0].clone()
@@ -117,8 +123,8 @@ fn main() {
 
     match command.as_ref() {
         "build" => {
-            info!("Building from {} into {}", source.display(), dest.display());
-            match cobalt::build(&source, &dest, &layouts, &posts) {
+            info!("Building from {} into {}", config.source, config.dest);
+            match cobalt::build(&config) {
                 Ok(_) => info!("Build successful"),
                 Err(e) => {
                     error!("{}", e);
@@ -134,36 +140,3 @@ fn main() {
         }
     }
 }
-
-fn get_setting(arg_str: &str, config_str: &str, default: &str, matches: &Matches, yaml: &Yaml) -> String {
-    if let Some(arg_val) = matches.opt_str(arg_str) {
-        arg_val
-    } else if let Some(config_val) = yaml[config_str].as_str() {
-        config_val.to_string()
-    } else {
-        default.to_string()
-    }
-}
-
-fn get_config_contents<P: AsRef<Path>>(config_file: P) -> Result<String> {
-    let mut buffer = String::new();
-    let mut f = try!(File::open(config_file));
-    try!(f.read_to_string(&mut buffer));
-    Ok(buffer)
-}
-
-// Private method tests
-
-#[test]
-fn get_config_contents_ok() {
-    let result = get_config_contents("tests/fixtures/config_example/.cobalt.yml");
-    assert!(result.is_ok());
-    assert!(result.unwrap().len() != 0);
-}
-
-#[test]
-fn get_config_contents_err() {
-    let result = get_config_contents("tests/fixtures/config_example/config_does_not_exist.yml");
-    assert!(result.is_err());
-}
-

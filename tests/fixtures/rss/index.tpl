@@ -3,5 +3,5 @@ extends: default.tpl
 This is my Index page!
 
 {% for post in posts %}
- <a href="{{post.path}}">{{ post.title }}</a>
+ <a href="_posts/{{post.name}}.html">{{ post.title }}</a>
 {% endfor %}

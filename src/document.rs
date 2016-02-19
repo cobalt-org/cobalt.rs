@@ -5,6 +5,7 @@ use std::default::Default;
 use std::io::Write;
 use error::Result;
 use chrono::{DateTime, FixedOffset};
+use rss;
 
 use liquid::{Renderable, LiquidOptions, Context, Value};
 
@@ -14,6 +15,7 @@ use liquid;
 #[derive(Debug)]
 pub struct Document {
     pub name: String,
+    pub path: String,
     pub attributes: HashMap<String, String>,
     pub content: String,
     pub is_post: bool,
@@ -23,6 +25,7 @@ pub struct Document {
 
 impl Document {
     pub fn new(name: String,
+               path: String,
                attributes: HashMap<String, String>,
                content: String,
                is_post: bool,
@@ -31,6 +34,7 @@ impl Document {
                -> Document {
         Document {
             name: name,
+            path: path,
             attributes: attributes,
             content: content,
             is_post: is_post,
@@ -39,8 +43,22 @@ impl Document {
         }
     }
 
+    /// Metadata for generating RSS feeds
+    pub fn to_rss(&self, root_url: &str) -> rss::Item {
+        rss::Item {
+            title: self.attributes.get("title").map(|s| s.to_owned()),
+            link: Some(root_url.to_owned() + &self.path),
+            pub_date: self.date.map(|date| date.to_rfc2822()),
+            description: self.attributes.get("description").map(|s| s.to_owned()),
+            ..Default::default()
+        }
+    }
+
+    /// Attributes that are injected into the template when rendering
     pub fn get_attributes(&self) -> HashMap<String, Value> {
         let mut data = HashMap::new();
+        data.insert("name".to_owned(), Value::Str(self.name.clone()));
+        data.insert("path".to_owned(), Value::Str(self.path.clone()));
         for key in self.attributes.keys() {
             if let Some(val) = self.attributes.get(key) {
                 data.insert(key.to_owned(), Value::Str(val.clone()));
@@ -69,17 +87,17 @@ impl Document {
         // construct target path
         let mut file_path_buf = PathBuf::new();
         file_path_buf.push(dest);
-        file_path_buf.push(&self.name);
+        file_path_buf.push(&self.path);
         file_path_buf.set_extension("html");
 
         let file_path = file_path_buf.as_path();
 
         let layout_path = try!(self.attributes
                                    .get(&"extends".to_owned())
-                                   .ok_or(format!("No extends property creating {}", self.name)));
+                                   .ok_or(format!("No extends property in {}", self.name)));
 
         let layout = try!(layouts.get(layout_path)
-                                 .ok_or(format!("No layout path {} creating {}",
+                                 .ok_or(format!("Layout {} can not be found (defined in {})",
                                                 layout_path,
                                                 self.name)));
 
@@ -88,7 +106,10 @@ impl Document {
 
         let mut file = try!(File::create(&file_path));
 
-        let mut data = Context::new();
+        // Insert the attributes into the layout template
+        // TODO we're currently calling get_attributes twice on each document render, can we get it
+        // to a single call?
+        let mut data = Context::with_values(self.get_attributes());
 
         // compile with liquid
         let mut html = try!(self.as_html(post_data));
@@ -98,13 +119,6 @@ impl Document {
         }
 
         data.set_val("content", Value::Str(html));
-
-        // Insert the attributes into the layout template
-        for key in self.attributes.keys() {
-            if let Some(val) = self.attributes.get(key) {
-                data.set_val(key, Value::Str(val.clone()));
-            }
-        }
 
         let options: LiquidOptions = Default::default();
 
