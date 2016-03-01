@@ -74,11 +74,6 @@ pub fn build(config: &Config) -> Result<()> {
         }
     }
 
-    // check if we should create an RSS file and create it!
-    if let &Some(ref path) = &config.rss {
-        try!(create_rss(path, dest, &config, &documents));
-    }
-
     // January 1, 1970 0:00:00 UTC, the beginning of time
     let default_date = UTC.timestamp(0, 0).with_timezone(&FixedOffset::east(0));
 
@@ -87,6 +82,11 @@ pub fn build(config: &Config) -> Result<()> {
     documents.sort_by(|a, b| {
         b.date.unwrap_or(default_date.clone()).cmp(&a.date.unwrap_or(default_date.clone()))
     });
+
+    // check if we should create an RSS file and create it!
+    if let &Some(ref path) = &config.rss {
+        try!(create_rss(path, dest, &config, &documents));
+    }
 
     // these are the attributes of all documents that are posts, so that they can be
     // passed to the renderer
