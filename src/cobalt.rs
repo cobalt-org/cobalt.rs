@@ -45,8 +45,10 @@ pub fn build(config: &Config) -> Result<()> {
     let dest = PathBuf::from(&config.dest).join("");
     let dest = dest.as_path();
 
-    // TODO make configurable
-    let template_extensions = [OsStr::new("tpl"), OsStr::new("md")];
+    let template_extensions: Vec<&OsStr> = config.template_extensions
+                                                .iter()
+                                                .map(OsStr::new)
+                                                .collect();
 
     let layouts_path = source.join(&config.layouts);
     let posts_path = source.join(&config.posts);

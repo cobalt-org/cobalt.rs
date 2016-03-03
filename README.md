@@ -55,11 +55,17 @@ The ```date``` attribute will be used to sort blog posts (from last to first). `
 
 ### Other files
 
-Any file with the .tpl file extension will be parsed for metadata and compiled using liquid, like a post.
+Any file with the .tpl, .md or .liquid file extension is considered a liquid template and will be parsed for metadata and compiled using liquid, like a post.
 
 Unlike posts, files outside the ``_posts`` directory will not be indexed as blog posts and not passed to the index file in the list of contents.
 
 All other files and directories in the source folder will be recursively added to your destination folder.
+
+You can specify different template extensions by setting the `template_extensions` field in your config file:
+
+```yaml
+template_extensions: ['txt', 'lqd']
+```
 
 ### Attributes
 

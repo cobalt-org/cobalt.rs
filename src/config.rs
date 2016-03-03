@@ -11,6 +11,7 @@ pub struct Config {
     pub dest: String,
     pub layouts: String,
     pub posts: String,
+    pub template_extensions: Vec<String>,
     pub rss: Option<String>,
     pub name: Option<String>,
     pub description: Option<String>,
@@ -24,6 +25,7 @@ impl Default for Config {
             dest: "./".to_owned(),
             layouts: "_layouts".to_owned(),
             posts: "_posts".to_owned(),
+            template_extensions: vec!["tpl".to_owned(), "md".to_owned(), "liquid".to_owned()],
             rss: None,
             name: None,
             description: None,
@@ -65,6 +67,12 @@ impl Config {
 
         if let Some(posts) = yaml["posts"].as_str() {
             config.posts = posts.to_owned();
+        };
+
+        if let Some(extensions) = yaml["template_extensions"].as_vec() {
+            config.template_extensions = extensions.iter()
+                                                   .filter_map(|k| k.as_str().map(|k| k.to_owned()))
+                                                   .collect();
         };
 
         if let Some(link) = yaml["link"].as_str() {

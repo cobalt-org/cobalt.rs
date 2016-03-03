@@ -58,6 +58,11 @@ pub fn example() {
 }
 
 #[test]
+pub fn custom_template_extensions() {
+    run_test("custom_template_extensions").expect("Build error");
+}
+
+#[test]
 pub fn incomplete_rss() {
     let err = run_test("incomplete_rss");
     assert!(err.is_err());
