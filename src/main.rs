@@ -15,7 +15,7 @@ use log::{LogRecord, LogLevelFilter};
 use env_logger::LogBuilder;
 
 fn print_version() {
-    println!("0.1.2");
+    println!("0.2.0");
 }
 
 fn main() {
