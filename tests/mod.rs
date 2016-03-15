@@ -94,6 +94,11 @@ pub fn rss() {
 }
 
 #[test]
+pub fn copy_files() {
+    run_test("copy_files").unwrap();
+}
+
+#[test]
 pub fn yaml_error() {
     let err = run_test("yaml_error");
     assert!(err.is_err());
