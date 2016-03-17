@@ -1,6 +1,5 @@
 use crossbeam;
 
-use std::sync::Arc;
 use std::fs::{self, File};
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
@@ -103,8 +102,6 @@ pub fn build(config: &Config) -> Result<()> {
     // generate documents (in parallel)
     // TODO I'm probably underutilizing crossbeam
     crossbeam::scope(|scope| {
-        let post_data = Arc::new(post_data);
-        let layouts = Arc::new(layouts);
         for doc in &documents {
             trace!("Generating {}", doc.path);
             let post_data = post_data.clone();
