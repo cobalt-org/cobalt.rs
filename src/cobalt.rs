@@ -45,9 +45,9 @@ pub fn build(config: &Config) -> Result<()> {
     let dest = dest.as_path();
 
     let template_extensions: Vec<&OsStr> = config.template_extensions
-                                                .iter()
-                                                .map(OsStr::new)
-                                                .collect();
+                                                 .iter()
+                                                 .map(OsStr::new)
+                                                 .collect();
 
     let layouts_path = source.join(&config.layouts);
     let posts_path = source.join(&config.posts);
@@ -141,6 +141,11 @@ pub fn build(config: &Config) -> Result<()> {
                 try!(fs::create_dir_all(&dest.join(relative)));
                 debug!("Created new directory {:?}", dest.join(relative));
             } else {
+                let parent_folder_path = dest.clone()
+                                             .join(Path::new(relative).parent().unwrap());
+
+                try!(fs::create_dir_all(&parent_folder_path));
+
                 try!(fs::copy(entry.path(), &dest.join(relative))
                          .map_err(|_| format!("Could not copy {:?}", entry.path())));
                 debug!("Copied {:?} to {:?}", entry.path(), dest.join(relative));
