@@ -141,10 +141,9 @@ pub fn build(config: &Config) -> Result<()> {
                 try!(fs::create_dir_all(&dest.join(relative)));
                 debug!("Created new directory {:?}", dest.join(relative));
             } else {
-                let parent_folder_path = dest.clone()
-                                             .join(Path::new(relative).parent().unwrap());
-
-                try!(fs::create_dir_all(&parent_folder_path));
+                if let Some(ref parent) = Path::new(relative).parent() {
+                    try!(fs::create_dir_all(&dest.join(parent)));
+                }
 
                 try!(fs::copy(entry.path(), &dest.join(relative))
                          .map_err(|_| format!("Could not copy {:?}", entry.path())));
