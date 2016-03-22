@@ -1,7 +1,7 @@
 #![deny(warnings)]
 
 extern crate liquid;
-extern crate markdown;
+extern crate pulldown_cmark;
 extern crate walkdir;
 extern crate crossbeam;
 extern crate chrono;

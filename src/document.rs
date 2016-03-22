@@ -9,7 +9,7 @@ use rss;
 
 use liquid::{Renderable, LiquidOptions, Context, Value};
 
-use markdown;
+use pulldown_cmark as cmark;
 use liquid;
 
 #[derive(Debug)]
@@ -115,7 +115,12 @@ impl Document {
         let mut html = try!(self.as_html(post_data));
 
         if self.markdown {
-            html = markdown::to_html(&html);
+            html = {
+                let mut buf = String::new();
+                let parser = cmark::Parser::new(&html);
+                cmark::html::push_html(&mut buf, parser);
+                buf
+            };
         }
 
         data.set_val("content", Value::Str(html));
