@@ -22,17 +22,13 @@ fn main() {
     let args: Vec<String> = env::args().collect();
 
     let mut opts = Options::new();
-    opts.optopt("s",
-                "source",
-                "Build from example/folder",
-                "[example/folder]");
-    opts.optopt("d",
-                "destination",
-                "Build into example/folder/build",
-                "[example/folder]");
-    opts.optopt("", "config", "Config file to use", "[.cobalt.yml]");
-    opts.optopt("", "layouts", "Folder to get layouts from", "[_layouts]");
-    opts.optopt("", "posts", "Folder to get posts from", "[_posts]");
+
+    opts.optopt("s", "source", "Source folder, Default: ./", "");
+    opts.optopt("d", "destination", "Destination folder, Default: ./", "");
+    opts.optopt("c", "config", "Config file to use, Default: .cobalt.yml", "");
+    opts.optopt("l", "layouts", "\tLayout templates folder, Default: _layouts/", "");
+    opts.optopt("p", "posts", "Posts folder, Default: _posts/", "");
+
     opts.optflag("", "debug", "Log verbose (debug level) information");
     opts.optflag("", "trace", "Log ultra-verbose (trace level) information");
     opts.optflag("", "silent", "Suppress all output");
