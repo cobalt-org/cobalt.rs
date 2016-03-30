@@ -15,7 +15,7 @@ log = "0.3"
 env_logger = "0.3"
 rss = "0.3.1"
 pulldown-cmark = "0.0.7"
-nickel = "*"
+nickel = "0.7.3"
 
 [dev-dependencies]
 difference = "0.4"
