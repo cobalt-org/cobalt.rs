@@ -134,6 +134,17 @@ fn main() {
             }
         }
 
+        "serve" => {
+            info!("Serving {} through static file server", config.dest);
+            match cobalt::serve(&config) {
+                Ok(_) => info!("Server running.."),
+                Err(e) => {
+                    error!("{}", e);
+                    std::process::exit(1);
+                }
+            }
+        }
+
         _ => {
             println!("{}", opts.usage("\n\tcobalt build"));
             return;
