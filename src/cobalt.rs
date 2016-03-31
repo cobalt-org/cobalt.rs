@@ -14,7 +14,6 @@ use yaml_rust::YamlLoader;
 use chrono::{DateTime, UTC, FixedOffset};
 use chrono::offset::TimeZone;
 use rss::{Channel, Rss};
-use nickel::{Nickel, StaticFilesHandler};
 
 macro_rules! walker {
     ($dir:expr) => {
@@ -154,16 +153,6 @@ pub fn build(config: &Config) -> Result<()> {
     }
 
     Ok(())
-}
-
-pub fn serve(config: &Config) -> Result<()> {
-  let mut server = Nickel::new();
-
-  server.utilize(StaticFilesHandler::new(&config.dest));
-
-  server.listen("127.0.0.1:3000");
-
-  Ok(())
 }
 
 /// Gets all layout files from the specified path (usually _layouts/)

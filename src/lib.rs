@@ -9,13 +9,9 @@ extern crate yaml_rust;
 extern crate rss;
 
 #[macro_use]
-extern crate nickel;
-
-#[macro_use]
 extern crate log;
 
 pub use cobalt::build;
-pub use cobalt::serve;
 pub use error::Error;
 pub use config::Config;
 
