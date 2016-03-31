@@ -1,4 +1,4 @@
-extends: posts.tpl
+extends: posts.liquid
 
 title:   My fifth Blogpost!
 date:    16 Feb 2016 10:00:00 +0100

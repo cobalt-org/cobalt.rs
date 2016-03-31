@@ -25,7 +25,7 @@ impl Default for Config {
             dest: "./".to_owned(),
             layouts: "_layouts".to_owned(),
             posts: "_posts".to_owned(),
-            template_extensions: vec!["tpl".to_owned(), "md".to_owned(), "liquid".to_owned()],
+            template_extensions: vec!["md".to_owned(), "liquid".to_owned()],
             rss: None,
             name: None,
             description: None,
