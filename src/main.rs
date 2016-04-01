@@ -5,6 +5,9 @@ extern crate getopts;
 extern crate env_logger;
 
 #[macro_use]
+extern crate nickel;
+
+#[macro_use]
 extern crate log;
 
 use getopts::Options;
@@ -13,6 +16,7 @@ use std::fs;
 use cobalt::Config;
 use log::{LogRecord, LogLevelFilter};
 use env_logger::LogBuilder;
+use nickel::{Nickel, StaticFilesHandler};
 
 fn print_version() {
     println!("0.2.0");
@@ -128,6 +132,15 @@ fn main() {
                     std::process::exit(1);
                 }
             }
+        }
+
+        "serve" => {
+            info!("Serving {} through static file server", config.dest);
+            let mut server = Nickel::new();
+
+            server.utilize(StaticFilesHandler::new(&config.dest));
+
+            server.listen("127.0.0.1:3000");
         }
 
         _ => {
