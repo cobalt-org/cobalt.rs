@@ -1,4 +1,4 @@
-extends: posts.tpl
+extends: posts.liquid
 
 title:   My first Blogpost
 description: It's my first blog post

@@ -37,7 +37,7 @@ Posts live in ```_posts```.
 Example:
 
 ```text
-extends: posts.tpl
+extends: posts.liquid
 
 title:   My first Blogpost
 date:    01 Jan 2016 21:00:00 +0100
@@ -55,7 +55,7 @@ The ```date``` attribute will be used to sort blog posts (from last to first). `
 
 ### Other files
 
-Any file with the .tpl, .md or .liquid file extension is considered a liquid template and will be parsed for metadata and compiled using liquid, like a post.
+Any file with the .md or .liquid file extension is considered a liquid template and will be parsed for metadata and compiled using liquid, like a post.
 
 Unlike posts, files outside the ``_posts`` directory will not be indexed as blog posts and not passed to the index file in the list of contents.
 

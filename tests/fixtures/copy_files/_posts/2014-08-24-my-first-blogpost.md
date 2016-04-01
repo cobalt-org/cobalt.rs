@@ -1,4 +1,4 @@
-extends: posts.tpl
+extends: posts.liquid
 
 title:   My first Blogpost
 date:    24/08/2014 at 15:36
