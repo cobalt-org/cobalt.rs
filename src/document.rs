@@ -59,6 +59,8 @@ impl Document {
         let mut data = HashMap::new();
         data.insert("name".to_owned(), Value::Str(self.name.clone()));
         data.insert("path".to_owned(), Value::Str(self.path.clone()));
+        data.insert("is_post".to_owned(), Value::Bool(self.is_post));
+
         for key in self.attributes.keys() {
             if let Some(val) = self.attributes.get(key) {
                 data.insert(key.to_owned(), Value::Str(val.clone()));
