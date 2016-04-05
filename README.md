@@ -12,6 +12,13 @@ A static site generator written in [Rust](http://www.rust-lang.org/).
   $ cargo install --git https://github.com/cobalt-org/cobalt.rs
 ```
 
+## Examples
+
+There are a few people already using `cobalt`. Here is a list of projects and their source code that use `cobalt`.
+
+- [tak1n.github.io](https://tak1n.github.io) [Source](https://github.com/tak1n/tak1n.github.io)
+- [Amehtyst.rs](https://amethyst.rs)  [Source](https://github.com/amethyst/website)
+
 ## Usage
 
 ```
