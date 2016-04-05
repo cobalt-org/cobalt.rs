@@ -124,6 +124,9 @@ impl Document {
         }
 
         data.set_val("content", Value::Str(html));
+        if self.is_post {
+            data.set_val("is_post", Value::Bool(true));
+        }
 
         let options: LiquidOptions = Default::default();
 
