@@ -3,6 +3,7 @@
 extern crate cobalt;
 extern crate getopts;
 extern crate env_logger;
+extern crate notify;
 
 #[macro_use]
 extern crate nickel;
@@ -17,6 +18,10 @@ use cobalt::Config;
 use log::{LogRecord, LogLevelFilter};
 use env_logger::LogBuilder;
 use nickel::{Nickel, StaticFilesHandler};
+
+use notify::{RecommendedWatcher, Error, Watcher};
+use std::sync::mpsc::channel;
+use std::thread;
 
 fn print_version() {
     println!("0.2.0");
@@ -134,12 +139,39 @@ fn main() {
 
         "serve" => {
             build(&config);
-            serve(&config);
+            serve(&config.dest);
         }
 
         "watch" => {
             build(&config);
-            serve(&config);
+
+            let dest = config.dest.clone();
+            thread::spawn(move || {
+                serve(&dest);
+            });
+
+            let (tx, rx) = channel();
+
+            // Automatically select the best implementation for your platform.
+            // You can also access each implementation directly e.g. INotifyWatcher.
+            let w: Result<RecommendedWatcher, Error> = Watcher::new(tx);
+
+            match w {
+                Ok(mut watcher) => {
+                    watcher.watch(&config.source).unwrap();
+                    info!("watching {:?}", config.source);
+
+                    loop {
+                        match rx.recv() {
+                            _ => {
+                                info!("Rebuilding...");
+                                build(&config);
+                            }
+                        }
+                    }
+                }
+                Err(_) => error!("Error"),
+            }
         }
 
         _ => {
@@ -162,11 +194,12 @@ fn build(config: &Config) {
     };
 }
 
-fn serve(config: &Config) {
-    info!("Serving {} through static file server", config.dest);
+// TODO: make this just take dest so we can move just a copy of that and call this in another thread
+fn serve(dest: &str) {
+    info!("Serving {} through static file server", dest);
     let mut server = Nickel::new();
 
-    server.utilize(StaticFilesHandler::new(&config.dest));
+    server.utilize(StaticFilesHandler::new(dest));
 
     server.listen("127.0.0.1:3000");
 }

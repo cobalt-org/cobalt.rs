@@ -71,7 +71,9 @@ impl Config {
 
         if let Some(extensions) = yaml["template_extensions"].as_vec() {
             config.template_extensions = extensions.iter()
-                                                   .filter_map(|k| k.as_str().map(|k| k.to_owned()))
+                                                   .filter_map(|k| {
+                                                       k.as_str().map(|k| k.to_owned())
+                                                   })
                                                    .collect();
         };
 
