@@ -29,8 +29,14 @@ fn main() {
 
     opts.optopt("s", "source", "Source folder, Default: ./", "");
     opts.optopt("d", "destination", "Destination folder, Default: ./", "");
-    opts.optopt("c", "config", "Config file to use, Default: .cobalt.yml", "");
-    opts.optopt("l", "layouts", "\tLayout templates folder, Default: _layouts/", "");
+    opts.optopt("c",
+                "config",
+                "Config file to use, Default: .cobalt.yml",
+                "");
+    opts.optopt("l",
+                "layouts",
+                "\tLayout templates folder, Default: _layouts/",
+                "");
     opts.optopt("p", "posts", "Posts folder, Default: _posts/", "");
 
     opts.optflag("", "debug", "Log verbose (debug level) information");
@@ -123,24 +129,17 @@ fn main() {
 
     match command.as_ref() {
         "build" => {
-            info!("Building from {} into {}", config.source, config.dest);
-            match cobalt::build(&config) {
-                Ok(_) => info!("Build successful"),
-                Err(e) => {
-                    error!("{}", e);
-                    error!("Build not successful");
-                    std::process::exit(1);
-                }
-            }
+            build(&config);
         }
 
         "serve" => {
-            info!("Serving {} through static file server", config.dest);
-            let mut server = Nickel::new();
+            build(&config);
+            serve(&config);
+        }
 
-            server.utilize(StaticFilesHandler::new(&config.dest));
-
-            server.listen("127.0.0.1:3000");
+        "watch" => {
+            build(&config);
+            serve(&config);
         }
 
         _ => {
@@ -148,4 +147,26 @@ fn main() {
             return;
         }
     }
+}
+
+
+fn build(config: &Config) {
+    info!("Building from {} into {}", config.source, config.dest);
+    match cobalt::build(&config) {
+        Ok(_) => info!("Build successful"),
+        Err(e) => {
+            error!("{}", e);
+            error!("Build not successful");
+            std::process::exit(1);
+        }
+    };
+}
+
+fn serve(config: &Config) {
+    info!("Serving {} through static file server", config.dest);
+    let mut server = Nickel::new();
+
+    server.utilize(StaticFilesHandler::new(&config.dest));
+
+    server.listen("127.0.0.1:3000");
 }
