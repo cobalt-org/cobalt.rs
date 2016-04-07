@@ -156,9 +156,6 @@ fn main() {
             });
 
             let (tx, rx) = channel();
-
-            // Automatically select the best implementation for your platform.
-            // You can also access each implementation directly e.g. INotifyWatcher.
             let w: Result<RecommendedWatcher, Error> = Watcher::new(tx);
 
             match w {
@@ -169,13 +166,13 @@ fn main() {
                     loop {
                         match rx.recv() {
                             _ => {
-                                info!("Rebuilding...");
+                                info!("Rebuilding cobalt site...");
                                 build(&config);
                             }
                         }
                     }
                 }
-                Err(_) => error!("Error"),
+                Err(e) => error!("[Notify]: {}", e),
             }
         }
 
