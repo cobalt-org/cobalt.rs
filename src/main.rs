@@ -27,6 +27,11 @@ fn print_version() {
     println!("0.2.0");
 }
 
+fn print_usage(opts: Options) {
+    println!("{}",
+             opts.usage("\n\tcobalt build\n\tcobalt watch\n\tcobalt serve"));
+}
+
 fn main() {
     let args: Vec<String> = env::args().collect();
 
@@ -56,7 +61,7 @@ fn main() {
     };
 
     if matches.opt_present("h") {
-        println!("{}", opts.usage("\n\tcobalt build"));
+        print_usage(opts);
         return;
     }
 
@@ -175,7 +180,7 @@ fn main() {
         }
 
         _ => {
-            println!("{}", opts.usage("\n\tcobalt build"));
+            print_usage(opts);
             return;
         }
     }
@@ -194,7 +199,6 @@ fn build(config: &Config) {
     };
 }
 
-// TODO: make this just take dest so we can move just a copy of that and call this in another thread
 fn serve(dest: &str) {
     info!("Serving {} through static file server", dest);
     let mut server = Nickel::new();
