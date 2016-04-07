@@ -28,8 +28,10 @@ fn print_version() {
 }
 
 fn print_usage(opts: Options) {
-    println!("{}",
-             opts.usage("\n\tcobalt build\n\tcobalt watch\n\tcobalt serve"));
+    let usage = concat!("\n\tbuild -- build the cobalt project at the source dir",
+                        "\n\tserve -- build and serve the cobalt project at the source dir",
+                        "\n\twatch -- build, serve, and watch the project at the source dir");
+    println!("{}", opts.usage(usage));
 }
 
 fn main() {
@@ -48,6 +50,7 @@ fn main() {
                 "\tLayout templates folder, Default: _layouts/",
                 "");
     opts.optopt("p", "posts", "Posts folder, Default: _posts/", "");
+    opts.optopt("P", "port", "Port to serve from, Default: 3000", "");
 
     opts.optflag("", "debug", "Log verbose (debug level) information");
     opts.optflag("", "trace", "Log ultra-verbose (trace level) information");
@@ -133,9 +136,12 @@ fn main() {
     let command = if !matches.free.is_empty() {
         matches.free[0].clone()
     } else {
-        println!("{}", opts.usage("\n\tcobalt build"));
+        print_usage(opts);
         return;
     };
+
+    // Check for port and set port variable to it
+    let port = matches.opt_str("port").unwrap_or("3000".to_owned());
 
     match command.as_ref() {
         "build" => {
@@ -144,7 +150,7 @@ fn main() {
 
         "serve" => {
             build(&config);
-            serve(&config.dest);
+            serve(&config.dest, &port);
         }
 
         "watch" => {
@@ -152,7 +158,7 @@ fn main() {
 
             let dest = config.dest.clone();
             thread::spawn(move || {
-                serve(&dest);
+                serve(&dest, &port);
             });
 
             let (tx, rx) = channel();
@@ -160,8 +166,9 @@ fn main() {
 
             match w {
                 Ok(mut watcher) => {
+                    // TODO: clean up this unwrap
                     watcher.watch(&config.source).unwrap();
-                    info!("watching {:?}", config.source);
+                    info!("watching {:?}", &config.source);
 
                     loop {
                         match rx.recv() {
@@ -172,7 +179,7 @@ fn main() {
                         }
                     }
                 }
-                Err(e) => error!("[Notify]: {}", e),
+                Err(e) => error!("[Notify Error]: {}", e),
             }
         }
 
@@ -182,7 +189,6 @@ fn main() {
         }
     }
 }
-
 
 fn build(config: &Config) {
     info!("Building from {} into {}", config.source, config.dest);
@@ -196,11 +202,12 @@ fn build(config: &Config) {
     };
 }
 
-fn serve(dest: &str) {
+fn serve(dest: &str, port: &str) {
     info!("Serving {} through static file server", dest);
     let mut server = Nickel::new();
 
     server.utilize(StaticFilesHandler::new(dest));
 
-    server.listen("127.0.0.1:3000");
+    let ip = "127.0.0.1:".to_owned() + port;
+    server.listen(&*ip);
 }
