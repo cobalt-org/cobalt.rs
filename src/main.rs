@@ -3,6 +3,7 @@
 extern crate cobalt;
 extern crate getopts;
 extern crate env_logger;
+extern crate notify;
 
 #[macro_use]
 extern crate nickel;
@@ -16,10 +17,21 @@ use std::fs;
 use cobalt::Config;
 use log::{LogRecord, LogLevelFilter};
 use env_logger::LogBuilder;
-use nickel::{Nickel, StaticFilesHandler};
+use nickel::{Nickel, Options as NickelOptions, StaticFilesHandler};
+
+use notify::{RecommendedWatcher, Error, Watcher};
+use std::sync::mpsc::channel;
+use std::thread;
 
 fn print_version() {
     println!("0.2.0");
+}
+
+fn print_usage(opts: Options) {
+    let usage = concat!("\n\tbuild -- build the cobalt project at the source dir",
+                        "\n\tserve -- build and serve the cobalt project at the source dir",
+                        "\n\twatch -- build, serve, and watch the project at the source dir");
+    println!("{}", opts.usage(usage));
 }
 
 fn main() {
@@ -29,9 +41,16 @@ fn main() {
 
     opts.optopt("s", "source", "Source folder, Default: ./", "");
     opts.optopt("d", "destination", "Destination folder, Default: ./", "");
-    opts.optopt("c", "config", "Config file to use, Default: .cobalt.yml", "");
-    opts.optopt("l", "layouts", "\tLayout templates folder, Default: _layouts/", "");
+    opts.optopt("c",
+                "config",
+                "Config file to use, Default: .cobalt.yml",
+                "");
+    opts.optopt("l",
+                "layouts",
+                "\tLayout templates folder, Default: _layouts/",
+                "");
     opts.optopt("p", "posts", "Posts folder, Default: _posts/", "");
+    opts.optopt("P", "port", "Port to serve from, Default: 3000", "");
 
     opts.optflag("", "debug", "Log verbose (debug level) information");
     opts.optflag("", "trace", "Log ultra-verbose (trace level) information");
@@ -45,7 +64,7 @@ fn main() {
     };
 
     if matches.opt_present("h") {
-        println!("{}", opts.usage("\n\tcobalt build"));
+        print_usage(opts);
         return;
     }
 
@@ -117,35 +136,84 @@ fn main() {
     let command = if !matches.free.is_empty() {
         matches.free[0].clone()
     } else {
-        println!("{}", opts.usage("\n\tcobalt build"));
+        print_usage(opts);
         return;
     };
 
+    // Check for port and set port variable to it
+    let port = matches.opt_str("port").unwrap_or("3000".to_owned());
+
     match command.as_ref() {
         "build" => {
-            info!("Building from {} into {}", config.source, config.dest);
-            match cobalt::build(&config) {
-                Ok(_) => info!("Build successful"),
+            build(&config);
+        }
+
+        "serve" => {
+            build(&config);
+            serve(&config.dest, &port);
+        }
+
+        "watch" => {
+            build(&config);
+
+            let dest = config.dest.clone();
+            thread::spawn(move || {
+                serve(&dest, &port);
+            });
+
+            let (tx, rx) = channel();
+            let w: Result<RecommendedWatcher, Error> = Watcher::new(tx);
+
+            match w {
+                Ok(mut watcher) => {
+                    // TODO: clean up this unwrap
+                    watcher.watch(&config.source).unwrap();
+                    info!("Watching {:?} for changes", &config.source);
+
+                    loop {
+                        match rx.recv() {
+                            _ => {
+                                info!("Rebuilding cobalt site...");
+                                build(&config);
+                            }
+                        }
+                    }
+                }
                 Err(e) => {
-                    error!("{}", e);
-                    error!("Build not successful");
+                    error!("[Notify Error]: {}", e);
                     std::process::exit(1);
                 }
             }
         }
 
-        "serve" => {
-            info!("Serving {} through static file server", config.dest);
-            let mut server = Nickel::new();
-
-            server.utilize(StaticFilesHandler::new(&config.dest));
-
-            server.listen("127.0.0.1:3000");
-        }
-
         _ => {
-            println!("{}", opts.usage("\n\tcobalt build"));
+            print_usage(opts);
             return;
         }
     }
+}
+
+fn build(config: &Config) {
+    info!("Building from {} into {}", config.source, config.dest);
+    match cobalt::build(&config) {
+        Ok(_) => info!("Build successful"),
+        Err(e) => {
+            error!("{}", e);
+            error!("Build not successful");
+            std::process::exit(1);
+        }
+    };
+}
+
+fn serve(dest: &str, port: &str) {
+    info!("Serving {:?} through static file server", dest);
+    let mut server = Nickel::new();
+    server.options = NickelOptions::default().output_on_listen(false);
+
+    server.utilize(StaticFilesHandler::new(dest));
+
+    let ip = "127.0.0.1:".to_owned() + port;
+    info!("Server Listening on {}", &ip);
+    info!("Ctrl-c to stop the server");
+    server.listen(&*ip);
 }
