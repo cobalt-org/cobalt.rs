@@ -6,7 +6,7 @@ authors = ["Benny Klotz <r3qnbenni@gmail.com>", "Johann Hofmann"]
 
 [dependencies]
 getopts = "0.2.14"
-liquid = "0.6"
+liquid = "0.7"
 walkdir = "0.1"
 crossbeam = "0.1.5"
 yaml-rust = "0.2.2"
