@@ -17,7 +17,7 @@ use std::fs;
 use cobalt::Config;
 use log::{LogRecord, LogLevelFilter};
 use env_logger::LogBuilder;
-use nickel::{Nickel, StaticFilesHandler};
+use nickel::{Nickel, Options as NickelOptions, StaticFilesHandler};
 
 use notify::{RecommendedWatcher, Error, Watcher};
 use std::sync::mpsc::channel;
@@ -168,7 +168,7 @@ fn main() {
                 Ok(mut watcher) => {
                     // TODO: clean up this unwrap
                     watcher.watch(&config.source).unwrap();
-                    info!("watching {:?}", &config.source);
+                    info!("Watching {:?} for changes", &config.source);
 
                     loop {
                         match rx.recv() {
@@ -179,7 +179,10 @@ fn main() {
                         }
                     }
                 }
-                Err(e) => error!("[Notify Error]: {}", e),
+                Err(e) => {
+                    error!("[Notify Error]: {}", e);
+                    std::process::exit(1);
+                }
             }
         }
 
@@ -203,11 +206,14 @@ fn build(config: &Config) {
 }
 
 fn serve(dest: &str, port: &str) {
-    info!("Serving {} through static file server", dest);
+    info!("Serving {:?} through static file server", dest);
     let mut server = Nickel::new();
+    server.options = NickelOptions::default().output_on_listen(false);
 
     server.utilize(StaticFilesHandler::new(dest));
 
     let ip = "127.0.0.1:".to_owned() + port;
+    info!("Server Listening on {}", &ip);
+    info!("Ctrl-c to stop the server");
     server.listen(&*ip);
 }
