@@ -58,6 +58,7 @@ impl Document {
     pub fn get_attributes(&self) -> HashMap<String, Value> {
         let mut data = HashMap::new();
         data.insert("name".to_owned(), Value::Str(self.name.clone()));
+        // We replace to swap back slashes to forward slashes to ensure the URL's are valid
         data.insert("path".to_owned(), Value::Str(self.path.replace("\\", "/")));
         data.insert("is_post".to_owned(), Value::Bool(self.is_post));
 
