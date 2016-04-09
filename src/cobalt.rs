@@ -106,7 +106,9 @@ pub fn build(config: &Config) -> Result<()> {
             trace!("Generating {}", doc.path);
             let post_data = post_data.clone();
             let layouts = layouts.clone();
-            let handle = scope.spawn(move || doc.create_file(&dest, &layouts, &post_data));
+            let handle = scope.spawn(move || {
+                doc.create_file(&source, &dest, &layouts, &post_data)
+            });
             handles.push(handle);
         }
     });

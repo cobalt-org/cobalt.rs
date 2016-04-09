@@ -69,8 +69,8 @@ impl Document {
         data
     }
 
-    pub fn as_html(&self, post_data: &Vec<Value>) -> Result<String> {
-        let options: LiquidOptions = Default::default();
+    pub fn as_html(&self, source: &Path, post_data: &Vec<Value>) -> Result<String> {
+        let options = LiquidOptions { file_system: Some(source.to_owned()), ..Default::default() };
         let template = try!(liquid::parse(&self.content, options));
 
         // TODO: pass in documents as template data if as_html is called on Index
@@ -82,6 +82,7 @@ impl Document {
     }
 
     pub fn create_file(&self,
+                       source: &Path,
                        dest: &Path,
                        layouts: &HashMap<String, String>,
                        post_data: &Vec<Value>)
@@ -114,7 +115,7 @@ impl Document {
         let mut data = Context::with_values(self.get_attributes());
 
         // compile with liquid
-        let mut html = try!(self.as_html(post_data));
+        let mut html = try!(self.as_html(&source, post_data));
 
         if self.markdown {
             html = {
@@ -127,7 +128,7 @@ impl Document {
 
         data.set_val("content", Value::Str(html));
 
-        let options: LiquidOptions = Default::default();
+        let options = LiquidOptions { file_system: Some(source.to_owned()), ..Default::default() };
 
         let template = try!(liquid::parse(&layout, options));
 
