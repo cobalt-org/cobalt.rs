@@ -172,9 +172,15 @@ fn main() {
 
                     loop {
                         match rx.recv() {
-                            _ => {
+                            Ok(val) => {
+                                trace!("file changed {:?}", val);
                                 info!("Rebuilding cobalt site...");
                                 build(&config);
+                            }
+
+                            Err(e) => {
+                                error!("[Notify Error]: {}", e);
+                                std::process::exit(1);
                             }
                         }
                     }
