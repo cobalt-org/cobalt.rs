@@ -22,6 +22,7 @@ use nickel::{Nickel, Options as NickelOptions, StaticFilesHandler};
 use notify::{RecommendedWatcher, Error, Watcher};
 use std::sync::mpsc::channel;
 use std::thread;
+use std::path::PathBuf;
 
 fn print_version() {
     println!("0.2.0");
@@ -175,21 +176,24 @@ fn main() {
                             Ok(val) => {
                                 trace!("file changed {:?}", val);
 
-                                // TODO: clean up this unwrap
-                                let path = val.path.unwrap();
+                                if let Some(path) = val.path {
+                                    if path.is_absolute() {
+                                        // get where process was run from
+                                        let cwd = std::env::current_dir().unwrap_or(PathBuf::new());
+                                        // strip absolute path
+                                        let rel_path = path.strip_prefix(&cwd).unwrap_or(&cwd);
 
-                                if path.is_absolute() {
-                                    // TODO: clean up unwrap
-                                    let cwd = std::env::current_dir().unwrap();
-                                    let rel_path = path.strip_prefix(&cwd).unwrap();
+                                        // check if path starts with the build folder.
+                                        if !rel_path.starts_with(&config.dest) {
+                                            build(&config);
+                                        }
 
-                                    if !rel_path.starts_with(&config.dest) {
-                                        build(&config);
-                                    }
-
-                                } else {
-                                    if path.to_str() != Some(&config.dest) {
-                                        build(&config);
+                                    } else {
+                                        // check if path starts with build folder.
+                                        // TODO: may want to check if it starts `./`
+                                        if path.to_str() != Some(&config.dest) {
+                                            build(&config);
+                                        }
                                     }
                                 }
                             }
