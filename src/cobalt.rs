@@ -128,8 +128,10 @@ pub fn build(config: &Config) -> Result<()> {
             !template_extensions.contains(&f.path()
                                             .extension()
                                             .unwrap_or(OsStr::new(""))) &&
-            f.path() != dest && f.path() != layouts_path.as_path()
+            f.path() != dest && !f.path().starts_with(Path::new("./").join(dest)) &&
+            f.path() != layouts_path.as_path()
         }) {
+            trace!("copying entry {:?}", entry);
             let entry_path = try!(entry.path()
                                        .to_str()
                                        .ok_or(format!("Cannot convert pathname {:?} to UTF-8",

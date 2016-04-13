@@ -174,8 +174,24 @@ fn main() {
                         match rx.recv() {
                             Ok(val) => {
                                 trace!("file changed {:?}", val);
-                                info!("Rebuilding cobalt site...");
-                                build(&config);
+
+                                // TODO: clean up this unwrap
+                                let path = val.path.unwrap();
+
+                                if path.is_absolute() {
+                                    // TODO: clean up unwrap
+                                    let cwd = std::env::current_dir().unwrap();
+                                    let rel_path = path.strip_prefix(&cwd).unwrap();
+
+                                    if !rel_path.starts_with(&config.dest) {
+                                        build(&config);
+                                    }
+
+                                } else {
+                                    if path.to_str() != Some(&config.dest) {
+                                        build(&config);
+                                    }
+                                }
                             }
 
                             Err(e) => {

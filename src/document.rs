@@ -50,6 +50,7 @@ impl Document {
             link: Some(root_url.to_owned() + &self.path),
             pub_date: self.date.map(|date| date.to_rfc2822()),
             description: self.attributes.get("description").map(|s| s.to_owned()),
+            author: self.attributes.get("author").map(|s| s.to_owned()),
             ..Default::default()
         }
     }
