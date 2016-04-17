@@ -14,6 +14,7 @@ use yaml_rust::YamlLoader;
 use chrono::{DateTime, UTC, FixedOffset};
 use chrono::offset::TimeZone;
 use rss::{Channel, Rss};
+use std::sync::Arc;
 
 macro_rules! walker {
     ($dir:expr) => {
@@ -100,8 +101,10 @@ pub fn build(config: &Config) -> Result<()> {
     let mut handles = vec![];
 
     // generate documents (in parallel)
-    // TODO I'm probably underutilizing crossbeam
     crossbeam::scope(|scope| {
+        let post_data = Arc::new(post_data);
+        let layouts = Arc::new(layouts);
+
         for doc in &documents {
             trace!("Generating {}", doc.path);
             let post_data = post_data.clone();
