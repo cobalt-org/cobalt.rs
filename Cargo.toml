@@ -17,6 +17,7 @@ rss = "0.3.1"
 pulldown-cmark = "0.0.7"
 nickel = "0.8"
 notify = "^2.5.0"
+ghp = "0.1"
 
 [dev-dependencies]
 difference = "0.4"

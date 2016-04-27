@@ -4,6 +4,7 @@ extern crate cobalt;
 extern crate getopts;
 extern crate env_logger;
 extern crate notify;
+extern crate ghp;
 
 #[macro_use]
 extern crate nickel;
@@ -18,6 +19,7 @@ use cobalt::Config;
 use log::{LogRecord, LogLevelFilter};
 use env_logger::LogBuilder;
 use nickel::{Nickel, Options as NickelOptions, StaticFilesHandler};
+use ghp::import_dir;
 
 use notify::{RecommendedWatcher, Error, Watcher};
 use std::sync::mpsc::channel;
@@ -189,6 +191,35 @@ fn main() {
                     error!("[Notify Error]: {}", e);
                     std::process::exit(1);
                 }
+            }
+        }
+
+        "doc-upload" => {
+            info!("Importing {} to gh-pages", &config.dest);
+
+            let meta = match fs::metadata(&config.dest) {
+                Ok(data) => data,
+
+                Err(e) => {
+                    error!("{}", e);
+                    error!("Import not successful");
+                    std::process::exit(1);
+                }
+            };
+
+            if meta.is_dir() {
+                match import_dir(&config.dest, "gh-pages", "cobalt site upload") {
+                    Ok(_) => info!("Import successful"),
+                    Err(e) => {
+                        error!("{}", e);
+                        error!("Import not successful");
+                        std::process::exit(1);
+                    }
+                }
+            } else {
+                error!("Build dir is not a directory: {}", &config.dest);
+                error!("Import not successful");
+                std::process::exit(1);
             }
         }
 
