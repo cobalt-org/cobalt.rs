@@ -32,7 +32,8 @@ fn print_version() {
 fn print_usage(opts: Options) {
     let usage = concat!("\n\tbuild -- build the cobalt project at the source dir",
                         "\n\tserve -- build and serve the cobalt project at the source dir",
-                        "\n\twatch -- build, serve, and watch the project at the source dir");
+                        "\n\twatch -- build, serve, and watch the project at the source dir",
+                        "\n\tupload -- moves the contents of the dest folder to the gh-pages branch");
     println!("{}", opts.usage(usage));
 }
 
@@ -194,7 +195,7 @@ fn main() {
             }
         }
 
-        "doc-upload" => {
+        "upload" => {
             info!("Importing {} to gh-pages", &config.dest);
 
             let meta = match fs::metadata(&config.dest) {
