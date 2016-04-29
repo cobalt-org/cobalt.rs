@@ -30,7 +30,7 @@ fn print_version() {
 }
 
 fn print_usage(opts: Options) {
-    let usage = concat!("\n\tbuild -- build the cobalt project at the source dir, -i --import will import the site to the gh-pages branch",
+    let usage = concat!("\n\tbuild -- build the cobalt project at the source dir",
                         "\n\tserve -- build and serve the cobalt project at the source dir",
                         "\n\twatch -- build, serve, and watch the project at the source dir",
                         "\n\timport -- moves the contents of the dest folder to the gh-pages branch");
