@@ -30,10 +30,10 @@ fn print_version() {
 }
 
 fn print_usage(opts: Options) {
-    let usage = concat!("\n\tbuild -- build the cobalt project at the source dir",
+    let usage = concat!("\n\tbuild -- build the cobalt project at the source dir, -i --import will import the site to the gh-pages branch",
                         "\n\tserve -- build and serve the cobalt project at the source dir",
                         "\n\twatch -- build, serve, and watch the project at the source dir",
-                        "\n\tupload -- moves the contents of the dest folder to the gh-pages branch");
+                        "\n\timport -- moves the contents of the dest folder to the gh-pages branch");
     println!("{}", opts.usage(usage));
 }
 
@@ -54,10 +54,13 @@ fn main() {
                 "");
     opts.optopt("p", "posts", "Posts folder, Default: _posts/", "");
     opts.optopt("P", "port", "Port to serve from, Default: 3000", "");
+    opts.optopt("b", "branch", "Branch that will be used to import the site to, Default: gh-pages", "");
+    opts.optopt("m", "message", "Commit message that will be used on import, Default: cobalt site import", "");
 
     opts.optflag("", "debug", "Log verbose (debug level) information");
     opts.optflag("", "trace", "Log ultra-verbose (trace level) information");
     opts.optflag("", "silent", "Suppress all output");
+    opts.optflag("i", "import", "Import after build to gh-pages branch");
     opts.optflag("h", "help", "Print this help menu");
     opts.optflag("v", "version", "Display version");
 
@@ -145,10 +148,16 @@ fn main() {
 
     // Check for port and set port variable to it
     let port = matches.opt_str("port").unwrap_or("3000".to_owned());
+    let branch = matches.opt_str("branch").unwrap_or("gh-pages".to_owned());
+    let message = matches.opt_str("message").unwrap_or("cobalt site import".to_owned());
+    let should_import = matches.opt_present("import");
 
     match command.as_ref() {
         "build" => {
             build(&config);
+            if should_import {
+                import(&config, &branch, &message);
+            }
         }
 
         "serve" => {
@@ -195,33 +204,8 @@ fn main() {
             }
         }
 
-        "upload" => {
-            info!("Importing {} to gh-pages", &config.dest);
-
-            let meta = match fs::metadata(&config.dest) {
-                Ok(data) => data,
-
-                Err(e) => {
-                    error!("{}", e);
-                    error!("Import not successful");
-                    std::process::exit(1);
-                }
-            };
-
-            if meta.is_dir() {
-                match import_dir(&config.dest, "gh-pages", "cobalt site upload") {
-                    Ok(_) => info!("Import successful"),
-                    Err(e) => {
-                        error!("{}", e);
-                        error!("Import not successful");
-                        std::process::exit(1);
-                    }
-                }
-            } else {
-                error!("Build dir is not a directory: {}", &config.dest);
-                error!("Import not successful");
-                std::process::exit(1);
-            }
+        "import" => {
+            import(&config, &branch, &message);
         }
 
         _ => {
@@ -254,4 +238,33 @@ fn serve(dest: &str, port: &str) {
     info!("Server Listening on {}", &ip);
     info!("Ctrl-c to stop the server");
     server.listen(&*ip);
+}
+
+fn import(config: &Config, branch: &str, message: &str) {
+    info!("Importing {} to {}", config.dest, branch);
+
+    let meta = match fs::metadata(&config.dest) {
+        Ok(data) => data,
+
+        Err(e) => {
+            error!("{}", e);
+            error!("Import not successful");
+            std::process::exit(1);
+        }
+    };
+
+    if meta.is_dir() {
+        match import_dir(&config.dest, branch, message) {
+            Ok(_) => info!("Import successful"),
+            Err(e) => {
+                error!("{}", e);
+                error!("Import not successful");
+                std::process::exit(1);
+            }
+        }
+    } else {
+        error!("Build dir is not a directory: {}", config.dest);
+        error!("Import not successful");
+        std::process::exit(1);
+    }
 }
