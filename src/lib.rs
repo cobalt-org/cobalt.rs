@@ -7,6 +7,7 @@ extern crate crossbeam;
 extern crate chrono;
 extern crate yaml_rust;
 extern crate rss;
+extern crate glob;
 
 #[macro_use]
 extern crate log;

@@ -15,9 +15,10 @@ use chrono::{DateTime, UTC, FixedOffset};
 use chrono::offset::TimeZone;
 use rss::{Channel, Rss};
 use std::sync::Arc;
+use glob::Pattern;
 
 macro_rules! walker {
-    ($dir:expr) => {
+    ($dir:expr, $ignore:expr) => {
         WalkDir::new($dir)
             .into_iter()
             .filter_map(|e| e.ok())
@@ -31,6 +32,11 @@ macro_rules! walker {
                     .and_then(|name| name.to_str())
                     .unwrap_or(".")
                     .starts_with(".")
+                    &&
+                    // don't copy ignored files
+                    !$ignore.iter().any(|pattern| Pattern::matches_path(
+                        pattern,
+                        f.path().strip_prefix($dir).unwrap_or(f.path())))
             })
     }
 }
@@ -60,7 +66,7 @@ pub fn build(config: &Config) -> Result<()> {
 
     let mut documents = vec![];
 
-    for entry in walker!(&source) {
+    for entry in walker!(&source, &config.ignore) {
         if template_extensions.contains(&entry.path()
                                               .extension()
                                               .unwrap_or(OsStr::new(""))) &&
@@ -127,7 +133,7 @@ pub fn build(config: &Config) -> Result<()> {
                                     .ok_or(format!("Cannot convert pathname {:?} to UTF-8",
                                                    source)));
 
-        for entry in walker!(&source).filter(|f| {
+        for entry in walker!(&source, &config.ignore).filter(|f| {
             !template_extensions.contains(&f.path()
                                             .extension()
                                             .unwrap_or(OsStr::new(""))) &&
@@ -169,7 +175,7 @@ fn get_layouts(layouts_path: &Path) -> Result<HashMap<String, String>> {
 
     // go through the layout directory and add
     // filename -> text content to the layout map
-    for entry in walker!(layouts_path) {
+    for entry in walker!(layouts_path, vec![]) {
         let mut text = String::new();
         let mut file = try!(File::open(entry.path()));
         try!(file.read_to_string(&mut text));
