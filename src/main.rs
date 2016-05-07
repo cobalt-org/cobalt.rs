@@ -1,7 +1,7 @@
 #![deny(warnings)]
 
 extern crate cobalt;
-extern crate getopts;
+extern crate clap;
 extern crate env_logger;
 extern crate notify;
 extern crate glob;
@@ -12,8 +12,7 @@ extern crate hyper;
 #[macro_use]
 extern crate log;
 
-use getopts::Options;
-use std::env;
+use clap::{Arg, App, SubCommand, AppSettings};
 use std::fs;
 use cobalt::Config;
 use log::{LogRecord, LogLevelFilter};
@@ -32,63 +31,121 @@ use std::io::prelude::*;
 use std::io::Result as IoResult;
 use std::fs::File;
 
-fn print_usage(opts: Options) {
-    let usage = concat!("\n\tnew -- create a new cobalt project",
-                        "\n\tbuild -- build the cobalt project at the source dir",
-                        "\n\tserve -- build and serve the cobalt project at the source dir",
-                        "\n\twatch -- build, serve, and watch the project at the source dir",
-                        "\n\timport -- moves the contents of the dest folder to the gh-pages \
-                         branch");
-    println!("{}", opts.usage(usage));
-}
-
 fn main() {
-    let args: Vec<String> = env::args().collect();
-
-    let mut opts = Options::new();
-
-    opts.optopt("s", "source", "Source folder, Default: ./", "");
-    opts.optopt("d", "destination", "Destination folder, Default: ./", "");
-    opts.optopt("c",
-                "config",
-                "Config file to use, Default: .cobalt.yml",
-                "");
-    opts.optopt("l",
-                "layouts",
-                "\tLayout templates folder, Default: _layouts/",
-                "");
-    opts.optopt("p", "posts", "Posts folder, Default: posts/", "");
-    opts.optopt("P", "port", "Port to serve from, Default: 3000", "");
-    opts.optopt("b",
-                "branch",
-                "Branch that will be used to import the site to, Default: gh-pages",
-                "");
-    opts.optopt("m",
-                "message",
-                "Commit message that will be used on import, Default: cobalt site import",
-                "");
-
-    opts.optflag("", "debug", "Log verbose (debug level) information");
-    opts.optflag("", "trace", "Log ultra-verbose (trace level) information");
-    opts.optflag("", "silent", "Suppress all output");
-    opts.optflag("i", "import", "Import after build to gh-pages branch");
-    opts.optflag("h", "help", "Print this help menu");
-    opts.optflag("v", "version", "Display version");
-
-    let matches = match opts.parse(&args[1..]) {
-        Ok(m) => m,
-        Err(f) => panic!(f.to_string()),
-    };
-
-    if matches.opt_present("h") {
-        print_usage(opts);
-        return;
-    }
-
-    if matches.opt_present("version") {
-        println!("0.3.0");
-        return;
-    }
+    let matches = App::new("Cobalt")
+        .version("0.3.0")
+        .author("Benny Klotz <r3qnbenni@gmail.com>, Johann Hofmann")
+        .about("A static site generator written in Rust.")
+        .setting(AppSettings::SubcommandRequired)
+        .setting(AppSettings::GlobalVersion)
+        .arg(Arg::with_name("config")
+            .short("c")
+            .long("config")
+            .value_name("FILE")
+            .help("Config file to use")
+            .default_value(".cobalt.yml")
+            .takes_value(true))
+        .arg(Arg::with_name("source")
+            .short("s")
+            .long("source")
+            .value_name("DIR")
+            .help("Source folder [default: ./]")
+            .takes_value(true))
+        .arg(Arg::with_name("destination")
+            .short("d")
+            .long("destination")
+            .value_name("DIR")
+            .help("Destination folder [default: ./]")
+            .takes_value(true))
+        .arg(Arg::with_name("layouts")
+            .short("l")
+            .long("layouts")
+            .value_name("DIR")
+            .help("Layout templates folder [default: ./_layouts]")
+            .takes_value(true))
+        .arg(Arg::with_name("posts")
+            .short("p")
+            .long("posts")
+            .value_name("DIR")
+            .help("Posts folder [default: ./posts]")
+            .takes_value(true))
+        .arg(Arg::with_name("log-level")
+            .short("L")
+            .long("log-level")
+            .possible_values(&["info", "debug", "trace", "off"])
+            .help("Log level")
+            .default_value("info")
+            .takes_value(true))
+        .arg(Arg::with_name("trace")
+            .long("trace")
+            .help("Log ultra-verbose (trace level) information")
+            .takes_value(false))
+        .arg(Arg::with_name("silent")
+            .long("silent")
+            .help("Suppress all output")
+            .takes_value(false))
+        .subcommand(SubCommand::with_name("new")
+            .about("create a new cobalt project")
+            .arg(Arg::with_name("DIRECTORY")
+                .help("Suppress all output")
+                .default_value("./")
+                .index(1)))
+        .subcommand(SubCommand::with_name("build")
+            .about("build the cobalt project at the source dir")
+            .arg(Arg::with_name("import")
+                .short("i")
+                .long("import")
+                .help("Import after build to gh-pages branch")
+                .takes_value(false))
+            .arg(Arg::with_name("branch")
+                .short("b")
+                .long("branch")
+                .value_name("BRANCH")
+                .help("Branch that will be used to import the site to")
+                .default_value("gh-pages")
+                .takes_value(true))
+            .arg(Arg::with_name("message")
+                .short("m")
+                .long("message")
+                .value_name("COMMIT-MESSAGE")
+                .help("Commit message that will be used on import")
+                .default_value("cobalt site import")
+                .takes_value(true)))
+        .subcommand(SubCommand::with_name("serve")
+            .about("build and serve the cobalt project at the source dir")
+            .arg(Arg::with_name("port")
+                .short("P")
+                .long("port")
+                .value_name("INT")
+                .help("Port to serve from")
+                .default_value("3000")
+                .takes_value(true)))
+        .subcommand(SubCommand::with_name("watch")
+            .about("build, serve, and watch the project at the source dir")
+            .arg(Arg::with_name("port")
+                .short("P")
+                .long("port")
+                .value_name("INT")
+                .help("Port to serve from")
+                .default_value("3000")
+                .takes_value(true)))
+        .subcommand(SubCommand::with_name("import")
+            .about("moves the contents of the dest folder to the gh-pages branch")
+            .arg(Arg::with_name("branch")
+                .short("b")
+                .long("branch")
+                .value_name("BRANCH")
+                .help("Branch that will be used to import the site to")
+                .default_value("gh-pages")
+                .takes_value(true))
+            .arg(Arg::with_name("message")
+                .short("m")
+                .long("message")
+                .value_name("COMMIT-MESSAGE")
+                .help("Commit message that will be used on import")
+                .default_value("cobalt site import")
+                .takes_value(true)))
+        .get_matches();
 
     let format = |record: &LogRecord| {
         let level = format!("[{}]", record.level()).to_lowercase();
@@ -97,26 +154,28 @@ fn main() {
 
     let mut builder = LogBuilder::new();
     builder.format(format);
-    builder.filter(None, LogLevelFilter::Info);
 
-    if matches.opt_present("debug") {
-        builder.filter(None, LogLevelFilter::Debug);
-    }
-
-    if matches.opt_present("trace") {
-        builder.filter(None, LogLevelFilter::Trace);
-    }
-
-    if matches.opt_present("silent") {
-        builder.filter(None, LogLevelFilter::Off);
+    match matches.value_of("log-level") {
+        Some("info") => {
+            builder.filter(None, LogLevelFilter::Info);
+        }
+        Some("debug") => {
+            builder.filter(None, LogLevelFilter::Debug);
+        }
+        Some("trace") => {
+            builder.filter(None, LogLevelFilter::Trace);
+        }
+        Some("off") => {
+            builder.filter(None, LogLevelFilter::Off);
+        }
+        _ => {
+            builder.filter(None, LogLevelFilter::Info);
+        }
     }
 
     builder.init().unwrap();
 
-    let config_path = match matches.opt_str("config") {
-        Some(config) => config,
-        None => "./.cobalt.yml".to_owned(),
-    };
+    let config_path = matches.value_of("config").unwrap().to_string();
 
     // Fetch config information if available
     let mut config: Config = if fs::metadata(&config_path).is_ok() {
@@ -135,52 +194,56 @@ fn main() {
         Default::default()
     };
 
-    if let Some(source) = matches.opt_str("s") {
-        config.source = source;
-    };
+    config.source = matches.value_of("source")
+        .map(str::to_string)
+        .unwrap_or(config.source);
 
-    if let Some(dest) = matches.opt_str("d") {
-        config.dest = dest;
-    };
+    config.dest = matches.value_of("destination")
+        .map(str::to_string)
+        .unwrap_or(config.dest);
 
-    if let Some(layouts) = matches.opt_str("layouts") {
-        config.layouts = layouts;
-    };
+    config.layouts = matches.value_of("layouts")
+        .map(str::to_string)
+        .unwrap_or(config.layouts);
 
-    if let Some(posts) = matches.opt_str("posts") {
-        config.posts = posts;
-    };
+    config.posts = matches.value_of("posts")
+        .map(str::to_string)
+        .unwrap_or(config.posts);
 
-    let command = if !matches.free.is_empty() {
-        matches.free[0].clone()
-    } else {
-        print_usage(opts);
-        return;
-    };
+    match matches.subcommand() {
+        ("new", Some(submatches)) => {
+            let directory = submatches.value_of("DIRECTORY").unwrap();
 
-    // Check for port and set port variable to it
-    let port = matches.opt_str("port").unwrap_or("3000".to_owned());
-    let branch = matches.opt_str("branch").unwrap_or("gh-pages".to_owned());
-    let message = matches.opt_str("message").unwrap_or("cobalt site import".to_owned());
-    let should_import = matches.opt_present("import");
+            match create_new_project(&directory.to_string()) {
+                Ok(_) => info!("Created new project at {}", directory),
+                Err(e) => {
+                    error!("{}", e);
+                    error!("Could not create a new cobalt project");
+                    std::process::exit(1);
+                }
+            }
+        }
 
-    match command.as_ref() {
-        "build" => {
+        ("build", Some(submatches)) => {
             build(&config);
-            if should_import {
+            if submatches.is_present("import") {
+                let branch = submatches.value_of("branch").unwrap().to_string();
+                let message = submatches.value_of("message").unwrap().to_string();
                 import(&config, &branch, &message);
             }
         }
 
-        "serve" => {
+        ("serve", Some(submatches)) => {
             build(&config);
+            let port = submatches.value_of("port").unwrap().to_string();
             serve(&config.dest, &port);
         }
 
-        "watch" => {
+        ("watch", Some(submatches)) => {
             build(&config);
 
             let dest = config.dest.clone();
+            let port = submatches.value_of("port").unwrap().to_string();
             thread::spawn(move || {
                 serve(&dest, &port);
             });
@@ -238,31 +301,14 @@ fn main() {
             }
         }
 
-        "import" => {
+        ("import", Some(submatches)) => {
+            let branch = submatches.value_of("branch").unwrap().to_string();
+            let message = submatches.value_of("message").unwrap().to_string();
             import(&config, &branch, &message);
         }
 
-        "new" => {
-            if matches.free.len() == 2 {
-                let dest = matches.free[1].clone();
-
-                match create_new_project(&dest) {
-                    Ok(_) => info!("Created new project at {}", dest),
-                    Err(e) => {
-                        error!("{}", e);
-                        error!("Could not create a new cobalt project");
-                        std::process::exit(1);
-                    }
-                }
-            } else {
-                error!("No directory specified for new blog.");
-                error!("USAGE: new DIRECTORY");
-                std::process::exit(1);
-            }
-        }
-
         _ => {
-            print_usage(opts);
+            println!("{}", matches.usage());
             return;
         }
     }
