@@ -1,10 +1,13 @@
 use std::fs::{self, File};
 use std::collections::HashMap;
+use std::ffi::OsStr;
 use std::path::{Path, PathBuf};
 use std::default::Default;
 use std::io::Write;
 use error::Result;
 use chrono::{DateTime, FixedOffset};
+use yaml_rust::YamlLoader;
+use std::io::Read;
 use rss;
 
 use liquid::{Renderable, LiquidOptions, Context, Value};
@@ -21,6 +24,13 @@ pub struct Document {
     pub is_post: bool,
     pub date: Option<DateTime<FixedOffset>>,
     markdown: bool,
+}
+
+fn read_file(path: &Path) -> Result<String> {
+    let mut file = try!(File::open(path));
+    let mut text = String::new();
+    try!(file.read_to_string(&mut text));
+    Ok(text)
 }
 
 impl Document {
@@ -42,6 +52,77 @@ impl Document {
             markdown: markdown,
         }
     }
+
+    pub fn parse(path: &Path, source: &Path) -> Result<Document> {
+        let mut attributes = HashMap::new();
+        let mut content = try!(read_file(path));
+
+        // if there is front matter, split the file and parse it
+        // TODO: make this a regex to support lines of any length
+        if content.contains("---") {
+            let content2 = content.clone();
+            let mut content_splits = content2.split("---");
+
+            // above the split are the attributes
+            let attribute_string = content_splits.next().unwrap_or("");
+
+            // everything below the split becomes the new content
+            content = content_splits.next().unwrap_or("").to_owned();
+
+            let yaml_result = try!(YamlLoader::load_from_str(attribute_string));
+
+            let yaml_attributes = try!(yaml_result[0]
+                                           .as_hash()
+                                           .ok_or(format!("Incorrect front matter format in \
+                                                           {:?}",
+                                                          path)));
+
+            for (key, value) in yaml_attributes {
+                // TODO is unwrap_or the best way to handle this?
+                attributes.insert(key.as_str().unwrap_or("").to_owned(),
+                                  value.as_str().unwrap_or("").to_owned());
+            }
+        }
+
+        let date = attributes.get("date")
+                             .and_then(|d| {
+                                 DateTime::parse_from_str(d, "%d %B %Y %H:%M:%S %z").ok()
+                             });
+
+        let path_str = try!(path.to_str()
+                                .ok_or(format!("Cannot convert pathname {:?} to UTF-8", path)));
+
+        let source_str = try!(source.to_str()
+                                    .ok_or(format!("Cannot convert pathname {:?} to UTF-8",
+                                                   source)));
+
+        let new_path = try!(path_str.split(source_str)
+                                    .last()
+                                    .ok_or(format!("Empty path")));
+
+        // construct path
+        let mut path_buf = PathBuf::from(new_path);
+        path_buf.set_extension("html");
+
+        let path_str = try!(path_buf.to_str()
+                                    .ok_or(format!("Cannot convert pathname {:?} to UTF-8",
+                                                   path_str)));
+
+        let markdown = path.extension().unwrap_or(OsStr::new("")) == OsStr::new("md");
+
+        let name = try!(path.file_stem()
+                            .and_then(|stem| stem.to_str())
+                            .ok_or(format!("Invalid UTF-8 in file stem for {:?}", path)));
+
+        Ok(Document::new(name.to_owned(),
+                         path_str.to_owned(),
+                         attributes,
+                         content,
+                         false,
+                         date,
+                         markdown))
+    }
+
 
     /// Metadata for generating RSS feeds
     pub fn to_rss(&self, root_url: &str) -> rss::Item {
@@ -92,7 +173,6 @@ impl Document {
         let mut file_path_buf = PathBuf::new();
         file_path_buf.push(dest);
         file_path_buf.push(&self.path);
-        file_path_buf.set_extension("html");
 
         let file_path = file_path_buf.as_path();
 
