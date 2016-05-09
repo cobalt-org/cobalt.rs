@@ -22,6 +22,7 @@ use env_logger::LogBuilder;
 use nickel::{Nickel, Options as NickelOptions, StaticFilesHandler};
 use ghp::import_dir;
 use glob::Pattern;
+use cobalt::create_new_project;
 
 use notify::{RecommendedWatcher, Error, Watcher};
 use std::sync::mpsc::channel;
@@ -229,6 +230,24 @@ fn main() {
 
         "import" => {
             import(&config, &branch, &message);
+        }
+
+        "new" => {
+            if !matches.len() < 2 {
+                let dest = matches.free[1].clone();
+
+                match create_new_project(dest.as_ref()) {
+                    Ok(_) => info!("Created new project at {}", dest.as_ref()),
+                    Err(e) => {
+                        error!("{}", e);
+                        error!("Could not create a new cobalt project");
+                        std::process::exit(1);
+                    }
+                }
+            } else {
+                print_usage();
+                std::process::exit(1);
+            }
         }
 
         _ => {
