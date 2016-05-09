@@ -24,6 +24,7 @@ use ghp::import_dir;
 use notify::{RecommendedWatcher, Error, Watcher};
 use std::sync::mpsc::channel;
 use std::thread;
+use std::path::PathBuf;
 
 fn print_version() {
     println!("0.2.0");
@@ -186,8 +187,26 @@ fn main() {
                         match rx.recv() {
                             Ok(val) => {
                                 trace!("file changed {:?}", val);
-                                info!("Rebuilding cobalt site...");
-                                build(&config);
+                                if let Some(path) = val.path {
+                                    if path.is_absolute() {
+                                        // get where process was run from
+                                        let cwd = std::env::current_dir().unwrap_or(PathBuf::new());
+                                        // strip absolute path
+                                        let rel_path = path.strip_prefix(&cwd).unwrap_or(&cwd);
+
+                                        // check if path starts with the build folder.
+                                        if !rel_path.starts_with(&config.dest) {
+                                            build(&config);
+                                        }
+
+                                    } else {
+                                        // check if path starts with build folder.
+                                        // TODO: may want to check if it starts `./`
+                                        if path.to_str() != Some(&config.dest) {
+                                            build(&config);
+                                        }
+                                    }
+                                }
                             }
 
                             Err(e) => {
