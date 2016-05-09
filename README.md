@@ -113,3 +113,8 @@ None of these fields are optional, as by the [RSS 2.0 spec]().
 
 Make sure to also provide the fields `title`, `date` and `description` in the front matter of your posts.
 
+### Import
+
+To import your site to your `gh-pages` branch you can either pass a `build --import` flag when you build the site or after you have build the site with `build` you can run `import`. There are also some flags that can be found via `import --help`.
+
+**Note:** to import to gitlab pages you can pass `import --branch gl-pages`
