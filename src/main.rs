@@ -233,11 +233,11 @@ fn main() {
         }
 
         "new" => {
-            if !matches.len() < 2 {
+            if matches.free.len() == 2 {
                 let dest = matches.free[1].clone();
 
-                match create_new_project(dest.as_ref()) {
-                    Ok(_) => info!("Created new project at {}", dest.as_ref()),
+                match create_new_project(&dest) {
+                    Ok(_) => info!("Created new project at {}", dest),
                     Err(e) => {
                         error!("{}", e);
                         error!("Could not create a new cobalt project");
@@ -245,7 +245,8 @@ fn main() {
                     }
                 }
             } else {
-                print_usage();
+                println!("cobalt new DIRECTORY");
+                print_usage(opts);
                 std::process::exit(1);
             }
         }

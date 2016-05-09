@@ -1,7 +1,6 @@
 #![allow(non_upper_case_globals)]
 
-const cobalt_yml: &'static [u8] = b"
-name: Cobalt.rs Blog
+const cobalt_yml: &'static [u8] = b"name: cobalt blog
 source: \".\"
 dest: \"build\"
 ignore:
@@ -9,8 +8,7 @@ ignore:
   - ./build/*
 ";
 
-const default_liquid: &'static [u8] = b"
-<!DOCTYPE html>
+const default_liquid: &'static [u8] = b"<!DOCTYPE html>
 <html>
     <head>
       <meta charset=\"utf-8\">
@@ -44,8 +42,7 @@ const default_liquid: &'static [u8] = b"
 </html>
 ";
 
-const post_liquid: &'static [u8] = b"
-<div>
+const post_liquid: &'static [u8] = b"<div>
   <h2>{{ title }}</h2>
   <p>
     {{content}}
@@ -53,8 +50,7 @@ const post_liquid: &'static [u8] = b"
 </div>
 ";
 
-const post_1_md: &'static [u8] = b"
-extends: default.liquid
+const post_1_md: &'static [u8] = b"extends: default.liquid
 
 title: First Post
 date: 14 January 2016 21:00:30 -0500
@@ -65,8 +61,7 @@ date: 14 January 2016 21:00:30 -0500
 Welcome to the first post ever on cobalt.rs!
 ";
 
-const index_liquid: &'static [u8] = b"
-extends: default.liquid
+const index_liquid: &'static [u8] = b"extends: default.liquid
 ---
 <div >
   <h2>Blog!</h2>
@@ -91,6 +86,8 @@ use error::Result;
 pub fn create_new_project<P: AsRef<Path>>(dest: P) -> Result<()> {
     let dest = dest.as_ref();
 
+    try!(create_folder(&dest));
+
     try!(create_file(&dest.join(".coblat.yml"), cobalt_yml));
     try!(create_file(&dest.join("index.liquid"), index_liquid));
 
@@ -105,6 +102,8 @@ pub fn create_new_project<P: AsRef<Path>>(dest: P) -> Result<()> {
 }
 
 fn create_folder<P: AsRef<Path>>(path: P) -> Result<()> {
+    trace!("Creating folder {:?}", &path.as_ref());
+
     try!(DirBuilder::new()
                     .recursive(true)
                     .create(path));
@@ -113,6 +112,8 @@ fn create_folder<P: AsRef<Path>>(path: P) -> Result<()> {
 }
 
 fn create_file<P: AsRef<Path>>(name: P, content: &[u8]) -> Result<()> {
+    trace!("Creating file {:?}", &name.as_ref());
+
     let mut file = try!(OpenOptions::new()
                      .write(true)
                      .create(true)
