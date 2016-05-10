@@ -2,6 +2,7 @@ use std::default::Default;
 use std::path::Path;
 use std::fs::File;
 use std::io::Read;
+use glob::Pattern;
 use error::Result;
 use yaml_rust::YamlLoader;
 
@@ -16,6 +17,7 @@ pub struct Config {
     pub name: Option<String>,
     pub description: Option<String>,
     pub link: Option<String>,
+    pub ignore: Vec<Pattern>,
 }
 
 impl Default for Config {
@@ -30,6 +32,7 @@ impl Default for Config {
             name: None,
             description: None,
             link: None,
+            ignore: vec![],
         }
     }
 }
@@ -83,6 +86,13 @@ impl Config {
                 link = link + "/";
             }
             config.link = Some(link);
+        };
+
+        if let Some(patterns) = yaml["ignore"].as_vec() {
+            config.ignore = patterns.iter()
+                                    .filter_map(|k| k.as_str())
+                                    .filter_map(|k| Pattern::new(k).ok())
+                                    .collect();
         };
 
         Ok(config)
