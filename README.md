@@ -138,6 +138,7 @@ language: rust
 
 before_script:
   - cargo install --git https://github.com/cobalt-org/cobalt.rs
+  - export PATH="$PATH:/home/travis/.cargo/bin"
 
 script:
   - cobalt build
