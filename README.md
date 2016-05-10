@@ -24,7 +24,7 @@ A static site generator written in [Rust](http://www.rust-lang.org/).
 There are a few people already using `cobalt`. Here is a list of projects and their source code that use `cobalt`.
 
 - [tak1n.github.io](https://tak1n.github.io) [Source](https://github.com/tak1n/tak1n.github.io)
-- [Amethyst.rs](https://amethyst.rs)  [Source](https://github.com/amethyst/website)
+- [amethyst.rs](https://amethyst.rs)  [Source](https://github.com/amethyst/website)
 - [johannh.me](http://johannh.me) [Source](https://github.com/johannhof/johannhof.github.io)
 
 ## Usage
