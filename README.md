@@ -143,6 +143,7 @@ script:
   - cobalt build
 
 after_success: |
+  [ $TRAVIS_BRANCH = master ] &&  
   [ $TRAVIS_PULL_REQUEST = false ] &&  
   cobalt import &&
   git config user.name "Cobalt Site Deployer" &&
