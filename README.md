@@ -6,12 +6,19 @@
 
 A static site generator written in [Rust](http://www.rust-lang.org/).
 
-# Content
+## Content
 
 - [Installation](#installation)
 - [Examples](#examples)
 - [Usage](#usage)
+  - [Layouts](#layouts)
+  - [Posts](#posts)
+  - [Other Files](#other-files)
+  - [Attributes](#attributes)
+  - [RSS](#rss)
+  - [Import](#import)
 - [Deployment](#deployment)
+  - [Travis-CI](#with-travis-ci)
 
 ## Installation
 
