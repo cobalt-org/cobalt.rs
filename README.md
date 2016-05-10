@@ -6,6 +6,13 @@
 
 A static site generator written in [Rust](http://www.rust-lang.org/).
 
+# Content
+
+- [Installation](#installation)
+- [Examples](#examples)
+- [Usage](#usage)
+- [Deployment](#deployment)
+
 ## Installation
 
 ```
@@ -118,3 +125,29 @@ Make sure to also provide the fields `title`, `date` and `description` in the fr
 To import your site to your `gh-pages` branch you can either pass a `build --import` flag when you build the site or after you have build the site with `build` you can run `import`. There are also some flags that can be found via `import --help`.
 
 **Note:** to import to gitlab pages you can pass `import --branch gl-pages`
+
+## Deployment
+
+### With Travis-CI
+
+You can easily deploy a cobalt site to `gh-pages` or `gl-pages`! To do this with travis is also very easy. You will need to have rust available on travis. In your `travis.yml` you will need to have something similar to this:
+
+```yaml
+sudo: false
+language: rust
+
+before_script:
+  - cargo install --git https://github.com/cobalt-org/cobalt.rs
+
+script:
+  - cobalt build
+
+after_success: |
+  [ $TRAVIS_PULL_REQUEST = false ] &&  
+  cobalt import &&
+  git config user.name "Cobalt Site Deployer" &&
+  git config user.email "name@example.com" &&
+  git push -fq https://${GH_TOKEN}@github.com/${TRAVIS_REPO_SLUG}.git gh-pages
+```
+
+**Note:** For `gl-pages` you will need to pass `import --branch gl-pages` and you will need to change the url that git pushes to.
