@@ -246,8 +246,8 @@ fn main() {
                     }
                 }
             } else {
-                println!("cobalt new DIRECTORY");
-                print_usage(opts);
+                error!("No directory specified for new blog.");
+                error!("USAGE: new DIRECTORY");
                 std::process::exit(1);
             }
         }
