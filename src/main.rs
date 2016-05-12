@@ -4,6 +4,7 @@ extern crate cobalt;
 extern crate getopts;
 extern crate env_logger;
 extern crate notify;
+extern crate glob;
 extern crate ghp;
 
 #[macro_use]
@@ -20,10 +21,12 @@ use log::{LogRecord, LogLevelFilter};
 use env_logger::LogBuilder;
 use nickel::{Nickel, Options as NickelOptions, StaticFilesHandler};
 use ghp::import_dir;
+use glob::Pattern;
 
 use notify::{RecommendedWatcher, Error, Watcher};
 use std::sync::mpsc::channel;
 use std::thread;
+use std::path::PathBuf;
 
 fn print_version() {
     println!("0.2.0");
@@ -186,8 +189,28 @@ fn main() {
                         match rx.recv() {
                             Ok(val) => {
                                 trace!("file changed {:?}", val);
-                                info!("Rebuilding cobalt site...");
-                                build(&config);
+                                if let Some(path) = val.path {
+                                    if path.is_absolute() {
+                                        // get where process was run from
+                                        let cwd = std::env::current_dir().unwrap_or(PathBuf::new());
+                                        // strip absolute path
+                                        let rel_path = path.strip_prefix(&cwd).unwrap_or(&cwd);
+
+                                        // check if path starts with the build folder.
+                                        if !&config.ignore.iter().any(|pattern| Pattern::matches_path(
+                                            pattern,
+                                            rel_path)) {
+                                            build(&config);
+                                        }
+
+                                    } else {
+                                        // check if path starts with build folder.
+                                        // TODO: may want to check if it starts `./`
+                                        if !&config.ignore.iter().any(|pattern| Pattern::matches_path(pattern, &path)) {
+                                            build(&config);
+                                        }
+                                    }
+                                }
                             }
 
                             Err(e) => {
