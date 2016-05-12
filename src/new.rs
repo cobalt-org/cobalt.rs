@@ -74,7 +74,7 @@ pub fn create_new_project<P: AsRef<Path>>(dest: P) -> Result<()> {
 
     try!(create_folder(&dest));
 
-    try!(create_file(&dest.join(".coblat.yml"), cobalt_yml));
+    try!(create_file(&dest.join(".cobalt.yml"), cobalt_yml));
     try!(create_file(&dest.join("index.liquid"), index_liquid));
 
     try!(create_folder(&dest.join("_layouts")));
