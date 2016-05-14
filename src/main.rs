@@ -22,6 +22,7 @@ use env_logger::LogBuilder;
 use nickel::{Nickel, Options as NickelOptions, StaticFilesHandler};
 use ghp::import_dir;
 use glob::Pattern;
+use cobalt::create_new_project;
 
 use notify::{RecommendedWatcher, Error, Watcher};
 use std::sync::mpsc::channel;
@@ -33,7 +34,8 @@ fn print_version() {
 }
 
 fn print_usage(opts: Options) {
-    let usage = concat!("\n\tbuild -- build the cobalt project at the source dir",
+    let usage = concat!("\n\tnew -- create a new cobalt project",
+                        "\n\tbuild -- build the cobalt project at the source dir",
                         "\n\tserve -- build and serve the cobalt project at the source dir",
                         "\n\twatch -- build, serve, and watch the project at the source dir",
                         "\n\timport -- moves the contents of the dest folder to the gh-pages branch");
@@ -229,6 +231,25 @@ fn main() {
 
         "import" => {
             import(&config, &branch, &message);
+        }
+
+        "new" => {
+            if matches.free.len() == 2 {
+                let dest = matches.free[1].clone();
+
+                match create_new_project(&dest) {
+                    Ok(_) => info!("Created new project at {}", dest),
+                    Err(e) => {
+                        error!("{}", e);
+                        error!("Could not create a new cobalt project");
+                        std::process::exit(1);
+                    }
+                }
+            } else {
+                error!("No directory specified for new blog.");
+                error!("USAGE: new DIRECTORY");
+                std::process::exit(1);
+            }
         }
 
         _ => {

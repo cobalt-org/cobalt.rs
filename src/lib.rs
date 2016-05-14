@@ -15,9 +15,11 @@ extern crate log;
 pub use cobalt::build;
 pub use error::Error;
 pub use config::Config;
+pub use new::create_new_project;
 
 // modules
 mod cobalt;
 mod config;
 pub mod error;
 mod document;
+mod new;
