@@ -19,6 +19,7 @@ nickel = "0.8"
 notify = "^2.5.0"
 ghp = "0.1"
 glob = "0.2.11"
+regex = "0.1"
 
 [dev-dependencies]
 difference = "0.4"

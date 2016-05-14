@@ -27,25 +27,43 @@ fn run_test(name: &str) -> Result<(), cobalt::Error> {
 
         // walk through fixture and created tmp directory and compare files
         for entry in walker.filter_map(|e| e.ok()).filter(|e| e.file_type().is_file()) {
-            let relative = entry.path().to_str().unwrap().split(&target).last().expect("Comparison error");
+            let relative = entry.path()
+                                .to_str()
+                                .unwrap()
+                                .split(&target)
+                                .last()
+                                .expect("Comparison error");
 
             let mut original = String::new();
-            File::open(entry.path()).expect("Comparison error").read_to_string(&mut original).unwrap();
+            File::open(entry.path())
+                .expect("Comparison error")
+                .read_to_string(&mut original)
+                .expect("Could not read to string");
 
             let mut created = String::new();
             File::open(&Path::new(&config.dest).join(&relative))
                 .expect("Comparison error")
                 .read_to_string(&mut created)
-                .unwrap();
+                .expect("Could not read to string");
 
             difference::assert_diff(&original, &created, " ", 0);
         }
     }
 
     // clean up
-    fs::remove_dir_all(&config.dest).is_err();
+    fs::remove_dir_all(&config.dest).is_ok();
 
     result
+}
+
+#[test]
+pub fn copy_files() {
+    run_test("copy_files").expect("Build error");
+}
+
+#[test]
+pub fn custom_paths() {
+    run_test("custom_paths").expect("Build error");
 }
 
 #[test]
@@ -67,21 +85,25 @@ pub fn custom_template_extensions() {
 pub fn incomplete_rss() {
     let err = run_test("incomplete_rss");
     assert!(err.is_err());
-    assert_eq!(err.unwrap_err().description(), "name, description and link need to be defined in the config file to generate RSS");
+    assert_eq!(err.unwrap_err().description(),
+               "name, description and link need to be defined in the config file to generate RSS");
 }
 
 #[test]
 pub fn liquid_error() {
     let err = run_test("liquid_error");
     assert!(err.is_err());
-    assert_eq!(err.unwrap_err().description(), "{{{ is not a valid identifier");
+    assert_eq!(err.unwrap_err().description(),
+               "{{{ is not a valid identifier");
 }
 
 #[test]
 pub fn no_extends_error() {
     let err = run_test("no_extends_error");
     assert!(err.is_err());
-    assert_eq!(err.unwrap_err().description(), "No extends property in 2014-08-24-my-first-blogpost");
+    assert_eq!(err.unwrap_err().description(),
+               "Layout default_nonexistent.liquid can not be found (defined in \
+                tests/fixtures/no_extends_error/index.liquid)");
 }
 
 #[test]
@@ -92,11 +114,6 @@ pub fn sort_posts() {
 #[test]
 pub fn rss() {
     run_test("rss").expect("Build error");
-}
-
-#[test]
-pub fn copy_files() {
-    run_test("copy_files").unwrap();
 }
 
 #[test]

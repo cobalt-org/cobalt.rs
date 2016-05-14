@@ -116,7 +116,7 @@ pub fn build(config: &Config) -> Result<()> {
             let layouts = layouts.clone();
 
             let handle = scope.spawn(move || {
-                let content = try!(doc.as_html(&post_data, &layouts));
+                let content = try!(doc.as_html(&source, &post_data, &layouts));
                 create_document_file(content, &doc.path, &dest)
             });
             handles.push(handle);
@@ -249,10 +249,7 @@ fn create_dir_all(path: &Path) -> io::Result<()> {
 
 fn create_document_file<T: AsRef<Path>>(content: String, path: T, dest: &Path) -> Result<()> {
     // construct target path
-    let mut file_path_buf = PathBuf::new();
-    file_path_buf.push(dest);
-    file_path_buf.push(path);
-
+    let file_path_buf = dest.join(path);
     let file_path = file_path_buf.as_path();
 
     // create target directories if any exist
