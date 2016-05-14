@@ -11,13 +11,14 @@ use cobalt::Config;
 
 fn run_test(name: &str) -> Result<(), cobalt::Error> {
     let target = format!("tests/target/{}/", name);
-    let mut config = Config::from_file(format!("tests/fixtures/{}/.cobalt.yml", name)).unwrap_or(Default::default());
+    let mut config = Config::from_file(format!("tests/fixtures/{}/.cobalt.yml", name))
+                         .unwrap_or(Default::default());
 
     config.source = format!("tests/fixtures/{}/", name);
     config.dest = format!("tests/tmp/{}/", name);
 
     // try to create the target directory, ignore errors
-    fs::create_dir_all(&config.dest).is_err();
+    fs::create_dir_all(&config.dest).is_ok();
 
     let result = cobalt::build(&config);
 

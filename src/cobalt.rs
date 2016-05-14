@@ -1,7 +1,7 @@
 use crossbeam;
 
 use std::fs::{self, File};
-use std::io::{Read, Write};
+use std::io::{self, Read, Write, ErrorKind};
 use std::path::{Path, PathBuf};
 use std::collections::HashMap;
 use std::ffi::OsStr;
@@ -114,8 +114,10 @@ pub fn build(config: &Config) -> Result<()> {
             trace!("Generating {}", doc.path);
             let post_data = post_data.clone();
             let layouts = layouts.clone();
+
             let handle = scope.spawn(move || {
-                doc.create_file(&source, &dest, &layouts, &post_data)
+                let content = try!(doc.as_html(&post_data, &layouts));
+                create_document_file(content, &doc.path, &dest)
             });
             handles.push(handle);
         }
@@ -230,3 +232,38 @@ fn create_rss(path: &str, dest: &Path, config: &Config, documents: &[Document]) 
     }
 }
 
+/// A slightly less efficient implementation of fs::create_dir_all
+/// that eliminates the race condition problems of the original
+fn create_dir_all(path: &Path) -> io::Result<()> {
+    let mut new_path = PathBuf::new();
+    for component in path {
+        new_path.push(component);
+        match fs::create_dir(&new_path) {
+            Ok(_) => {}
+            Err(ref e) if e.kind() == ErrorKind::AlreadyExists => {}
+            Err(e) => return Err(e),
+        }
+    }
+    Ok(())
+}
+
+fn create_document_file<T: AsRef<Path>>(content: String, path: T, dest: &Path) -> Result<()> {
+    // construct target path
+    let mut file_path_buf = PathBuf::new();
+    file_path_buf.push(dest);
+    file_path_buf.push(path);
+
+    let file_path = file_path_buf.as_path();
+
+    // create target directories if any exist
+    if let Some(parent) = file_path.parent() {
+        try!(create_dir_all(parent).map_err(|e| format!("Could not create {:?}: {}", parent, e)));
+    }
+
+    let mut file = try!(File::create(&file_path)
+                            .map_err(|e| format!("Could not create {:?}: {}", file_path, e)));
+
+    try!(file.write_all(&content.into_bytes()));
+    info!("Created {}", file_path.display());
+    Ok(())
+}
