@@ -6,6 +6,20 @@
 
 A static site generator written in [Rust](http://www.rust-lang.org/).
 
+## Content
+
+- [Installation](#installation)
+- [Examples](#examples)
+- [Usage](#usage)
+  - [Layouts](#layouts)
+  - [Posts](#posts)
+  - [Other Files](#other-files)
+  - [Attributes](#attributes)
+  - [RSS](#rss)
+  - [Import](#import)
+- [Deployment](#deployment)
+  - [Travis-CI](#with-travis-ci)
+
 ## Installation
 
 ```
@@ -17,7 +31,7 @@ A static site generator written in [Rust](http://www.rust-lang.org/).
 There are a few people already using `cobalt`. Here is a list of projects and their source code that use `cobalt`.
 
 - [tak1n.github.io](https://tak1n.github.io) [Source](https://github.com/tak1n/tak1n.github.io)
-- [Amethyst.rs](https://amethyst.rs)  [Source](https://github.com/amethyst/website)
+- [amethyst.rs](https://amethyst.rs)  [Source](https://github.com/amethyst/website)
 - [johannh.me](http://johannh.me) [Source](https://github.com/johannhof/johannhof.github.io)
 
 ## Usage
@@ -118,3 +132,31 @@ Make sure to also provide the fields `title`, `date` and `description` in the fr
 To import your site to your `gh-pages` branch you can either pass a `build --import` flag when you build the site or after you have build the site with `build` you can run `import`. There are also some flags that can be found via `import --help`.
 
 **Note:** to import to gitlab pages you can pass `import --branch gl-pages`
+
+## Deployment
+
+### With Travis-CI
+
+You can easily deploy a cobalt site to `gh-pages` or `gl-pages`! To do this with travis is also very easy. You will need to have rust available on travis. In your `travis.yml` you will need to have something similar to this:
+
+```yaml
+sudo: false
+language: rust
+
+before_script:
+  - cargo install --git https://github.com/cobalt-org/cobalt.rs
+  - export PATH="$PATH:/home/travis/.cargo/bin"
+
+script:
+  - cobalt build
+
+after_success: |
+  [ $TRAVIS_BRANCH = master ] &&  
+  [ $TRAVIS_PULL_REQUEST = false ] &&  
+  cobalt import &&
+  git config user.name "Cobalt Site Deployer" &&
+  git config user.email "name@example.com" &&
+  git push -fq https://${GH_TOKEN}@github.com/${TRAVIS_REPO_SLUG}.git gh-pages
+```
+
+**Note:** For `gl-pages` you will need to pass `import --branch gl-pages` and you will need to change the url that git pushes to.
