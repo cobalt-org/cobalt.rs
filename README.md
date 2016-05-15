@@ -37,7 +37,8 @@ There are a few people already using `cobalt`. Here is a list of projects and th
 ## Usage
 
 ```
-  $ cobalt build -s path/to/your/source -d path/to/your/destination
+  $ cobalt new myBlog
+  $ cobalt build -s myBlog -d path/to/your/destination
 ```
 
 See more options with
