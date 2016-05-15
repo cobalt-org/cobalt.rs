@@ -159,4 +159,6 @@ after_success: |
   git push -fq https://${GH_TOKEN}@github.com/${TRAVIS_REPO_SLUG}.git gh-pages
 ```
 
+For the `GH_TOKEN` you will need to create a personal access token, which can be found [here](https://github.com/settings/tokens), then you will need to use the [travis cli](https://github.com/travis-ci/travis.rb#the-travis-client-) tool to encrypt your personal access token. You can do this as so `travis encrypt GH_TOKEN=... --add env.global`
+
 **Note:** For `gl-pages` you will need to pass `import --branch gl-pages` and you will need to change the url that git pushes to.
