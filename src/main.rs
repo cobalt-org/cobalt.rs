@@ -6,6 +6,7 @@ extern crate env_logger;
 extern crate notify;
 extern crate glob;
 extern crate ghp;
+extern crate sass_rs;
 
 #[macro_use]
 extern crate nickel;

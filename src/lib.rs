@@ -8,6 +8,7 @@ extern crate chrono;
 extern crate yaml_rust;
 extern crate rss;
 extern crate glob;
+extern crate sass_rs;
 
 #[macro_use]
 extern crate log;

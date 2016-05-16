@@ -17,6 +17,11 @@ use rss::{Channel, Rss};
 use std::sync::Arc;
 use glob::Pattern;
 
+use sass_rs::sass_context::{SassFileContext};
+use sass_rs::sass_function::*;
+use sass_rs::dispatcher::Dispatcher;
+use std::thread;
+
 macro_rules! walker {
     ($dir:expr, $ignore:expr) => {
         WalkDir::new($dir)
@@ -58,6 +63,7 @@ pub fn build(config: &Config) -> Result<()> {
 
     let layouts_path = source.join(&config.layouts);
     let posts_path = source.join(&config.posts);
+    let sass_path = source.join(&config.sass);
 
     debug!("Layouts directory: {:?}", layouts_path);
     debug!("Posts directory: {:?}", posts_path);
@@ -65,9 +71,12 @@ pub fn build(config: &Config) -> Result<()> {
     let layouts = try!(get_layouts(&layouts_path));
 
     let mut documents = vec![];
+    let mut sass_files =  vec![];
 
     for entry in walker!(&source, &config.ignore) {
-        if template_extensions.contains(&entry.path()
+        if entry.path().parent() == Some(sass_path.as_path()) {
+            sass_files.push(entry);
+        }else if template_extensions.contains(&entry.path()
                                               .extension()
                                               .unwrap_or(OsStr::new(""))) &&
            entry.path().parent() != Some(layouts_path.as_path()) {
@@ -126,6 +135,16 @@ pub fn build(config: &Config) -> Result<()> {
         try!(handle.join());
     }
 
+    let sass_final_path = &dest.join("_sass");
+    try!(fs::create_dir_all(sass_final_path));
+    for sass_file in sass_files {
+        let content = try!(compile_sass(sass_file.path()));
+
+        let path = sass_final_path.join(sass_file.file_name()).with_extension("css");
+        let mut file = try!(fs::File::create(&path));
+        try!(file.write_all(content.as_bytes()));
+    }
+
     // copy all remaining files in the source to the destination
     if source != dest {
         info!("Copying remaining assets");
@@ -137,7 +156,7 @@ pub fn build(config: &Config) -> Result<()> {
             !template_extensions.contains(&f.path()
                                             .extension()
                                             .unwrap_or(OsStr::new(""))) &&
-            f.path() != dest && f.path() != layouts_path.as_path()
+            f.path() != dest && f.path() != layouts_path.as_path() && f.path().parent() != Some(sass_path.as_path())
         }) {
             let entry_path = try!(entry.path()
                                        .to_str()
@@ -229,6 +248,19 @@ fn create_rss(path: &str, dest: &Path, config: &Config, documents: &[Document]) 
                              generate RSS"))
         }
     }
+}
+
+fn compile_sass(filename: &Path) -> Result<String> {
+    let mut file_context = SassFileContext::new(filename.to_str().unwrap()); // TODO: clean up unwrap
+    let fns:Vec<(&'static str,Box<SassFunction>)> = vec![];
+    let options = file_context.sass_context.sass_options.clone();
+
+    thread::spawn(move|| {
+        let dispatcher = Dispatcher::build(fns,options);
+        while dispatcher.dispatch().is_ok() {}
+    });
+
+    Ok(try!(file_context.compile()))
 }
 
 fn parse_document(path: &Path, source: &Path) -> Result<Document> {
