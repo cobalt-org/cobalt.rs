@@ -20,7 +20,7 @@ const default_liquid: &'static [u8] = b"<!DOCTYPE html>
     <body>
     <div>
       {% if is_post %}
-        {% include '_layouts/post.liquid' %}
+        {% include _layouts/post.liquid %}
       {% else %}
         {{ content }}
       {% endif %}
