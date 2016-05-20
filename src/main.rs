@@ -71,7 +71,10 @@ fn main() {
 
     let matches = match opts.parse(&args[1..]) {
         Ok(m) => m,
-        Err(f) => panic!(f.to_string()),
+        Err(e) => {
+          println!("{}",e);
+          std::process::exit(1);
+        }
     };
 
     if matches.opt_present("h") {
