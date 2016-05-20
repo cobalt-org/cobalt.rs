@@ -23,10 +23,6 @@ use notify::{RecommendedWatcher, Error, Watcher};
 use std::sync::mpsc::channel;
 use std::thread;
 
-fn print_version() {
-    println!("0.2.0");
-}
-
 fn print_usage(opts: Options) {
     let usage = concat!("\n\tbuild -- build the cobalt project at the source dir",
                         "\n\tserve -- build and serve the cobalt project at the source dir",
@@ -69,7 +65,7 @@ fn main() {
     }
 
     if matches.opt_present("version") {
-        print_version();
+        println!("0.2.0");
         return;
     }
 
