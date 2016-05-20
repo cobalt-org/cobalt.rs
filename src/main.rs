@@ -22,6 +22,7 @@ use nickel::{Nickel, Options as NickelOptions, StaticFilesHandler};
 use notify::{RecommendedWatcher, Error, Watcher};
 use std::sync::mpsc::channel;
 use std::thread;
+use std::io::{self,Write};
 
 fn print_version() {
     println!("0.2.0");
@@ -60,7 +61,11 @@ fn main() {
 
     let matches = match opts.parse(&args[1..]) {
         Ok(m) => m,
-        Err(f) => panic!(f.to_string()),
+        Err(e) => {
+          writeln!(&mut io::stderr(), "{}", e)
+              .expect("failed printing to stderr");
+          std::process::exit(1);
+        }
     };
 
     if matches.opt_present("h") {
