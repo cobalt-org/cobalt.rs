@@ -4,8 +4,8 @@ const cobalt_yml: &'static [u8] = b"name: cobalt blog
 source: \".\"
 dest: \"build\"
 ignore:
-  - ./.git/*
-  - ./build/*
+  - .git/*
+  - build/*
 ";
 
 const default_liquid: &'static [u8] = b"<!DOCTYPE html>
