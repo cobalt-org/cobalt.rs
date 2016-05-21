@@ -55,11 +55,11 @@ Layouts will be compiled as [liquid](https://github.com/cobalt-org/liquid-rust) 
 
 ### Posts
 
-Posts live in ```_posts```.
+Posts live in `_posts`. You can use a different directory for posts with the `-p` flag.
 
 Example:
 
-```text
+```yaml
 extends: posts.liquid
 
 title:   My first Blogpost
@@ -90,6 +90,39 @@ You can specify different template extensions by setting the `template_extension
 template_extensions: ['txt', 'lqd']
 ```
 
+#### Custom paths
+
+Custom paths are much like permalinks in Jekyll, but with a bit more flexibility. You can specify a `path` attribute in the front matter of
+any document to give it a custom path. The path is always relative to the document root, independent of where the file is located.
+
+Example:
+
+```yaml
+extends: posts.liquid
+
+title:   My first Blogpost
+path: /some/other/path/
+```
+
+would result in a file with the url `your-website.com/some/other/path/index.html`.
+
+Any attribute in the front matter can be interpolated into the path. If you set a `date` attribute you have access to several other custom attributes. See the Jekyll documentation.
+
+More examples:
+
+```yaml
+date: 01 Jan 2016 21:00:00 +0100
+path: /:year/:month/:day/thing.html
+```
+-> `/2016/01/01/thing.html`
+
+```yaml
+date: 01 Jan 2016 21:00:00 +0100
+author: johann
+path: /:author/:year/:month/:day/title
+```
+-> `/johann/2016/01/01/title/index.html`
+
 ### Attributes
 
 All template files have access to a set of attributes.
@@ -108,7 +141,7 @@ In example above _title_ is accessible via ```{{ title }}``` and _date_ via ```{
 
 ```
 {% for post in posts %}
- <a href="blog/{{post.name}}.html">{{ post.title }}</a>
+ <a href="{{post.path}}">{{ post.title }}</a>
 {% endfor %}
 ```
 
