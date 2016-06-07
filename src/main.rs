@@ -7,8 +7,7 @@ extern crate notify;
 extern crate glob;
 extern crate ghp;
 
-#[macro_use]
-extern crate nickel;
+extern crate hyper;
 
 #[macro_use]
 extern crate log;
@@ -19,7 +18,8 @@ use std::fs;
 use cobalt::Config;
 use log::{LogRecord, LogLevelFilter};
 use env_logger::LogBuilder;
-use nickel::{Nickel, Options as NickelOptions, StaticFilesHandler};
+use hyper::server::{Server, Request, Response};
+use hyper::uri::RequestUri;
 use ghp::import_dir;
 use glob::Pattern;
 use cobalt::create_new_project;
@@ -27,7 +27,10 @@ use cobalt::create_new_project;
 use notify::{RecommendedWatcher, Error, Watcher};
 use std::sync::mpsc::channel;
 use std::thread;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
+use std::str::FromStr;
+use std::io::prelude::*;
+use std::fs::File;
 
 fn print_usage(opts: Options) {
     let usage = concat!("\n\tnew -- create a new cobalt project",
@@ -269,15 +272,41 @@ fn build(config: &Config) {
 
 fn serve(dest: &str, port: &str) {
     info!("Serving {:?} through static file server", dest);
-    let mut server = Nickel::new();
-    server.options = NickelOptions::default().output_on_listen(false);
 
-    server.utilize(StaticFilesHandler::new(dest));
-
-    let ip = "127.0.0.1:".to_owned() + port;
+    let ip = format!("127.0.0.1:{}", port);
     info!("Server Listening on {}", &ip);
     info!("Ctrl-c to stop the server");
-    server.listen(&*ip);
+
+    // need a clone because of closure's lifetime
+    let dest_clone = dest.to_owned();
+
+    // TODO: better error handling
+    Server::http(&*ip).unwrap().handle(move |req: Request, res: Response| {
+        let base_uri = RequestUri::from_str("/").unwrap();
+
+        // get the path of the desired file, relative to the destination folder
+        let rel_path = if req.uri == base_uri {
+            // if the required uri is the base, this means we should serve
+            // index.html
+            format!("{}/index.html", dest_clone)
+        } else {
+            // if it is not, we'll have to find the desired file in the
+            // hierarchy
+            format!("{}{}", dest_clone, req.uri)
+        };
+
+        let path = Path::new(rel_path.as_str());
+
+        // if the file exists, open, read and send it
+        if path.exists() {
+            let mut file = File::open(path).unwrap();
+            let mut buffer: Vec<u8> = vec![];
+
+            file.read_to_end(&mut buffer).unwrap();
+
+            res.send(&buffer).unwrap();
+        }
+    }).unwrap();
 }
 
 fn import(config: &Config, branch: &str, message: &str) {
