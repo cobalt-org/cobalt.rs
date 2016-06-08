@@ -23,3 +23,6 @@ regex = "0.1"
 
 [dev-dependencies]
 difference = "0.4"
+
+[features]
+unstable = []
