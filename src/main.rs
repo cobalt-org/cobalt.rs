@@ -19,7 +19,6 @@ use cobalt::Config;
 use log::{LogRecord, LogLevelFilter};
 use env_logger::LogBuilder;
 use hyper::server::{Server, Request, Response};
-use hyper::uri::RequestUri;
 use ghp::import_dir;
 use glob::Pattern;
 use cobalt::create_new_project;
@@ -27,8 +26,7 @@ use cobalt::create_new_project;
 use notify::{RecommendedWatcher, Error, Watcher};
 use std::sync::mpsc::channel;
 use std::thread;
-use std::path::{Path, PathBuf};
-use std::str::FromStr;
+use std::path::PathBuf;
 use std::io::prelude::*;
 use std::fs::File;
 
@@ -270,6 +268,48 @@ fn build(config: &Config) {
     };
 }
 
+fn static_file_handler(dest: &str, req: Request, res: Response) {
+    let path = PathBuf::from(format!("{}{}", dest, req.uri));
+
+    let serve_path = if path.is_file() {
+        // try to point the serve path to `path` if it corresponds to a file
+        path.clone()
+    } else {
+        // try to point the serve path into a "index.html" file in the requested
+        // path
+        path.join("index.html")
+    };
+
+    // if the request points to a file and it exists, read and serve it
+    if serve_path.exists() {
+        let mut file = match File::open(serve_path) {
+            Ok(f) => f,
+            Err(e) => {
+                error!("{}", e);
+                std::process::exit(1);
+            }
+        };
+
+        let mut buffer: Vec<u8> = vec![];
+
+        match file.read_to_end(&mut buffer) {
+            Err(e) => {
+                error!("{}", e);
+                std::process::exit(1);
+            },
+            Ok(_) => {},
+        };
+
+        match res.send(&buffer) {
+            Err(e) => {
+                error!("{}", e);
+                std::process::exit(1);
+            },
+            Ok(()) => {},
+        };
+    }
+}
+
 fn serve(dest: &str, port: &str) {
     info!("Serving {:?} through static file server", dest);
 
@@ -277,36 +317,28 @@ fn serve(dest: &str, port: &str) {
     info!("Server Listening on {}", &ip);
     info!("Ctrl-c to stop the server");
 
+    // attempts to create a server
+    let http_server = match Server::http(&*ip) {
+        Ok(server) => server,
+        Err(e) => {
+            error!("{}", e);
+            std::process::exit(1);
+        }
+    };
+
     // need a clone because of closure's lifetime
     let dest_clone = dest.to_owned();
 
-    // TODO: better error handling
-    Server::http(&*ip).unwrap().handle(move |req: Request, res: Response| {
-        let base_uri = RequestUri::from_str("/").unwrap();
-
-        // get the path of the desired file, relative to the destination folder
-        let rel_path = if req.uri == base_uri {
-            // if the required uri is the base, this means we should serve
-            // index.html
-            format!("{}/index.html", dest_clone)
-        } else {
-            // if it is not, we'll have to find the desired file in the
-            // hierarchy
-            format!("{}{}", dest_clone, req.uri)
-        };
-
-        let path = Path::new(rel_path.as_str());
-
-        // if the file exists, open, read and send it
-        if path.exists() {
-            let mut file = File::open(path).unwrap();
-            let mut buffer: Vec<u8> = vec![];
-
-            file.read_to_end(&mut buffer).unwrap();
-
-            res.send(&buffer).unwrap();
-        }
-    }).unwrap();
+    // bind the handle function and start serving
+    match http_server.handle(move |req: Request, res: Response| {
+        static_file_handler(dest_clone.as_str(), req, res);
+    }) {
+        Err(e) => {
+            error!("{}", e);
+            std::process::exit(1);
+        },
+        Ok(_) => {},
+    };
 }
 
 fn import(config: &Config, branch: &str, message: &str) {
