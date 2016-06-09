@@ -19,6 +19,7 @@ use cobalt::Config;
 use log::{LogRecord, LogLevelFilter};
 use env_logger::LogBuilder;
 use hyper::server::{Server, Request, Response};
+use hyper::uri::RequestUri;
 use ghp::import_dir;
 use glob::Pattern;
 use cobalt::create_new_project;
@@ -268,12 +269,24 @@ fn build(config: &Config) {
     };
 }
 
-fn static_file_handler(dest: &str, req: Request, res: Response) {
-    let path = PathBuf::from(format!("{}{}", dest, req.uri));
+fn static_file_handler(dest: &str, req: Request, mut res: Response) {
+    // grab the requested path
+    let req_path = match req.uri {
+        RequestUri::AbsolutePath(p) => p,
+        _ => {
+            println!("Requset is not of the format AbsolutePath(p)");
+            std::process::exit(1);
+        },
+    };
+
+    // find the path of the file in the local system
+    // (this gets rid of the '/' in `p`, so the `join()` will not replace the
+    // path)
+    let path = PathBuf::from(dest).join(&req_path[1..]);
 
     let serve_path = if path.is_file() {
         // try to point the serve path to `path` if it corresponds to a file
-        path.clone()
+        path
     } else {
         // try to point the serve path into a "index.html" file in the requested
         // path
@@ -285,28 +298,38 @@ fn static_file_handler(dest: &str, req: Request, res: Response) {
         let mut file = match File::open(serve_path) {
             Ok(f) => f,
             Err(e) => {
-                error!("{}", e);
+                // error!("{}", e);
+                println!("{}", e);
                 std::process::exit(1);
             }
         };
 
+        // buffer to store the file
         let mut buffer: Vec<u8> = vec![];
 
-        match file.read_to_end(&mut buffer) {
-            Err(e) => {
-                error!("{}", e);
-                std::process::exit(1);
-            },
-            Ok(_) => {},
-        };
+        if let Err(e) = file.read_to_end(&mut buffer) {
+            // error!("{}", e);
+            println!("{}", e);
+            std::process::exit(1);
+        }
 
-        match res.send(&buffer) {
-            Err(e) => {
-                error!("{}", e);
-                std::process::exit(1);
-            },
-            Ok(()) => {},
-        };
+        if let Err(e) = res.send(&buffer) {
+            // error!("{}", e);
+            println!("{}", e);
+            std::process::exit(1);
+        }
+    } else {
+        // return a 404 status
+        *res.status_mut() = hyper::status::StatusCode::NotFound;
+
+        // write a simple body for the 404 page
+        let body = b"<h1> <center> 404: Page not found </center> </h1>";
+
+        if let Err(e) = res.send(body) {
+            // error!("{}", e);
+            println!("{}", e);
+            std::process::exit(1);
+        }
     }
 }
 
@@ -327,6 +350,7 @@ fn serve(dest: &str, port: &str) {
     };
 
     // need a clone because of closure's lifetime
+    // let dest_clone = dest.to_owned();
     let dest_clone = dest.to_owned();
 
     // bind the handle function and start serving
