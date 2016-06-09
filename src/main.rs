@@ -350,7 +350,6 @@ fn serve(dest: &str, port: &str) {
     };
 
     // need a clone because of closure's lifetime
-    // let dest_clone = dest.to_owned();
     let dest_clone = dest.to_owned();
 
     // bind the handle function and start serving
