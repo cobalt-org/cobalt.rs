@@ -29,6 +29,7 @@ use std::sync::mpsc::channel;
 use std::thread;
 use std::path::PathBuf;
 use std::io::prelude::*;
+use std::io::Result as IoResult;
 use std::fs::File;
 
 fn print_usage(opts: Options) {
@@ -269,13 +270,16 @@ fn build(config: &Config) {
     };
 }
 
-fn static_file_handler(dest: &str, req: Request, mut res: Response) {
+fn static_file_handler(dest: &str, req: Request, mut res: Response) -> IoResult<()> {
     // grab the requested path
     let req_path = match req.uri {
         RequestUri::AbsolutePath(p) => p,
         _ => {
-            println!("Requset is not of the format AbsolutePath(p)");
-            std::process::exit(1);
+            // return a 400 and exit from this request
+            *res.status_mut() = hyper::status::StatusCode::BadRequest;
+            let body = b"<h1> <center> 400: Bad request </center> </h1>";
+            try!(res.send(body));
+            return Ok(())
         },
     };
 
@@ -295,29 +299,14 @@ fn static_file_handler(dest: &str, req: Request, mut res: Response) {
 
     // if the request points to a file and it exists, read and serve it
     if serve_path.exists() {
-        let mut file = match File::open(serve_path) {
-            Ok(f) => f,
-            Err(e) => {
-                // error!("{}", e);
-                println!("{}", e);
-                std::process::exit(1);
-            }
-        };
+        let mut file = try!(File::open(serve_path));
 
         // buffer to store the file
         let mut buffer: Vec<u8> = vec![];
 
-        if let Err(e) = file.read_to_end(&mut buffer) {
-            // error!("{}", e);
-            println!("{}", e);
-            std::process::exit(1);
-        }
+        try!(file.read_to_end(&mut buffer));
 
-        if let Err(e) = res.send(&buffer) {
-            // error!("{}", e);
-            println!("{}", e);
-            std::process::exit(1);
-        }
+        try!(res.send(&buffer));
     } else {
         // return a 404 status
         *res.status_mut() = hyper::status::StatusCode::NotFound;
@@ -325,12 +314,10 @@ fn static_file_handler(dest: &str, req: Request, mut res: Response) {
         // write a simple body for the 404 page
         let body = b"<h1> <center> 404: Page not found </center> </h1>";
 
-        if let Err(e) = res.send(body) {
-            // error!("{}", e);
-            println!("{}", e);
-            std::process::exit(1);
-        }
+        try!(res.send(body));
     }
+
+    Ok(())
 }
 
 fn serve(dest: &str, port: &str) {
@@ -353,14 +340,14 @@ fn serve(dest: &str, port: &str) {
     let dest_clone = dest.to_owned();
 
     // bind the handle function and start serving
-    match http_server.handle(move |req: Request, res: Response| {
-        static_file_handler(dest_clone.as_str(), req, res);
-    }) {
-        Err(e) => {
+    if let Err(e) = http_server.handle(move |req: Request, res: Response| {
+        if let Err(e) = static_file_handler(&dest_clone, req, res) {
             error!("{}", e);
             std::process::exit(1);
-        },
-        Ok(_) => {},
+        }
+    }) {
+        error!("{}", e);
+        std::process::exit(1);
     };
 }
 
