@@ -28,9 +28,8 @@ addons:
       - libelf-dev
       - libdw-dev
 
-after_success: |
-  [ $TRAVIS_RUST_VERSION = stable ] &&
-  travis-cargo coveralls --no-sudo
+after_success:
+  - travis-cargo --only stable coveralls --no-sudo
 
 notifications:
   webhooks:
