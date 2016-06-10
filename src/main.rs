@@ -7,8 +7,7 @@ extern crate notify;
 extern crate glob;
 extern crate ghp;
 
-#[macro_use]
-extern crate nickel;
+extern crate hyper;
 
 #[macro_use]
 extern crate log;
@@ -19,7 +18,8 @@ use std::fs;
 use cobalt::Config;
 use log::{LogRecord, LogLevelFilter};
 use env_logger::LogBuilder;
-use nickel::{Nickel, Options as NickelOptions, StaticFilesHandler};
+use hyper::server::{Server, Request, Response};
+use hyper::uri::RequestUri;
 use ghp::import_dir;
 use glob::Pattern;
 use cobalt::create_new_project;
@@ -28,6 +28,9 @@ use notify::{RecommendedWatcher, Error, Watcher};
 use std::sync::mpsc::channel;
 use std::thread;
 use std::path::PathBuf;
+use std::io::prelude::*;
+use std::io::Result as IoResult;
+use std::fs::File;
 
 fn print_usage(opts: Options) {
     let usage = concat!("\n\tnew -- create a new cobalt project",
@@ -267,17 +270,85 @@ fn build(config: &Config) {
     };
 }
 
+fn static_file_handler(dest: &str, req: Request, mut res: Response) -> IoResult<()> {
+    // grab the requested path
+    let req_path = match req.uri {
+        RequestUri::AbsolutePath(p) => p,
+        _ => {
+            // return a 400 and exit from this request
+            *res.status_mut() = hyper::status::StatusCode::BadRequest;
+            let body = b"<h1> <center> 400: Bad request </center> </h1>";
+            try!(res.send(body));
+            return Ok(())
+        },
+    };
+
+    // find the path of the file in the local system
+    // (this gets rid of the '/' in `p`, so the `join()` will not replace the
+    // path)
+    let path = PathBuf::from(dest).join(&req_path[1..]);
+
+    let serve_path = if path.is_file() {
+        // try to point the serve path to `path` if it corresponds to a file
+        path
+    } else {
+        // try to point the serve path into a "index.html" file in the requested
+        // path
+        path.join("index.html")
+    };
+
+    // if the request points to a file and it exists, read and serve it
+    if serve_path.exists() {
+        let mut file = try!(File::open(serve_path));
+
+        // buffer to store the file
+        let mut buffer: Vec<u8> = vec![];
+
+        try!(file.read_to_end(&mut buffer));
+
+        try!(res.send(&buffer));
+    } else {
+        // return a 404 status
+        *res.status_mut() = hyper::status::StatusCode::NotFound;
+
+        // write a simple body for the 404 page
+        let body = b"<h1> <center> 404: Page not found </center> </h1>";
+
+        try!(res.send(body));
+    }
+
+    Ok(())
+}
+
 fn serve(dest: &str, port: &str) {
     info!("Serving {:?} through static file server", dest);
-    let mut server = Nickel::new();
-    server.options = NickelOptions::default().output_on_listen(false);
 
-    server.utilize(StaticFilesHandler::new(dest));
-
-    let ip = "127.0.0.1:".to_owned() + port;
+    let ip = format!("127.0.0.1:{}", port);
     info!("Server Listening on {}", &ip);
     info!("Ctrl-c to stop the server");
-    server.listen(&*ip);
+
+    // attempts to create a server
+    let http_server = match Server::http(&*ip) {
+        Ok(server) => server,
+        Err(e) => {
+            error!("{}", e);
+            std::process::exit(1);
+        }
+    };
+
+    // need a clone because of closure's lifetime
+    let dest_clone = dest.to_owned();
+
+    // bind the handle function and start serving
+    if let Err(e) = http_server.handle(move |req: Request, res: Response| {
+        if let Err(e) = static_file_handler(&dest_clone, req, res) {
+            error!("{}", e);
+            std::process::exit(1);
+        }
+    }) {
+        error!("{}", e);
+        std::process::exit(1);
+    };
 }
 
 fn import(config: &Config, branch: &str, message: &str) {
