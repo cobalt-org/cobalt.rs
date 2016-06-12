@@ -115,7 +115,7 @@ impl Document {
         // TODO: make this a regex to support lines of any length
         if content.contains("---") {
             let content2 = content.clone();
-            let mut content_splits = content2.split("---");
+            let mut content_splits = content2.splitn(2, "---");
 
             // above the split are the attributes
             let attribute_string = content_splits.next().unwrap_or("");
