@@ -37,7 +37,8 @@ fn print_usage(opts: Options) {
                         "\n\tbuild -- build the cobalt project at the source dir",
                         "\n\tserve -- build and serve the cobalt project at the source dir",
                         "\n\twatch -- build, serve, and watch the project at the source dir",
-                        "\n\timport -- moves the contents of the dest folder to the gh-pages branch");
+                        "\n\timport -- moves the contents of the dest folder to the gh-pages \
+                         branch");
     println!("{}", opts.usage(usage));
 }
 
@@ -58,8 +59,14 @@ fn main() {
                 "");
     opts.optopt("p", "posts", "Posts folder, Default: _posts/", "");
     opts.optopt("P", "port", "Port to serve from, Default: 3000", "");
-    opts.optopt("b", "branch", "Branch that will be used to import the site to, Default: gh-pages", "");
-    opts.optopt("m", "message", "Commit message that will be used on import, Default: cobalt site import", "");
+    opts.optopt("b",
+                "branch",
+                "Branch that will be used to import the site to, Default: gh-pages",
+                "");
+    opts.optopt("m",
+                "message",
+                "Commit message that will be used on import, Default: cobalt site import",
+                "");
 
     opts.optflag("", "debug", "Log verbose (debug level) information");
     opts.optflag("", "trace", "Log ultra-verbose (trace level) information");
@@ -198,16 +205,18 @@ fn main() {
                                         let rel_path = path.strip_prefix(&cwd).unwrap_or(&cwd);
 
                                         // check if path starts with the build folder.
-                                        if !&config.ignore.iter().any(|pattern| Pattern::matches_path(
-                                            pattern,
-                                            rel_path)) {
+                                        if !&config.ignore.iter().any(|pattern| {
+                                            Pattern::matches_path(pattern, rel_path)
+                                        }) {
                                             build(&config);
                                         }
 
                                     } else {
                                         // check if path starts with build folder.
                                         // TODO: may want to check if it starts `./`
-                                        if !&config.ignore.iter().any(|pattern| Pattern::matches_path(pattern, &path)) {
+                                        if !&config.ignore
+                                            .iter()
+                                            .any(|pattern| Pattern::matches_path(pattern, &path)) {
                                             build(&config);
                                         }
                                     }
@@ -279,8 +288,8 @@ fn static_file_handler(dest: &str, req: Request, mut res: Response) -> IoResult<
             *res.status_mut() = hyper::status::StatusCode::BadRequest;
             let body = b"<h1> <center> 400: Bad request </center> </h1>";
             try!(res.send(body));
-            return Ok(())
-        },
+            return Ok(());
+        }
     };
 
     // find the path of the file in the local system

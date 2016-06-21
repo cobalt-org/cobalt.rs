@@ -51,9 +51,9 @@ pub fn build(config: &Config) -> Result<()> {
     let dest = dest.as_path();
 
     let template_extensions: Vec<&OsStr> = config.template_extensions
-                                                 .iter()
-                                                 .map(OsStr::new)
-                                                 .collect();
+        .iter()
+        .map(OsStr::new)
+        .collect();
 
     let layouts_path = source.join(&config.layouts);
     let posts_path = source.join(&config.posts);
@@ -67,16 +67,13 @@ pub fn build(config: &Config) -> Result<()> {
 
     for entry in walker!(&source, &config.ignore) {
         if template_extensions.contains(&entry.path()
-                                              .extension()
-                                              .unwrap_or(OsStr::new(""))) &&
+            .extension()
+            .unwrap_or(OsStr::new(""))) &&
            entry.path().parent() != Some(layouts_path.as_path()) {
-            let mut doc = try!(Document::parse(&entry.path(), &source));
-
             // if the document is in the posts folder it's considered a post
-            if entry.path().parent() == Some(posts_path.as_path()) {
-                doc.is_post = true;
-            }
+            let is_post = entry.path().parent() == Some(posts_path.as_path());
 
+            let doc = try!(Document::parse(&entry.path(), &source, is_post));
             documents.push(doc);
         }
     }
@@ -97,10 +94,11 @@ pub fn build(config: &Config) -> Result<()> {
 
     // these are the attributes of all documents that are posts, so that they can be
     // passed to the renderer
+    // TODO: do we have to clone these?
     let post_data: Vec<Value> = documents.iter()
-                                         .filter(|x| x.is_post)
-                                         .map(|x| Value::Object(x.get_attributes()))
-                                         .collect();
+        .filter(|x| x.is_post)
+        .map(|x| Value::Object(x.attributes.clone()))
+        .collect();
 
     // thread handles to join later
     let mut handles = vec![];
@@ -131,23 +129,21 @@ pub fn build(config: &Config) -> Result<()> {
     if source != dest {
         info!("Copying remaining assets");
         let source_str = try!(source.to_str()
-                                    .ok_or(format!("Cannot convert pathname {:?} to UTF-8",
-                                                   source)));
+            .ok_or(format!("Cannot convert pathname {:?} to UTF-8", source)));
 
         for entry in walker!(&source, &config.ignore).filter(|f| {
             !template_extensions.contains(&f.path()
-                                            .extension()
-                                            .unwrap_or(OsStr::new(""))) &&
-            f.path() != dest && f.path() != layouts_path.as_path()
+                .extension()
+                .unwrap_or(OsStr::new(""))) && f.path() != dest &&
+            f.path() != layouts_path.as_path()
         }) {
             let entry_path = try!(entry.path()
-                                       .to_str()
-                                       .ok_or(format!("Cannot convert pathname {:?} to UTF-8",
-                                                      entry.path())));
+                .to_str()
+                .ok_or(format!("Cannot convert pathname {:?} to UTF-8", entry.path())));
 
             let relative = try!(entry_path.split(source_str)
-                                          .last()
-                                          .ok_or(format!("Empty path")));
+                .last()
+                .ok_or(format!("Empty path")));
 
             if try!(entry.metadata()).is_dir() {
                 try!(fs::create_dir_all(&dest.join(relative)));
@@ -158,7 +154,7 @@ pub fn build(config: &Config) -> Result<()> {
                 }
 
                 try!(fs::copy(entry.path(), &dest.join(relative))
-                         .map_err(|_| format!("Could not copy {:?}", entry.path())));
+                    .map_err(|e| format!("Could not copy {:?}: {}", entry.path(), e)));
                 debug!("Copied {:?} to {:?}", entry.path(), dest.join(relative));
             }
         }
@@ -182,10 +178,10 @@ fn get_layouts(layouts_path: &Path) -> Result<HashMap<String, String>> {
         try!(file.read_to_string(&mut text));
 
         let path = try!(entry.path()
-                             .file_name()
-                             .and_then(|name| name.to_str())
-                             .ok_or(format!("Cannot convert pathname {:?} to UTF-8",
-                                            entry.path().file_name())));
+            .file_name()
+            .and_then(|name| name.to_str())
+            .ok_or(format!("Cannot convert pathname {:?} to UTF-8",
+                           entry.path().file_name())));
 
         layouts.insert(path.to_owned(), text);
     }
@@ -201,9 +197,9 @@ fn create_rss(path: &str, dest: &Path, config: &Config, documents: &[Document]) 
             trace!("Generating RSS data");
 
             let items = documents.iter()
-                                 .filter(|x| x.is_post)
-                                 .map(|doc| doc.to_rss(link))
-                                 .collect();
+                .filter(|x| x.is_post)
+                .map(|doc| doc.to_rss(link))
+                .collect();
 
             let channel = Channel {
                 title: name.to_owned(),
@@ -258,7 +254,7 @@ fn create_document_file<T: AsRef<Path>>(content: String, path: T, dest: &Path) -
     }
 
     let mut file = try!(File::create(&file_path)
-                            .map_err(|e| format!("Could not create {:?}: {}", file_path, e)));
+        .map_err(|e| format!("Could not create {:?}: {}", file_path, e)));
 
     try!(file.write_all(&content.into_bytes()));
     info!("Created {}", file_path.display());
