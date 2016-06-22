@@ -74,10 +74,8 @@ impl Config {
 
         if let Some(extensions) = yaml["template_extensions"].as_vec() {
             config.template_extensions = extensions.iter()
-                                                   .filter_map(|k| {
-                                                       k.as_str().map(|k| k.to_owned())
-                                                   })
-                                                   .collect();
+                .filter_map(|k| k.as_str().map(|k| k.to_owned()))
+                .collect();
         };
 
         if let Some(link) = yaml["link"].as_str() {
@@ -90,9 +88,9 @@ impl Config {
 
         if let Some(patterns) = yaml["ignore"].as_vec() {
             config.ignore = patterns.iter()
-                                    .filter_map(|k| k.as_str())
-                                    .filter_map(|k| Pattern::new(k).ok())
-                                    .collect();
+                .filter_map(|k| k.as_str())
+                .filter_map(|k| Pattern::new(k).ok())
+                .collect();
         };
 
         Ok(config)

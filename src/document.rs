@@ -5,7 +5,7 @@ use std::path::{Path, PathBuf};
 use std::default::Default;
 use error::Result;
 use chrono::{DateTime, FixedOffset, Datelike, Timelike};
-use yaml_rust::YamlLoader;
+use yaml_rust::{Yaml, YamlLoader};
 use std::io::Read;
 use regex::Regex;
 use rss;
@@ -18,8 +18,7 @@ use liquid;
 #[derive(Debug)]
 pub struct Document {
     pub path: String,
-    // TODO store attributes as liquid values?
-    pub attributes: HashMap<String, String>,
+    pub attributes: HashMap<String, Value>,
     pub content: String,
     pub layout: Option<String>,
     pub is_post: bool,
@@ -35,20 +34,31 @@ fn read_file(path: &Path) -> Result<String> {
     Ok(text)
 }
 
+fn yaml_to_liquid(yaml: &Yaml) -> Option<Value> {
+    match *yaml {
+        Yaml::Real(ref s) |
+        Yaml::String(ref s) => Some(Value::Str(s.to_owned())),
+        Yaml::Integer(i) => Some(Value::Num(i as f32)),
+        Yaml::Boolean(b) => Some(Value::Bool(b)),
+        Yaml::Array(ref a) => Some(Value::Array(a.iter().filter_map(yaml_to_liquid).collect())),
+        Yaml::BadValue | Yaml::Null => None,
+        _ => panic!("Not implemented yet"),
+    }
+}
+
 /// Formats a user specified custom path, adding custom parameters
 /// and "exploding" the URL.
 fn format_path(p: &str,
-               attributes: &HashMap<String, String>,
+               attributes: &HashMap<String, Value>,
                date: &Option<DateTime<FixedOffset>>)
                -> Result<String> {
     let mut p = p.to_owned();
 
     let time_vars = Regex::new(":(year|month|i_month|day|i_day|short_year|hour|minute|second)")
-                        .unwrap();
+        .unwrap();
     if time_vars.is_match(&p) {
-        let date = try!(date.ok_or(format!("Can not format file path without a valid date \
-                                            ({:?})",
-                                           p)));
+        let date =
+            try!(date.ok_or(format!("Can not format file path without a valid date ({:?})", p)));
 
         p = p.replace(":year", &date.year().to_string());
         p = p.replace(":month", &format!("{:02}", &date.month()));
@@ -61,7 +71,11 @@ fn format_path(p: &str,
     }
 
     for (key, val) in attributes {
-        p = p.replace(&(String::from(":") + key), val);
+        p = match *val {
+            Value::Str(ref v) => p.replace(&(String::from(":") + key), v),
+            Value::Num(ref v) => p.replace(&(String::from(":") + key), &v.to_string()),
+            _ => p,
+        }
     }
 
     // TODO if title is present inject title slug
@@ -87,7 +101,7 @@ fn format_path(p: &str,
 
 impl Document {
     pub fn new(path: String,
-               attributes: HashMap<String, String>,
+               attributes: HashMap<String, Value>,
                content: String,
                layout: Option<String>,
                is_post: bool,
@@ -107,9 +121,11 @@ impl Document {
         }
     }
 
-    pub fn parse(file_path: &Path, source: &Path) -> Result<Document> {
+    pub fn parse(file_path: &Path, source: &Path, is_post: bool) -> Result<Document> {
         let mut attributes = HashMap::new();
         let mut content = try!(read_file(file_path));
+
+        attributes.insert("is_post".to_owned(), Value::Bool(is_post));
 
         // if there is front matter, split the file and parse it
         // TODO: make this a regex to support lines of any length
@@ -126,49 +142,46 @@ impl Document {
             let yaml_result = try!(YamlLoader::load_from_str(attribute_string));
 
             let yaml_attributes = try!(yaml_result[0]
-                                           .as_hash()
-                                           .ok_or(format!("Incorrect front matter format in \
-                                                           {:?}",
-                                                          file_path)));
+                .as_hash()
+                .ok_or(format!("Incorrect front matter format in {:?}", file_path)));
 
             for (key, value) in yaml_attributes {
-                // TODO store attributes as liquid values
-                attributes.insert(key.as_str().unwrap_or("").to_owned(),
-                                  value.as_str().unwrap_or("").to_owned());
+                if let Some(v) = yaml_to_liquid(value) {
+                    attributes.insert(try!(key.as_str().ok_or(format!("Invalid key {:?}", key)))
+                                          .to_owned(),
+                                      v);
+                }
             }
         }
 
         let date = attributes.get("date")
-                             .and_then(|d| {
-                                 DateTime::parse_from_str(d, "%d %B %Y %H:%M:%S %z").ok()
-                             });
+            .and_then(|d| d.as_str())
+            .and_then(|d| DateTime::parse_from_str(d, "%d %B %Y %H:%M:%S %z").ok());
 
         // if the file has a .md extension we assume it's markdown
         // TODO add a "markdown" flag to yaml front matter
         let markdown = file_path.extension().unwrap_or(OsStr::new("")) == OsStr::new("md");
 
-        let layout = attributes.get(&"extends".to_owned()).cloned();
+        let layout = attributes.get("extends").and_then(|l| l.as_str()).map(|x| x.to_owned());
 
         let path_str = try!(file_path.to_str()
-                                     .ok_or(format!("Cannot convert pathname {:?} to UTF-8",
-                                                    file_path)));
+            .ok_or(format!("Cannot convert pathname {:?} to UTF-8", file_path)));
 
         let source_str = try!(source.to_str()
-                                    .ok_or(format!("Cannot convert pathname {:?} to UTF-8",
-                                                   source)));
+            .ok_or(format!("Cannot convert pathname {:?} to UTF-8", source)));
 
         // construct a relative path to the source
         // TODO: use strip_prefix instead
         let new_path = try!(path_str.split(source_str)
-                                    .last()
-                                    .ok_or(format!("Empty path")));
+            .last()
+            .ok_or(format!("Empty path")));
 
         let mut path_buf = PathBuf::from(new_path);
         path_buf.set_extension("html");
 
         // if the user specified a custom path override
         // format it and push it over the original file name
-        if let Some(path) = attributes.get("path") {
+        if let Some(path) = attributes.get("path").and_then(|p| p.as_str()) {
 
             // TODO replace "date", "pretty", "ordinal" and "none"
             // for Jekyl compatibility
@@ -183,13 +196,15 @@ impl Document {
         };
 
         let path = try!(path_buf.to_str()
-                                .ok_or(format!("Cannot convert pathname {:?} to UTF-8", path_buf)));
+            .ok_or(format!("Cannot convert pathname {:?} to UTF-8", path_buf)));
+
+        attributes.insert("path".to_owned(), Value::Str(path.to_owned()));
 
         Ok(Document::new(path.to_owned(),
                          attributes,
                          content,
                          layout,
-                         false,
+                         is_post,
                          date,
                          file_path.to_string_lossy().into_owned(),
                          markdown))
@@ -199,28 +214,15 @@ impl Document {
     /// Metadata for generating RSS feeds
     pub fn to_rss(&self, root_url: &str) -> rss::Item {
         rss::Item {
-            title: self.attributes.get("title").map(|s| s.to_owned()),
+            title: self.attributes.get("title").and_then(|s| s.as_str()).map(|s| s.to_owned()),
             link: Some(root_url.to_owned() + &self.path),
             pub_date: self.date.map(|date| date.to_rfc2822()),
-            description: self.attributes.get("description").map(|s| s.to_owned()),
+            description: self.attributes
+                .get("description")
+                .and_then(|s| s.as_str())
+                .map(|s| s.to_owned()),
             ..Default::default()
         }
-    }
-
-    /// Attributes that are injected into the template when rendering
-    pub fn get_attributes(&self) -> HashMap<String, Value> {
-        let mut data = HashMap::new();
-
-        for (key, val) in &self.attributes {
-            data.insert(key.to_owned(), Value::Str(val.clone()));
-        }
-
-        // We replace to swap back slashes to forward slashes to ensure the URL's are valid
-        data.insert("path".to_owned(), Value::Str(self.path.replace("\\", "/")));
-
-        data.insert("is_post".to_owned(), Value::Bool(self.is_post));
-
-        data
     }
 
     pub fn as_html(&self,
@@ -233,14 +235,14 @@ impl Document {
 
         let layout = if let Some(ref layout) = self.layout {
             Some(try!(layouts.get(layout)
-                             .ok_or(format!("Layout {} can not be found (defined in {})",
-                                            layout,
-                                            self.file_path))))
+                .ok_or(format!("Layout {} can not be found (defined in {})",
+                               layout,
+                               self.file_path))))
         } else {
             None
         };
 
-        let mut data = Context::with_values(self.get_attributes());
+        let mut data = Context::with_values(self.attributes.clone());
         data.set_val("posts", Value::Array(post_data.clone()));
 
         let mut html = try!(template.render(&mut data)).unwrap_or(String::new());
