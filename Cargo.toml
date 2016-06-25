@@ -1,8 +1,20 @@
 [package]
 
-name = "cobalt"
+name = "cobalt-bin"
 version = "0.2.0"
-authors = ["Benny Klotz <r3qnbenni@gmail.com>", "Johann Hofmann"]
+authors = ["Benny Klotz <r3qnbenni@gmail.com>", "Johann Hofmann <mail@johann-hofmann.com>"]
+description = "Static site generator written in Rust"
+repository = "https://github.com/cobalt-org/cobalt.rs"
+readme = "README.md"
+keywords = ["static", "site", "generator"]
+license = "MIT"
+
+[lib]
+name="cobalt"
+
+[[bin]]
+name = "cobalt"
+doc = false
 
 [dependencies]
 getopts = "0.2.14"
