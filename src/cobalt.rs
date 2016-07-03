@@ -16,9 +16,12 @@ use std::sync::Arc;
 use glob::Pattern;
 
 fn ignore_filter(entry: &DirEntry, source: &Path, ignore: &[Pattern]) -> bool {
+    if compare_paths(entry.path(), source) {
+        return true;
+    }
     let path = entry.path().strip_prefix(&source).unwrap_or(entry.path());
     let file_name = entry.file_name().to_str().unwrap_or("");
-    if file_name != "./" && (file_name.starts_with("_") || file_name.starts_with(".")) {
+    if file_name.starts_with("_") || file_name.starts_with(".") {
         return false;
     }
     !ignore.iter().any(|p| p.matches_path(path))
