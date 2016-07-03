@@ -121,7 +121,7 @@ impl Document {
         }
     }
 
-    pub fn parse(file_path: &Path, source: &Path, mut is_post: bool) -> Result<Document> {
+    pub fn parse(file_path: &Path, source: &Path, mut is_post: bool, post_path: &Option<String>) -> Result<Document> {
         let mut attributes = HashMap::new();
         let mut content = try!(read_file(file_path));
 
@@ -174,11 +174,15 @@ impl Document {
 
         // if the user specified a custom path override
         // format it and push it over the original file name
+        // TODO replace "date", "pretty", "ordinal" and "none"
+        // for Jekyl compatibility
         if let Some(path) = attributes.get("path").and_then(|p| p.as_str()) {
-
-            // TODO replace "date", "pretty", "ordinal" and "none"
-            // for Jekyl compatibility
             path_buf = PathBuf::from(try!(format_path(path, &attributes, &date)));
+        } else if is_post {
+            // check if there is a global setting for post paths
+            if let &Some(ref path) = post_path {
+                path_buf = PathBuf::from(try!(format_path(path, &attributes, &date)));
+            }
         };
 
         let path = try!(path_buf.to_str()

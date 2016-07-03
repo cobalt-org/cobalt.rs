@@ -81,8 +81,8 @@ pub fn create_new_project<P: AsRef<Path>>(dest: P) -> Result<()> {
     try!(create_file(&dest.join("_layouts/default.liquid"), default_liquid));
     try!(create_file(&dest.join("_layouts/post.liquid"), post_liquid));
 
-    try!(create_folder(&dest.join("_posts")));
-    try!(create_file(&dest.join("_posts/post-1.md"), post_1_md));
+    try!(create_folder(&dest.join("posts")));
+    try!(create_file(&dest.join("posts/post-1.md"), post_1_md));
 
     Ok(())
 }

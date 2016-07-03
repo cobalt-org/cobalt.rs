@@ -65,14 +65,12 @@ pub fn build(config: &Config) -> Result<()> {
         .filter_map(|e| e.ok());
 
     for entry in walker {
-        trace!("Walking {:?}", entry);
         let extension = &entry.path().extension().unwrap_or(OsStr::new(""));
         if template_extensions.contains(extension) {
             // if the document is in the posts folder it's considered a post
             let is_post = entry.path().parent().map(|p| compare_paths(p, posts)).unwrap_or(false);
-            trace!("is_post {:?}: {:?}", entry, is_post);
 
-            let doc = try!(Document::parse(&entry.path(), &source, is_post));
+            let doc = try!(Document::parse(&entry.path(), &source, is_post, &config.post_path));
             documents.push(doc);
         }
     }

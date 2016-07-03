@@ -88,6 +88,11 @@ pub fn custom_posts_folder() {
 }
 
 #[test]
+pub fn custom_post_path() {
+    run_test("custom_post_path").expect("Build error");
+}
+
+#[test]
 pub fn dotfiles() {
     run_test("dotfiles").expect("Build error");
 }
