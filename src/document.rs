@@ -178,14 +178,7 @@ impl Document {
 
             // TODO replace "date", "pretty", "ordinal" and "none"
             // for Jekyl compatibility
-
-            path_buf = if let Some(parent) = path_buf.parent() {
-                let mut p = PathBuf::from(parent);
-                p.push(try!(format_path(path, &attributes, &date)));
-                p
-            } else {
-                PathBuf::from(try!(format_path(path, &attributes, &date)))
-            }
+            path_buf = PathBuf::from(try!(format_path(path, &attributes, &date)));
         };
 
         let path = try!(path_buf.to_str()
