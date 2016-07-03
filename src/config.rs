@@ -26,7 +26,7 @@ impl Default for Config {
             source: "./".to_owned(),
             dest: "./".to_owned(),
             layouts: "_layouts".to_owned(),
-            posts: "_posts".to_owned(),
+            posts: "posts".to_owned(),
             template_extensions: vec!["md".to_owned(), "liquid".to_owned()],
             rss: None,
             name: None,
@@ -87,10 +87,11 @@ impl Config {
         };
 
         if let Some(patterns) = yaml["ignore"].as_vec() {
-            config.ignore = patterns.iter()
+            for pattern in patterns.iter()
                 .filter_map(|k| k.as_str())
-                .filter_map(|k| Pattern::new(k).ok())
-                .collect();
+                .filter_map(|k| Pattern::new(k).ok()) {
+                config.ignore.push(pattern);
+            }
         };
 
         Ok(config)

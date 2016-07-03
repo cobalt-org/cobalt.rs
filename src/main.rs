@@ -131,6 +131,7 @@ fn main() {
             }
         }
     } else {
+        warn!("No .cobalt.yml file found in current directory, using default config.");
         Default::default()
     };
 

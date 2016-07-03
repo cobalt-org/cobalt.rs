@@ -27,7 +27,7 @@ pub struct Document {
     markdown: bool,
 }
 
-fn read_file(path: &Path) -> Result<String> {
+fn read_file<P: AsRef<Path>>(path: P) -> Result<String> {
     let mut file = try!(File::open(path));
     let mut text = String::new();
     try!(file.read_to_string(&mut text));
@@ -121,11 +121,9 @@ impl Document {
         }
     }
 
-    pub fn parse(file_path: &Path, source: &Path, is_post: bool) -> Result<Document> {
+    pub fn parse(file_path: &Path, source: &Path, mut is_post: bool) -> Result<Document> {
         let mut attributes = HashMap::new();
         let mut content = try!(read_file(file_path));
-
-        attributes.insert("is_post".to_owned(), Value::Bool(is_post));
 
         // if there is front matter, split the file and parse it
         // TODO: make this a regex to support lines of any length
@@ -154,6 +152,11 @@ impl Document {
             }
         }
 
+        if let &mut Value::Bool(val) = attributes.entry("is_post".to_owned())
+            .or_insert(Value::Bool(is_post)) {
+            is_post = val;
+        }
+
         let date = attributes.get("date")
             .and_then(|d| d.as_str())
             .and_then(|d| DateTime::parse_from_str(d, "%d %B %Y %H:%M:%S %z").ok());
@@ -164,17 +167,7 @@ impl Document {
 
         let layout = attributes.get("extends").and_then(|l| l.as_str()).map(|x| x.to_owned());
 
-        let path_str = try!(file_path.to_str()
-            .ok_or(format!("Cannot convert pathname {:?} to UTF-8", file_path)));
-
-        let source_str = try!(source.to_str()
-            .ok_or(format!("Cannot convert pathname {:?} to UTF-8", source)));
-
-        // construct a relative path to the source
-        // TODO: use strip_prefix instead
-        let new_path = try!(path_str.split(source_str)
-            .last()
-            .ok_or(format!("Empty path")));
+        let new_path = try!(file_path.strip_prefix(source).map_err(|_| "File path not in source".to_owned()));
 
         let mut path_buf = PathBuf::from(new_path);
         path_buf.set_extension("html");
@@ -228,16 +221,18 @@ impl Document {
     pub fn as_html(&self,
                    source: &Path,
                    post_data: &Vec<Value>,
-                   layouts: &HashMap<String, String>)
+                   layouts_path: &Path)
                    -> Result<String> {
         let options = LiquidOptions { file_system: Some(source.to_owned()), ..Default::default() };
         let template = try!(liquid::parse(&self.content, options));
 
         let layout = if let Some(ref layout) = self.layout {
-            Some(try!(layouts.get(layout)
-                .ok_or(format!("Layout {} can not be found (defined in {})",
-                               layout,
-                               self.file_path))))
+            Some(try!(read_file(layouts_path.join(layout)).map_err(|e| {
+                format!("Layout {} can not be read (defined in {}): {}",
+                        layout,
+                        self.file_path,
+                        e)
+            })))
         } else {
             None
         };

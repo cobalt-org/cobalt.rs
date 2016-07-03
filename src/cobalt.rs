@@ -1,12 +1,11 @@
 use crossbeam;
 
 use std::fs::{self, File};
-use std::io::{self, Read, Write, ErrorKind};
+use std::io::{self, Write, ErrorKind};
 use std::path::{Path, PathBuf};
-use std::collections::HashMap;
 use std::ffi::OsStr;
 use liquid::Value;
-use walkdir::WalkDir;
+use walkdir::{WalkDir, DirEntry, WalkDirIterator};
 use document::Document;
 use error::{Error, Result};
 use config::Config;
@@ -16,27 +15,19 @@ use rss::{Channel, Rss};
 use std::sync::Arc;
 use glob::Pattern;
 
-macro_rules! walker {
-    ($dir:expr, $ignore:expr) => {
-        WalkDir::new($dir)
-            .into_iter()
-            .filter_map(|e| e.ok())
-            .filter(|f| {
-                // skip directories
-                f.file_type().is_file()
-                    &&
-                    // don't copy hidden files
-                    !f.path()
-                    .file_name()
-                    .and_then(|name| name.to_str())
-                    .unwrap_or(".")
-                    .starts_with(".")
-                    &&
-                    // don't copy ignored files
-                    !$ignore.iter().any(|pattern| Pattern::matches_path(
-                        pattern,
-                        f.path().strip_prefix($dir).unwrap_or(f.path())))
-            })
+fn ignore_filter(entry: &DirEntry, source: &Path, ignore: &[Pattern]) -> bool {
+    let path = entry.path().strip_prefix(&source).unwrap_or(entry.path());
+    let file_name = entry.file_name().to_str().unwrap_or("");
+    if file_name != "./" && (file_name.starts_with("_") || file_name.starts_with(".")) {
+        return false;
+    }
+    !ignore.iter().any(|p| p.matches_path(path))
+}
+
+fn compare_paths(a: &Path, b: &Path) -> bool {
+    match (fs::canonicalize(a), fs::canonicalize(b)) {
+        (Ok(p), Ok(p2)) => p == p2,
+        _ => false
     }
 }
 
@@ -55,23 +46,31 @@ pub fn build(config: &Config) -> Result<()> {
         .map(OsStr::new)
         .collect();
 
-    let layouts_path = source.join(&config.layouts);
-    let posts_path = source.join(&config.posts);
+    let layouts = source.join(&config.layouts);
+    let layouts = layouts.as_path();
+    let posts = source.join(&config.posts);
+    let posts = posts.as_path();
 
-    debug!("Layouts directory: {:?}", layouts_path);
-    debug!("Posts directory: {:?}", posts_path);
-
-    let layouts = try!(get_layouts(&layouts_path));
+    debug!("Layouts directory: {:?}", layouts);
+    debug!("posts directory: {:?}", posts);
 
     let mut documents = vec![];
 
-    for entry in walker!(&source, &config.ignore) {
-        if template_extensions.contains(&entry.path()
-            .extension()
-            .unwrap_or(OsStr::new(""))) &&
-           entry.path().parent() != Some(layouts_path.as_path()) {
+    let walker = WalkDir::new(&source)
+        .into_iter()
+        .filter_entry(|e| {
+            (ignore_filter(e, &source, &config.ignore) || compare_paths(e.path(), posts))
+            && !compare_paths(e.path(), dest)
+        })
+        .filter_map(|e| e.ok());
+
+    for entry in walker {
+        trace!("Walking {:?}", entry);
+        let extension = &entry.path().extension().unwrap_or(OsStr::new(""));
+        if template_extensions.contains(extension) {
             // if the document is in the posts folder it's considered a post
-            let is_post = entry.path().parent() == Some(posts_path.as_path());
+            let is_post = entry.path().parent().map(|p| compare_paths(p, posts)).unwrap_or(false);
+            trace!("is_post {:?}: {:?}", entry, is_post);
 
             let doc = try!(Document::parse(&entry.path(), &source, is_post));
             documents.push(doc);
@@ -106,12 +105,10 @@ pub fn build(config: &Config) -> Result<()> {
     // generate documents (in parallel)
     crossbeam::scope(|scope| {
         let post_data = Arc::new(post_data);
-        let layouts = Arc::new(layouts);
 
         for doc in &documents {
             trace!("Generating {}", doc.path);
             let post_data = post_data.clone();
-            let layouts = layouts.clone();
 
             let handle = scope.spawn(move || {
                 let content = try!(doc.as_html(&source, &post_data, &layouts));
@@ -126,17 +123,23 @@ pub fn build(config: &Config) -> Result<()> {
     }
 
     // copy all remaining files in the source to the destination
-    if source != dest {
+    if !compare_paths(source, dest) {
         info!("Copying remaining assets");
         let source_str = try!(source.to_str()
             .ok_or(format!("Cannot convert pathname {:?} to UTF-8", source)));
 
-        for entry in walker!(&source, &config.ignore).filter(|f| {
-            !template_extensions.contains(&f.path()
-                .extension()
-                .unwrap_or(OsStr::new(""))) && f.path() != dest &&
-            f.path() != layouts_path.as_path()
-        }) {
+        let walker = WalkDir::new(&source)
+            .into_iter()
+            .filter_entry(|e| {
+                ignore_filter(e, &source, &config.ignore) &&
+                !template_extensions.contains(&e.path()
+                    .extension()
+                    .unwrap_or(OsStr::new("")))
+                && !compare_paths(e.path(), dest)
+            })
+            .filter_map(|e| e.ok());
+
+        for entry in walker {
             let entry_path = try!(entry.path()
                 .to_str()
                 .ok_or(format!("Cannot convert pathname {:?} to UTF-8", entry.path())));
@@ -161,32 +164,6 @@ pub fn build(config: &Config) -> Result<()> {
     }
 
     Ok(())
-}
-
-/// Gets all layout files from the specified path (usually _layouts/)
-/// This walks the specified directory recursively
-///
-/// Returns a map filename -> content
-fn get_layouts(layouts_path: &Path) -> Result<HashMap<String, String>> {
-    let mut layouts = HashMap::new();
-
-    // go through the layout directory and add
-    // filename -> text content to the layout map
-    for entry in walker!(layouts_path, vec![]) {
-        let mut text = String::new();
-        let mut file = try!(File::open(entry.path()));
-        try!(file.read_to_string(&mut text));
-
-        let path = try!(entry.path()
-            .file_name()
-            .and_then(|name| name.to_str())
-            .ok_or(format!("Cannot convert pathname {:?} to UTF-8",
-                           entry.path().file_name())));
-
-        layouts.insert(path.to_owned(), text);
-    }
-
-    Ok(layouts)
 }
 
 // creates a new RSS file with the contents of the site blog
