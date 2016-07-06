@@ -86,7 +86,7 @@ fn main() {
     }
 
     if matches.opt_present("version") {
-        println!("0.2.0");
+        println!("0.3.0");
         return;
     }
 
