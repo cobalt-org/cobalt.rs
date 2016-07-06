@@ -57,7 +57,7 @@ fn main() {
                 "layouts",
                 "\tLayout templates folder, Default: _layouts/",
                 "");
-    opts.optopt("p", "posts", "Posts folder, Default: _posts/", "");
+    opts.optopt("p", "posts", "Posts folder, Default: posts/", "");
     opts.optopt("P", "port", "Port to serve from, Default: 3000", "");
     opts.optopt("b",
                 "branch",
@@ -131,6 +131,7 @@ fn main() {
             }
         }
     } else {
+        warn!("No .cobalt.yml file found in current directory, using default config.");
         Default::default()
     };
 

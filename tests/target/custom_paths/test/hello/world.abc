@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>My blog - test/hello/world.abc</title>
+    </head>
+    <body>
+        <h1>Variables file name</h1>
+<p>This asserts that you can substitute any part of the url with custom variables</p>
+
+    </body>
+</html>
+

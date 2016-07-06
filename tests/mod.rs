@@ -23,15 +23,15 @@ fn run_test(name: &str) -> Result<(), cobalt::Error> {
     let result = cobalt::build(&config);
 
     if result.is_ok() {
-        let walker = WalkDir::new(&target).into_iter();
+        let walker = WalkDir::new(&target)
+            .into_iter()
+            .filter_map(|e| e.ok())
+            .filter(|e| e.file_type().is_file());
 
         // walk through fixture and created tmp directory and compare files
-        for entry in walker.filter_map(|e| e.ok()).filter(|e| e.file_type().is_file()) {
+        for entry in walker {
             let relative = entry.path()
-                                .to_str()
-                                .unwrap()
-                                .split(&target)
-                                .last()
+                                .strip_prefix(&target)
                                 .expect("Comparison error");
 
             let mut original = String::new();
@@ -47,6 +47,22 @@ fn run_test(name: &str) -> Result<(), cobalt::Error> {
                 .expect("Could not read to string");
 
             difference::assert_diff(&original, &created, " ", 0);
+        }
+
+        // ensure no unnecessary files were created
+        let walker = WalkDir::new(&config.dest)
+            .into_iter()
+            .filter_map(|e| e.ok())
+            .filter(|e| e.file_type().is_file());
+
+        for entry in walker {
+            let relative = entry.path()
+                                .strip_prefix(&config.dest)
+                                .expect("Comparison error");
+            let relative = Path::new(&target).join(&relative);
+
+            File::open(&relative)
+                .expect(&format!("File {:?} does not exist in reference ({:?}).", entry.path(), relative));
         }
     }
 
@@ -67,6 +83,16 @@ pub fn custom_paths() {
 }
 
 #[test]
+pub fn custom_posts_folder() {
+    run_test("custom_posts_folder").expect("Build error");
+}
+
+#[test]
+pub fn custom_post_path() {
+    run_test("custom_post_path").expect("Build error");
+}
+
+#[test]
 pub fn dotfiles() {
     run_test("dotfiles").expect("Build error");
 }
@@ -74,6 +100,11 @@ pub fn dotfiles() {
 #[test]
 pub fn example() {
     run_test("example").expect("Build error");
+}
+
+#[test]
+pub fn hidden_posts_folder() {
+    run_test("hidden_posts_folder").expect("Build error");
 }
 
 #[test]
@@ -101,9 +132,11 @@ pub fn liquid_error() {
 pub fn no_extends_error() {
     let err = run_test("no_extends_error");
     assert!(err.is_err());
-    assert_eq!(err.unwrap_err().description(),
-               "Layout default_nonexistent.liquid can not be found (defined in \
-                tests/fixtures/no_extends_error/index.liquid)");
+    assert!(err
+            .unwrap_err()
+            .description()
+            .contains("Layout default_nonexistent.liquid can not be read (defined in tests/fixtures/no_extends_error/index.liquid)")
+            );
 }
 
 #[test]

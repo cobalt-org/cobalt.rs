@@ -56,7 +56,7 @@ Layouts will be compiled as [liquid](https://github.com/cobalt-org/liquid-rust) 
 
 ### Posts
 
-Posts live in `_posts`. You can use a different directory for posts with the `-p` flag.
+Posts live in `posts` by default, but you can use a different directory for posts with the `-p` flag or by setting the `posts` variable in your .cobalt.yml.
 
 Example:
 
@@ -106,6 +106,8 @@ path: /some/other/path/
 ```
 
 would result in a file with the url `your-website.com/some/other/path/index.html`.
+
+You can also set a global attribute `post_path` in your .cobalt.yml that will be used for all posts.
 
 Any attribute in the front matter can be interpolated into the path. If you set a `date` attribute you have access to several other custom attributes. See the Jekyll documentation.
 

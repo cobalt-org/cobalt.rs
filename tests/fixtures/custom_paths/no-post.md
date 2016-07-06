@@ -2,7 +2,7 @@ extends: posts.liquid
 
 title:  Custom paths are available to non-posts
 date:   22/08/2014 at 15:36
-path:  test/thing.html
+path:  test/hello.html
 ---
 # {{ title }}
 
