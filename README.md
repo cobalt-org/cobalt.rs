@@ -23,7 +23,7 @@ A static site generator written in [Rust](http://www.rust-lang.org/).
 ## Installation
 
 ```
-  $ cargo install --git https://github.com/cobalt-org/cobalt.rs
+  $ cargo install cobalt-bin
 ```
 
 ## Examples
