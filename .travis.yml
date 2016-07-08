@@ -29,7 +29,7 @@ addons:
       - libdw-dev
 
 after_success:
-  - travis-cargo --only stable coveralls --no-sudo --exclude-pattern="src/main.rs,src/new.rs"
+  - travis-cargo --only stable coveralls --no-sudo --exclude-pattern="src/main.rs,src/new.rs,ssl_ctx_options_shim.c"
 
 notifications:
   webhooks:
