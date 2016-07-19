@@ -121,7 +121,11 @@ impl Document {
         }
     }
 
-    pub fn parse(file_path: &Path, source: &Path, mut is_post: bool, post_path: &Option<String>) -> Result<Document> {
+    pub fn parse(file_path: &Path,
+                 source: &Path,
+                 mut is_post: bool,
+                 post_path: &Option<String>)
+                 -> Result<Document> {
         let mut attributes = HashMap::new();
         let mut content = try!(read_file(file_path));
 
@@ -167,7 +171,8 @@ impl Document {
 
         let layout = attributes.get("extends").and_then(|l| l.as_str()).map(|x| x.to_owned());
 
-        let new_path = try!(file_path.strip_prefix(source).map_err(|_| "File path not in source".to_owned()));
+        let new_path = try!(file_path.strip_prefix(source)
+            .map_err(|_| "File path not in source".to_owned()));
 
         let mut path_buf = PathBuf::from(new_path);
         path_buf.set_extension("html");
@@ -217,7 +222,7 @@ impl Document {
 
     pub fn as_html(&self,
                    source: &Path,
-                   post_data: &Vec<Value>,
+                   post_data: &[Value],
                    layouts_path: &Path)
                    -> Result<String> {
         let options = LiquidOptions { file_system: Some(source.to_owned()), ..Default::default() };
@@ -235,7 +240,7 @@ impl Document {
         };
 
         let mut data = Context::with_values(self.attributes.clone());
-        data.set_val("posts", Value::Array(post_data.clone()));
+        data.set_val("posts", Value::Array(post_data.to_vec()));
 
         let mut html = try!(template.render(&mut data)).unwrap_or(String::new());
 

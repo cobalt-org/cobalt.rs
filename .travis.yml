@@ -1,25 +1,23 @@
 sudo: false
 language: rust
-
+cache: cargo
 rust:
   - stable
   - beta
   - nightly
 
-matrix:
-  allow_failures:
-    - rust: nightly
-
 before_script:
   - |
     pip install 'travis-cargo<0.2' --user &&
-    export PATH=$HOME/.local/bin:$PATH
+    (cargo install --git https://github.com/rust-lang-nursery/rustfmt || true) &&
+    export PATH=$HOME/.local/bin:$PATH &&
+    export PATH=$HOME/.cargo/bin:$PATH
 
 script:
   - |
+    cargo fmt -- --write-mode=diff &&
     travis-cargo build &&
     travis-cargo test &&
-    travis-cargo bench
 
 addons:
   apt:
@@ -29,7 +27,11 @@ addons:
       - libdw-dev
 
 after_success:
-  - travis-cargo --only stable coveralls --no-sudo --exclude-pattern="src/main.rs,src/new.rs,ssl_ctx_options_shim.c"
+  - travis-cargo --only stable coveralls --no-sudo --exclude-pattern="src/main.rs,src/new.rs,target/debug/build/"
+
+env:
+  global:
+  - TRAVIS_CARGO_NIGHTLY_FEATURE="clippy"
 
 notifications:
   webhooks:

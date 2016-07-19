@@ -47,7 +47,7 @@ impl Config {
 
         let yaml = try!(YamlLoader::load_from_str(&buffer));
         let yaml = match yaml.get(0) {
-            Some(ref y) => y.clone(),
+            Some(y) => y,
             None => return Ok(Default::default()),
         };
 
@@ -83,7 +83,7 @@ impl Config {
 
         if let Some(link) = yaml["link"].as_str() {
             let mut link = link.to_owned();
-            if !link.ends_with("/") {
+            if !link.ends_with('/') {
                 link = link + "/";
             }
             config.link = Some(link);

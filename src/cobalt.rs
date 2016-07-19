@@ -21,7 +21,7 @@ fn ignore_filter(entry: &DirEntry, source: &Path, ignore: &[Pattern]) -> bool {
     }
     let path = entry.path().strip_prefix(&source).unwrap_or(entry.path());
     let file_name = entry.file_name().to_str().unwrap_or("");
-    if file_name.starts_with("_") || file_name.starts_with(".") {
+    if file_name.starts_with('_') || file_name.starts_with('.') {
         return false;
     }
     !ignore.iter().any(|p| p.matches_path(path))
@@ -30,7 +30,7 @@ fn ignore_filter(entry: &DirEntry, source: &Path, ignore: &[Pattern]) -> bool {
 fn compare_paths(a: &Path, b: &Path) -> bool {
     match (fs::canonicalize(a), fs::canonicalize(b)) {
         (Ok(p), Ok(p2)) => p == p2,
-        _ => false
+        _ => false,
     }
 }
 
@@ -62,8 +62,8 @@ pub fn build(config: &Config) -> Result<()> {
     let walker = WalkDir::new(&source)
         .into_iter()
         .filter_entry(|e| {
-            (ignore_filter(e, &source, &config.ignore) || compare_paths(e.path(), posts))
-            && !compare_paths(e.path(), dest)
+            (ignore_filter(e, source, &config.ignore) || compare_paths(e.path(), posts)) &&
+            !compare_paths(e.path(), dest)
         })
         .filter_map(|e| e.ok());
 
@@ -84,7 +84,7 @@ pub fn build(config: &Config) -> Result<()> {
     // sort documents by date, if there's no date (none was provided or it couldn't be read) then
     // fall back to the default date
     documents.sort_by(|a, b| {
-        b.date.unwrap_or(default_date.clone()).cmp(&a.date.unwrap_or(default_date.clone()))
+        b.date.unwrap_or(default_date).cmp(&a.date.unwrap_or(default_date))
     });
 
     // check if we should create an RSS file and create it!
@@ -113,7 +113,7 @@ pub fn build(config: &Config) -> Result<()> {
 
             let handle = scope.spawn(move || {
                 let content = try!(doc.as_html(&source, &post_data, &layouts));
-                create_document_file(content, &doc.path, &dest)
+                create_document_file(content, &doc.path, dest)
             });
             handles.push(handle);
         }
@@ -132,11 +132,10 @@ pub fn build(config: &Config) -> Result<()> {
         let walker = WalkDir::new(&source)
             .into_iter()
             .filter_entry(|e| {
-                ignore_filter(e, &source, &config.ignore) &&
+                ignore_filter(e, source, &config.ignore) &&
                 !template_extensions.contains(&e.path()
                     .extension()
-                    .unwrap_or(OsStr::new("")))
-                && !compare_paths(e.path(), dest)
+                    .unwrap_or(OsStr::new(""))) && !compare_paths(e.path(), dest)
             })
             .filter_map(|e| e.ok());
 
