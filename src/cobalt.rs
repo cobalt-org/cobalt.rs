@@ -34,7 +34,7 @@ fn compare_paths(a: &Path, b: &Path) -> bool {
     }
 }
 
-/// The primary build function that tranforms a directory into a site
+/// The primary build function that transforms a directory into a site
 pub fn build(config: &Config) -> Result<()> {
     trace!("Build configuration: {:?}", config);
 
