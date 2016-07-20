@@ -17,7 +17,7 @@ script:
   - |
     cargo fmt -- --write-mode=diff &&
     travis-cargo build &&
-    travis-cargo test &&
+    travis-cargo test
 
 addons:
   apt:
