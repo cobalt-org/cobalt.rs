@@ -83,9 +83,7 @@ pub fn build(config: &Config) -> Result<()> {
 
     // sort documents by date, if there's no date (none was provided or it couldn't be read) then
     // fall back to the default date
-    documents.sort_by(|a, b| {
-        b.date.unwrap_or(default_date).cmp(&a.date.unwrap_or(default_date))
-    });
+    documents.sort_by(|a, b| b.date.unwrap_or(default_date).cmp(&a.date.unwrap_or(default_date)));
 
     // check if we should create an RSS file and create it!
     if let &Some(ref path) = &config.rss {
