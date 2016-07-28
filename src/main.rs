@@ -73,6 +73,11 @@ fn main() {
             .help("Posts folder [default: ./posts]")
             .global(true)
             .takes_value(true))
+        .arg(Arg::with_name("drafts")
+            .long("drafts")
+            .help("Include drafts.")
+            .global(true)
+            .takes_value(false))
         .arg(Arg::with_name("log-level")
             .short("L")
             .long("log-level")
@@ -219,6 +224,8 @@ fn main() {
         .or(global_matches.value_of("posts"))
         .map(str::to_string)
         .unwrap_or(config.posts);
+
+    config.include_drafts = matches.is_present("drafts");
 
     match command {
         "new" => {

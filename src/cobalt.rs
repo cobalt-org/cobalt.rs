@@ -68,13 +68,40 @@ pub fn build(config: &Config) -> Result<()> {
         .filter_map(|e| e.ok());
 
     for entry in walker {
-        let extension = &entry.path().extension().unwrap_or(OsStr::new(""));
+        let entry_path = entry.path();
+        let extension = &entry_path.extension().unwrap_or(OsStr::new(""));
         if template_extensions.contains(extension) {
             // if the document is in the posts folder it's considered a post
-            let is_post = entry.path().parent().map(|p| compare_paths(p, posts)).unwrap_or(false);
+            let is_post = entry_path.parent().map(|p| compare_paths(p, posts)).unwrap_or(false);
 
-            let doc = try!(Document::parse(&entry.path(), &source, is_post, &config.post_path));
+            let new_path = entry_path.strip_prefix(source).expect("Entry not in source folder");
+
+            let doc = try!(Document::parse(&entry_path, new_path, is_post, &config.post_path));
             documents.push(doc);
+        }
+    }
+
+    if config.include_drafts {
+        let drafts = source.join(&config.drafts);
+        let drafts = drafts.as_path();
+
+        let walker = WalkDir::new(drafts)
+            .into_iter()
+            .filter_entry(|e| {
+                (ignore_filter(e, source, &config.ignore) || compare_paths(e.path(), drafts)) &&
+                !compare_paths(e.path(), dest)
+            })
+            .filter_map(|e| e.ok());
+
+        for entry in walker {
+            let entry_path = entry.path();
+            let extension = &entry_path.extension().unwrap_or(OsStr::new(""));
+            let new_path = posts.join(entry_path.strip_prefix(drafts).expect("Draft not in draft folder!"));
+            let new_path = new_path.strip_prefix(source).expect("Entry not in source folder");
+            if template_extensions.contains(extension) {
+                let doc = try!(Document::parse(&entry_path, new_path, true, &config.post_path));
+                documents.push(doc);
+            }
         }
     }
 

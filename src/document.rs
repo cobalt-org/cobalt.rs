@@ -122,7 +122,7 @@ impl Document {
     }
 
     pub fn parse(file_path: &Path,
-                 source: &Path,
+                 new_path: &Path,
                  mut is_post: bool,
                  post_path: &Option<String>)
                  -> Result<Document> {
@@ -170,9 +170,6 @@ impl Document {
         let markdown = file_path.extension().unwrap_or(OsStr::new("")) == OsStr::new("md");
 
         let layout = attributes.get("extends").and_then(|l| l.as_str()).map(|x| x.to_owned());
-
-        let new_path = try!(file_path.strip_prefix(source)
-            .map_err(|_| "File path not in source".to_owned()));
 
         let mut path_buf = PathBuf::from(new_path);
         path_buf.set_extension("html");

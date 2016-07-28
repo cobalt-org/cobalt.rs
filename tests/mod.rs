@@ -98,6 +98,11 @@ pub fn dotfiles() {
 }
 
 #[test]
+pub fn drafts() {
+    run_test("drafts").expect("Build error");
+}
+
+#[test]
 pub fn example() {
     run_test("example").expect("Build error");
 }
