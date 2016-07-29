@@ -103,6 +103,11 @@ pub fn drafts() {
 }
 
 #[test]
+pub fn drafts_not_shown_by_default() {
+    run_test("drafts_not_shown_by_default").expect("Build error");
+}
+
+#[test]
 pub fn example() {
     run_test("example").expect("Build error");
 }

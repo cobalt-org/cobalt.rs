@@ -77,7 +77,9 @@ pub fn build(config: &Config) -> Result<()> {
             let new_path = entry_path.strip_prefix(source).expect("Entry not in source folder");
 
             let doc = try!(Document::parse(&entry_path, new_path, is_post, &config.post_path));
-            documents.push(doc);
+            if !doc.is_draft || config.include_drafts {
+                documents.push(doc);
+            }
         }
     }
 

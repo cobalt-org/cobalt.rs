@@ -22,6 +22,7 @@ pub struct Document {
     pub content: String,
     pub layout: Option<String>,
     pub is_post: bool,
+    pub is_draft: bool,
     pub date: Option<DateTime<FixedOffset>>,
     file_path: String,
     markdown: bool,
@@ -105,6 +106,7 @@ impl Document {
                content: String,
                layout: Option<String>,
                is_post: bool,
+               is_draft: bool,
                date: Option<DateTime<FixedOffset>>,
                file_path: String,
                markdown: bool)
@@ -115,6 +117,7 @@ impl Document {
             content: content,
             layout: layout,
             is_post: is_post,
+            is_draft: is_draft,
             date: date,
             file_path: file_path,
             markdown: markdown,
@@ -161,6 +164,12 @@ impl Document {
             is_post = val;
         }
 
+        let is_draft = if let Some(&Value::Bool(true)) = attributes.get("draft") {
+            true
+        } else {
+            false
+        };
+
         let date = attributes.get("date")
             .and_then(|d| d.as_str())
             .and_then(|d| DateTime::parse_from_str(d, "%d %B %Y %H:%M:%S %z").ok());
@@ -198,6 +207,7 @@ impl Document {
                          content,
                          layout,
                          is_post,
+                         is_draft,
                          date,
                          file_path.to_string_lossy().into_owned(),
                          markdown))
