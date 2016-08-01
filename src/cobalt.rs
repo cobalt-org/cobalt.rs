@@ -98,7 +98,8 @@ pub fn build(config: &Config) -> Result<()> {
         for entry in walker {
             let entry_path = entry.path();
             let extension = &entry_path.extension().unwrap_or(OsStr::new(""));
-            let new_path = posts.join(entry_path.strip_prefix(drafts).expect("Draft not in draft folder!"));
+            let new_path =
+                posts.join(entry_path.strip_prefix(drafts).expect("Draft not in draft folder!"));
             let new_path = new_path.strip_prefix(source).expect("Entry not in source folder");
             if template_extensions.contains(extension) {
                 let doc = try!(Document::parse(&entry_path, new_path, true, &config.post_path));
