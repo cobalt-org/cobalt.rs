@@ -32,7 +32,7 @@ use std::io::Result as IoResult;
 use std::fs::File;
 
 fn main() {
-    let matches = App::new("Cobalt")
+    let global_matches = App::new("Cobalt")
         .version("0.3.0")
         .author("Benny Klotz <r3qnbenni@gmail.com>, Johann Hofmann")
         .about("A static site generator written in Rust.")
@@ -42,47 +42,53 @@ fn main() {
             .short("c")
             .long("config")
             .value_name("FILE")
-            .help("Config file to use")
-            .default_value(".cobalt.yml")
+            .help("Config file to use [default: .cobalt.yml]")
+            .global(true)
             .takes_value(true))
         .arg(Arg::with_name("source")
             .short("s")
             .long("source")
             .value_name("DIR")
             .help("Source folder [default: ./]")
+            .global(true)
             .takes_value(true))
         .arg(Arg::with_name("destination")
             .short("d")
             .long("destination")
             .value_name("DIR")
             .help("Destination folder [default: ./]")
+            .global(true)
             .takes_value(true))
         .arg(Arg::with_name("layouts")
             .short("l")
             .long("layouts")
             .value_name("DIR")
             .help("Layout templates folder [default: ./_layouts]")
+            .global(true)
             .takes_value(true))
         .arg(Arg::with_name("posts")
             .short("p")
             .long("posts")
             .value_name("DIR")
             .help("Posts folder [default: ./posts]")
+            .global(true)
             .takes_value(true))
         .arg(Arg::with_name("log-level")
             .short("L")
             .long("log-level")
-            .possible_values(&["info", "debug", "trace", "off"])
-            .help("Log level")
-            .default_value("info")
+            .possible_values(&["error", "warn", "info", "debug", "trace", "off"])
+            .help("Log level [default: info]")
+            .global(true)
             .takes_value(true))
         .arg(Arg::with_name("trace")
             .long("trace")
             .help("Log ultra-verbose (trace level) information")
+            .global(true)
             .takes_value(false))
         .arg(Arg::with_name("silent")
             .long("silent")
             .help("Suppress all output")
+            .global(true)
             .takes_value(false))
         .subcommand(SubCommand::with_name("new")
             .about("create a new cobalt project")
@@ -147,6 +153,11 @@ fn main() {
                 .takes_value(true)))
         .get_matches();
 
+    let (command, matches) = match global_matches.subcommand() {
+        (command, Some(matches)) => (command, matches),
+        (_, None) => unreachable!(),
+    };
+
     let format = |record: &LogRecord| {
         let level = format!("[{}]", record.level()).to_lowercase();
         format!("{:8} {}", level, record.args())
@@ -155,27 +166,22 @@ fn main() {
     let mut builder = LogBuilder::new();
     builder.format(format);
 
-    match matches.value_of("log-level") {
-        Some("info") => {
-            builder.filter(None, LogLevelFilter::Info);
-        }
-        Some("debug") => {
-            builder.filter(None, LogLevelFilter::Debug);
-        }
-        Some("trace") => {
-            builder.filter(None, LogLevelFilter::Trace);
-        }
-        Some("off") => {
-            builder.filter(None, LogLevelFilter::Off);
-        }
-        _ => {
-            builder.filter(None, LogLevelFilter::Info);
-        }
-    }
+    match matches.value_of("log-level").or(global_matches.value_of("log-level")) {
+        Some("error") => builder.filter(None, LogLevelFilter::Error),
+        Some("warn") => builder.filter(None, LogLevelFilter::Warn),
+        Some("info") => builder.filter(None, LogLevelFilter::Info),
+        Some("debug") => builder.filter(None, LogLevelFilter::Debug),
+        Some("trace") => builder.filter(None, LogLevelFilter::Trace),
+        Some("off") => builder.filter(None, LogLevelFilter::Off),
+        _ => builder.filter(None, LogLevelFilter::Info),
+    };
 
     builder.init().unwrap();
 
-    let config_path = matches.value_of("config").unwrap().to_string();
+    let config_path = matches.value_of("config")
+        .or(global_matches.value_of("config"))
+        .unwrap_or(".cobalt.yml")
+        .to_string();
 
     // Fetch config information if available
     let mut config: Config = if fs::metadata(&config_path).is_ok() {
@@ -195,24 +201,28 @@ fn main() {
     };
 
     config.source = matches.value_of("source")
+        .or(global_matches.value_of("source"))
         .map(str::to_string)
         .unwrap_or(config.source);
 
     config.dest = matches.value_of("destination")
+        .or(global_matches.value_of("destination"))
         .map(str::to_string)
         .unwrap_or(config.dest);
 
     config.layouts = matches.value_of("layouts")
+        .or(global_matches.value_of("layouts"))
         .map(str::to_string)
         .unwrap_or(config.layouts);
 
     config.posts = matches.value_of("posts")
+        .or(global_matches.value_of("posts"))
         .map(str::to_string)
         .unwrap_or(config.posts);
 
-    match matches.subcommand() {
-        ("new", Some(submatches)) => {
-            let directory = submatches.value_of("DIRECTORY").unwrap();
+    match command {
+        "new" => {
+            let directory = matches.value_of("DIRECTORY").unwrap();
 
             match create_new_project(&directory.to_string()) {
                 Ok(_) => info!("Created new project at {}", directory),
@@ -224,26 +234,26 @@ fn main() {
             }
         }
 
-        ("build", Some(submatches)) => {
+        "build" => {
             build(&config);
-            if submatches.is_present("import") {
-                let branch = submatches.value_of("branch").unwrap().to_string();
-                let message = submatches.value_of("message").unwrap().to_string();
+            if matches.is_present("import") {
+                let branch = matches.value_of("branch").unwrap().to_string();
+                let message = matches.value_of("message").unwrap().to_string();
                 import(&config, &branch, &message);
             }
         }
 
-        ("serve", Some(submatches)) => {
+        "serve" => {
             build(&config);
-            let port = submatches.value_of("port").unwrap().to_string();
+            let port = matches.value_of("port").unwrap().to_string();
             serve(&config.dest, &port);
         }
 
-        ("watch", Some(submatches)) => {
+        "watch" => {
             build(&config);
 
             let dest = config.dest.clone();
-            let port = submatches.value_of("port").unwrap().to_string();
+            let port = matches.value_of("port").unwrap().to_string();
             thread::spawn(move || {
                 serve(&dest, &port);
             });
@@ -301,14 +311,14 @@ fn main() {
             }
         }
 
-        ("import", Some(submatches)) => {
-            let branch = submatches.value_of("branch").unwrap().to_string();
-            let message = submatches.value_of("message").unwrap().to_string();
+        "import" => {
+            let branch = matches.value_of("branch").unwrap().to_string();
+            let message = matches.value_of("message").unwrap().to_string();
             import(&config, &branch, &message);
         }
 
         _ => {
-            println!("{}", matches.usage());
+            println!("{}", global_matches.usage());
             return;
         }
     }
