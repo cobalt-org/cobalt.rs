@@ -8,16 +8,21 @@ environment:
     # Stable channel
     - TARGET: x86_64-pc-windows-gnu
       CHANNEL: stable
+      BITS: 64
     - TARGET: i686-pc-windows-msvc
       CHANNEL: stable
+      BITS: 32
     - TARGET: x86_64-pc-windows-msvc
       CHANNEL: stable
+      BITS: 64
     # Beta channel
     - TARGET: x86_64-pc-windows-msvc
       CHANNEL: beta
+      BITS: 64
     # Nightly channel
     - TARGET: x86_64-pc-windows-msvc
       CHANNEL: nightly
+      BITS: 64
 
 # Install Rust and Cargo
 # (Based on from https://github.com/rust-lang/libc/blob/master/appveyor.yml)
