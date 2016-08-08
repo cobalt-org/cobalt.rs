@@ -211,7 +211,8 @@ impl Document {
     pub fn to_rss(&self, root_url: &str) -> rss::Item {
         rss::Item {
             title: self.attributes.get("title").and_then(|s| s.as_str()).map(|s| s.to_owned()),
-            link: Some(root_url.to_owned() + &self.path),
+            // Swap back slashes to forward slashes to ensure the URL's are valid on Windows
+            link: Some(root_url.to_owned() + &self.path.replace("\\", "/")),
             pub_date: self.date.map(|date| date.to_rfc2822()),
             description: self.attributes
                 .get("description")
