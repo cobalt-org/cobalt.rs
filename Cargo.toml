@@ -27,12 +27,15 @@ log = "0.3"
 env_logger = "0.3"
 rss = "0.3.1"
 pulldown-cmark = "0.0.7"
-hyper = "0.9"
 notify = "^2.5.0"
 ghp = "0.1"
 glob = "0.2.11"
 regex = "0.1"
 clippy = {version = "0.0", optional = true}
+
+[dependencies.hyper]
+version = "0.9"
+default-features = false
 
 [dev-dependencies]
 difference = "0.4"
