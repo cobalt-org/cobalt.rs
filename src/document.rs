@@ -193,7 +193,8 @@ impl Document {
         let path = try!(path_buf.to_str()
             .ok_or(format!("Cannot convert pathname {:?} to UTF-8", path_buf)));
 
-        attributes.insert("path".to_owned(), Value::Str(path.to_owned()));
+        // Swap back slashes to forward slashes to ensure the URL's are valid on Windows
+        attributes.insert("path".to_owned(), Value::Str(path.replace("\\", "/")));
 
         Ok(Document::new(path.to_owned(),
                          attributes,
