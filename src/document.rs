@@ -22,6 +22,7 @@ pub struct Document {
     pub content: String,
     pub layout: Option<String>,
     pub is_post: bool,
+    pub is_draft: bool,
     pub date: Option<DateTime<FixedOffset>>,
     file_path: String,
     markdown: bool,
@@ -105,6 +106,7 @@ impl Document {
                content: String,
                layout: Option<String>,
                is_post: bool,
+               is_draft: bool,
                date: Option<DateTime<FixedOffset>>,
                file_path: String,
                markdown: bool)
@@ -115,6 +117,7 @@ impl Document {
             content: content,
             layout: layout,
             is_post: is_post,
+            is_draft: is_draft,
             date: date,
             file_path: file_path,
             markdown: markdown,
@@ -122,7 +125,7 @@ impl Document {
     }
 
     pub fn parse(file_path: &Path,
-                 source: &Path,
+                 new_path: &Path,
                  mut is_post: bool,
                  post_path: &Option<String>)
                  -> Result<Document> {
@@ -161,6 +164,12 @@ impl Document {
             is_post = val;
         }
 
+        let is_draft = if let Some(&Value::Bool(true)) = attributes.get("draft") {
+            true
+        } else {
+            false
+        };
+
         let date = attributes.get("date")
             .and_then(|d| d.as_str())
             .and_then(|d| DateTime::parse_from_str(d, "%d %B %Y %H:%M:%S %z").ok());
@@ -170,9 +179,6 @@ impl Document {
         let markdown = file_path.extension().unwrap_or(OsStr::new("")) == OsStr::new("md");
 
         let layout = attributes.get("extends").and_then(|l| l.as_str()).map(|x| x.to_owned());
-
-        let new_path = try!(file_path.strip_prefix(source)
-            .map_err(|_| "File path not in source".to_owned()));
 
         let mut path_buf = PathBuf::from(new_path);
         path_buf.set_extension("html");
@@ -201,6 +207,7 @@ impl Document {
                          content,
                          layout,
                          is_post,
+                         is_draft,
                          date,
                          file_path.to_string_lossy().into_owned(),
                          markdown))

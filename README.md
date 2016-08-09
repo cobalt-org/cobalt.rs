@@ -77,6 +77,12 @@ The ```extends``` attribute specifies which layout will be used.
 
 The ```date``` attribute will be used to sort blog posts (from last to first). ```date``` must have the format `%dd %Mon %YYYY %HH:%MM:%SS %zzzz`, so for example `27 May 2016 21:00:30 +0100`.
 
+#### Drafts
+
+Cobalt supports leaving posts in "draft" state. Drafts will not be rendered unless Cobalt is run with the `--drafts` flag.
+
+To mark a post as draft you can either set `draft: true` in your front matter or add it to the drafts folder (`_drafts` by default). The draft folder location can be specified using the `draft` key in your .cobalt.yml.
+
 ### Other files
 
 Any file with the .md or .liquid file extension is considered a liquid template and will be parsed for metadata and compiled using liquid, like a post.

@@ -11,6 +11,8 @@ pub struct Config {
     pub source: String,
     pub dest: String,
     pub layouts: String,
+    pub drafts: String,
+    pub include_drafts: bool,
     pub posts: String,
     pub post_path: Option<String>,
     pub template_extensions: Vec<String>,
@@ -27,6 +29,8 @@ impl Default for Config {
             source: "./".to_owned(),
             dest: "./".to_owned(),
             layouts: "_layouts".to_owned(),
+            drafts: "_drafts".to_owned(),
+            include_drafts: false,
             posts: "posts".to_owned(),
             post_path: None,
             template_extensions: vec!["md".to_owned(), "liquid".to_owned()],
@@ -69,6 +73,14 @@ impl Config {
 
         if let Some(layouts) = yaml["layouts"].as_str() {
             config.layouts = layouts.to_owned();
+        };
+
+        if let Some(drafts) = yaml["drafts"].as_str() {
+            config.drafts = drafts.to_owned();
+        };
+
+        if let Some(include_drafts) = yaml["include_drafts"].as_bool() {
+            config.include_drafts = include_drafts;
         };
 
         if let Some(posts) = yaml["posts"].as_str() {
