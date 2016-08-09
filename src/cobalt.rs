@@ -55,7 +55,11 @@ pub fn build(config: &Config) -> Result<()> {
     let posts = posts.as_path();
 
     debug!("Layouts directory: {:?}", layouts);
-    debug!("posts directory: {:?}", posts);
+    debug!("Posts directory: {:?}", posts);
+    debug!("Draft mode enabled: {}", config.include_drafts);
+    if config.include_drafts {
+        debug!("Draft directory: {:?}", config.drafts);
+    }
 
     let mut documents = vec![];
 
