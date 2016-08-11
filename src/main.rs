@@ -181,6 +181,14 @@ fn main() {
         _ => builder.filter(None, LogLevelFilter::Info),
     };
 
+    if matches.is_present("trace") {
+        builder.filter(None, LogLevelFilter::Trace);
+    }
+
+    if matches.is_present("silent") {
+        builder.filter(None, LogLevelFilter::Off);
+    }
+
     builder.init().unwrap();
 
     let config_path = matches.value_of("config")
