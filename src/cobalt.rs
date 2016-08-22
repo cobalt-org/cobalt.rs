@@ -184,7 +184,7 @@ pub fn build(config: &Config) -> Result<()> {
                 try!(fs::create_dir_all(&dest.join(relative)));
                 debug!("Created new directory {:?}", dest.join(relative));
             } else {
-                if let Some(ref parent) = Path::new(relative).parent() {
+                if let Some(parent) = Path::new(relative).parent() {
                     try!(fs::create_dir_all(&dest.join(parent)));
                 }
 
