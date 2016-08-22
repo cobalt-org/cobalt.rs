@@ -38,6 +38,8 @@ version = "0.9"
 default-features = false
 
 [dev-dependencies]
+assert_cli = "0.3"
+lazy_static = "0.1"
 difference = "0.4"
 
 [features]
