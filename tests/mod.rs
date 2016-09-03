@@ -186,3 +186,20 @@ pub fn yaml_error() {
     assert!(err.is_err());
     assert_eq!(err.unwrap_err().description(), "unexpected character: `@'");
 }
+
+#[test]
+pub fn subdirectory_posts() {
+    let config = configure("subdirectory_posts").expect("configure error");
+    setup("subdirectory_posts", &config).expect("build error");
+    let index_html = "tests/tmp/subdirectory_posts/index.html";
+    let mut index_file = File::open(index_html).expect("cannot open index.html");
+    let mut content = String::new();
+    index_file.read_to_string(&mut content).expect("cannot read index.html");
+
+    assert!(content.find("sub-post-1.html") != None);
+    assert!(content.find("sub-post-2.html") != None);
+    assert!(content.find("sub-post-3.html") != None);
+    assert!(content.find("sub-post-4.html") != None);
+
+    cleanup(&config);
+}
