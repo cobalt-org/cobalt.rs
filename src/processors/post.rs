@@ -1,5 +1,4 @@
 use std::path::{PathBuf, Path};
-use std::ffi::OsStr;
 use util::*;
 use walkdir::{WalkDir, DirEntry};
 use document::Document;
@@ -10,7 +9,6 @@ use config::Config;
 use error::{Result, Error};
 use std::fs::{self, File};
 use std::io::{self, Write, ErrorKind};
-use std::error;
 use std::sync::Arc;
 use processor::Processor;
 use crossbeam;
@@ -18,16 +16,10 @@ use crossbeam;
 pub struct Post;
 
 impl Processor for Post {
-    fn match_dir(entry: &DirEntry, config: &Config) -> bool {
+    fn match_dir(&mut self, entry: &DirEntry, config: &Config) -> bool {
         // join("") makes sure path has a trailing slash
         let source = PathBuf::from(&config.source).join("");
         let source = source.as_path();
-
-        let template_extensions: Vec<&OsStr> = config.template_extensions
-            .iter()
-            .map(OsStr::new)
-            .collect();
-
 
         let posts = source.join(&config.posts);
         let posts = posts.as_path();
@@ -35,7 +27,7 @@ impl Processor for Post {
         compare_paths(entry.path(), posts)
     }
 
-    fn process(dir: DirEntry, config: &Config) -> Result<()> {
+    fn process(&mut self, dir: DirEntry, config: &Config) -> Result<()> {
         let source = PathBuf::from(&config.source).join("");
         let source = source.as_path();
         let dest = PathBuf::from(&config.dest).join("");

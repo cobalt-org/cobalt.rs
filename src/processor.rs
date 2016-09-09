@@ -6,7 +6,7 @@ use error::Result;
 pub use processors::*;
 
 pub trait Processor {
-    fn match_dir(entry: &DirEntry, config: &Config) -> bool;
+    fn match_dir(&mut self, entry: &DirEntry, config: &Config) -> bool;
 
-    fn process(entry: DirEntry, config: &Config) -> Result<()>;
+    fn process(&mut self, entry: DirEntry, config: &Config) -> Result<()>;
 }
