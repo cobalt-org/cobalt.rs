@@ -38,10 +38,12 @@ impl Processor for Post {
 
         let mut documents = vec![];
 
-        for entry in WalkDir::new(&dir.path()).into_iter().filter_map(|e| e.ok()) {
+        for entry in WalkDir::new(&dir.path())
+            .min_depth(1)
+            .into_iter()
+            .filter_map(|e| e.ok()) {
             let entry_path = &entry.path();
             let new_path = entry_path.strip_prefix(source).expect("Entry not in source folder");
-
             let doc = try!(Document::parse(entry_path, new_path, true, &config.post_path));
 
             if !doc.is_draft || config.include_drafts {

@@ -45,7 +45,10 @@ pub fn build(config: &Config) -> Result<()> {
 
     let mut pros = vec![Post];
 
-    for entry in WalkDir::new(&source).into_iter().filter_map(|e| e.ok()) {
+    for entry in WalkDir::new(&source)
+        .max_depth(1)
+        .into_iter()
+        .filter_map(|e| e.ok()) {
         for mut p in &mut pros {
             if p.match_dir(&entry, config) {
                 try!(p.process(entry, config));
