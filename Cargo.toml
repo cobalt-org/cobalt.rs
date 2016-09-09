@@ -32,6 +32,7 @@ ghp = "0.1"
 glob = "0.2.11"
 regex = "0.1"
 clippy = {version = "0.0", optional = true}
+sass-rs = "0.0.18"
 
 [dependencies.hyper]
 version = "0.9"
