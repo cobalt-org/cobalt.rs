@@ -174,13 +174,11 @@ Make sure to also provide the fields `title`, `date` and `description` in the fr
 
 To import your site to your `gh-pages` branch you can either pass a `build --import` flag when you build the site or after you have build the site with `build` you can run `import`. There are also some flags that can be found via `import --help`.
 
-**Note:** to import to gitlab pages you can pass `import --branch gl-pages`
-
 ## Deployment
 
 ### With Travis-CI
 
-You can easily deploy a cobalt site to `gh-pages` or `gl-pages`! To do this with travis is also very easy. You will need to have rust available on travis. In your `travis.yml` you will need to have something similar to this:
+You can easily deploy a cobalt site to `gh-pages`! To do this with travis is also very easy. You will need to have rust available on travis. In your `travis.yml` you will need to have something similar to this:
 
 ```yaml
 sudo: false
@@ -204,4 +202,22 @@ after_success: |
 
 For the `GH_TOKEN` you will need to create a personal access token, which can be found [here](https://github.com/settings/tokens), then you will need to use the [travis cli](https://github.com/travis-ci/travis.rb#the-travis-client-) tool to encrypt your personal access token. You can do this like so `travis encrypt GH_TOKEN=... --add env.global`
 
-**Note:** For `gl-pages` you will need to pass `import --branch gl-pages` and you will need to change the url that git pushes to.
+### With GitLab CI
+
+You can also deploy a cobalt site to [GitLab Pages](http://pages.gitlab.io/) using GitLab CI. GitLab CI uses [Docker](https://docs.docker.com/), you can use [nott/cobalt](https://hub.docker.com/r/nott/cobalt/) or any other image with `cobalt` in `PATH`.
+
+An example of `.gitlab-ci.yml`:
+
+```yaml
+image: nott/cobalt:latest
+
+pages:
+  script:
+  - mkdir -p public
+  - cobalt build -d public
+  artifacts:
+    paths:
+    - public/
+  only:
+  - master
+```
