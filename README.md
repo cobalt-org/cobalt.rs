@@ -18,7 +18,7 @@ A static site generator written in [Rust](http://www.rust-lang.org/).
   - [RSS](#rss)
   - [Import](#import)
 - [Deployment](#deployment)
-  - [Travis-CI](#with-travis-ci)
+  - [Travis CI](#with-travis-ci)
   - [GitLab CI](#with-gitlab-ci)
 
 ## Installation
@@ -177,7 +177,7 @@ To import your site to your `gh-pages` branch you can either pass a `build --imp
 
 ## Deployment
 
-### With Travis-CI
+### With Travis CI
 
 You can easily deploy a cobalt site to `gh-pages`! To do this with travis is also very easy. You will need to have rust available on travis. In your `travis.yml` you will need to have something similar to this:
 
