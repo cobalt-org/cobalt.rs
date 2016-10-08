@@ -19,6 +19,7 @@ A static site generator written in [Rust](http://www.rust-lang.org/).
   - [Import](#import)
 - [Deployment](#deployment)
   - [Travis-CI](#with-travis-ci)
+  - [GitLab CI](#with-gitlab-ci)
 
 ## Installation
 
