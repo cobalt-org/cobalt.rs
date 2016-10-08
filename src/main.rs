@@ -293,10 +293,11 @@ fn main() {
                                         // strip absolute path
                                         let rel_path = path.strip_prefix(&cwd).unwrap_or(&cwd);
 
-                                        // check if path starts with the build folder.
-                                        if !&config.ignore.iter().any(|pattern| {
-                                            Pattern::matches_path(pattern, rel_path)
-                                        }) {
+                                        let path_starts_with_build =
+                                            &config.ignore.iter().any(|pattern| {
+                                                Pattern::matches_path(pattern, rel_path)
+                                            });
+                                        if !path_starts_with_build {
                                             build(&config);
                                         }
 
