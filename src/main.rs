@@ -290,16 +290,13 @@ fn main() {
                                     // get where process was run from
                                     let cwd = std::env::current_dir().unwrap_or(PathBuf::new());
 
-                                    // the final goal is to have a relative path
-                                    // without corner-case prefixes like "./"
-                                    let abs_path = match path.is_absolute() {
-                                        true => path.clone(),
-                                        false => {
-                                            // let path::Path handle corner cases like `./rel/path`
-                                            let mut abs_path = cwd.clone();
-                                            abs_path.push(path.clone());
-                                            abs_path
-                                        }
+                                    // The final goal is to have a relative path. If we already
+                                    // have a relative path, we still convert it to an abs path
+                                    // first to handle prefix "./" correctly.
+                                    let abs_path = if path.is_absolute() {
+                                        path.clone()
+                                    } else {
+                                        cwd.join(&path)
                                     };
                                     let rel_path = abs_path.strip_prefix(&cwd).unwrap_or(&path);
 
