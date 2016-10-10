@@ -287,28 +287,26 @@ fn main() {
                             Ok(val) => {
                                 trace!("file changed {:?}", val);
                                 if let Some(path) = val.path {
-                                    if path.is_absolute() {
-                                        // get where process was run from
-                                        let cwd = std::env::current_dir().unwrap_or(PathBuf::new());
-                                        // strip absolute path
-                                        let rel_path = path.strip_prefix(&cwd).unwrap_or(&cwd);
+                                    // get where process was run from
+                                    let cwd = std::env::current_dir().unwrap_or(PathBuf::new());
 
-                                        let path_starts_with_build =
-                                            &config.ignore.iter().any(|pattern| {
-                                                Pattern::matches_path(pattern, rel_path)
-                                            });
-                                        if !path_starts_with_build {
-                                            build(&config);
-                                        }
-
+                                    // The final goal is to have a relative path. If we already
+                                    // have a relative path, we still convert it to an abs path
+                                    // first to handle prefix "./" correctly.
+                                    let abs_path = if path.is_absolute() {
+                                        path.clone()
                                     } else {
-                                        // check if path starts with build folder.
-                                        // TODO: may want to check if it starts `./`
-                                        if !&config.ignore
-                                            .iter()
-                                            .any(|pattern| Pattern::matches_path(pattern, &path)) {
-                                            build(&config);
-                                        }
+                                        cwd.join(&path)
+                                    };
+                                    let rel_path = abs_path.strip_prefix(&cwd).unwrap_or(&path);
+
+                                    // check whether this path has been marked as ignored in config
+                                    let rel_path_matches =
+                                        |pattern| Pattern::matches_path(pattern, rel_path);
+                                    let path_ignored = &config.ignore.iter().any(rel_path_matches);
+
+                                    if !path_ignored {
+                                        build(&config);
                                     }
                                 }
                             }
