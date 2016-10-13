@@ -1,0 +1,6 @@
+name: cobalt blog for subpost testing
+source: "."
+dest: "build"
+ignore:
+  - .git/*
+  - build/*

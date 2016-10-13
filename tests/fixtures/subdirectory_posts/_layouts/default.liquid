@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        {% if is_post %}
+          <title>{{ title }}</title>
+        {% else %}
+       	  <title>Cobalt.rs Blog</title>
+        {% endif %}
+    </head>
+    <body>
+    <div>
+      {% if is_post %}
+        {% include '_layouts/post.liquid' %}
+      {% else %}
+        {{ content }}
+      {% endif %}
+    </div>
+  </body>
+</html>
