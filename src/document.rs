@@ -100,6 +100,14 @@ fn format_path(p: &str,
     Ok(path_buf.to_string_lossy().into_owned())
 }
 
+/// Renders markdown document into an HTML string.
+fn render_markdown(markdown: &str) -> String {
+    let mut html = String::new();
+    let parser = cmark::Parser::new(markdown);
+    cmark::html::push_html(&mut html, parser);
+    html
+}
+
 impl Document {
     pub fn new(path: String,
                attributes: HashMap<String, Value>,
@@ -252,10 +260,7 @@ impl Document {
         }
 
         if markdown {
-            let mut excerpt_html = String::new();
-            let parser = cmark::Parser::new(&excerpt);
-            cmark::html::push_html(&mut excerpt_html, parser);
-            excerpt_html
+            render_markdown(&excerpt)
         } else {
             excerpt
         }
@@ -301,12 +306,7 @@ impl Document {
         let mut html = try!(template.render(&mut data)).unwrap_or(String::new());
 
         if self.markdown {
-            html = {
-                let mut buf = String::new();
-                let parser = cmark::Parser::new(&html);
-                cmark::html::push_html(&mut buf, parser);
-                buf
-            };
+            html = render_markdown(&html);
         }
 
         let options = LiquidOptions { file_system: Some(source.to_owned()), ..Default::default() };
