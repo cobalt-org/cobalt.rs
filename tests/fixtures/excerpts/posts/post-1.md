@@ -1,6 +1,6 @@
 extends: default.liquid
 
-title: First Post
+title: First block is an excerpt
 date: 14 January 2016 21:00:30 -0500
 ---
 
