@@ -14,6 +14,7 @@ A static site generator written in [Rust](http://www.rust-lang.org/).
   - [Layouts](#layouts)
   - [Posts](#posts)
   - [Other Files](#other-files)
+  - [Excerpts](#excerpts)
   - [Attributes](#attributes)
   - [RSS](#rss)
   - [Import](#import)
@@ -132,6 +133,31 @@ author: johann
 path: /:author/:year/:month/:day/title
 ```
 -> `/johann/2016/01/01/title/index.html`
+
+### Excerpts
+
+Each post automatically takes the first block of text, from the beginning of the content to the first occurrence of `excerpt_separator`, and sets it as the `post.excerpt`. Perhaps you want to include a little hint about the post’s content by adding the first paragraph of each of your posts:
+
+```
+<ul>
+  {% for post in posts %}
+    <li>
+      <a href="{{ post.path }}">{{ post.title }}</a>
+      {{ post.excerpt }}
+    </li>
+  {% endfor %}
+</ul>
+```
+
+If you don't like the automatically-generated post excerpt, it can be explicitly overridden by adding an `excerpt` attribute to your post’s document. Alternatively, you can choose to define a custom `excerpt_separator` attribute:
+
+```
+excerpt_separator: <!--more-->
+---
+Excerpt
+<!--more-->
+Out-of-excerpt
+```
 
 ### Attributes
 
