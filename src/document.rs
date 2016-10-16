@@ -100,6 +100,14 @@ fn format_path(p: &str,
     Ok(path_buf.to_string_lossy().into_owned())
 }
 
+/// Renders markdown document into an HTML string.
+fn render_markdown(markdown: &str) -> String {
+    let mut html = String::new();
+    let parser = cmark::Parser::new(markdown);
+    cmark::html::push_html(&mut html, parser);
+    html
+}
+
 impl Document {
     pub fn new(path: String,
                attributes: HashMap<String, Value>,
@@ -180,6 +188,11 @@ impl Document {
 
         let layout = attributes.get("extends").and_then(|l| l.as_str()).map(|x| x.to_owned());
 
+        if is_post {
+            let excerpt = Document::get_excerpt(&content, markdown, &attributes);
+            attributes.insert("excerpt".to_owned(), Value::Str(excerpt));
+        }
+
         let mut path_buf = PathBuf::from(new_path);
         path_buf.set_extension("html");
 
@@ -213,6 +226,45 @@ impl Document {
                          markdown))
     }
 
+    /// Extracts post excerpt out of content.
+    ///
+    /// * Takes the first block of text from contents of a markdown post.
+    /// * If `"excerpt"` attribute is explicitly set, the function takes it instead.
+    /// * If `"excerpt"` attribute is not set and the post isn't in markdown,
+    ///   empty string is returned.
+    /// * Excerpt separator can be overriden by attribute `"excerpt_separator"`.
+    /// * Default excerpt separator is `"\n\n"`.
+    fn get_excerpt(content: &str, markdown: bool, attributes: &HashMap<String, Value>) -> String {
+        static DEFAULT_EXCERPT: &'static str = "";
+        static DEFAULT_EXCERPT_SEPARATOR: &'static str = "\n\n";
+
+        let excerpt;
+
+        if let Some(excerpt_str) = attributes.get("excerpt").and_then(|attr| attr.as_str()) {
+            excerpt = excerpt_str.to_string();
+        } else if !markdown {
+            // If it's not a markdown document and we don't have an explicit excerpt attribute,
+            // we don't know how to split excerpt. Let's just return an empty String in this case.
+            excerpt = DEFAULT_EXCERPT.to_string();
+        } else {
+            let excerpt_separator = attributes.get("excerpt_separator")
+                .and_then(|attr| attr.as_str())
+                .unwrap_or(DEFAULT_EXCERPT_SEPARATOR);
+            let content_splits = content.split(excerpt_separator);
+            // above the split is excerpt
+            excerpt = content_splits
+                .filter(|chunk| !chunk.is_empty())
+                .next() // first non-empty chunk
+                .map(|s| s.to_string())
+                .unwrap_or(content.to_string());
+        }
+
+        if markdown {
+            render_markdown(&excerpt)
+        } else {
+            excerpt
+        }
+    }
 
     /// Metadata for generating RSS feeds
     pub fn to_rss(&self, root_url: &str) -> rss::Item {
@@ -254,12 +306,7 @@ impl Document {
         let mut html = try!(template.render(&mut data)).unwrap_or(String::new());
 
         if self.markdown {
-            html = {
-                let mut buf = String::new();
-                let parser = cmark::Parser::new(&html);
-                cmark::html::push_html(&mut buf, parser);
-                buf
-            };
+            html = render_markdown(&html);
         }
 
         let options = LiquidOptions { file_system: Some(source.to_owned()), ..Default::default() };
