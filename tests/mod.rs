@@ -170,3 +170,8 @@ pub fn yaml_error() {
     assert!(err.is_err());
     assert_eq!(err.unwrap_err().description(), "unexpected character: `@'");
 }
+
+#[test]
+pub fn excerpts() {
+    run_test("excerpts").unwrap();
+}
