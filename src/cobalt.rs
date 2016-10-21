@@ -1,7 +1,5 @@
-use crossbeam;
-
 use std::fs::{self, File};
-use std::io::{self, Write, ErrorKind};
+use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::ffi::OsStr;
 use liquid::Value;
@@ -12,7 +10,6 @@ use config::Config;
 use chrono::{UTC, FixedOffset};
 use chrono::offset::TimeZone;
 use rss::{Channel, Rss};
-use std::sync::Arc;
 use glob::Pattern;
 
 fn ignore_filter(entry: &DirEntry, source: &Path, ignore: &[Pattern]) -> bool {
@@ -51,11 +48,11 @@ pub fn build(config: &Config) -> Result<()> {
 
     let layouts = source.join(&config.layouts);
     let layouts = layouts.as_path();
-    let posts = source.join(&config.posts);
-    let posts = posts.as_path();
+    let posts_path = source.join(&config.posts);
+    let posts_path = posts_path.as_path();
 
     debug!("Layouts directory: {:?}", layouts);
-    debug!("Posts directory: {:?}", posts);
+    debug!("Posts directory: {:?}", posts_path);
     debug!("Draft mode enabled: {}", config.include_drafts);
     if config.include_drafts {
         debug!("Draft directory: {:?}", config.drafts);
@@ -66,7 +63,7 @@ pub fn build(config: &Config) -> Result<()> {
     let walker = WalkDir::new(&source)
         .into_iter()
         .filter_entry(|e| {
-            (ignore_filter(e, source, &config.ignore) || compare_paths(e.path(), posts)) &&
+            (ignore_filter(e, source, &config.ignore) || compare_paths(e.path(), posts_path)) &&
             !compare_paths(e.path(), dest)
         })
         .filter_map(|e| e.ok());
@@ -76,7 +73,8 @@ pub fn build(config: &Config) -> Result<()> {
         let extension = &entry_path.extension().unwrap_or(OsStr::new(""));
         if template_extensions.contains(extension) {
             // if the document is in the posts folder it's considered a post
-            let is_post = entry_path.parent().map(|p| compare_paths(p, posts)).unwrap_or(false);
+            let is_post =
+                entry_path.parent().map(|p| compare_paths(p, posts_path)).unwrap_or(false);
 
             let new_path = entry_path.strip_prefix(source).expect("Entry not in source folder");
 
@@ -102,8 +100,8 @@ pub fn build(config: &Config) -> Result<()> {
         for entry in walker {
             let entry_path = entry.path();
             let extension = &entry_path.extension().unwrap_or(OsStr::new(""));
-            let new_path =
-                posts.join(entry_path.strip_prefix(drafts).expect("Draft not in draft folder!"));
+            let new_path = posts_path
+                .join(entry_path.strip_prefix(drafts).expect("Draft not in draft folder!"));
             let new_path = new_path.strip_prefix(source).expect("Entry not in source folder");
             if template_extensions.contains(extension) {
                 let doc = try!(Document::parse(&entry_path, new_path, true, &config.post_path));
@@ -115,44 +113,45 @@ pub fn build(config: &Config) -> Result<()> {
     // January 1, 1970 0:00:00 UTC, the beginning of time
     let default_date = UTC.timestamp(0, 0).with_timezone(&FixedOffset::east(0));
 
+    let (mut posts, documents): (Vec<Document>, Vec<Document>) = documents.into_iter()
+        .partition(|x| x.is_post);
+
     // sort documents by date, if there's no date (none was provided or it couldn't be read) then
     // fall back to the default date
-    documents.sort_by(|a, b| b.date.unwrap_or(default_date).cmp(&a.date.unwrap_or(default_date)));
+    posts.sort_by(|a, b| b.date.unwrap_or(default_date).cmp(&a.date.unwrap_or(default_date)));
 
     // check if we should create an RSS file and create it!
     if let &Some(ref path) = &config.rss {
-        try!(create_rss(path, dest, &config, &documents));
+        try!(create_rss(path, dest, &config, &posts));
     }
 
-    // these are the attributes of all documents that are posts, so that they can be
-    // passed to the renderer
-    // TODO: do we have to clone these?
-    let post_data: Vec<Value> = documents.iter()
-        .filter(|x| x.is_post)
+    // collect all posts attributes to pass them to other posts for rendering
+    let simple_posts_data: Vec<Value> = posts.iter()
         .map(|x| Value::Object(x.attributes.clone()))
         .collect();
 
-    // thread handles to join later
-    let mut handles = vec![];
+    trace!("Generating posts");
+    for mut post in &mut posts {
+        trace!("Generating {}", post.path);
 
-    // generate documents (in parallel)
-    crossbeam::scope(|scope| {
-        let post_data = Arc::new(post_data);
+        let content = try!(post.as_html(&source, &simple_posts_data, &layouts));
+        try!(create_document_file(&content, &post.path, dest));
 
-        for doc in &documents {
-            trace!("Generating {}", doc.path);
-            let post_data = post_data.clone();
+        post.attributes.insert("content".to_owned(), Value::Str(content));
+    }
 
-            let handle = scope.spawn(move || {
-                let content = try!(doc.as_html(&source, &post_data, &layouts));
-                create_document_file(content, &doc.path, dest)
-            });
-            handles.push(handle);
-        }
-    });
+    // during post rendering additional attributes such as content were
+    // added to posts. collect them so that non-post documents can access them
+    let posts_data: Vec<Value> = posts.into_iter()
+        .map(|x| Value::Object(x.attributes))
+        .collect();
 
-    for handle in handles {
-        try!(handle.join());
+    trace!("Generating other documents");
+    for doc in documents {
+        trace!("Generating {}", doc.path);
+
+        let content = try!(doc.as_html(&source, &posts_data, &layouts));
+        try!(create_document_file(&content, &doc.path, dest));
     }
 
     // copy all remaining files in the source to the destination
@@ -199,14 +198,13 @@ pub fn build(config: &Config) -> Result<()> {
 }
 
 // creates a new RSS file with the contents of the site blog
-fn create_rss(path: &str, dest: &Path, config: &Config, documents: &[Document]) -> Result<()> {
+fn create_rss(path: &str, dest: &Path, config: &Config, posts: &[Document]) -> Result<()> {
     match (&config.name, &config.description, &config.link) {
         // these three fields are mandatory in the RSS standard
         (&Some(ref name), &Some(ref description), &Some(ref link)) => {
             trace!("Generating RSS data");
 
-            let items = documents.iter()
-                .filter(|x| x.is_post)
+            let items = posts.iter()
                 .map(|doc| doc.to_rss(link))
                 .collect();
 
@@ -237,35 +235,21 @@ fn create_rss(path: &str, dest: &Path, config: &Config, documents: &[Document]) 
     }
 }
 
-/// A slightly less efficient implementation of fs::create_dir_all
-/// that eliminates the race condition problems of the original
-fn create_dir_all(path: &Path) -> io::Result<()> {
-    let mut new_path = PathBuf::new();
-    for component in path {
-        new_path.push(component);
-        match fs::create_dir(&new_path) {
-            Ok(_) => {}
-            Err(ref e) if e.kind() == ErrorKind::AlreadyExists => {}
-            Err(e) => return Err(e),
-        }
-    }
-    Ok(())
-}
-
-fn create_document_file<T: AsRef<Path>>(content: String, path: T, dest: &Path) -> Result<()> {
+fn create_document_file<T: AsRef<Path>>(content: &str, path: T, dest: &Path) -> Result<()> {
     // construct target path
     let file_path_buf = dest.join(path);
     let file_path = file_path_buf.as_path();
 
     // create target directories if any exist
     if let Some(parent) = file_path.parent() {
-        try!(create_dir_all(parent).map_err(|e| format!("Could not create {:?}: {}", parent, e)));
+        try!(fs::create_dir_all(parent)
+            .map_err(|e| format!("Could not create {:?}: {}", parent, e)));
     }
 
     let mut file = try!(File::create(&file_path)
         .map_err(|e| format!("Could not create {:?}: {}", file_path, e)));
 
-    try!(file.write_all(&content.into_bytes()));
+    try!(file.write_all(&content.as_bytes()));
     info!("Created {}", file_path.display());
     Ok(())
 }

@@ -20,7 +20,6 @@ doc = false
 clap = "2.4.0"
 liquid = "0.8"
 walkdir = "0.1"
-crossbeam = "0.2"
 yaml-rust = "0.3"
 chrono = "0.2"
 log = "0.3"

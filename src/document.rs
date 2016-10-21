@@ -130,21 +130,20 @@ impl Document {
                  post_path: &Option<String>)
                  -> Result<Document> {
         let mut attributes = HashMap::new();
-        let mut content = try!(read_file(file_path));
+        let content = try!(read_file(file_path));
 
         // if there is front matter, split the file and parse it
         // TODO: make this a regex to support lines of any length
-        if content.contains("---") {
-            let content2 = content.clone();
-            let mut content_splits = content2.splitn(2, "---");
+        let content = if content.contains("---") {
+            let mut splits = content.splitn(2, "---");
 
             // above the split are the attributes
-            let attribute_string = content_splits.next().unwrap_or("");
+            let attribute_split = splits.next().unwrap_or("");
 
             // everything below the split becomes the new content
-            content = content_splits.next().unwrap_or("").to_owned();
+            let content_split = splits.next().unwrap_or("").to_owned();
 
-            let yaml_result = try!(YamlLoader::load_from_str(attribute_string));
+            let yaml_result = try!(YamlLoader::load_from_str(attribute_split));
 
             let yaml_attributes = try!(yaml_result[0]
                 .as_hash()
@@ -157,7 +156,11 @@ impl Document {
                                       v);
                 }
             }
-        }
+
+            content_split
+        } else {
+            content
+        };
 
         if let &mut Value::Bool(val) = attributes.entry("is_post".to_owned())
             .or_insert(Value::Bool(is_post)) {
