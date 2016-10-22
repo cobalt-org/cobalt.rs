@@ -40,7 +40,6 @@
 extern crate liquid;
 extern crate pulldown_cmark;
 extern crate walkdir;
-extern crate crossbeam;
 extern crate chrono;
 extern crate yaml_rust;
 extern crate rss;
