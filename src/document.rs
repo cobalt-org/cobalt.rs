@@ -267,14 +267,13 @@ impl Document {
 
         let options = LiquidOptions { file_system: Some(source.to_owned()), ..Default::default() };
 
-        let template = if let Some(layout) = layout {
+        if let Some(layout) = layout {
             data.set_val("content", Value::Str(html));
 
-            try!(liquid::parse(&layout, options))
+            let template = try!(liquid::parse(&layout, options));
+            Ok(try!(template.render(&mut data)).unwrap_or(String::new()))
         } else {
-            try!(liquid::parse(&html, options))
-        };
-
-        Ok(try!(template.render(&mut data)).unwrap_or(String::new()))
+            Ok(html)
+        }
     }
 }

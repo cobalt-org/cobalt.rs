@@ -144,6 +144,11 @@ pub fn liquid_error() {
 }
 
 #[test]
+pub fn liquid_raw() {
+    run_test("liquid_escaped").expect("Build error");
+}
+
+#[test]
 pub fn no_extends_error() {
     let err = run_test("no_extends_error");
     assert!(err.is_err());
