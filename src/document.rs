@@ -220,15 +220,17 @@ impl Document {
 
     /// Metadata for generating RSS feeds
     pub fn to_rss(&self, root_url: &str) -> rss::Item {
+        let description = self.attributes.get("description")
+            .or(self.attributes.get("content"))
+            .and_then(|s| s.as_str())
+            .map(|s| s.to_owned());
+
         rss::Item {
             title: self.attributes.get("title").and_then(|s| s.as_str()).map(|s| s.to_owned()),
             // Swap back slashes to forward slashes to ensure the URL's are valid on Windows
             link: Some(root_url.to_owned() + &self.path.replace("\\", "/")),
             pub_date: self.date.map(|date| date.to_rfc2822()),
-            description: self.attributes
-                .get("description")
-                .and_then(|s| s.as_str())
-                .map(|s| s.to_owned()),
+            description: description,
             ..Default::default()
         }
     }
