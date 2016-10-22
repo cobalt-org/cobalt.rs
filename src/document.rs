@@ -237,9 +237,6 @@ impl Document {
                    post_data: &[Value],
                    layouts_path: &Path)
                    -> Result<String> {
-        let options = LiquidOptions { file_system: Some(source.to_owned()), ..Default::default() };
-        let template = try!(liquid::parse(&self.content, options));
-
         let layout = if let Some(ref layout) = self.layout {
             Some(try!(read_file(layouts_path.join(layout)).map_err(|e| {
                 format!("Layout {} can not be read (defined in {}): {}",
@@ -254,6 +251,8 @@ impl Document {
         let mut data = Context::with_values(self.attributes.clone());
         data.set_val("posts", Value::Array(post_data.to_vec()));
 
+        let options = LiquidOptions { file_system: Some(source.to_owned()), ..Default::default() };
+        let template = try!(liquid::parse(&self.content, options));
         let mut html = try!(template.render(&mut data)).unwrap_or(String::new());
 
         if self.markdown {
@@ -265,11 +264,11 @@ impl Document {
             };
         }
 
-        let options = LiquidOptions { file_system: Some(source.to_owned()), ..Default::default() };
-
         if let Some(layout) = layout {
             data.set_val("content", Value::Str(html));
 
+            let options =
+                LiquidOptions { file_system: Some(source.to_owned()), ..Default::default() };
             let template = try!(liquid::parse(&layout, options));
             Ok(try!(template.render(&mut data)).unwrap_or(String::new()))
         } else {
