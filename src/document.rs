@@ -133,9 +133,9 @@ impl Document {
         let content = try!(read_file(file_path));
 
         // if there is front matter, split the file and parse it
-        // TODO: make this a regex to support lines of any length
-        let content = if content.contains("---") {
-            let mut splits = content.splitn(2, "---");
+        let splitter = Regex::new(r"---\s*\r?\n").unwrap();
+        let content = if splitter.is_match(&content) {
+            let mut splits = splitter.splitn(&content, 2);
 
             // above the split are the attributes
             let attribute_split = splits.next().unwrap_or("");
