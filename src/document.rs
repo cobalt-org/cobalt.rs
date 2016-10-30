@@ -232,28 +232,22 @@ impl Document {
         }
     }
 
-    pub fn as_html(&self,
-                   source: &Path,
-                   post_data: &[Value],
-                   layouts_path: &Path)
-                   -> Result<String> {
-        let layout = if let Some(ref layout) = self.layout {
-            Some(try!(read_file(layouts_path.join(layout)).map_err(|e| {
-                format!("Layout {} can not be read (defined in {}): {}",
-                        layout,
-                        self.file_path,
-                        e)
-            })))
-        } else {
-            None
-        };
+    /// Prepares liquid context for further rendering.
+    pub fn get_render_context(&self, posts: &[Value]) -> Context {
+        let mut context = Context::with_values(self.attributes.clone());
+        context.set_val("posts", Value::Array(posts.to_vec()));
+        context
+    }
 
-        let mut data = Context::with_values(self.attributes.clone());
-        data.set_val("posts", Value::Array(post_data.to_vec()));
-
+    /// Renders liquid templates into HTML in the context of current document.
+    ///
+    /// Takes `content` string and returns rendered HTML. This function doesn't
+    /// take `"extends"` attribute into account. This function can be used for
+    /// rendering content or excerpt.
+    fn render_html(&self, content: &str, context: &mut Context, source: &Path) -> Result<String> {
         let options = LiquidOptions { file_system: Some(source.to_owned()), ..Default::default() };
-        let template = try!(liquid::parse(&self.content, options));
-        let mut html = try!(template.render(&mut data)).unwrap_or(String::new());
+        let template = try!(liquid::parse(content, options));
+        let mut html = try!(template.render(context)).unwrap_or(String::new());
 
         if self.markdown {
             html = {
@@ -263,16 +257,44 @@ impl Document {
                 buf
             };
         }
+        Ok(html.to_owned())
+    }
+
+    /// Renders the document to an HTML string.
+    ///
+    /// Side effects:
+    ///
+    /// * content is inserted to the attributes of the document
+    /// * content is inserted to context
+    ///
+    /// When we say "content" we mean only this document without extended layout.
+    pub fn render(&mut self,
+                  context: &mut Context,
+                  source: &Path,
+                  layouts_dir: &Path)
+                  -> Result<String> {
+        let content_html = try!(self.render_html(&self.content, context, source));
+        self.attributes.insert("content".to_owned(), Value::Str(content_html.clone()));
+        context.set_val("content", Value::Str(content_html.clone()));
+
+        let layout = if let Some(ref layout) = self.layout {
+            Some(try!(read_file(layouts_dir.join(layout)).map_err(|e| {
+                format!("Layout {} can not be read (defined in {}): {}",
+                        layout,
+                        self.file_path,
+                        e)
+            })))
+        } else {
+            None
+        };
 
         if let Some(layout) = layout {
-            data.set_val("content", Value::Str(html));
-
             let options =
                 LiquidOptions { file_system: Some(source.to_owned()), ..Default::default() };
             let template = try!(liquid::parse(&layout, options));
-            Ok(try!(template.render(&mut data)).unwrap_or(String::new()))
+            Ok(try!(template.render(context)).unwrap_or(String::new()))
         } else {
-            Ok(html)
+            Ok(content_html)
         }
     }
 }

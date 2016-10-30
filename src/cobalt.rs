@@ -134,10 +134,10 @@ pub fn build(config: &Config) -> Result<()> {
     for mut post in &mut posts {
         trace!("Generating {}", post.path);
 
-        let content = try!(post.as_html(&source, &simple_posts_data, &layouts));
-        try!(create_document_file(&content, &post.path, dest));
+        let mut context = post.get_render_context(&simple_posts_data);
 
-        post.attributes.insert("content".to_owned(), Value::Str(content));
+        let post_html = try!(post.render(&mut context, &source, &layouts));
+        try!(create_document_file(&post_html, &post.path, dest));
     }
 
     // during post rendering additional attributes such as content were
@@ -147,11 +147,12 @@ pub fn build(config: &Config) -> Result<()> {
         .collect();
 
     trace!("Generating other documents");
-    for doc in documents {
+    for mut doc in documents {
         trace!("Generating {}", doc.path);
 
-        let content = try!(doc.as_html(&source, &posts_data, &layouts));
-        try!(create_document_file(&content, &doc.path, dest));
+        let mut context = doc.get_render_context(&posts_data);
+        let doc_html = try!(doc.render(&mut context, &source, &layouts));
+        try!(create_document_file(&doc_html, &doc.path, dest));
     }
 
     // copy all remaining files in the source to the destination
