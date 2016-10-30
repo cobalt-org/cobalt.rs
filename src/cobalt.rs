@@ -1,4 +1,5 @@
 use std::fs::{self, File};
+use std::collections::HashMap;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::ffi::OsStr;
@@ -48,6 +49,7 @@ pub fn build(config: &Config) -> Result<()> {
 
     let layouts = source.join(&config.layouts);
     let layouts = layouts.as_path();
+    let mut layouts_cache = HashMap::new();
     let posts_path = source.join(&config.posts);
     let posts_path = posts_path.as_path();
 
@@ -137,7 +139,7 @@ pub fn build(config: &Config) -> Result<()> {
         let mut context = post.get_render_context(&simple_posts_data);
 
         try!(post.render_excerpt(&mut context, &source, &config.excerpt_separator));
-        let post_html = try!(post.render(&mut context, &source, &layouts));
+        let post_html = try!(post.render(&mut context, &source, &layouts, &mut layouts_cache));
         try!(create_document_file(&post_html, &post.path, dest));
     }
 
@@ -152,7 +154,7 @@ pub fn build(config: &Config) -> Result<()> {
         trace!("Generating {}", doc.path);
 
         let mut context = doc.get_render_context(&posts_data);
-        let doc_html = try!(doc.render(&mut context, &source, &layouts));
+        let doc_html = try!(doc.render(&mut context, &source, &layouts, &mut layouts_cache));
         try!(create_document_file(&doc_html, &doc.path, dest));
     }
 

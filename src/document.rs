@@ -1,5 +1,6 @@
 use std::fs::File;
 use std::collections::HashMap;
+use std::collections::hash_map::Entry;
 use std::ffi::OsStr;
 use std::path::{Path, PathBuf};
 use std::default::Default;
@@ -297,32 +298,36 @@ impl Document {
     ///
     /// * content is inserted to the attributes of the document
     /// * content is inserted to context
+    /// * layout may be inserted to layouts cache
     ///
     /// When we say "content" we mean only this document without extended layout.
     pub fn render(&mut self,
                   context: &mut Context,
                   source: &Path,
-                  layouts_dir: &Path)
+                  layouts_dir: &Path,
+                  layouts_cache: &mut HashMap<String, String>)
                   -> Result<String> {
         let content_html = try!(self.render_html(&self.content, context, source));
         self.attributes.insert("content".to_owned(), Value::Str(content_html.clone()));
         context.set_val("content", Value::Str(content_html.clone()));
 
-        let layout = if let Some(ref layout) = self.layout {
-            Some(try!(read_file(layouts_dir.join(layout)).map_err(|e| {
-                format!("Layout {} can not be read (defined in {}): {}",
-                        layout,
-                        self.file_path,
-                        e)
-            })))
-        } else {
-            None
-        };
+        if let Some(ref layout) = self.layout {
+            let layout_data_ref = match layouts_cache.entry(layout.to_owned()) {
+                Entry::Vacant(vacant) => {
+                    let layout_data = try!(read_file(layouts_dir.join(layout)).map_err(|e| {
+                        format!("Layout {} can not be read (defined in {}): {}",
+                                layout,
+                                self.file_path,
+                                e)
+                    }));
+                    vacant.insert(layout_data)
+                }
+                Entry::Occupied(occupied) => occupied.into_mut(),
+            };
 
-        if let Some(layout) = layout {
             let options =
                 LiquidOptions { file_system: Some(source.to_owned()), ..Default::default() };
-            let template = try!(liquid::parse(&layout, options));
+            let template = try!(liquid::parse(layout_data_ref, options));
             Ok(try!(template.render(context)).unwrap_or(String::new()))
         } else {
             Ok(content_html)
