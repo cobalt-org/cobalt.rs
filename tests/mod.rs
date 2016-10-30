@@ -1,10 +1,12 @@
 extern crate difference;
 extern crate cobalt;
+extern crate tempdir;
 extern crate walkdir;
 
 use std::path::Path;
 use std::fs::{self, File};
 use std::io::Read;
+use tempdir::TempDir;
 use walkdir::WalkDir;
 use std::error::Error;
 use cobalt::Config;
@@ -13,9 +15,12 @@ fn run_test(name: &str) -> Result<(), cobalt::Error> {
     let target = format!("tests/target/{}/", name);
     let mut config = Config::from_file(format!("tests/fixtures/{}/.cobalt.yml", name))
                          .unwrap_or(Default::default());
+    let destdir = TempDir::new(name).expect("Tempdir not created");
 
     config.source = format!("tests/fixtures/{}/", name);
-    config.dest = format!("tests/tmp/{}/", name);
+    config.dest = destdir.path().to_str()
+        .expect("Can't convert destdir to str")
+        .to_owned();
 
     // try to create the target directory, ignore errors
     fs::create_dir_all(&config.dest).is_ok();
@@ -67,7 +72,7 @@ fn run_test(name: &str) -> Result<(), cobalt::Error> {
     }
 
     // clean up
-    fs::remove_dir_all(&config.dest).is_ok();
+    try!(destdir.close());
 
     result
 }
