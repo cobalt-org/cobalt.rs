@@ -136,6 +136,7 @@ pub fn build(config: &Config) -> Result<()> {
 
         let mut context = post.get_render_context(&simple_posts_data);
 
+        try!(post.render_excerpt(&mut context, &source, &config.excerpt_separator));
         let post_html = try!(post.render(&mut context, &source, &layouts));
         try!(create_document_file(&post_html, &post.path, dest));
     }
