@@ -222,6 +222,7 @@ impl Document {
     pub fn to_rss(&self, root_url: &str) -> rss::Item {
         let description = self.attributes
             .get("description")
+            .or(self.attributes.get("excerpt"))
             .or(self.attributes.get("content"))
             .and_then(|s| s.as_str())
             .map(|s| s.to_owned());
