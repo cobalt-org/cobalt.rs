@@ -122,6 +122,8 @@ fn main() {
                 .help("Commit message that will be used on import")
                 .default_value("cobalt site import")
                 .takes_value(true)))
+        .subcommand(SubCommand::with_name("clean")
+            .about("cleans directory set as destination"))
         .subcommand(SubCommand::with_name("serve")
             .about("build and serve the cobalt project at the source dir")
             .arg(Arg::with_name("port")
@@ -255,6 +257,13 @@ fn main() {
                 let branch = matches.value_of("branch").unwrap().to_string();
                 let message = matches.value_of("message").unwrap().to_string();
                 import(&config, &branch, &message);
+            }
+        }
+
+        "clean" => {
+            match fs::remove_dir_all(&config.dest) {
+              Ok(..) => println!("directory \"{}\" removed", &config.dest),
+              Err(err) => println!("Error: {}", err)
             }
         }
 
