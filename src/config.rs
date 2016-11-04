@@ -21,6 +21,7 @@ pub struct Config {
     pub description: Option<String>,
     pub link: Option<String>,
     pub ignore: Vec<Pattern>,
+    pub excerpt_separator: String,
 }
 
 impl Default for Config {
@@ -39,6 +40,7 @@ impl Default for Config {
             description: None,
             link: None,
             ignore: vec![],
+            excerpt_separator: "\n\n".to_owned(),
         }
     }
 }
@@ -107,6 +109,10 @@ impl Config {
                 .filter_map(|k| Pattern::new(k).ok()) {
                 config.ignore.push(pattern);
             }
+        };
+
+        if let Some(excerpt_separator) = yaml["excerpt_separator"].as_str() {
+            config.excerpt_separator = excerpt_separator.to_owned();
         };
 
         Ok(config)

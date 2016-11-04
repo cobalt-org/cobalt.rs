@@ -1,5 +1,6 @@
 use std::fs::File;
 use std::collections::HashMap;
+use std::collections::hash_map::Entry;
 use std::ffi::OsStr;
 use std::path::{Path, PathBuf};
 use std::default::Default;
@@ -133,9 +134,9 @@ impl Document {
         let content = try!(read_file(file_path));
 
         // if there is front matter, split the file and parse it
-        // TODO: make this a regex to support lines of any length
-        let content = if content.contains("---") {
-            let mut splits = content.splitn(2, "---");
+        let splitter = Regex::new(r"---\s*\r?\n").unwrap();
+        let content = if splitter.is_match(&content) {
+            let mut splits = splitter.splitn(&content, 2);
 
             // above the split are the attributes
             let attribute_split = splits.next().unwrap_or("");
@@ -232,29 +233,22 @@ impl Document {
         }
     }
 
-    pub fn as_html(&self,
-                   source: &Path,
-                   post_data: &[Value],
-                   layouts_path: &Path)
-                   -> Result<String> {
+    /// Prepares liquid context for further rendering.
+    pub fn get_render_context(&self, posts: &[Value]) -> Context {
+        let mut context = Context::with_values(self.attributes.clone());
+        context.set_val("posts", Value::Array(posts.to_vec()));
+        context
+    }
+
+    /// Renders liquid templates into HTML in the context of current document.
+    ///
+    /// Takes `content` string and returns rendered HTML. This function doesn't
+    /// take `"extends"` attribute into account. This function can be used for
+    /// rendering content or excerpt.
+    fn render_html(&self, content: &str, context: &mut Context, source: &Path) -> Result<String> {
         let options = LiquidOptions { file_system: Some(source.to_owned()), ..Default::default() };
-        let template = try!(liquid::parse(&self.content, options));
-
-        let layout = if let Some(ref layout) = self.layout {
-            Some(try!(read_file(layouts_path.join(layout)).map_err(|e| {
-                format!("Layout {} can not be read (defined in {}): {}",
-                        layout,
-                        self.file_path,
-                        e)
-            })))
-        } else {
-            None
-        };
-
-        let mut data = Context::with_values(self.attributes.clone());
-        data.set_val("posts", Value::Array(post_data.to_vec()));
-
-        let mut html = try!(template.render(&mut data)).unwrap_or(String::new());
+        let template = try!(liquid::parse(content, options));
+        let mut html = try!(template.render(context)).unwrap_or(String::new());
 
         if self.markdown {
             html = {
@@ -264,17 +258,79 @@ impl Document {
                 buf
             };
         }
+        Ok(html.to_owned())
+    }
 
-        let options = LiquidOptions { file_system: Some(source.to_owned()), ..Default::default() };
+    /// Renders excerpt and adds it to attributes of the document.
+    pub fn render_excerpt(&mut self,
+                          context: &mut Context,
+                          source: &Path,
+                          default_excerpt_separator: &str)
+                          -> Result<()> {
+        let excerpt_html = {
+            let excerpt_attr = self.attributes
+                .get("excerpt")
+                .and_then(|attr| attr.as_str());
 
-        let template = if let Some(layout) = layout {
-            data.set_val("content", Value::Str(html));
+            let excerpt_separator: &str = self.attributes
+                .get("excerpt_separator")
+                .and_then(|attr| attr.as_str())
+                .unwrap_or(default_excerpt_separator);
 
-            try!(liquid::parse(&layout, options))
-        } else {
-            try!(liquid::parse(&html, options))
+            let excerpt = if let Some(excerpt_str) = excerpt_attr {
+                excerpt_str
+            } else if excerpt_separator.is_empty() {
+                ""
+            } else {
+                self.content.split(excerpt_separator).next().unwrap_or(&self.content)
+            };
+
+            try!(self.render_html(excerpt, context, source))
         };
 
-        Ok(try!(template.render(&mut data)).unwrap_or(String::new()))
+        self.attributes.insert("excerpt".to_owned(), Value::Str(excerpt_html));
+        Ok(())
+    }
+
+    /// Renders the document to an HTML string.
+    ///
+    /// Side effects:
+    ///
+    /// * content is inserted to the attributes of the document
+    /// * content is inserted to context
+    /// * layout may be inserted to layouts cache
+    ///
+    /// When we say "content" we mean only this document without extended layout.
+    pub fn render(&mut self,
+                  context: &mut Context,
+                  source: &Path,
+                  layouts_dir: &Path,
+                  layouts_cache: &mut HashMap<String, String>)
+                  -> Result<String> {
+        let content_html = try!(self.render_html(&self.content, context, source));
+        self.attributes.insert("content".to_owned(), Value::Str(content_html.clone()));
+        context.set_val("content", Value::Str(content_html.clone()));
+
+        if let Some(ref layout) = self.layout {
+            let layout_data_ref = match layouts_cache.entry(layout.to_owned()) {
+                Entry::Vacant(vacant) => {
+                    let layout_data = try!(read_file(layouts_dir.join(layout)).map_err(|e| {
+                        format!("Layout {} can not be read (defined in {}): {}",
+                                layout,
+                                self.file_path,
+                                e)
+                    }));
+                    vacant.insert(layout_data)
+                }
+                Entry::Occupied(occupied) => occupied.into_mut(),
+            };
+
+            let options =
+                LiquidOptions { file_system: Some(source.to_owned()), ..Default::default() };
+            let template = try!(liquid::parse(layout_data_ref, options));
+            Ok(try!(template.render(context)).unwrap_or(String::new()))
+        } else {
+            Ok(content_html)
+        }
     }
 }

@@ -1,4 +1,5 @@
 use std::fs::{self, File};
+use std::collections::HashMap;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::ffi::OsStr;
@@ -48,6 +49,7 @@ pub fn build(config: &Config) -> Result<()> {
 
     let layouts = source.join(&config.layouts);
     let layouts = layouts.as_path();
+    let mut layouts_cache = HashMap::new();
     let posts_path = source.join(&config.posts);
     let posts_path = posts_path.as_path();
 
@@ -134,10 +136,11 @@ pub fn build(config: &Config) -> Result<()> {
     for mut post in &mut posts {
         trace!("Generating {}", post.path);
 
-        let content = try!(post.as_html(&source, &simple_posts_data, &layouts));
-        try!(create_document_file(&content, &post.path, dest));
+        let mut context = post.get_render_context(&simple_posts_data);
 
-        post.attributes.insert("content".to_owned(), Value::Str(content));
+        try!(post.render_excerpt(&mut context, &source, &config.excerpt_separator));
+        let post_html = try!(post.render(&mut context, &source, &layouts, &mut layouts_cache));
+        try!(create_document_file(&post_html, &post.path, dest));
     }
 
     // during post rendering additional attributes such as content were
@@ -147,11 +150,12 @@ pub fn build(config: &Config) -> Result<()> {
         .collect();
 
     trace!("Generating other documents");
-    for doc in documents {
+    for mut doc in documents {
         trace!("Generating {}", doc.path);
 
-        let content = try!(doc.as_html(&source, &posts_data, &layouts));
-        try!(create_document_file(&content, &doc.path, dest));
+        let mut context = doc.get_render_context(&posts_data);
+        let doc_html = try!(doc.render(&mut context, &source, &layouts, &mut layouts_cache));
+        try!(create_document_file(&doc_html, &doc.path, dest));
     }
 
     // copy all remaining files in the source to the destination
