@@ -65,3 +65,12 @@ pub fn log_levels() {
     assert_cli!(&BIN, &["build", "--silent"] => Success, "").unwrap();
 }
 
+#[test]
+pub fn clean() {
+    env::set_current_dir(CWD.join("tests/fixtures/example")).unwrap();
+    assert_cli!(&BIN, &["build", "-d", "./test_dest"] => Success).unwrap();
+    assert_eq!(Path::new("./test_dest/").is_dir(), true);
+
+    assert_cli!(&BIN, &["clean", "-d", "./test_dest"] => Success).unwrap();
+    assert_eq!(Path::new("./test_dest").is_dir(), false);
+}
