@@ -18,14 +18,14 @@ doc = false
 
 [dependencies]
 clap = "2.4.0"
-liquid = "0.8"
+liquid = "0.9"
 walkdir = "0.1"
 yaml-rust = "0.3"
 chrono = "0.2"
 log = "0.3"
 env_logger = "0.3"
 rss = "0.3.1"
-pulldown-cmark = "0.0.7"
+pulldown-cmark = "0.0.8"
 notify = "^2.5.0"
 ghp = "0.1"
 glob = "0.2.11"
@@ -38,7 +38,7 @@ default-features = false
 
 [dev-dependencies]
 assert_cli = "0.3"
-lazy_static = "0.1"
+lazy_static = "0.2"
 difference = "0.4"
 tempdir = "0.3"
 
