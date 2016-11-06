@@ -122,11 +122,6 @@ pub fn build(config: &Config) -> Result<()> {
     // fall back to the default date
     posts.sort_by(|a, b| b.date.unwrap_or(default_date).cmp(&a.date.unwrap_or(default_date)));
 
-    // check if we should create an RSS file and create it!
-    if let &Some(ref path) = &config.rss {
-        try!(create_rss(path, dest, &config, &posts));
-    }
-
     // collect all posts attributes to pass them to other posts for rendering
     let simple_posts_data: Vec<Value> = posts.iter()
         .map(|x| Value::Object(x.attributes.clone()))
@@ -141,6 +136,11 @@ pub fn build(config: &Config) -> Result<()> {
         try!(post.render_excerpt(&mut context, &source, &config.excerpt_separator));
         let post_html = try!(post.render(&mut context, &source, &layouts, &mut layouts_cache));
         try!(create_document_file(&post_html, &post.path, dest));
+    }
+
+    // check if we should create an RSS file and create it!
+    if let &Some(ref path) = &config.rss {
+        try!(create_rss(path, dest, &config, &posts));
     }
 
     // during post rendering additional attributes such as content were
