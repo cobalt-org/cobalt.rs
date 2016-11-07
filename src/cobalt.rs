@@ -42,13 +42,6 @@ pub fn build(config: &Config) -> Result<()> {
     let dest = PathBuf::from(&config.dest).join("");
     let dest = dest.as_path();
 
-    // try to create the supplied dest dir if it currently does not exist
-    if dest.is_dir() == false {
-        try!(fs::create_dir(dest));
-        info!("Created dest dir: {:?}", dest);
-    }
-
-
     let template_extensions: Vec<&OsStr> = config.template_extensions
         .iter()
         .map(OsStr::new)
