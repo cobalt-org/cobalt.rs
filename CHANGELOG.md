@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.4
+
+- Improved Windows support ([@johannhof][])
+- Migrated from getopt to clap, global parameters are now available in subcommands ([@jespino][])
+- Added draft support ([@johannhof][])
+- Added `content` and `excerpt` attributes to posts ([@johannhof][] and [@nott][])
+- Added `guid` tag to RSS ([@nott][])
+- Added `cobalt clean` ([@rjgoldsborough][])
+- tons of other bugfixes and improvements (all of the above + [@LucioFranco][])
+
 ## 0.3
 
 - Added `cobalt serve` ([@tak1n][] and [@DonRyuDragoni][])
@@ -22,4 +32,6 @@
 [@jespino]: https://github.com/jespino
 [@johannhof]: https://github.com/johannhof
 [@kstep]: https://github.com/kstep
+[@nott]: https://github.com/nott
+[@rjgoldsborough]: http://github.com/rjgoldsborough
 [@tak1n]: https://github.com/tak1n
