@@ -71,6 +71,7 @@ pub fn clean() {
     assert_cli!(&BIN, &["build", "-d", "./test_dest"] => Success).unwrap();
     assert_eq!(Path::new("./test_dest/").is_dir(), true);
 
-    assert_cli!(&BIN, &["clean", "-d", "./test_dest"] => Success).unwrap();
+    let output = assert_cli!(&BIN, &["clean", "-d", "./test_dest"] => Success).unwrap();
     assert_eq!(Path::new("./test_dest").is_dir(), false);
+    assert_contains!(&output.stderr, "directory \"./test_dest\" removed"); 
 }
