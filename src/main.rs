@@ -1,6 +1,7 @@
 #![deny(warnings)]
 
 extern crate cobalt;
+#[macro_use]
 extern crate clap;
 extern crate env_logger;
 extern crate notify;
@@ -33,7 +34,7 @@ use std::fs::File;
 
 fn main() {
     let global_matches = App::new("Cobalt")
-        .version("0.3.0")
+        .version(crate_version!())
         .author("Benny Klotz <r3qnbenni@gmail.com>, Johann Hofmann")
         .about("A static site generator written in Rust.")
         .setting(AppSettings::SubcommandRequired)
