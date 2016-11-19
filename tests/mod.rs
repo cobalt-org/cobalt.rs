@@ -131,8 +131,12 @@ pub fn custom_template_extensions() {
 pub fn incomplete_rss() {
     let err = run_test("incomplete_rss");
     assert!(err.is_err());
-    assert_eq!(err.unwrap_err().description(),
+
+    let err = err.unwrap_err();
+    assert_eq!(format!("{}",err),
                "name, description and link need to be defined in the config file to generate RSS");
+    assert_eq!(err.description(),
+               "missing fields in config file");
 }
 
 #[test]
