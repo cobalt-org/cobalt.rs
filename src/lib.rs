@@ -49,6 +49,9 @@ extern crate regex;
 #[macro_use]
 extern crate log;
 
+#[macro_use]
+extern crate error_chain;
+
 pub use cobalt::build;
 pub use error::Error;
 pub use config::Config;
