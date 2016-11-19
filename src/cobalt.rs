@@ -1,7 +1,7 @@
 use std::fs::{self, File};
 use std::collections::HashMap;
 use std::io::Write;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::ffi::OsStr;
 use liquid::Value;
 use walkdir::{WalkDir, DirEntry, WalkDirIterator};
@@ -36,11 +36,8 @@ fn compare_paths(a: &Path, b: &Path) -> bool {
 pub fn build(config: &Config) -> Result<()> {
     trace!("Build configuration: {:?}", config);
 
-    // join("") makes sure path has a trailing slash
-    let source = PathBuf::from(&config.source).join("");
-    let source = source.as_path();
-    let dest = PathBuf::from(&config.dest).join("");
-    let dest = dest.as_path();
+    let source = Path::new(&config.source);
+    let dest = Path::new(&config.dest);
 
     let template_extensions: Vec<&OsStr> = config.template_extensions
         .iter()
@@ -48,10 +45,8 @@ pub fn build(config: &Config) -> Result<()> {
         .collect();
 
     let layouts = source.join(&config.layouts);
-    let layouts = layouts.as_path();
     let mut layouts_cache = HashMap::new();
     let posts_path = source.join(&config.posts);
-    let posts_path = posts_path.as_path();
 
     debug!("Layouts directory: {:?}", layouts);
     debug!("Posts directory: {:?}", posts_path);
@@ -65,7 +60,7 @@ pub fn build(config: &Config) -> Result<()> {
     let walker = WalkDir::new(&source)
         .into_iter()
         .filter_entry(|e| {
-            (ignore_filter(e, source, &config.ignore) || compare_paths(e.path(), posts_path)) &&
+            (ignore_filter(e, &source, &config.ignore) || compare_paths(e.path(), &posts_path)) &&
             !compare_paths(e.path(), dest)
         })
         .filter_map(|e| e.ok());
@@ -76,7 +71,7 @@ pub fn build(config: &Config) -> Result<()> {
         if template_extensions.contains(extension) {
             // if the document is in the posts folder it's considered a post
             let is_post =
-                entry_path.parent().map(|p| compare_paths(p, posts_path)).unwrap_or(false);
+                entry_path.parent().map(|p| compare_paths(p, &posts_path)).unwrap_or(false);
 
             let new_path = entry_path.strip_prefix(source).expect("Entry not in source folder");
 
@@ -89,12 +84,11 @@ pub fn build(config: &Config) -> Result<()> {
 
     if config.include_drafts {
         let drafts = source.join(&config.drafts);
-        let drafts = drafts.as_path();
 
-        let walker = WalkDir::new(drafts)
+        let walker = WalkDir::new(&drafts)
             .into_iter()
             .filter_entry(|e| {
-                (ignore_filter(e, source, &config.ignore) || compare_paths(e.path(), drafts)) &&
+                (ignore_filter(e, source, &config.ignore) || compare_paths(e.path(), &drafts)) &&
                 !compare_paths(e.path(), dest)
             })
             .filter_map(|e| e.ok());
@@ -103,7 +97,7 @@ pub fn build(config: &Config) -> Result<()> {
             let entry_path = entry.path();
             let extension = &entry_path.extension().unwrap_or(OsStr::new(""));
             let new_path = posts_path
-                .join(entry_path.strip_prefix(drafts).expect("Draft not in draft folder!"));
+                .join(entry_path.strip_prefix(&drafts).expect("Draft not in draft folder!"));
             let new_path = new_path.strip_prefix(source).expect("Entry not in source folder");
             if template_extensions.contains(extension) {
                 let doc = try!(Document::parse(&entry_path, new_path, true, &config.post_path));
@@ -236,10 +230,12 @@ fn create_rss(path: &str, dest: &Path, config: &Config, posts: &[Document]) -> R
     }
 }
 
-fn create_document_file<T: AsRef<Path>>(content: &str, path: T, dest: &Path) -> Result<()> {
+fn create_document_file<T: AsRef<Path>, R: AsRef<Path>>(content: &str,
+                                                        path: T,
+                                                        dest: R)
+                                                        -> Result<()> {
     // construct target path
-    let file_path_buf = dest.join(path);
-    let file_path = file_path_buf.as_path();
+    let file_path = dest.as_ref().join(path);
 
     // create target directories if any exist
     if let Some(parent) = file_path.parent() {
