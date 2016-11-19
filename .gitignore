@@ -3,3 +3,6 @@
 
 .DS_Store
 *.rs.bk
+
+.*.swp
+
