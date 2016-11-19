@@ -16,5 +16,10 @@ error_chain! {
     }
 
     errors {
+        ConfigFileMissingFields {
+            description("missing fields in config file")
+            display("name, description and link need to be defined in the config file to \
+                    generate RSS")
+        }
     }
 }

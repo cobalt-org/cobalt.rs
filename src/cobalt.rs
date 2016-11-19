@@ -6,7 +6,7 @@ use std::ffi::OsStr;
 use liquid::Value;
 use walkdir::{WalkDir, DirEntry, WalkDirIterator};
 use document::Document;
-use error::{Error, Result};
+use error::{ErrorKind, Result};
 use config::Config;
 use chrono::{UTC, FixedOffset};
 use chrono::offset::TimeZone;
@@ -232,10 +232,7 @@ fn create_rss(path: &str, dest: &Path, config: &Config, posts: &[Document]) -> R
             info!("Created RSS file at {}", rss_path.display());
             Ok(())
         }
-        _ => {
-            Err(Error::from("name, description and link need to be defined in the config file to \
-                             generate RSS"))
-        }
+        _ => Err(ErrorKind::ConfigFileMissingFields.into()),
     }
 }
 
