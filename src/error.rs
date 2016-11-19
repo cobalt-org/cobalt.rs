@@ -1,89 +1,20 @@
-use std::result;
 use std::io;
-use std::error;
-use std::fmt;
 use yaml_rust::scanner;
 use walkdir;
 use liquid;
 
-// type alias because we always want to deal with CobaltErrors
-pub type Result<T> = result::Result<T, Error>;
+error_chain! {
 
-#[derive(Debug)]
-pub enum Error {
-    Io(io::Error),
-    Liquid(liquid::Error),
-    WalkDir(walkdir::Error),
-    Yaml(scanner::ScanError),
-    Other(String),
-}
-
-impl From<io::Error> for Error {
-    fn from(err: io::Error) -> Error {
-        Error::Io(err)
-    }
-}
-
-impl From<liquid::Error> for Error {
-    fn from(err: liquid::Error) -> Error {
-        Error::Liquid(err)
-    }
-}
-
-impl From<walkdir::Error> for Error {
-    fn from(err: walkdir::Error) -> Error {
-        Error::WalkDir(err)
-    }
-}
-
-impl From<scanner::ScanError> for Error {
-    fn from(err: scanner::ScanError) -> Error {
-        Error::Yaml(err)
-    }
-}
-
-impl From<String> for Error {
-    fn from(err: String) -> Error {
-        Error::Other(err)
-    }
-}
-
-impl<'a> From<&'a str> for Error {
-    fn from(err: &'a str) -> Error {
-        Error::Other(err.to_owned())
-    }
-}
-
-impl fmt::Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
-            Error::Io(ref err) => write!(f, "IO error: {}", err),
-            Error::Liquid(ref err) => write!(f, "Liquid error: {}", err),
-            Error::WalkDir(ref err) => write!(f, "walkdir error: {}", err),
-            Error::Yaml(ref err) => write!(f, "yaml parsing error: {}", err),
-            Error::Other(ref err) => write!(f, "error: {}", err),
-        }
-    }
-}
-
-impl error::Error for Error {
-    fn description(&self) -> &str {
-        match *self {
-            Error::Io(ref err) => err.description(),
-            Error::Liquid(ref err) => err.description(),
-            Error::WalkDir(ref err) => err.description(),
-            Error::Yaml(ref err) => err.description(),
-            Error::Other(ref err) => err,
-        }
+    links {
     }
 
-    fn cause(&self) -> Option<&error::Error> {
-        match *self {
-            Error::Io(ref err) => Some(err),
-            Error::Liquid(ref err) => Some(err),
-            Error::WalkDir(ref err) => Some(err),
-            Error::Yaml(ref err) => Some(err),
-            Error::Other(_) => None,
-        }
+    foreign_links {
+        io::Error, Io;
+        liquid::Error, Liquid;
+        walkdir::Error, WalkDir;
+        scanner::ScanError, Yaml;
+    }
+
+    errors {
     }
 }
