@@ -62,8 +62,7 @@ error_chain! {
 }
 
 #[derive(Debug,Clone,Copy)]
-enum Command
-{
+enum Command {
     New,
     Build,
     Clean,
@@ -282,23 +281,23 @@ fn main() {
     // dependencies of commands
     let chain = match command {
         "new" => vec![New],
-        "build" => if matches.is_present("import") {
-            vec![Build,Import]
+        "build" => {
+            if matches.is_present("import") {
+                vec![Build, Import]
+            } else {
+                vec![Build]
+            }
         }
-        else {
-            vec![Build]
-        },
         "clean" => vec![Clean],
-        "serve" => vec![Build,Serve],
-        "watch" => vec![Build,Watch],
+        "serve" => vec![Build, Serve],
+        "watch" => vec![Build, Watch],
         _ => {
             println!("{}", global_matches.usage());
             vec![]
         }
     };
 
-    for result in chain.iter().map(|&cmd|exec(cmd,&config,&matches))
-    {
+    for result in chain.iter().map(|&cmd| exec(cmd, &config, &matches)) {
         if let Err(err) = result {
             error!("Error: {}", err);
             std::process::exit(1);
@@ -306,10 +305,9 @@ fn main() {
     }
 }
 
-fn exec(command: Command, config: &Config, matches: &ArgMatches) -> Result<()>
-{
+fn exec(command: Command, config: &Config, matches: &ArgMatches) -> Result<()> {
     use Command::*;
-    info!("Executing {:?}",command);
+    info!("Executing {:?}", command);
     match command {
         New => {
             let directory = matches.value_of("DIRECTORY").unwrap();
@@ -317,9 +315,7 @@ fn exec(command: Command, config: &Config, matches: &ArgMatches) -> Result<()>
             Ok(try!(create_new_project(&directory.to_string())))
         }
 
-        Build => {
-            Ok(try!(build(&config)))
-        }
+        Build => Ok(try!(build(&config))),
 
         Clean => {
             try!(fs::remove_dir_all(&config.dest));
@@ -368,12 +364,11 @@ fn exec(command: Command, config: &Config, matches: &ArgMatches) -> Result<()>
                     let rel_path = abs_path.strip_prefix(&cwd).unwrap_or(&path);
 
                     // check whether this path has been marked as ignored in config
-                    let rel_path_matches =
-                        |pattern| Pattern::matches_path(pattern, rel_path);
+                    let rel_path_matches = |pattern| Pattern::matches_path(pattern, rel_path);
                     let path_ignored = &config.ignore.iter().any(rel_path_matches);
 
                     if !path_ignored {
-                        try!(exec(Build,&config,&matches));
+                        try!(exec(Build, &config, &matches));
                     }
                 }
             }
