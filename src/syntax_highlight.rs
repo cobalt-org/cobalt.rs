@@ -29,10 +29,9 @@ impl Renderable for CodeBlock {
         let ts = ThemeSet::load_defaults();
 
         let syntax = match self.lang {
-            Some(ref lang) => syn.find_syntax_by_name(lang).unwrap_or(syn.find_syntax_plain_text()),
-            None => syn.find_syntax_plain_text()
-            // None => syn.find_syntax_by_firstline().unwrap_or(syn.find_syntax_plain_text())
-        };
+            Some(ref lang) => syn.find_syntax_by_token(lang),
+            _ => None
+        }.unwrap_or_else(|| syn.find_syntax_plain_text());
 
         // FIXME: allow for theming options?
         Ok(Some(highlighted_snippet_for_string(&self.code, syntax, &ts.themes["base16-ocean.dark"])))
@@ -85,7 +84,7 @@ mod test {
     fn test_codeblock_renders_rust() {
         let mut options: LiquidOptions = Default::default();
         options.blocks.insert("codeblock".to_string(), Box::new(initialize_codeblock));
-        let template = liquid::parse(&format!("{{% codeblock Rust %}}{}{{% endcodeblock %}}", CODE_BLOCK), options).unwrap();
+        let template = liquid::parse(&format!("{{% codeblock rust %}}{}{{% endcodeblock %}}", CODE_BLOCK), options).unwrap();
         let mut data = Context::new();
         let output = template.render(&mut data);
         assert_eq!(output.unwrap(), Some(RENDERED.to_string()));
