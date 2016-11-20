@@ -1,6 +1,7 @@
 
 extern crate syntect;
 extern crate liquid;
+extern crate pulldown_cmark as cmark;
 
 use liquid::Renderable;
 use liquid::Context;
@@ -9,18 +10,21 @@ use liquid::Token::{self, Identifier};
 use liquid::lexer::Element::{self, Expression, Tag, Raw};
 use liquid::Error;
 
-use syntect::parsing::SyntaxSet;
+use syntect::parsing::{SyntaxSet, SyntaxDefinition};
 use syntect::highlighting::ThemeSet;
 use syntect::html::highlighted_snippet_for_string;
 
 use std::slice::Iter;
+use std::borrow::Cow::Owned;
 
+use self::cmark::Parser;
+use self::cmark::Tag as cmarkTag;
+use self::cmark::Event::{self, Start, End, Text, Html};
 
 struct CodeBlock {
     lang: Option<String>,
     code: String
 }
-
 
 impl Renderable for CodeBlock {
     fn render(&self, context: &mut Context) -> Result<Option<String>, Error> {
@@ -38,6 +42,59 @@ impl Renderable for CodeBlock {
     }
 }
 
+
+pub struct DecoratedParser<'a> {
+    parser: Parser<'a>,
+    syntax_set: SyntaxSet,
+    theme_set: ThemeSet,
+    cur_syntax: Option<SyntaxDefinition>
+}
+
+impl<'a> DecoratedParser<'a> {
+    pub fn new(parser: Parser<'a>) -> Self {
+        DecoratedParser {
+            parser: parser,
+            syntax_set: SyntaxSet::load_defaults_newlines(),
+            theme_set: ThemeSet::load_defaults(),
+            cur_syntax: None }
+    }
+}
+
+
+impl<'a> Iterator for DecoratedParser<'a> {
+    type Item = Event<'a>;
+
+    fn next(&mut self) -> Option<Event<'a>> {
+        match self.parser.next() {
+            Some(item) => {
+                if let Text(text) = item {
+                    if let Some(ref syntax) = self.cur_syntax {
+                        Some(Html(Owned(
+                            highlighted_snippet_for_string(&text,
+                                                            syntax,
+                                                            &self.theme_set.themes["base16-ocean.dark"]))))
+                    } else {
+                        Some(Text(text))
+                    }
+                } else {
+                    if let Start(cmarkTag::CodeBlock(ref info)) = item {
+                        // set local highlighter, if found
+                        self.cur_syntax = Some(info.clone().split(' ').next(
+                            ).and_then(|lang| self.syntax_set.find_syntax_by_token(lang)
+                            ).unwrap_or_else(|| self.syntax_set.find_syntax_plain_text()).clone());
+                    }
+                    if let End(cmarkTag::CodeBlock(_)) = item {
+                        // reset
+                        self.cur_syntax = None
+                    }
+
+                    Some(item)
+                }
+            },
+            None => None
+        }
+    }
+}
 
 pub fn initialize_codeblock(_tag_name: &str,
                             arguments: &[Token],
@@ -63,6 +120,10 @@ pub fn initialize_codeblock(_tag_name: &str,
     Ok(Box::new(CodeBlock { code: content, lang: lang }))
 }
 
+
+pub fn decorate_markdown<'a>(parser: Parser<'a>) -> DecoratedParser {
+    DecoratedParser::new(parser)
+}
 
 
 #[cfg(test)]

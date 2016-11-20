@@ -12,7 +12,7 @@ use regex::Regex;
 use rss;
 
 #[cfg(feature="syntax-highlight")]
-use syntax_highlight::initialize_codeblock;
+use syntax_highlight::{initialize_codeblock, decorate_markdown};
 
 use liquid::{Renderable, LiquidOptions, Context, Value};
 
@@ -270,6 +270,9 @@ impl Document {
             html = {
                 let mut buf = String::new();
                 let parser = cmark::Parser::new(&html);
+                #[cfg(feature="syntax-highlight")]
+                cmark::html::push_html(&mut buf, decorate_markdown(parser));
+                #[cfg(not(feature="syntax-highlight"))]
                 cmark::html::push_html(&mut buf, parser);
                 buf
             };
