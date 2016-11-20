@@ -195,3 +195,8 @@ pub fn yaml_error() {
 pub fn excerpts() {
     run_test("excerpts").unwrap();
 }
+
+#[test]
+pub fn previous_next() {
+    run_test("previous_next").unwrap();
+}

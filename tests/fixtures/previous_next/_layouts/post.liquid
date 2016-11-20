@@ -1,0 +1,15 @@
+<div>
+  <h2>{{ title }}</h2>
+  <p>
+    {{content}}
+  </p>
+</div>
+
+<div>
+  {% if previous.path %}
+    <a class="prev" href="{{previous.path}}">&laquo; {{previous.title}}</a>
+  {% endif %}
+  {% if next.path %}
+    <a class="next" href="{{next.path}}">{{next.title}} &raquo;</a>
+  {% endif %}
+</div>
