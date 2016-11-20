@@ -58,8 +58,9 @@ pub fn initialize_codeblock(_tag_name: &str,
 }
 
 
+
 #[cfg(test)]
-fn test_codeblock_renders_rust() {
+mod test {
 
     use std::default::Default;
     use syntax_highlight::initialize_codeblock;
@@ -72,11 +73,14 @@ fn test_codeblock_renders_rust() {
     }
     ";
 
-
-    let mut options: LiquidOptions = Default::default();
-    options.blocks.insert("codeblock".to_string(), Box::new(initialize_codeblock));
-    let template = liquid::parse(&format!("{{% codeblock rust %}}{}{{% endcodeblock %}}", CODE_BLOCK), options).unwrap();
-    let mut data = Context::new();
-    let output = template.render(&mut data);
-    assert_eq!(output.unwrap(), Some("LIQUID!".to_string()));
+    const RENDERED : &'static str = "<pre style=\"background-color:#2b303b;\">\n<span style=\"color:#b48ead;\">mod</span><span style=\"color:#c0c5ce;\"> </span><span style=\"color:#c0c5ce;\">test</span><span style=\"color:#c0c5ce;\"> </span><span style=\"color:#c0c5ce;\">{</span>\n<span style=\"color:#c0c5ce;\">        </span><span style=\"color:#b48ead;\">fn</span><span style=\"color:#c0c5ce;\"> </span><span style=\"color:#8fa1b3;\">hello</span><span style=\"color:#c0c5ce;\">(</span><span style=\"color:#bf616a;\">arg</span><span style=\"color:#c0c5ce;\">:</span><span style=\"color:#c0c5ce;\"> int</span><span style=\"color:#c0c5ce;\">)</span><span style=\"color:#c0c5ce;\"> </span><span style=\"color:#c0c5ce;\">-&gt;</span><span style=\"color:#c0c5ce;\"> </span><span style=\"color:#b48ead;\">bool</span><span style=\"color:#c0c5ce;\"> </span><span style=\"color:#c0c5ce;\">{</span>\n<span style=\"color:#c0c5ce;\">            </span><span style=\"color:#d08770;\">true</span>\n<span style=\"color:#c0c5ce;\">        </span><span style=\"color:#c0c5ce;\">}</span>\n<span style=\"color:#c0c5ce;\">    </span><span style=\"color:#c0c5ce;\">}</span>\n<span style=\"color:#c0c5ce;\">    </span>\n</pre>\n";
+    #[test]
+    fn test_codeblock_renders_rust() {
+        let mut options: LiquidOptions = Default::default();
+        options.blocks.insert("codeblock".to_string(), Box::new(initialize_codeblock));
+        let template = liquid::parse(&format!("{{% codeblock Rust %}}{}{{% endcodeblock %}}", CODE_BLOCK), options).unwrap();
+        let mut data = Context::new();
+        let output = template.render(&mut data);
+        assert_eq!(output.unwrap(), Some(RENDERED.to_string()));
+    }
 }
