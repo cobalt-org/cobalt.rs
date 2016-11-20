@@ -44,6 +44,7 @@ error_chain! {
     }
 
     foreign_links {
+        // FIXME: shouldn't the first one be under "links"?
         ::cobalt::error::Error, Lib;
         std::io::Error, Io;
         notify::Error, Notify;
