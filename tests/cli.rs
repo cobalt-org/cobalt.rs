@@ -1,7 +1,6 @@
 #[macro_use] extern crate assert_cli;
 #[macro_use] extern crate lazy_static;
 
-use std::fs;
 use std::env;
 use std::str;
 use std::path::{Path, PathBuf};
@@ -79,18 +78,9 @@ pub fn clean() {
 
 #[test]
 pub fn clean_warning() {
-    let res = fs::create_dir_all("/tmp/foo");
-    match res {
-        Ok(_) => {
-            env::set_current_dir("/tmp/foo").unwrap();
-            assert_cli!(&BIN, &["build", "-d", "/tmp/foo"] => Success).unwrap();
+    env::set_current_dir("test_dest").unwrap();
+    let output = assert_cli!(&BIN, &["clean", "-d", "."] => Success).unwrap();
+    assert_contains!(&output.stderr, "Destination directory is same as current directory. The current directory \
+                                      will be deleted.");
 
-            let output = assert_cli!(&BIN, &["clean", "-d", "/tmp/foo"] => Success).unwrap();
-            assert_contains!(&output.stderr, "Destination directory is same as current directory. The current directory \
-                                              will be deleted.");
-        },
-        Err(_) => {
-            assert!(true, false, "clean warning failed");
-        }
-    }
 }
