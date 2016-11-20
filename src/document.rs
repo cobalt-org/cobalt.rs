@@ -11,6 +11,9 @@ use std::io::Read;
 use regex::Regex;
 use rss;
 
+#[cfg(feature="syntax-highlight")]
+use syntax_highlight::initialize_codeblock;
+
 use liquid::{Renderable, LiquidOptions, Context, Value};
 
 use pulldown_cmark as cmark;
@@ -257,7 +260,9 @@ impl Document {
     /// take `"extends"` attribute into account. This function can be used for
     /// rendering content or excerpt.
     fn render_html(&self, content: &str, context: &mut Context, source: &Path) -> Result<String> {
-        let options = LiquidOptions { file_system: Some(source.to_owned()), ..Default::default() };
+        let mut options = LiquidOptions { file_system: Some(source.to_owned()), ..Default::default() };
+        #[cfg(feature="syntax-highlight")]
+        options.blocks.insert("highlight".to_string(), Box::new(initialize_codeblock));
         let template = try!(liquid::parse(content, options));
         let mut html = try!(template.render(context)).unwrap_or(String::new());
 

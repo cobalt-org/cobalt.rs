@@ -46,6 +46,10 @@ extern crate rss;
 extern crate glob;
 extern crate regex;
 
+#[cfg(feature="syntax-highlight")]
+extern crate syntect;
+
+
 #[macro_use]
 extern crate log;
 
@@ -63,3 +67,6 @@ mod config;
 pub mod error;
 mod document;
 mod new;
+
+#[cfg(feature="syntax-highlight")]
+mod syntax_highlight;

@@ -127,6 +127,12 @@ pub fn custom_template_extensions() {
     run_test("custom_template_extensions").expect("Build error");
 }
 
+#[cfg(feature = "syntax-highlight")]
+#[test]
+pub fn syntax_highlight() {
+    run_test("syntax_highlight").expect("Build error");
+}
+
 #[test]
 pub fn incomplete_rss() {
     let err = run_test("incomplete_rss");
