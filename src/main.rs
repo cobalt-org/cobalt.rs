@@ -261,6 +261,11 @@ fn main() {
         }
 
         "clean" => {
+            let cwd = std::env::current_dir().unwrap_or(PathBuf::new());
+            let destdir = std::fs::canonicalize(PathBuf::from(&config.dest)).unwrap_or(PathBuf::new());
+            if cwd == destdir {
+                warn!("Destination directory is same as current directory. The current directory will be deleted.")
+            }
             match fs::remove_dir_all(&config.dest) {
                 Ok(..) => info!("directory \"{}\" removed", &config.dest),
                 Err(err) => error!("Error: {}", err),
