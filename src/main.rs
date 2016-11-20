@@ -13,7 +13,10 @@ extern crate hyper;
 #[macro_use]
 extern crate log;
 
-use clap::{Arg, App, SubCommand, AppSettings};
+#[macro_use]
+extern crate error_chain;
+
+use clap::{Arg, ArgMatches, App, SubCommand, AppSettings};
 use std::fs;
 use cobalt::Config;
 use log::{LogRecord, LogLevelFilter};
@@ -24,13 +27,49 @@ use ghp::import_dir;
 use glob::Pattern;
 use cobalt::create_new_project;
 
-use notify::{RecommendedWatcher, Error, Watcher};
+use notify::{RecommendedWatcher, Watcher};
 use std::sync::mpsc::channel;
 use std::thread;
 use std::path::PathBuf;
 use std::io::prelude::*;
-use std::io::Result as IoResult;
 use std::fs::File;
+
+error_chain! {
+
+    types {
+        Error, ErrorKind, Result;
+    }
+
+    links {
+    }
+
+    foreign_links {
+        ::cobalt::error::Error, Lib;
+        std::io::Error, Io;
+        notify::Error, Notify;
+        hyper::Error, Hyper;
+        std::sync::mpsc::RecvError, Channel;
+        ghp::Error, Ghp;
+    }
+
+    errors {
+        NotADirectory(dir: String) {
+            description("builddir is no directory")
+            display("Build dir is not a directory: {}", dir)
+        }
+    }
+}
+
+#[derive(Debug,Clone,Copy)]
+enum Command
+{
+    New,
+    Build,
+    Clean,
+    Serve,
+    Watch,
+    Import,
+}
 
 fn main() {
     let global_matches = App::new("Cobalt")
@@ -237,129 +276,122 @@ fn main() {
 
     config.include_drafts = matches.is_present("drafts");
 
-    match command {
-        "new" => {
-            let directory = matches.value_of("DIRECTORY").unwrap();
+    use Command::*;
 
-            match create_new_project(&directory.to_string()) {
-                Ok(_) => info!("Created new project at {}", directory),
-                Err(e) => {
-                    error!("{}", e);
-                    error!("Could not create a new cobalt project");
-                    std::process::exit(1);
-                }
-            }
+    // dependencies of commands
+    let chain = match command {
+        "new" => vec![New],
+        "build" => if matches.is_present("import") {
+            vec![Build,Import]
         }
-
-        "build" => {
-            build(&config);
-            if matches.is_present("import") {
-                let branch = matches.value_of("branch").unwrap().to_string();
-                let message = matches.value_of("message").unwrap().to_string();
-                import(&config, &branch, &message);
-            }
-        }
-
-        "clean" => {
-            match fs::remove_dir_all(&config.dest) {
-                Ok(..) => info!("directory \"{}\" removed", &config.dest),
-                Err(err) => error!("Error: {}", err),
-            }
-        }
-
-        "serve" => {
-            build(&config);
-            let port = matches.value_of("port").unwrap().to_string();
-            serve(&config.dest, &port);
-        }
-
-        "watch" => {
-            build(&config);
-
-            let dest = config.dest.clone();
-            let port = matches.value_of("port").unwrap().to_string();
-            thread::spawn(move || {
-                serve(&dest, &port);
-            });
-
-            let (tx, rx) = channel();
-            let w: Result<RecommendedWatcher, Error> = Watcher::new(tx);
-
-            match w {
-                Ok(mut watcher) => {
-                    // TODO: clean up this unwrap
-                    watcher.watch(&config.source).unwrap();
-                    info!("Watching {:?} for changes", &config.source);
-
-                    loop {
-                        match rx.recv() {
-                            Ok(val) => {
-                                trace!("file changed {:?}", val);
-                                if let Some(path) = val.path {
-                                    // get where process was run from
-                                    let cwd = std::env::current_dir().unwrap_or(PathBuf::new());
-
-                                    // The final goal is to have a relative path. If we already
-                                    // have a relative path, we still convert it to an abs path
-                                    // first to handle prefix "./" correctly.
-                                    let abs_path = if path.is_absolute() {
-                                        path.clone()
-                                    } else {
-                                        cwd.join(&path)
-                                    };
-                                    let rel_path = abs_path.strip_prefix(&cwd).unwrap_or(&path);
-
-                                    // check whether this path has been marked as ignored in config
-                                    let rel_path_matches =
-                                        |pattern| Pattern::matches_path(pattern, rel_path);
-                                    let path_ignored = &config.ignore.iter().any(rel_path_matches);
-
-                                    if !path_ignored {
-                                        build(&config);
-                                    }
-                                }
-                            }
-
-                            Err(e) => {
-                                error!("[Notify Error]: {}", e);
-                                std::process::exit(1);
-                            }
-                        }
-                    }
-                }
-                Err(e) => {
-                    error!("[Notify Error]: {}", e);
-                    std::process::exit(1);
-                }
-            }
-        }
-
-        "import" => {
-            let branch = matches.value_of("branch").unwrap().to_string();
-            let message = matches.value_of("message").unwrap().to_string();
-            import(&config, &branch, &message);
-        }
-
+        else {
+            vec![Build]
+        },
+        "clean" => vec![Clean],
+        "serve" => vec![Build,Serve],
+        "watch" => vec![Build,Watch],
         _ => {
             println!("{}", global_matches.usage());
-            return;
+            vec![]
+        }
+    };
+
+    for result in chain.iter().map(|&cmd|exec(cmd,&config,&matches))
+    {
+        if let Err(err) = result {
+            error!("Error: {}", err);
+            std::process::exit(1);
         }
     }
 }
 
-fn build(config: &Config) {
-    info!("Building from {} into {}", config.source, config.dest);
-    match cobalt::build(&config) {
-        Ok(_) => info!("Build successful"),
-        Err(e) => {
-            error!("{}", e);
-            error!("Build not successful");
-            std::process::exit(1);
+fn exec(command: Command, config: &Config, matches: &ArgMatches) -> Result<()>
+{
+    use Command::*;
+    info!("Executing {:?}",command);
+    match command {
+        New => {
+            let directory = matches.value_of("DIRECTORY").unwrap();
+
+            Ok(try!(create_new_project(&directory.to_string())))
         }
-    };
+
+        Build => {
+            Ok(try!(build(&config)))
+        }
+
+        Clean => {
+            try!(fs::remove_dir_all(&config.dest));
+            info!("directory \"{}\" removed", &config.dest);
+
+            Ok(())
+        }
+
+        Serve => {
+            let port = matches.value_of("port").unwrap().to_string();
+            Ok(try!(serve(&config.dest, &port)))
+        }
+
+        Watch => {
+            let dest = config.dest.clone();
+            let port = matches.value_of("port").unwrap().to_string();
+            thread::spawn(move || {
+                if let Err(err) = serve(&dest, &port) {
+                    error!("Error: {}", err);
+                    std::process::exit(1);
+                }
+            });
+
+            let (tx, rx) = channel();
+            let mut watcher: RecommendedWatcher = try!(Watcher::new(tx));
+
+            // TODO: clean up this unwrap
+            watcher.watch(&config.source).unwrap();
+            info!("Watching {:?} for changes", &config.source);
+
+            loop {
+                let val = try!(rx.recv());
+                trace!("file changed {:?}", val);
+                if let Some(path) = val.path {
+                    // get where process was run from
+                    let cwd = std::env::current_dir().unwrap_or(PathBuf::new());
+
+                    // The final goal is to have a relative path. If we already
+                    // have a relative path, we still convert it to an abs path
+                    // first to handle prefix "./" correctly.
+                    let abs_path = if path.is_absolute() {
+                        path.clone()
+                    } else {
+                        cwd.join(&path)
+                    };
+                    let rel_path = abs_path.strip_prefix(&cwd).unwrap_or(&path);
+
+                    // check whether this path has been marked as ignored in config
+                    let rel_path_matches =
+                        |pattern| Pattern::matches_path(pattern, rel_path);
+                    let path_ignored = &config.ignore.iter().any(rel_path_matches);
+
+                    if !path_ignored {
+                        try!(exec(Build,&config,&matches));
+                    }
+                }
+            }
+        }
+
+        Import => {
+            let branch = matches.value_of("branch").unwrap().to_string();
+            let message = matches.value_of("message").unwrap().to_string();
+            Ok(try!(import(&config, &branch, &message)))
+        }
+    }
 }
 
-fn static_file_handler(dest: &str, req: Request, mut res: Response) -> IoResult<()> {
+fn build(config: &Config) -> Result<()> {
+    info!("Building from {} into {}", config.source, config.dest);
+    Ok(try!(cobalt::build(&config)))
+}
+
+fn static_file_handler(dest: &str, req: Request, mut res: Response) -> Result<()> {
     // grab the requested path
     let req_path = match req.uri {
         RequestUri::AbsolutePath(p) => p,
@@ -409,7 +441,7 @@ fn static_file_handler(dest: &str, req: Request, mut res: Response) -> IoResult<
     Ok(())
 }
 
-fn serve(dest: &str, port: &str) {
+fn serve(dest: &str, port: &str) -> Result<()> {
     info!("Serving {:?} through static file server", dest);
 
     let ip = format!("127.0.0.1:{}", port);
@@ -417,19 +449,14 @@ fn serve(dest: &str, port: &str) {
     info!("Ctrl-c to stop the server");
 
     // attempts to create a server
-    let http_server = match Server::http(&*ip) {
-        Ok(server) => server,
-        Err(e) => {
-            error!("{}", e);
-            std::process::exit(1);
-        }
-    };
+    let server = try!(Server::http(&*ip));
 
     // need a clone because of closure's lifetime
     let dest_clone = dest.to_owned();
 
+    // TODO: use try!
     // bind the handle function and start serving
-    if let Err(e) = http_server.handle(move |req: Request, res: Response| {
+    if let Err(e) = server.handle(move |req: Request, res: Response| {
         if let Err(e) = static_file_handler(&dest_clone, req, res) {
             error!("{}", e);
             std::process::exit(1);
@@ -438,33 +465,18 @@ fn serve(dest: &str, port: &str) {
         error!("{}", e);
         std::process::exit(1);
     };
+
+    Ok(())
 }
 
-fn import(config: &Config, branch: &str, message: &str) {
+fn import(config: &Config, branch: &str, message: &str) -> Result<()> {
     info!("Importing {} to {}", config.dest, branch);
 
-    let meta = match fs::metadata(&config.dest) {
-        Ok(data) => data,
-
-        Err(e) => {
-            error!("{}", e);
-            error!("Import not successful");
-            std::process::exit(1);
-        }
-    };
+    let meta = try!(fs::metadata(&config.dest));
 
     if meta.is_dir() {
-        match import_dir(&config.dest, branch, message) {
-            Ok(_) => info!("Import successful"),
-            Err(e) => {
-                error!("{}", e);
-                error!("Import not successful");
-                std::process::exit(1);
-            }
-        }
+        Ok(try!(import_dir(&config.dest, branch, message)))
     } else {
-        error!("Build dir is not a directory: {}", config.dest);
-        error!("Import not successful");
-        std::process::exit(1);
+        Err(ErrorKind::NotADirectory(config.dest.clone()).into())
     }
 }
