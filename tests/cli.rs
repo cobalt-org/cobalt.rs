@@ -75,3 +75,14 @@ pub fn clean() {
     assert_eq!(Path::new("./test_dest").is_dir(), false);
     assert_contains!(&output.stderr, "directory \"./test_dest\" removed"); 
 }
+
+#[test]
+pub fn clean_warning() {
+    try!(fs::create_dir_all("/tmp/foo"));
+    env::set_current_dir("/tmp/foo").unwrap();
+    assert_cli!(&BIN, &["build", "-d", "/tmp/foo"] => Success).unwrap();
+
+    let output = assert_cli!(&BIN, &["clean", "-d", "/tmp/foo"] => Success).unwrap();
+    assert_contains!(&output.stderr, "Destination directory is same as current directory. The current directory \
+                                      will be deleted."); 
+}
