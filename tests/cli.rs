@@ -78,7 +78,7 @@ pub fn clean() {
 
 #[test]
 pub fn clean_warning() {
-    env::set_current_dir("test_dest").unwrap();
+    env::set_current_dir("./test_dest").unwrap();
     let output = assert_cli!(&BIN, &["clean", "-d", "."] => Success).unwrap();
     assert_contains!(&output.stderr, "Destination directory is same as current directory. The current directory \
                                       will be deleted.");
