@@ -5,13 +5,15 @@ extern crate liquid;
 use liquid::Renderable;
 use liquid::Context;
 use liquid::LiquidOptions;
-use liquid::Token;
+use liquid::Token::{self, Identifier};
 use liquid::lexer::Element::{self, Expression, Tag, Raw};
 use liquid::Error;
 
 use syntect::parsing::SyntaxSet;
 use syntect::highlighting::ThemeSet;
 use syntect::html::highlighted_snippet_for_string;
+
+use std::slice::Iter;
 
 
 struct CodeBlock {
@@ -39,7 +41,7 @@ impl Renderable for CodeBlock {
 
 
 pub fn initialize_codeblock(_tag_name: &str,
-                            _arguments: &[Token],
+                            arguments: &[Token],
                             tokens: Vec<Element>,
                             options: &LiquidOptions)
                         -> Result<Box<Renderable>, Error> {
@@ -52,9 +54,14 @@ pub fn initialize_codeblock(_tag_name: &str,
             }
             .to_owned() + &a
     });
+
+    let lang = match arguments.iter().next() {
+        Some(&Identifier(ref x)) => Some(x.clone()),
+        _ => None
+    };
        
     // FIXME: add language declarion support
-    Ok(Box::new(CodeBlock { code: content, lang: None }))
+    Ok(Box::new(CodeBlock { code: content, lang: lang }))
 }
 
 
@@ -83,4 +90,5 @@ mod test {
         let output = template.render(&mut data);
         assert_eq!(output.unwrap(), Some(RENDERED.to_string()));
     }
+
 }
