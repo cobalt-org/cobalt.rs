@@ -5,6 +5,10 @@ use liquid;
 
 error_chain! {
 
+    types {
+        Error, ErrorKind, Result;
+    }
+
     links {
     }
 
