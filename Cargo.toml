@@ -31,11 +31,13 @@ ghp = "0.1"
 glob = "0.2.11"
 regex = "0.1"
 clippy = {version = "0.0", optional = true}
-error-chain = "0.5.0"
 
 [dependencies.hyper]
 version = "0.9"
 default-features = false
+
+[dependencies.error-chain]
+git = "https://github.com/brson/error-chain.git"
 
 [dev-dependencies]
 assert_cli = "0.3"
