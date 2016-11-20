@@ -1,6 +1,7 @@
 #[macro_use] extern crate assert_cli;
 #[macro_use] extern crate lazy_static;
 
+use std::fs;
 use std::env;
 use std::str;
 use std::path::{Path, PathBuf};
