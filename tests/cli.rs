@@ -1,11 +1,13 @@
-#[macro_use] extern crate assert_cli;
-#[macro_use] extern crate lazy_static;
+#[macro_use]
+extern crate assert_cli;
+#[macro_use]
+extern crate lazy_static;
 
 use std::env;
 use std::str;
 use std::path::{Path, PathBuf};
 
-static EMPTY : &'static [&'static str] = &[];
+static EMPTY: &'static [&'static str] = &[];
 lazy_static! {
     static ref _CWD: PathBuf = env::current_dir().unwrap();
     static ref CWD: &'static Path = _CWD.as_path();
@@ -37,7 +39,8 @@ pub fn invalid_calls() {
     assert_contains!(&output.stderr, "requires a subcommand");
 
     let output = assert_cli!(&BIN, &["--nonexistent-argument"] => Error 1).unwrap();
-    assert_contains!(&output.stderr, r"Found argument '--nonexistent-argument' which wasn't expected");
+    assert_contains!(&output.stderr,
+                     r"Found argument '--nonexistent-argument' which wasn't expected");
 }
 
 #[test]
@@ -73,5 +76,5 @@ pub fn clean() {
 
     let output = assert_cli!(&BIN, &["clean", "-d", "./test_dest"] => Success).unwrap();
     assert_eq!(Path::new("./test_dest").is_dir(), false);
-    assert_contains!(&output.stderr, "directory \"./test_dest\" removed"); 
+    assert_contains!(&output.stderr, "directory \"./test_dest\" removed");
 }

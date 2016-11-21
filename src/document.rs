@@ -166,8 +166,9 @@ impl Document {
             content
         };
 
-        if let &mut Value::Bool(val) = attributes.entry("is_post".to_owned())
-            .or_insert(Value::Bool(is_post)) {
+        if let &mut Value::Bool(val) =
+            attributes.entry("is_post".to_owned())
+                .or_insert(Value::Bool(is_post)) {
             is_post = val;
         }
 
@@ -260,7 +261,8 @@ impl Document {
     /// take `"extends"` attribute into account. This function can be used for
     /// rendering content or excerpt.
     fn render_html(&self, content: &str, context: &mut Context, source: &Path) -> Result<String> {
-        let mut options = LiquidOptions { file_system: Some(source.to_owned()), ..Default::default() };
+        let mut options =
+            LiquidOptions { file_system: Some(source.to_owned()), ..Default::default() };
         #[cfg(feature="syntax-highlight")]
         options.blocks.insert("highlight".to_string(), Box::new(initialize_codeblock));
         let template = try!(liquid::parse(content, options));
