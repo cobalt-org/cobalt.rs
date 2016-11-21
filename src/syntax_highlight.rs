@@ -21,6 +21,25 @@ use self::cmark::Parser;
 use self::cmark::Tag as cmarkTag;
 use self::cmark::Event::{self, Start, End, Text, Html};
 
+
+struct Setup {
+    syntax_set: SyntaxSet,
+    theme_set: ThemeSet
+}
+
+
+unsafe impl Send for Setup {}
+unsafe impl Sync for Setup {}
+
+
+lazy_static!{
+    static ref SETUP: Setup = Setup {
+        syntax_set: SyntaxSet::load_defaults_newlines(),
+        theme_set: ThemeSet::load_defaults()
+    };
+}
+
+
 struct CodeBlock {
     lang: Option<String>,
     code: String
@@ -29,24 +48,20 @@ struct CodeBlock {
 impl Renderable for CodeBlock {
     fn render(&self, context: &mut Context) -> Result<Option<String>, Error> {
         // FIXME: do this setup only once.
-        let syn = SyntaxSet::load_defaults_newlines();
-        let ts = ThemeSet::load_defaults();
 
         let syntax = match self.lang {
-            Some(ref lang) => syn.find_syntax_by_token(lang),
+            Some(ref lang) => SETUP.syntax_set.find_syntax_by_token(lang),
             _ => None
-        }.unwrap_or_else(|| syn.find_syntax_plain_text());
+        }.unwrap_or_else(|| SETUP.syntax_set.find_syntax_plain_text());
 
         // FIXME: allow for theming options?
-        Ok(Some(highlighted_snippet_for_string(&self.code, syntax, &ts.themes["base16-ocean.dark"])))
+        Ok(Some(highlighted_snippet_for_string(&self.code, syntax, &SETUP.theme_set.themes["base16-ocean.dark"])))
     }
 }
 
 
 pub struct DecoratedParser<'a> {
     parser: Parser<'a>,
-    syntax_set: SyntaxSet,
-    theme_set: ThemeSet,
     cur_syntax: Option<SyntaxDefinition>
 }
 
@@ -54,8 +69,6 @@ impl<'a> DecoratedParser<'a> {
     pub fn new(parser: Parser<'a>) -> Self {
         DecoratedParser {
             parser: parser,
-            syntax_set: SyntaxSet::load_defaults_newlines(),
-            theme_set: ThemeSet::load_defaults(),
             cur_syntax: None }
     }
 }
@@ -72,7 +85,7 @@ impl<'a> Iterator for DecoratedParser<'a> {
                         Some(Html(Owned(
                             highlighted_snippet_for_string(&text,
                                                             syntax,
-                                                            &self.theme_set.themes["base16-ocean.dark"]))))
+                                                            &SETUP.theme_set.themes["base16-ocean.dark"]))))
                     } else {
                         Some(Text(text))
                     }
@@ -80,8 +93,8 @@ impl<'a> Iterator for DecoratedParser<'a> {
                     if let Start(cmarkTag::CodeBlock(ref info)) = item {
                         // set local highlighter, if found
                         self.cur_syntax = Some(info.clone().split(' ').next(
-                            ).and_then(|lang| self.syntax_set.find_syntax_by_token(lang)
-                            ).unwrap_or_else(|| self.syntax_set.find_syntax_plain_text()).clone());
+                            ).and_then(|lang| SETUP.syntax_set.find_syntax_by_token(lang)
+                            ).unwrap_or_else(|| SETUP.syntax_set.find_syntax_plain_text()).clone());
                     }
                     if let End(cmarkTag::CodeBlock(_)) = item {
                         // reset
