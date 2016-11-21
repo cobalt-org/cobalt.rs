@@ -20,6 +20,7 @@ use self::cmark::Parser;
 use self::cmark::Tag as cmarkTag;
 use self::cmark::Event::{self, Start, End, Text, Html};
 
+const THEME_NAME: &'static str = "base16-ocean.dark";
 
 struct Setup {
     syntax_set: SyntaxSet,
@@ -46,7 +47,6 @@ struct CodeBlock {
 
 impl Renderable for CodeBlock {
     fn render(&self, _: &mut Context) -> Result<Option<String>, Error> {
-        // FIXME: do this setup only once.
 
         let syntax = match self.lang {
                 Some(ref lang) => SETUP.syntax_set.find_syntax_by_token(lang),
@@ -54,10 +54,9 @@ impl Renderable for CodeBlock {
             }
             .unwrap_or_else(|| SETUP.syntax_set.find_syntax_plain_text());
 
-        // FIXME: allow for theming options?
         Ok(Some(highlighted_snippet_for_string(&self.code,
                                                syntax,
-                                               &SETUP.theme_set.themes["base16-ocean.dark"])))
+                                               &SETUP.theme_set.themes[THEME_NAME])))
     }
 }
 
@@ -87,8 +86,8 @@ impl<'a> Iterator for DecoratedParser<'a> {
                     if let Some(ref syntax) = self.cur_syntax {
                         Some(Html(Owned(
                             highlighted_snippet_for_string(&text,
-        syntax,
-        &SETUP.theme_set.themes["base16-ocean.dark"]))))
+                                                           syntax,
+                                                           &SETUP.theme_set.themes[THEME_NAME]))))
                     } else {
                         Some(Text(text))
                     }
