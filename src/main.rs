@@ -265,8 +265,9 @@ fn main() {
             let destdir = std::fs::canonicalize(PathBuf::from(&config.dest))
                 .unwrap_or(PathBuf::new());
             if cwd == destdir {
-                warn!("Destination directory is same as current directory. The current directory \
-                       will be deleted.")
+                error!("Destination directory is same as current directory. \
+                       Cancelling the operation");
+                std::process::exit(1);
             }
             match fs::remove_dir_all(&config.dest) {
                 Ok(..) => info!("directory \"{}\" removed", &config.dest),
