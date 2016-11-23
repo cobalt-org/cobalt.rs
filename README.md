@@ -88,7 +88,7 @@ To mark a post as draft you can either set `draft: true` in your front matter or
 
 Any file with the .md or .liquid file extension is considered a liquid template and will be parsed for metadata and compiled using liquid, like a post.
 
-Unlike posts, files outside the ``_posts`` directory will not be indexed as blog posts and not passed to the index file in the list of contents.
+Unlike posts, files outside the ``posts`` directory will not be indexed as blog posts and not passed to the index file in the list of contents.
 
 All other files and directories in the source folder will be recursively added to your destination folder.
 
@@ -147,7 +147,7 @@ In example above _title_ is accessible via ```{{ title }}``` and _date_ via ```{
 
 #### posts
 
-`{{ posts }}` is a list of the attributes of all templates in the `_posts` directory. Example usage on a page listing all blog posts:
+`{{ posts }}` is a list of the attributes of all templates in the `posts` directory. Example usage on a page listing all blog posts:
 
 ```
 {% for post in posts %}
@@ -157,7 +157,7 @@ In example above _title_ is accessible via ```{{ title }}``` and _date_ via ```{
 
 ### RSS
 
-To generate an RSS file from the metadata of your `_posts`, you need to provide the following data in your config.file:
+To generate an RSS file from the metadata of your posts, you need to provide the following data in your config file:
 
 ```yaml
 # path where the RSS file should be generated
