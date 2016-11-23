@@ -8,7 +8,7 @@ dependencies = [
  "clippy 0.0.98 (registry+https://github.com/rust-lang/crates.io-index)",
  "difference 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "env_logger 0.3.5 (registry+https://github.com/rust-lang/crates.io-index)",
- "error-chain 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "error-chain 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "ghp 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "glob 0.2.11 (registry+https://github.com/rust-lang/crates.io-index)",
  "hyper 0.9.12 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -59,7 +59,7 @@ dependencies = [
 
 [[package]]
 name = "backtrace"
-version = "0.2.3"
+version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "backtrace-sys 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -188,10 +188,10 @@ dependencies = [
 
 [[package]]
 name = "error-chain"
-version = "0.5.0"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "backtrace 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "backtrace 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -743,7 +743,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 "checksum ansi_term 0.6.3 (registry+https://github.com/rust-lang/crates.io-index)" = "ae206c860259479b73b3abc98b66da811843056ed570ed79eb95d3d9b2524325"
 "checksum ansi_term 0.9.0 (registry+https://github.com/rust-lang/crates.io-index)" = "23ac7c30002a5accbf7e8987d0632fa6de155b7c3d39d0067317a391e00a2ef6"
 "checksum assert_cli 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)" = "240645c6effe2439d5b08204b1999afddd0c003b851b12cc378c115737cc3f38"
-"checksum backtrace 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)" = "346d7644f0b5f9bc73082d3b2236b69a05fd35cce0cfa3724e184e6a5c9e2a2f"
+"checksum backtrace 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)" = "f551bc2ddd53aea015d453ef0b635af89444afa5ed2405dd0b2062ad5d600d80"
 "checksum backtrace-sys 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)" = "3602e8d8c43336088a8505fa55cae2b3884a9be29440863a11528a42f46f6bb7"
 "checksum bitflags 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)" = "8dead7461c1127cf637931a1e50934eb6eee8bff2f74433ac7909e9afcee04a3"
 "checksum bitflags 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)" = "4f67931368edf3a9a51d29886d245f1c3db2f1ef0dcc9e35ff70341b78c10d23"
@@ -758,7 +758,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 "checksum dbghelp-sys 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)" = "97590ba53bcb8ac28279161ca943a924d1fd4a8fb3fa63302591647c4fc5b850"
 "checksum difference 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)" = "ffef4c144e881a906ed5bd6e1e749dc1955cd3f0c7969d3d34122a971981c5ea"
 "checksum env_logger 0.3.5 (registry+https://github.com/rust-lang/crates.io-index)" = "15abd780e45b3ea4f76b4e9a26ff4843258dd8a3eed2775a0e7368c2e7936c2f"
-"checksum error-chain 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)" = "bd5c82c815138e278b8dcdeffc49f27ea6ffb528403e9dea4194f2e3dd40b143"
+"checksum error-chain 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)" = "be9cb54f0b3504d22ff42c1fbed938ebe55e14dd3707768c65b07fde7198b389"
 "checksum filetime 0.1.10 (registry+https://github.com/rust-lang/crates.io-index)" = "5363ab8e4139b8568a6237db5248646e5a8a2f89bd5ccb02092182b11fd3e922"
 "checksum fsevent 0.2.15 (registry+https://github.com/rust-lang/crates.io-index)" = "740a52ca589381d87dd0d9960555de3320aa6d408326659e3bae88be9f71a125"
 "checksum fsevent-sys 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)" = "72e33a926306442d961595c3a325864326ca4287795e106dae8993afe484ede6"

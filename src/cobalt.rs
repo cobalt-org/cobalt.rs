@@ -1,3 +1,5 @@
+pub use error::*;
+
 use std::fs::{self, File};
 use std::collections::HashMap;
 use std::io::Write;
@@ -6,7 +8,6 @@ use std::ffi::OsStr;
 use liquid::Value;
 use walkdir::{WalkDir, DirEntry, WalkDirIterator};
 use document::Document;
-use error::{ErrorKind, Result};
 use config::Config;
 use chrono::{UTC, FixedOffset};
 use chrono::offset::TimeZone;

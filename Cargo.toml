@@ -31,7 +31,7 @@ ghp = "0.1"
 glob = "0.2.11"
 regex = "0.1"
 clippy = {version = "0.0", optional = true}
-error-chain = "0.5.0"
+error-chain = "~0.6.0"
 
 [dependencies.hyper]
 version = "0.9"
