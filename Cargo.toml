@@ -32,6 +32,8 @@ glob = "0.2.11"
 regex = "0.1"
 clippy = {version = "0.0", optional = true}
 error-chain = "0.5.0"
+syntect = {version = "1.0", optional = true}
+lazy_static = {version = "0.2", optional =true}
 
 [dependencies.hyper]
 version = "0.9"
@@ -44,5 +46,9 @@ difference = "0.4"
 tempdir = "0.3"
 
 [features]
+default = ["syntax-highlight"]
 unstable = []
 dev = []
+
+syntax-highlight = ["syntect", "lazy_static"]
+

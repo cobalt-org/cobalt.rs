@@ -14,11 +14,12 @@ use cobalt::Config;
 fn run_test(name: &str) -> Result<(), cobalt::Error> {
     let target = format!("tests/target/{}/", name);
     let mut config = Config::from_file(format!("tests/fixtures/{}/.cobalt.yml", name))
-                         .unwrap_or(Default::default());
+        .unwrap_or(Default::default());
     let destdir = TempDir::new(name).expect("Tempdir not created");
 
     config.source = format!("tests/fixtures/{}/", name);
-    config.dest = destdir.path().to_str()
+    config.dest = destdir.path()
+        .to_str()
         .expect("Can't convert destdir to str")
         .to_owned();
 
@@ -36,8 +37,8 @@ fn run_test(name: &str) -> Result<(), cobalt::Error> {
         // walk through fixture and created tmp directory and compare files
         for entry in walker {
             let relative = entry.path()
-                                .strip_prefix(&target)
-                                .expect("Comparison error");
+                .strip_prefix(&target)
+                .expect("Comparison error");
 
             let mut original = String::new();
             File::open(entry.path())
@@ -62,12 +63,13 @@ fn run_test(name: &str) -> Result<(), cobalt::Error> {
 
         for entry in walker {
             let relative = entry.path()
-                                .strip_prefix(&config.dest)
-                                .expect("Comparison error");
+                .strip_prefix(&config.dest)
+                .expect("Comparison error");
             let relative = Path::new(&target).join(&relative);
 
-            File::open(&relative)
-                .expect(&format!("File {:?} does not exist in reference ({:?}).", entry.path(), relative));
+            File::open(&relative).expect(&format!("File {:?} does not exist in reference ({:?}).",
+                                                  entry.path(),
+                                                  relative));
         }
     }
 
@@ -127,16 +129,21 @@ pub fn custom_template_extensions() {
     run_test("custom_template_extensions").expect("Build error");
 }
 
+#[cfg(feature = "syntax-highlight")]
+#[test]
+pub fn syntax_highlight() {
+    run_test("syntax_highlight").expect("Build error");
+}
+
 #[test]
 pub fn incomplete_rss() {
     let err = run_test("incomplete_rss");
     assert!(err.is_err());
 
     let err = err.unwrap_err();
-    assert_eq!(format!("{}",err),
+    assert_eq!(format!("{}", err),
                "name, description and link need to be defined in the config file to generate RSS");
-    assert_eq!(err.description(),
-               "missing fields in config file");
+    assert_eq!(err.description(), "missing fields in config file");
 }
 
 #[test]
@@ -156,11 +163,10 @@ pub fn liquid_raw() {
 pub fn no_extends_error() {
     let err = run_test("no_extends_error");
     assert!(err.is_err());
-    assert!(err
-            .unwrap_err()
-            .description()
-            .contains("Layout default_nonexistent.liquid can not be read (defined in tests/fixtures/no_extends_error/index.liquid)")
-            );
+    assert!(err.unwrap_err()
+        .description()
+        .contains("Layout default_nonexistent.liquid can not be read (defined in \
+                   tests/fixtures/no_extends_error/index.liquid)"));
 }
 
 #[test]
