@@ -10,9 +10,10 @@ use liquid::Token::{self, Identifier};
 use liquid::lexer::Element::{self, Expression, Tag, Raw};
 use liquid::Error;
 
-use syntect::parsing::{SyntaxSet, SyntaxDefinition};
+use syntect::parsing::{SyntaxSet};
 use syntect::highlighting::ThemeSet;
-use syntect::html::highlighted_snippet_for_string;
+use syntect::html::{IncludeBackground, highlighted_snippet_for_string, styles_to_coloured_html, start_coloured_html_snippet};
+use syntect::easy::HighlightLines;
 
 use std::borrow::Cow::Owned;
 
@@ -62,15 +63,15 @@ impl Renderable for CodeBlock {
 
 
 pub struct DecoratedParser<'a> {
+    h: Option<HighlightLines<'a>>,
     parser: Parser<'a>,
-    cur_syntax: Option<SyntaxDefinition>,
 }
 
 impl<'a> DecoratedParser<'a> {
     pub fn new(parser: Parser<'a>) -> Self {
         DecoratedParser {
+            h: None,
             parser: parser,
-            cur_syntax: None,
         }
     }
 }
@@ -83,27 +84,29 @@ impl<'a> Iterator for DecoratedParser<'a> {
         match self.parser.next() {
             Some(item) => {
                 if let Text(text) = item {
-                    if let Some(ref syntax) = self.cur_syntax {
-                        Some(Html(Owned(
-                            highlighted_snippet_for_string(&text,
-                                                           syntax,
-                                                           &SETUP.theme_set.themes[THEME_NAME]))))
+                    if let Some(ref mut h) = self.h {
+                        let highlighted = &h.highlight(&text);
+                        let html = styles_to_coloured_html(highlighted, IncludeBackground::Yes);
+                        Some(Html(Owned(html)))
                     } else {
                         Some(Text(text))
                     }
                 } else {
                     if let Start(cmarkTag::CodeBlock(ref info)) = item {
                         // set local highlighter, if found
-                        self.cur_syntax = Some(info.clone()
+                        let cur_syntax = info.clone()
                             .split(' ')
                             .next()
                             .and_then(|lang| SETUP.syntax_set.find_syntax_by_token(lang))
-                            .unwrap_or_else(|| SETUP.syntax_set.find_syntax_plain_text())
-                            .clone());
+                            .unwrap_or_else(|| SETUP.syntax_set.find_syntax_plain_text());
+                        self.h = Some(HighlightLines::new(&cur_syntax, &SETUP.theme_set.themes[THEME_NAME]));
+                        return Some(Html(Owned(start_coloured_html_snippet(&SETUP.theme_set.themes[THEME_NAME]))));
                     }
                     if let End(cmarkTag::CodeBlock(_)) = item {
-                        // reset
-                        self.cur_syntax = None
+                        // reset highlighter
+                        self.h = None;
+                        // close the code block
+                        return Some(Html(Owned("</pre>".to_owned())));
                     }
 
                     Some(item)
