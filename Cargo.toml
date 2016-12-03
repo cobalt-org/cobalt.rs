@@ -46,7 +46,7 @@ difference = "0.4"
 tempdir = "0.3"
 
 [features]
-default = ["syntax-highlight"]
+default = []
 unstable = []
 dev = []
 

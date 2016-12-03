@@ -10,9 +10,10 @@ use liquid::Token::{self, Identifier};
 use liquid::lexer::Element::{self, Expression, Tag, Raw};
 use liquid::Error;
 
-use syntect::parsing::{SyntaxSet};
+use syntect::parsing::SyntaxSet;
 use syntect::highlighting::ThemeSet;
-use syntect::html::{IncludeBackground, highlighted_snippet_for_string, styles_to_coloured_html, start_coloured_html_snippet};
+use syntect::html::{IncludeBackground, highlighted_snippet_for_string, styles_to_coloured_html,
+                    start_coloured_html_snippet};
 use syntect::easy::HighlightLines;
 
 use std::borrow::Cow::Owned;

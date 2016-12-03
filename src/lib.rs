@@ -46,7 +46,7 @@ extern crate rss;
 extern crate glob;
 extern crate regex;
 
-#[cfg(feature="syntax-highlight")]
+#[cfg(all(feature="syntax-highlight", not(windows)))]
 extern crate syntect;
 
 

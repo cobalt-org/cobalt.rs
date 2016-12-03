@@ -11,7 +11,7 @@ use std::io::Read;
 use regex::Regex;
 use rss;
 
-#[cfg(feature="syntax-highlight")]
+#[cfg(all(feature="syntax-highlight", not(windows)))]
 use syntax_highlight::{initialize_codeblock, decorate_markdown};
 
 use liquid::{Renderable, LiquidOptions, Context, Value};
@@ -260,10 +260,10 @@ impl Document {
     /// Takes `content` string and returns rendered HTML. This function doesn't
     /// take `"extends"` attribute into account. This function can be used for
     /// rendering content or excerpt.
+    #[cfg(all(feature="syntax-highlight", not(windows)))]
     fn render_html(&self, content: &str, context: &mut Context, source: &Path) -> Result<String> {
         let mut options =
             LiquidOptions { file_system: Some(source.to_owned()), ..Default::default() };
-        #[cfg(feature="syntax-highlight")]
         options.blocks.insert("highlight".to_string(), Box::new(initialize_codeblock));
         let template = try!(liquid::parse(content, options));
         let mut html = try!(template.render(context)).unwrap_or(String::new());
@@ -275,6 +275,22 @@ impl Document {
                 #[cfg(feature="syntax-highlight")]
                 cmark::html::push_html(&mut buf, decorate_markdown(parser));
                 #[cfg(not(feature="syntax-highlight"))]
+                cmark::html::push_html(&mut buf, parser);
+                buf
+            };
+        }
+        Ok(html.to_owned())
+    }
+    #[cfg(any(not(feature="syntax-highlight"), windows))]
+    fn render_html(&self, content: &str, context: &mut Context, source: &Path) -> Result<String> {
+        let options = LiquidOptions { file_system: Some(source.to_owned()), ..Default::default() };
+        let template = try!(liquid::parse(content, options));
+        let mut html = try!(template.render(context)).unwrap_or(String::new());
+
+        if self.markdown {
+            html = {
+                let mut buf = String::new();
+                let parser = cmark::Parser::new(&html);
                 cmark::html::push_html(&mut buf, parser);
                 buf
             };
