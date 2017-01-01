@@ -1,4 +1,3 @@
-
 extern crate syntect;
 extern crate liquid;
 extern crate pulldown_cmark as cmark;
@@ -29,10 +28,8 @@ struct Setup {
     theme_set: ThemeSet,
 }
 
-
 unsafe impl Send for Setup {}
 unsafe impl Sync for Setup {}
-
 
 lazy_static!{
     static ref SETUP: Setup = Setup {
@@ -40,7 +37,6 @@ lazy_static!{
         theme_set: ThemeSet::load_defaults()
     };
 }
-
 
 struct CodeBlock {
     lang: Option<String>,
@@ -62,7 +58,6 @@ impl Renderable for CodeBlock {
     }
 }
 
-
 pub struct DecoratedParser<'a> {
     h: Option<HighlightLines<'a>>,
     parser: Parser<'a>,
@@ -76,7 +71,6 @@ impl<'a> DecoratedParser<'a> {
         }
     }
 }
-
 
 impl<'a> Iterator for DecoratedParser<'a> {
     type Item = Event<'a>;
@@ -141,18 +135,15 @@ pub fn initialize_codeblock(_: &str,
         _ => None,
     };
 
-    // FIXME: add language declarion support
     Ok(Box::new(CodeBlock {
         code: content,
         lang: lang,
     }))
 }
 
-
 pub fn decorate_markdown<'a>(parser: Parser<'a>) -> DecoratedParser {
     DecoratedParser::new(parser)
 }
-
 
 #[cfg(test)]
 mod test {
