@@ -171,6 +171,15 @@ None of these fields are optional, as by the [RSS 2.0 spec]().
 
 Make sure to also provide the fields `title`, `date` and `description` in the front matter of your posts.
 
+### Syntax Highlighting
+
+> This feature is currently experimental and causes installation to fail on Windows. To enable syntax highlighting, you need to install Cobalt using cargo like this:
+>  ```
+>  cargo install cobalt-bin --features="syntax-highlight"
+>  ```
+
+If you [annotate your Markdown code blocks](https://help.github.com/articles/creating-and-highlighting-code-blocks/#syntax-highlighting), Cobalt will automatically highlight source code using [Syntect](https://github.com/trishume/syntect/).
+
 ### Import
 
 To import your site to your `gh-pages` branch you can either pass a `build --import` flag when you build the site or after you have build the site with `build` you can run `import`. There are also some flags that can be found via `import --help`.
