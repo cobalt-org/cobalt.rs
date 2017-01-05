@@ -79,6 +79,7 @@ pub fn clean() {
     assert_contains!(&output.stderr, "directory \"./test_dest\" removed");
 }
 
+#[cfg(not(windows))]
 #[test]
 pub fn clean_warning() {
     env::set_current_dir(CWD.join("tests/fixtures/example")).unwrap();
