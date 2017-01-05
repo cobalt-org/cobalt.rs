@@ -84,6 +84,7 @@ pub fn clean() {
 pub fn clean_warning() {
     env::set_current_dir(CWD.join("tests/fixtures/example")).unwrap();
     let output = assert_cli!(&BIN, &["clean"] => Error 1).unwrap();
-    assert_contains!(&output.stderr, "Destination directory is same as current directory. \
-                                      Cancelling the operation");
+    assert_contains!(&output.stderr,
+                     "Destination directory is same as current directory. Cancelling the \
+                      operation");
 }
