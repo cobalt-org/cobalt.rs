@@ -60,7 +60,7 @@ pub fn build(config: &Config) -> Result<()> {
     let walker = WalkDir::new(&source)
         .into_iter()
         .filter_entry(|e| {
-            (ignore_filter(e, &source, &config.ignore) || compare_paths(e.path(), &posts_path)) &&
+            (ignore_filter(e, source, &config.ignore) || compare_paths(e.path(), &posts_path)) &&
             !compare_paths(e.path(), dest)
         })
         .filter_map(|e| e.ok());
