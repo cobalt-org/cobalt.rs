@@ -11,6 +11,7 @@ ignore:
 const default_liquid: &'static [u8] = b"<!DOCTYPE html>
 <html>
     <head>
+        <meta charset=\"utf-8\">
         {% if is_post %}
           <title>{{ title }}</title>
         {% else %}
