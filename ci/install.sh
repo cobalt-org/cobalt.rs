@@ -10,7 +10,7 @@ main() {
            --force \
            --crate rustfmt \
            --git japaric/rustfmt-bin \
-           --tag v0.6.3-20170107 \
+           --tag v0.6.3-20161120 \
 
     if [ "$TRAVIS_RUST_VERSION" = "nightly" ]; then
       cargo install clippy || true
