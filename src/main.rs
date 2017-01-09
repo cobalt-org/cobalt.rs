@@ -1,4 +1,12 @@
+// Deny warnings, except in dev mode
 #![deny(warnings)]
+#![cfg_attr(feature="dev", warn(warnings))]
+
+// stuff we want clippy to ignore
+#![cfg_attr(feature="cargo-clippy", allow(
+        cyclomatic_complexity,
+        too_many_arguments,
+        ))]
 
 extern crate cobalt;
 #[macro_use]
@@ -176,11 +184,10 @@ fn main() {
     match matches.value_of("log-level").or(global_matches.value_of("log-level")) {
         Some("error") => builder.filter(None, LogLevelFilter::Error),
         Some("warn") => builder.filter(None, LogLevelFilter::Warn),
-        Some("info") => builder.filter(None, LogLevelFilter::Info),
         Some("debug") => builder.filter(None, LogLevelFilter::Debug),
         Some("trace") => builder.filter(None, LogLevelFilter::Trace),
         Some("off") => builder.filter(None, LogLevelFilter::Off),
-        _ => builder.filter(None, LogLevelFilter::Info),
+        Some("info") | _ => builder.filter(None, LogLevelFilter::Info),
     };
 
     if matches.is_present("trace") {
@@ -261,9 +268,9 @@ fn main() {
         }
 
         "clean" => {
-            let cwd = std::env::current_dir().unwrap_or(PathBuf::new());
+            let cwd = std::env::current_dir().unwrap_or_else(|_| PathBuf::new());
             let destdir = std::fs::canonicalize(PathBuf::from(&config.dest))
-                .unwrap_or(PathBuf::new());
+                .unwrap_or_else(|_| PathBuf::new());
             if cwd == destdir {
                 error!("Destination directory is same as current directory. \
                        Cancelling the operation");
@@ -305,7 +312,8 @@ fn main() {
                                 trace!("file changed {:?}", val);
                                 if let Some(path) = val.path {
                                     // get where process was run from
-                                    let cwd = std::env::current_dir().unwrap_or(PathBuf::new());
+                                    let cwd = std::env::current_dir()
+                                        .unwrap_or_else(|_| PathBuf::new());
 
                                     // The final goal is to have a relative path. If we already
                                     // have a relative path, we still convert it to an abs path
@@ -357,7 +365,7 @@ fn main() {
 
 fn build(config: &Config) {
     info!("Building from {} into {}", config.source, config.dest);
-    match cobalt::build(&config) {
+    match cobalt::build(config) {
         Ok(_) => info!("Build successful"),
         Err(e) => {
             error!("{}", e);

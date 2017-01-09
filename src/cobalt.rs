@@ -67,7 +67,7 @@ pub fn build(config: &Config) -> Result<()> {
 
     for entry in walker {
         let entry_path = entry.path();
-        let extension = &entry_path.extension().unwrap_or(OsStr::new(""));
+        let extension = &entry_path.extension().unwrap_or_else(|| OsStr::new(""));
         if template_extensions.contains(extension) {
             // if the document is in the posts folder it's considered a post
             let is_post =
@@ -95,7 +95,7 @@ pub fn build(config: &Config) -> Result<()> {
 
         for entry in walker {
             let entry_path = entry.path();
-            let extension = &entry_path.extension().unwrap_or(OsStr::new(""));
+            let extension = &entry_path.extension().unwrap_or_else(|| OsStr::new(""));
             let new_path = posts_path
                 .join(entry_path.strip_prefix(&drafts).expect("Draft not in draft folder!"));
             let new_path = new_path.strip_prefix(source).expect("Entry not in source folder");
@@ -133,7 +133,7 @@ pub fn build(config: &Config) -> Result<()> {
     }
 
     // check if we should create an RSS file and create it!
-    if let &Some(ref path) = &config.rss {
+    if let Some(ref path) = config.rss {
         try!(create_rss(path, dest, &config, &posts));
     }
 
@@ -164,7 +164,8 @@ pub fn build(config: &Config) -> Result<()> {
                 ignore_filter(e, source, &config.ignore) &&
                 !template_extensions.contains(&e.path()
                     .extension()
-                    .unwrap_or(OsStr::new(""))) && !compare_paths(e.path(), dest)
+                    .unwrap_or_else(|| OsStr::new(""))) &&
+                !compare_paths(e.path(), dest)
             })
             .filter_map(|e| e.ok());
 
@@ -176,7 +177,7 @@ pub fn build(config: &Config) -> Result<()> {
             let relative = try!(entry_path.split(source_str)
                 .last()
                 .map(|s| s.trim_left_matches("/"))
-                .ok_or(format!("Empty path")));
+                .ok_or("Empty path"));
 
             if try!(entry.metadata()).is_dir() {
                 try!(fs::create_dir_all(&dest.join(relative)));
