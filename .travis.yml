@@ -1,9 +1,5 @@
-# Based on the "trust" template v0.1.1
-# # https://github.com/japaric/trust/tree/v0.1.1
-
 dist: trusty
 language: rust
-services: docker
 
 rust: stable
 
@@ -17,7 +13,6 @@ matrix:
   include:
     # Linux
     # - env: TARGET=x86_64-unknown-linux-gnu  # this is the default job
-    - env: TARGET=x86_64-unknown-linux-musl
 
     # OSX
     - env: TARGET=x86_64-apple-darwin

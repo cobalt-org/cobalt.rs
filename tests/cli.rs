@@ -11,8 +11,8 @@ static EMPTY: &'static [&'static str] = &[];
 lazy_static! {
     static ref _CWD: PathBuf = env::current_dir().unwrap();
     static ref CWD: &'static Path = _CWD.as_path();
-    static ref _BIN: PathBuf = CWD.join("target/")
-        .join(option_env!("TARGET").unwrap_or("")).join("debug").join("cobalt");
+    // TODO test on release
+    static ref _BIN: PathBuf = CWD.join("target/debug/cobalt");
     static ref BIN: &'static str = _BIN.to_str().unwrap();
 }
 

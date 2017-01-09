@@ -1,18 +1,15 @@
-# This script takes care of testing your crate
-
 set -ex
 
 main() {
-    TARGET=$TARGET cross build --target $TARGET
-    TARGET=$TARGET cross build --target $TARGET --release
+    cargo build
+    cargo test
 
-    TARGET=$TARGET cross test --target $TARGET
-    TARGET=$TARGET cross test --target $TARGET --release
-
-    if [ $TRAVIS_RUST_VERSION == nightly ]; then
+    if [ "$TRAVIS_RUST_VERSION" = "nightly" ]; then
+      cargo clippy -- --version
       cargo clippy
     fi
 
+    cargo fmt -- --version
     cargo fmt -- --write-mode=diff
 }
 

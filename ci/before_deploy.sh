@@ -1,5 +1,3 @@
-# This script takes care of building your crate and packaging it for release
-
 set -ex
 
 main() {
@@ -17,7 +15,7 @@ main() {
 
     test -f Cargo.lock || cargo generate-lockfile
 
-    cross rustc --bin cobalt --target $TARGET --release -- -C lto
+    cargo rustc --target $TARGET --release --bin cobalt -- -C lto
 
     cp target/$TARGET/release/cobalt $stage/
 
