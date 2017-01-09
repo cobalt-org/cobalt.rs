@@ -11,7 +11,7 @@ static EMPTY: &'static [&'static str] = &[];
 lazy_static! {
     static ref _CWD: PathBuf = env::current_dir().unwrap();
     static ref CWD: &'static Path = _CWD.as_path();
-    static ref _BIN: PathBuf = CWD.join("target/debug/cobalt");
+    static ref _BIN: PathBuf = CWD.join("target/").join(env!("TARGET")).join("debug").join("cobalt");
     static ref BIN: &'static str = _BIN.to_str().unwrap();
 }
 
@@ -33,8 +33,7 @@ macro_rules! assert_contains_not {
 
 #[test]
 pub fn invalid_calls() {
-    env::set_current_dir(CWD.join("tests/fixtures/example")).unwrap();
-
+    println!("Binary: {:?}", BIN.to_owned());
     let output = assert_cli!(&BIN, EMPTY => Error 1).unwrap();
     assert_contains!(&output.stderr, "requires a subcommand");
 

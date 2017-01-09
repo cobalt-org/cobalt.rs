@@ -1,9 +1,12 @@
-# This is based on https://github.com/rust-lang-nursery/rustfmt/blob/master/appveyor.yml
-# which is in turn based on https://github.com/japaric/rust-everywhere/blob/master/appveyor.yml
+# Based on the "trust" template v0.1.1
+# https://github.com/japaric/trust/tree/v0.1.1
 
 environment:
   global:
-    PROJECT_NAME: cobalt.rs
+    RUST_VERSION: stable
+
+    CRATE_NAME: cobalt
+
   matrix:
     # Stable channel
     - TARGET: x86_64-pc-windows-gnu
@@ -19,25 +22,63 @@ environment:
     - TARGET: x86_64-pc-windows-msvc
       CHANNEL: nightly
 
-# Install Rust and Cargo
-# (Based on from https://github.com/rust-lang/libc/blob/master/appveyor.yml)
 install:
-  - ps: Start-FileDownload "https://static.rust-lang.org/dist/channel-rust-stable"
-  - ps: $env:RUST_VERSION = Get-Content channel-rust-stable | select -first 1 | %{$_.split('-')[1]}
-  - if NOT "%CHANNEL%" == "stable" set RUST_VERSION=%CHANNEL%
-  - ps: Start-FileDownload "https://static.rust-lang.org/dist/rust-${env:RUST_VERSION}-${env:TARGET}.exe"
-  - rust-%RUST_VERSION%-%TARGET%.exe /VERYSILENT /NORESTART /DIR="C:\Program Files (x86)\Rust"
-  - SET PATH=%PATH%;C:\Program Files (x86)\Rust\bin
-  - if "%TARGET%" == "i686-pc-windows-gnu" set PATH=%PATH%;C:\msys64\mingw32\bin
-  - if "%TARGET%" == "x86_64-pc-windows-gnu" set PATH=%PATH%;C:\msys64\mingw64\bin
-  - rustc -V
+  - ps: >-
+      If ($Env:TARGET -eq 'x86_64-pc-windows-gnu') {
+        $Env:PATH += ';C:\msys64\mingw64\bin'
+      } ElseIf ($Env:TARGET -eq 'i686-pc-windows-gnu') {
+        $Env:PATH += ';C:\msys64\mingw32\bin'
+      }
+  - curl -sSf -o rustup-init.exe https://win.rustup.rs/
+  - rustup-init.exe -y --default-host %TARGET% --default-toolchain %RUST_VERSION%
+  - set PATH=%PATH%;C:\Users\appveyor\.cargo\bin
+  - rustc -Vv
   - cargo -V
 
-# ???
-build: false
-
-# Build and test
 test_script:
-  - cargo build --verbose
-  - cargo test
+  # we don't run the "test phase" when doing deploys
+  - if [%APPVEYOR_REPO_TAG%]==[false] (
+      cargo build --target %TARGET% &&
+      cargo build --target %TARGET% --release &&
+      cargo test --target %TARGET% &&
+      cargo test --target %TARGET% --release
+    )
 
+before_deploy:
+  - cargo rustc --target %TARGET% --release --bin cargo -- -C lto
+  - ps: ci\before_deploy.ps1
+
+#deploy:
+  #artifact: /.*\.zip/
+  ## TODO update `auth_token.secure`
+  ## - Create a `public_repo` GitHub token. Go to: https://github.com/settings/tokens/new
+  ## - Encrypt it. Go to https://ci.appveyor.com/tools/encrypt
+  ## - Paste the output down here
+  #auth_token:
+    #secure: t3puM/2hOig26EHhAodcZBc61NywF7/PFEpimR6SwGaCiqS07KR5i7iAhSABmBp7
+  #description: ''
+  #on:
+    ## TODO Here you can pick which targets will generate binary releases
+    ## In this example, there are some targets that are tested using the stable
+    ## and nightly channels. This condition makes sure there is only one release
+    ## for such targets and that's generated using the stable channel
+    #RUST_VERSION: stable
+    #appveyor_repo_tag: true
+  #provider: GitHub
+
+cache:
+  - C:\Users\appveyor\.cargo\registry
+  - target
+
+branches:
+  only:
+    # Release tags
+    - /^v\d+\.\d+\.\d+.*$/
+    - master
+
+notifications:
+  - provider: Email
+    on_build_success: false
+
+# disable automatic builds
+build: false
