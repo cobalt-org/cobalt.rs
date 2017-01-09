@@ -45,23 +45,15 @@ before_deploy:
   - cargo rustc --target %TARGET% --release --bin cobalt -- -C lto
   - ps: ci\before_deploy.ps1
 
-#deploy:
-  #artifact: /.*\.zip/
-  ## TODO update `auth_token.secure`
-  ## - Create a `public_repo` GitHub token. Go to: https://github.com/settings/tokens/new
-  ## - Encrypt it. Go to https://ci.appveyor.com/tools/encrypt
-  ## - Paste the output down here
-  #auth_token:
-    #secure: t3puM/2hOig26EHhAodcZBc61NywF7/PFEpimR6SwGaCiqS07KR5i7iAhSABmBp7
-  #description: ''
-  #on:
-    ## TODO Here you can pick which targets will generate binary releases
-    ## In this example, there are some targets that are tested using the stable
-    ## and nightly channels. This condition makes sure there is only one release
-    ## for such targets and that's generated using the stable channel
-    #RUST_VERSION: stable
-    #appveyor_repo_tag: true
-  #provider: GitHub
+deploy:
+  artifact: /.*\.zip/
+  auth_token:
+    secure: utuy2/b3b27gNjfJb/n/pZYEP3uMi9oDa6qvtbTg31QAgeih1+q8cQTsiCzN8fWZ
+  description: ''
+  on:
+    RUST_VERSION: stable
+    appveyor_repo_tag: true
+  provider: GitHub
 
 cache:
   - C:\Users\appveyor\.cargo\registry

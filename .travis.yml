@@ -10,6 +10,7 @@ env:
     - TARGET=x86_64-unknown-linux-gnu
 
 matrix:
+  fast_finish: true
   include:
     # Linux
     # - env: TARGET=x86_64-unknown-linux-gnu  # this is the default job
@@ -49,16 +50,16 @@ branches:
 #after_success:
  #- travis-cargo --only stable coveralls --no-sudo --exclude-pattern="src/main.rs,src/new.rs,target/debug/build/"
 
-#deploy:
-  #api_key:
-    #secure: IzxVmMO+mVWc4BSoB7Ek7L6Ye5FNrCI4fb/pIFitrQRmP3Cpuw7qMm5sxL5niiGaMRJHwce07ukyKsCNgs+64k8VwToUDPWy4F7+EbIHrjDOJtIY8TME+hUeaCmkMysuqUj1oKtDS+l8F+Yc42ZXNMqz/1kF/h6sGTRSmlzR3mc=
-  #file_glob: true
-  #file: $CRATE_NAME-$TRAVIS_TAG-$TARGET.*
-  #on:
-    #condition: $TRAVIS_RUST_VERSION = stable
-    #tags: true
-  #provider: releases
-  #skip_cleanup: true
+deploy:
+  provider: releases
+  api_key:
+    secure: "EGyMK0pMUtzHFuDRaACsVj7fkq4zkLumM8UHVSny2TWr+6Ln4uVwVjnQbuYdHVZfJWXWysdmlDpdH5kAVKA+80ysafv7QsORHOfiOlwvpEpAF1KzsiqKubn+IT1+/kKzztzDxeTyJX4BitEI5QIbWy+FIAWJFbxvy6M/y1baS+A="
+  file_glob: true
+  file: $CRATE_NAME-$TRAVIS_TAG-$TARGET.*
+  on:
+    condition: $TRAVIS_RUST_VERSION = stable
+    tags: true
+  skip_cleanup: true
 
 notifications:
   webhooks:

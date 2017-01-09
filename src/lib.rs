@@ -21,7 +21,6 @@ extern crate regex;
 #[cfg(all(feature="syntax-highlight", not(windows)))]
 extern crate syntect;
 
-
 #[macro_use]
 extern crate log;
 
