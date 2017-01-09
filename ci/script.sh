@@ -3,24 +3,17 @@
 set -ex
 
 main() {
-    if [ $TARGET = x86_64-unknown-linux-gnu ]; then
-        cargo fmt -- --write-mode=diff
-    fi
+    TARGET=$TARGET cross build --target $TARGET
+    TARGET=$TARGET cross build --target $TARGET --release
 
-    cross build --target $TARGET
-    cross build --target $TARGET --release
-
-    if [ -n $DISABLE_TESTS ]; then
-        return
-    fi
-
-    cross test --target $TARGET
-    cross test --target $TARGET --release
+    TARGET=$TARGET cross test --target $TARGET
+    TARGET=$TARGET cross test --target $TARGET --release
 
     if [ $TRAVIS_RUST_VERSION == nightly ]; then
       cargo clippy
     fi
 
+    cargo fmt -- --write-mode=diff
 }
 
 # we don't run the "test phase" when doing deploys
