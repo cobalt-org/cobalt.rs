@@ -3,6 +3,16 @@ language: rust
 
 rust: stable
 
+addons:
+  apt:
+    packages:
+      - libcurl4-openssl-dev
+      - libelf-dev
+      - libdw-dev
+      - cmake
+      - gcc
+      - binutils-dev
+
 env:
   global:
     - CRATE_NAME=cobalt
@@ -46,9 +56,8 @@ branches:
     - /^v\d+\.\d+\.\d+.*$/
     - master
 
-# TODO: Upload coverage
-#after_success:
- #- travis-cargo --only stable coveralls --no-sudo --exclude-pattern="src/main.rs,src/new.rs,target/debug/build/"
+after_success:
+  - bash ci/coverage.sh
 
 deploy:
   provider: releases

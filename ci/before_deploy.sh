@@ -13,8 +13,6 @@ main() {
             ;;
     esac
 
-    test -f Cargo.lock || cargo generate-lockfile
-
     cargo rustc --target $TARGET --release --bin cobalt -- -C lto
 
     cp target/$TARGET/release/cobalt $stage/
