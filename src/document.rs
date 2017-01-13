@@ -166,9 +166,8 @@ impl Document {
             content
         };
 
-        if let &mut Value::Bool(val) =
-            attributes.entry("is_post".to_owned())
-                .or_insert(Value::Bool(is_post)) {
+        if let Value::Bool(val) = *attributes.entry("is_post".to_owned())
+            .or_insert_with(|| Value::Bool(is_post)) {
             is_post = val;
         }
 
@@ -184,7 +183,7 @@ impl Document {
 
         // if the file has a .md extension we assume it's markdown
         // TODO add a "markdown" flag to yaml front matter
-        let markdown = file_path.extension().unwrap_or(OsStr::new("")) == OsStr::new("md");
+        let markdown = file_path.extension().unwrap_or_else(|| OsStr::new("")) == OsStr::new("md");
 
         let layout = attributes.get("extends").and_then(|l| l.as_str()).map(|x| x.to_owned());
 
@@ -199,7 +198,7 @@ impl Document {
             path_buf = PathBuf::from(try!(format_path(path, &attributes, &date)));
         } else if is_post {
             // check if there is a global setting for post paths
-            if let &Some(ref path) = post_path {
+            if let Some(ref path) = *post_path {
                 path_buf = PathBuf::from(try!(format_path(path, &attributes, &date)));
             }
         };
@@ -285,7 +284,7 @@ impl Document {
     fn render_html(&self, content: &str, context: &mut Context, source: &Path) -> Result<String> {
         let options = LiquidOptions { file_system: Some(source.to_owned()), ..Default::default() };
         let template = try!(liquid::parse(content, options));
-        let mut html = try!(template.render(context)).unwrap_or(String::new());
+        let mut html = try!(template.render(context)).unwrap_or_default();
 
         if self.markdown {
             html = {
@@ -365,7 +364,7 @@ impl Document {
             let options =
                 LiquidOptions { file_system: Some(source.to_owned()), ..Default::default() };
             let template = try!(liquid::parse(layout_data_ref, options));
-            Ok(try!(template.render(context)).unwrap_or(String::new()))
+            Ok(try!(template.render(context)).unwrap_or_default())
         } else {
             Ok(content_html)
         }

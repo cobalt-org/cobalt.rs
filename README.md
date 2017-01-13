@@ -23,8 +23,23 @@ A static site generator written in [Rust](http://www.rust-lang.org/).
 
 ## Installation
 
+### Using the install script
+
+No prerequisites
+
 ```
-  $ cargo install cobalt-bin
+$ curl -LSfs https://japaric.github.io/trust/install.sh | sh -s -- --git cobalt-org/cobalt.rs
+```
+
+You can also manually download all releases [here](https://github.com/cobalt-org/cobalt.rs/releases).
+If your platform is not supported yet, please try installing from source (see below) and file an issue.
+
+### Using cargo
+
+Requires Rust
+
+```
+$ cargo install cobalt-bin
 ```
 
 ## Examples

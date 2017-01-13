@@ -1,23 +1,7 @@
-sudo: false
+dist: trusty
 language: rust
-cache: cargo
-rust:
-  - stable
-  - beta
-  - nightly
 
-before_script:
-  - |
-    pip install 'travis-cargo<0.2' --user &&
-    (cargo install rustfmt || true) &&
-    export PATH=$HOME/.local/bin:$PATH &&
-    export PATH=$HOME/.cargo/bin:$PATH
-
-script:
-  - |
-    cargo fmt -- --write-mode=diff &&
-    travis-cargo build &&
-    travis-cargo test
+rust: stable
 
 addons:
   apt:
@@ -25,13 +9,66 @@ addons:
       - libcurl4-openssl-dev
       - libelf-dev
       - libdw-dev
-
-after_success:
-  - travis-cargo --only stable coveralls --no-sudo --exclude-pattern="src/main.rs,src/new.rs,target/debug/build/"
+      - cmake
+      - gcc
+      - binutils-dev
 
 env:
   global:
-  - TRAVIS_CARGO_NIGHTLY_FEATURE="clippy"
+    - CRATE_NAME=cobalt
+    # default job
+    - TARGET=x86_64-unknown-linux-gnu
+
+matrix:
+  fast_finish: true
+  include:
+    # Linux
+    # - env: TARGET=x86_64-unknown-linux-gnu  # this is the default job
+
+    # OSX
+    - env: TARGET=x86_64-apple-darwin
+      os: osx
+
+    # Testing other channels
+    - env: TARGET=x86_64-unknown-linux-gnu
+      rust: beta
+    - env: TARGET=x86_64-unknown-linux-gnu
+      rust: nightly
+
+install:
+  - sh ci/install.sh
+  - source ~/.cargo/env || true
+
+script:
+  - bash ci/script.sh
+
+before_deploy:
+  - sh ci/before_deploy.sh
+
+cache: cargo
+before_cache:
+    # Travis can't cache files that are not readable by "others"
+    - chmod -R a+r $HOME/.cargo
+
+branches:
+  only:
+    # release tags
+    - /^v\d+\.\d+\.\d+.*$/
+    - master
+
+after_success:
+  - bash ci/coverage.sh
+
+deploy:
+  provider: releases
+  api_key:
+    secure: "EGyMK0pMUtzHFuDRaACsVj7fkq4zkLumM8UHVSny2TWr+6Ln4uVwVjnQbuYdHVZfJWXWysdmlDpdH5kAVKA+80ysafv7QsORHOfiOlwvpEpAF1KzsiqKubn+IT1+/kKzztzDxeTyJX4BitEI5QIbWy+FIAWJFbxvy6M/y1baS+A="
+  file_glob: true
+  file: $CRATE_NAME-$TRAVIS_TAG-$TARGET.*
+  on:
+    condition: $TRAVIS_RUST_VERSION = stable
+    tags: true
+  skip_cleanup: true
 
 notifications:
   webhooks:

@@ -1,6 +1,7 @@
 extends: posts.liquid
 
 title:  Boom without trailing slash
+date:  3 May 2015 05:05:20 +0100
 path:  test/thing4
 ---
 # {{ title }}
