@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.5
+
+- We now generate binaries for OSX, Windows, and Linux ([@johannhof][])
+- Experimental Syntax Highlighting support (behind a compiler flag until we fix Windows support)([@gnunicorn][])
+- Prevent `cargo clean` from deleting the current directory ([@kracekumar][])
+- Set charset utf-8 in the default template ([@nott][])
+- tons of other bugfixes and improvements (all of the above + [@benaryorg][], [@crodjer][] and [@uetoyo][])
+
 ## 0.4
 
 - Improved Windows support ([@johannhof][])
