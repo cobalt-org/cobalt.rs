@@ -1,4 +1,5 @@
 dist: trusty
+sudo: false
 language: rust
 
 rust: stable
@@ -45,7 +46,13 @@ script:
 before_deploy:
   - sh ci/before_deploy.sh
 
-cache: cargo
+cache:
+  apt: true
+  directories:
+    - $HOME/.cargo
+    - target/debug/deps
+    - target/debug/build
+
 before_cache:
     # Travis can't cache files that are not readable by "others"
     - chmod -R a+r $HOME/.cargo
