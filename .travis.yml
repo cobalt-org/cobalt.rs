@@ -62,7 +62,7 @@ after_success:
 deploy:
   provider: releases
   api_key:
-    secure: "EGyMK0pMUtzHFuDRaACsVj7fkq4zkLumM8UHVSny2TWr+6Ln4uVwVjnQbuYdHVZfJWXWysdmlDpdH5kAVKA+80ysafv7QsORHOfiOlwvpEpAF1KzsiqKubn+IT1+/kKzztzDxeTyJX4BitEI5QIbWy+FIAWJFbxvy6M/y1baS+A="
+    secure: "R4P4oXBODF9LZW/ht2putfF4tg74aOjWVRZWu7ia4ORdpEQ++RkgO32SQLZsLeXsJbb/qbTa06FfD6MC8MWdmek4DvwlSAiHrykVyio3BCv4RHmeBtaIhmp0L7n608tDeoJZFXE08JkDtR6rS8OiQw1jt6GuNAVGYk7/Rhgpujo="
   file_glob: true
   file: $CRATE_NAME-$TRAVIS_TAG-$TARGET.*
   on:
