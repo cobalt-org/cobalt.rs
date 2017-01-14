@@ -12,6 +12,9 @@ main() {
   sudo make install
   cd ../..
 
+  cargo clean
+  cargo test --no-run
+
   ls target/debug
 
   # collect coverage
