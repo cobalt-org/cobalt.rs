@@ -28,7 +28,7 @@ A static site generator written in [Rust](http://www.rust-lang.org/).
 No prerequisites
 
 ```
-$ curl -LSfs https://japaric.github.io/trust/install.sh | sh -s -- --git cobalt-org/cobalt.rs
+$ curl -LSfs https://japaric.github.io/trust/install.sh | sh -s -- --git cobalt-org/cobalt.rs --crate cobalt
 ```
 
 You can also manually download all releases [here](https://github.com/cobalt-org/cobalt.rs/releases).
