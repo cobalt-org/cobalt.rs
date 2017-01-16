@@ -9,11 +9,7 @@ main() {
   cmake ..
   make
   make install DESTDIR=../tmp
-  sudo make install
   cd ../..
-
-  cargo clean
-  cargo test --no-run
 
   ls target/debug
 
