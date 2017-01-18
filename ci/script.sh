@@ -1,8 +1,8 @@
 set -ex
 
 main() {
-    cargo build
-    cargo test
+    cargo build --features="syntax-highlight"
+    cargo test --features="syntax-highlight"
 
     if [ "$TRAVIS_RUST_VERSION" = "nightly" ]; then
       cargo clippy -- --version
