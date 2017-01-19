@@ -32,12 +32,16 @@ glob = "0.2.11"
 regex = "0.1"
 clippy = {version = "0.0", optional = true}
 error-chain = "0.5.0"
-syntect = {version = "1.0", optional = true}
 lazy_static = {version = "0.2", optional =true}
 
 [dependencies.hyper]
 version = "0.9"
 default-features = false
+
+[dependencies.syntect]
+version = "1.0.4"
+optional = true
+features = ["static-onig"]
 
 [dev-dependencies]
 assert_cli = "0.3"
