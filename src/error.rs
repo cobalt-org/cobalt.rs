@@ -1,5 +1,6 @@
 #![cfg_attr(feature = "cargo-clippy", allow(redundant_closure))]
 use std::io;
+use std::path;
 use yaml_rust::scanner;
 use walkdir;
 use liquid;
@@ -11,6 +12,7 @@ error_chain! {
 
     foreign_links {
         io::Error, Io;
+        path::StripPrefixError, Path;
         liquid::Error, Liquid;
         walkdir::Error, WalkDir;
         scanner::ScanError, Yaml;
