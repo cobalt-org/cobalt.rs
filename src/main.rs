@@ -181,7 +181,7 @@ fn main() {
     let mut builder = LogBuilder::new();
     builder.format(format);
 
-    match matches.value_of("log-level").or(global_matches.value_of("log-level")) {
+    match matches.value_of("log-level").or_else(|| global_matches.value_of("log-level")) {
         Some("error") => builder.filter(None, LogLevelFilter::Error),
         Some("warn") => builder.filter(None, LogLevelFilter::Warn),
         Some("debug") => builder.filter(None, LogLevelFilter::Debug),
@@ -201,7 +201,7 @@ fn main() {
     builder.init().unwrap();
 
     let config_path = matches.value_of("config")
-        .or(global_matches.value_of("config"))
+        .or_else(|| global_matches.value_of("config"))
         .unwrap_or(".cobalt.yml")
         .to_string();
 
@@ -223,22 +223,22 @@ fn main() {
     };
 
     config.source = matches.value_of("source")
-        .or(global_matches.value_of("source"))
+        .or_else(|| global_matches.value_of("source"))
         .map(str::to_string)
         .unwrap_or(config.source);
 
     config.dest = matches.value_of("destination")
-        .or(global_matches.value_of("destination"))
+        .or_else(|| global_matches.value_of("destination"))
         .map(str::to_string)
         .unwrap_or(config.dest);
 
     config.layouts = matches.value_of("layouts")
-        .or(global_matches.value_of("layouts"))
+        .or_else(|| global_matches.value_of("layouts"))
         .map(str::to_string)
         .unwrap_or(config.layouts);
 
     config.posts = matches.value_of("posts")
-        .or(global_matches.value_of("posts"))
+        .or_else(|| global_matches.value_of("posts"))
         .map(str::to_string)
         .unwrap_or(config.posts);
 

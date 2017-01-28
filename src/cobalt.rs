@@ -17,7 +17,8 @@ fn ignore_filter(entry: &DirEntry, source: &Path, ignore: &[Pattern]) -> bool {
     if compare_paths(entry.path(), source) {
         return true;
     }
-    let path = entry.path().strip_prefix(&source).unwrap_or(entry.path());
+    let path = entry.path();
+    let path = path.strip_prefix(&source).unwrap_or(path);
     let file_name = entry.file_name().to_str().unwrap_or("");
     if file_name.starts_with('_') || file_name.starts_with('.') {
         return false;
