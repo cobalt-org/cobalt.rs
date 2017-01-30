@@ -2,22 +2,40 @@ extern crate difference;
 extern crate cobalt;
 extern crate tempdir;
 extern crate walkdir;
+#[macro_use]
+extern crate lazy_static;
 
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::fs::{self, File};
 use std::io::Read;
+use std::env;
 use tempdir::TempDir;
 use walkdir::WalkDir;
 use std::error::Error;
 use cobalt::Config;
 
+lazy_static! {
+    // Create a static variable containing the current working directory(CWD).
+    // This allows us to change the CWD without forgetting where we were at the begining.
+    static ref WORKING_DIRECTORY:PathBuf = env::current_dir().unwrap();
+}
+
 fn run_test(name: &str) -> Result<(), cobalt::Error> {
+    // Reset working directory in the event the previous test did not.
+    try!(env::set_current_dir(WORKING_DIRECTORY.clone()));
     let target = format!("tests/target/{}/", name);
     let mut config = Config::from_file(format!("tests/fixtures/{}/.cobalt.yml", name))
         .unwrap_or(Default::default());
     let destdir = TempDir::new(name).expect("Tempdir not created");
+    let srcdir = Path::new("tests/fixtures/").join(name);
 
-    config.source = format!("tests/fixtures/{}/", name);
+    // We should change the working directory if the config defines a non-default source.
+    let build_changing_cwd = config.source != "./";
+    if !build_changing_cwd {
+        config.source = srcdir.to_str()
+            .expect("Can't convert source dir to string")
+            .to_owned();
+    }
     config.dest = destdir.path()
         .to_str()
         .expect("Can't convert destdir to str")
@@ -26,7 +44,16 @@ fn run_test(name: &str) -> Result<(), cobalt::Error> {
     // try to create the target directory, ignore errors
     fs::create_dir_all(&config.dest).is_ok();
 
+    // If we are using a custom `config.source`, then run the build from the directory.
+    // and after building reset the working directory.
+    if build_changing_cwd {
+        let chdir = WORKING_DIRECTORY.join(srcdir);
+        try!(env::set_current_dir(chdir));
+    }
     let result = cobalt::build(&config);
+    if build_changing_cwd {
+        try!(env::set_current_dir(WORKING_DIRECTORY.clone()));
+    }
 
     if result.is_ok() {
         let walker = WalkDir::new(&target)
@@ -41,14 +68,18 @@ fn run_test(name: &str) -> Result<(), cobalt::Error> {
                 .expect("Comparison error");
 
             let mut original = String::new();
-            File::open(entry.path())
-                .expect("Comparison error")
+            let original_path = entry.path();
+            File::open(original_path)
+                .expect(&format!("Cannot open original path. Comparison error {:?}",
+                                 original_path))
                 .read_to_string(&mut original)
                 .expect("Could not read to string");
 
             let mut created = String::new();
-            File::open(&Path::new(&config.dest).join(&relative))
-                .expect("Comparison error")
+            let created_path = Path::new(&config.dest).join(&relative);
+            File::open(&original_path)
+                .expect(&format!("Cannot open created path. Comparison error {:?}",
+                                 created_path))
                 .read_to_string(&mut created)
                 .expect("Could not read to string");
 
@@ -167,6 +198,16 @@ pub fn no_extends_error() {
         .description()
         .contains("Layout default_nonexistent.liquid can not be read (defined in \
                    tests/fixtures/no_extends_error/index.liquid)"));
+}
+
+
+/// Tests for a fix for [Issues#183][1]
+///  - If the `source` variable is `.`, then additional files are not moved correctly.
+///
+/// [1]: https://github.com/cobalt-org/cobalt.rs/issues/183
+#[test]
+pub fn source_set_to_dot() {
+    run_test("source_set_to_dot").unwrap();
 }
 
 #[test]
