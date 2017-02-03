@@ -1,0 +1,5 @@
+name: cobalt blog testing posts in subfolders
+source: "."
+dest: "build"
+ignore:
+  - build/*

@@ -195,3 +195,8 @@ pub fn yaml_error() {
 pub fn excerpts() {
     run_test("excerpts").unwrap();
 }
+
+#[test]
+pub fn posts_in_subfolder() {
+    run_test("posts_in_subfolder").unwrap();
+}
