@@ -33,6 +33,13 @@ fn compare_paths(a: &Path, b: &Path) -> bool {
     }
 }
 
+fn starts_with_path(complete_path: &Path, post_path: &Path) -> bool {
+    match (fs::canonicalize(complete_path), fs::canonicalize(post_path)) {
+        (Ok(p), Ok(p2)) => p.starts_with(p2),
+        _ => false,
+    }
+}
+
 /// The primary build function that transforms a directory into a site
 pub fn build(config: &Config) -> Result<()> {
     trace!("Build configuration: {:?}", config);
@@ -72,7 +79,7 @@ pub fn build(config: &Config) -> Result<()> {
         if template_extensions.contains(extension) {
             // if the document is in the posts folder it's considered a post
             let is_post =
-                entry_path.parent().map(|p| compare_paths(p, &posts_path)).unwrap_or(false);
+                entry_path.parent().map(|p| starts_with_path(p, &posts_path)).unwrap_or(false);
 
             let new_path = entry_path.strip_prefix(source).expect("Entry not in source folder");
 
