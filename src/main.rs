@@ -293,9 +293,7 @@ fn main() {
 
             let dest = config.dest.clone();
             let port = matches.value_of("port").unwrap().to_string();
-            thread::spawn(move || {
-                serve(&dest, &port);
-            });
+            thread::spawn(move || { serve(&dest, &port); });
 
             let (tx, rx) = channel();
             let w: Result<RecommendedWatcher, Error> = Watcher::new(tx);
@@ -445,11 +443,10 @@ fn serve(dest: &str, port: &str) {
     let dest_clone = dest.to_owned();
 
     // bind the handle function and start serving
-    if let Err(e) = http_server.handle(move |req: Request, res: Response| {
-        if let Err(e) = static_file_handler(&dest_clone, req, res) {
-            error!("{}", e);
-            std::process::exit(1);
-        }
+    if let Err(e) = http_server.handle(move |req: Request, res: Response| if let Err(e) =
+        static_file_handler(&dest_clone, req, res) {
+        error!("{}", e);
+        std::process::exit(1);
     }) {
         error!("{}", e);
         std::process::exit(1);
