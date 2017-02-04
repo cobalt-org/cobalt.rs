@@ -22,5 +22,9 @@ error_chain! {
             display("name, description and link need to be defined in the config file to \
                     generate RSS")
         }
+        NoContent {
+            description("content attribute is missing")
+            display("content attribute should have been rendered by now")
+        }
     }
 }

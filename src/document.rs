@@ -4,7 +4,7 @@ use std::collections::hash_map::Entry;
 use std::ffi::OsStr;
 use std::path::{Path, PathBuf};
 use std::default::Default;
-use error::Result;
+use error::{Error, ErrorKind, Result};
 use chrono::{DateTime, FixedOffset, Datelike, Timelike};
 use yaml_rust::{Yaml, YamlLoader};
 use std::io::Read;
@@ -328,24 +328,29 @@ impl Document {
         Ok(())
     }
 
-    /// Renders the document to an HTML string.
-    ///
-    /// Side effects:
-    ///
-    /// * content is inserted to the attributes of the document
-    /// * content is inserted to context
-    /// * layout may be inserted to layouts cache
+    /// Renders content and adds it to the attributes of the document and to the context.
     ///
     /// When we say "content" we mean only this document without extended layout.
+    pub fn render_content(&mut self, context: &mut Context, source: &Path) -> Result<()> {
+        let content_html = try!(self.render_html(&self.content, context, source));
+        self.attributes.insert("content".to_owned(), Value::Str(content_html.clone()));
+        context.set_val("content", Value::Str(content_html.to_owned()));
+        Ok(())
+    }
+
+    /// Renders the document to an HTML string.
+    ///
+    /// Layout may be inserted to layouts cache as a side effect.
     pub fn render(&mut self,
                   context: &mut Context,
                   source: &Path,
                   layouts_dir: &Path,
                   layouts_cache: &mut HashMap<String, String>)
                   -> Result<String> {
-        let content_html = try!(self.render_html(&self.content, context, source));
-        self.attributes.insert("content".to_owned(), Value::Str(content_html.clone()));
-        context.set_val("content", Value::Str(content_html.clone()));
+        let content_html = try!(self.attributes
+            .get("content")
+            .and_then(|d| d.as_str())
+            .ok_or(Error::from(ErrorKind::NoContent)));
 
         if let Some(ref layout) = self.layout {
             let layout_data_ref = match layouts_cache.entry(layout.to_owned()) {
@@ -366,7 +371,7 @@ impl Document {
             let template = try!(liquid::parse(layout_data_ref, options));
             Ok(try!(template.render(context)).unwrap_or_default())
         } else {
-            Ok(content_html)
+            Ok(content_html.to_owned())
         }
     }
 }
