@@ -33,8 +33,21 @@ fn compare_paths(a: &Path, b: &Path) -> bool {
     }
 }
 
-fn starts_with_path(complete_path: &Path, post_path: &Path) -> bool {
-    match (fs::canonicalize(complete_path), fs::canonicalize(post_path)) {
+/// Checks if one path is the starting point of another path. The examples are taken
+/// from tests/fixtures/posts_in_subfolder/
+///
+/// # Examples 
+///   * starts_with_path(this, starts_with) -> bool
+/// ".../tests/fixtures/posts_in_subfolder" ".../tests/fixtures/posts_in_subfolder/posts"
+///   -> false
+/// ".../tests/fixtures/posts_in_subfolder/posts" ".../tests/fixtures/posts_in_subfolder/posts"
+///   -> true
+/// ".../tests/fixtures/posts_in_subfolder/posts/20170103" ".../tests/fixtures/posts_in_subfolder/posts"
+///   -> true
+/// ".../tests/fixtures/posts_in_subfolder/posts/2017/01/08" ".../tests/fixtures/posts_in_subfolder/posts"
+///   -> true
+fn starts_with_path(this: &Path, starts_with: &Path) -> bool {
+    match (fs::canonicalize(this), fs::canonicalize(starts_with)) {
         (Ok(p), Ok(p2)) => p.starts_with(p2),
         _ => false,
     }
