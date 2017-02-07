@@ -1,6 +1,6 @@
 extends: default.liquid
 
-title: README for differnent directory layouts
+title: README for different directory layouts
 date: 03 Feb 2017 21:00:00 -0000
 ---
 
@@ -16,5 +16,5 @@ For example there can be one folder per year. This makes managing of blog posts 
 
 ## one folder per post
 
-There is one folder per blog post. Especially usefull if there are many associated files
+There is one folder per blog post. Especially useful if there are many associated files
 to one blog post (pictures, source files, ...)
