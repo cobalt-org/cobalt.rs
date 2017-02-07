@@ -33,19 +33,24 @@ fn compare_paths(a: &Path, b: &Path) -> bool {
     }
 }
 
-/// Checks if one path is the starting point of another path. The examples are taken
-/// from tests/fixtures/`posts_in_subfolder`/
-///
-/// # Examples 
-///   * `starts_with_path`(this, `starts_with`) -> bool
-/// ".../tests/fixtures/`posts_in_subfolder`" ".../tests/fixtures/`posts_in_subfolder`/posts"
-///   -> false
-/// ".../tests/fixtures/`posts_in_subfolder`/posts" ".../tests/fixtures/`posts_in_subfolder`/posts"
-///   -> true
-/// ".../tests/fixtures/`posts_in_subfolder`/posts/20170103" ".../tests/fixtures/`posts_in_subfolder`/posts"
-///   -> true
-/// ".../tests/fixtures/`posts_in_subfolder`/posts/2017/01/08" ".../tests/fixtures/`posts_in_subfolder`/posts"
-///   -> true
+/// Checks if one path is the starting point of another path.
+/// The tests are taken from tests/fixtures/`posts_in_subfolder`/
+#[test]
+fn test_starts_with_path() {
+    let posts_folder = Path::new("tests/fixtures/posts_in_subfolder/posts");
+
+    assert_eq!(starts_with_path(Path::new("tests/fixtures/posts_in_subfolder"), posts_folder),
+               false);
+    assert_eq!(starts_with_path(Path::new("tests/fixtures/posts_in_subfolder/posts"),
+                                posts_folder),
+               true);
+    assert_eq!(starts_with_path(Path::new("tests/fixtures/posts_in_subfolder/posts/20170103"),
+                                posts_folder),
+               true);
+    assert_eq!(starts_with_path(Path::new("tests/fixtures/posts_in_subfolder/posts/2017/01/08"),
+                                posts_folder),
+               true);
+}
 fn starts_with_path(this: &Path, starts_with: &Path) -> bool {
     match (fs::canonicalize(this), fs::canonicalize(starts_with)) {
         (Ok(p), Ok(p2)) => p.starts_with(p2),
