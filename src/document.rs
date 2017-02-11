@@ -297,12 +297,12 @@ impl Document {
         Ok(html.to_owned())
     }
 
-    /// Extracts references from markdown content.
-    pub fn extract_references(&self) -> String {
+    /// Extracts references iff markdown content.
+    pub fn extract_markdown_references(&self) -> String {
         let mut trail = String::new();
         let re = Regex::new(r"(?m:^ {0,3}\[[^\]]+\]:.+$)").unwrap();
 
-        if re.is_match(&self.content) {
+        if self.markdown && re.is_match(&self.content) {
             for mat in re.find_iter(&self.content) {
                 trail.push_str(&self.content[mat.0..mat.1]);
                 trail.push('\n');
@@ -332,7 +332,7 @@ impl Document {
             } else if excerpt_separator.is_empty() {
                 String::new()
             } else {
-                self.extract_references() +
+                self.extract_markdown_references() +
                 self.content
                     .split(excerpt_separator)
                     .next()
