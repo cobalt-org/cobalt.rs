@@ -297,6 +297,20 @@ impl Document {
         Ok(html.to_owned())
     }
 
+    /// Extracts references from markdown content.
+    pub fn extract_references(&self) -> String {
+        let mut trail = String::new();
+        let re = Regex::new(r"(?m:^ {0,3}\[[^\]]+\]:.+$)").unwrap();
+
+        if re.is_match(&self.content) {
+            for mat in re.find_iter(&self.content) {
+                trail.push_str(&self.content[mat.0..mat.1]);
+                trail.push('\n');
+            }
+        }
+        trail
+    }
+
     /// Renders excerpt and adds it to attributes of the document.
     pub fn render_excerpt(&mut self,
                           context: &mut Context,
@@ -314,14 +328,18 @@ impl Document {
                 .unwrap_or(default_excerpt_separator);
 
             let excerpt = if let Some(excerpt_str) = excerpt_attr {
-                excerpt_str
+                excerpt_str.to_string()
             } else if excerpt_separator.is_empty() {
-                ""
+                String::new()
             } else {
-                self.content.split(excerpt_separator).next().unwrap_or(&self.content)
+                self.extract_references() +
+                self.content
+                    .split(excerpt_separator)
+                    .next()
+                    .unwrap_or(&self.content)
             };
 
-            try!(self.render_html(excerpt, context, source))
+            try!(self.render_html(&excerpt, context, source))
         };
 
         self.attributes.insert("excerpt".to_owned(), Value::Str(excerpt_html));
