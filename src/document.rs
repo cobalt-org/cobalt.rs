@@ -330,7 +330,7 @@ impl Document {
             let excerpt = if let Some(excerpt_str) = excerpt_attr {
                 excerpt_str.to_string()
             } else if excerpt_separator.is_empty() {
-                String::new()
+                "".to_string()
             } else {
                 self.extract_markdown_references() +
                 self.content
