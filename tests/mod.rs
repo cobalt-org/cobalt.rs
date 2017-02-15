@@ -23,11 +23,11 @@ lazy_static! {
 fn run_test(name: &str) -> Result<(), cobalt::Error> {
     // Reset working directory in the event the previous test did not.
     try!(env::set_current_dir(WORKING_DIRECTORY.clone()));
-    let target = format!("tests/target/{}/", name);
-    let mut config = Config::from_file(format!("tests/fixtures/{}/.cobalt.yml", name))
-        .unwrap_or(Default::default());
-    let destdir = TempDir::new(name).expect("Tempdir not created");
+    let target = Path::new("tests/target/").join(name);
     let srcdir = Path::new("tests/fixtures/").join(name);
+    let destdir = TempDir::new(name).expect("Tempdir not created");
+
+    let mut config = Config::from_file(srcdir.join(".cobalt.yml")).unwrap_or(Default::default());
 
     // We should change the working directory if the config defines a non-default source.
     let build_changing_cwd = config.source != "./";
