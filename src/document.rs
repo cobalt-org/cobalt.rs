@@ -298,7 +298,7 @@ impl Document {
     }
 
     /// Extracts references iff markdown content.
-    pub fn extract_markdown_references(&self) -> String {
+    pub fn extract_markdown_references(&self, excerpt_separator: &str) -> String {
         let mut trail = String::new();
         let re = Regex::new(r"(?m:^ {0,3}\[[^\]]+\]:.+$)").unwrap();
 
@@ -308,7 +308,11 @@ impl Document {
                 trail.push('\n');
             }
         }
-        trail
+        trail +
+        self.content
+            .split(excerpt_separator)
+            .next()
+            .unwrap_or(&self.content)
     }
 
     /// Renders excerpt and adds it to attributes of the document.
@@ -327,19 +331,15 @@ impl Document {
                 .and_then(|attr| attr.as_str())
                 .unwrap_or(default_excerpt_separator);
 
-            let excerpt = if let Some(excerpt_str) = excerpt_attr {
-                excerpt_str.to_string()
+            if let Some(excerpt_str) = excerpt_attr {
+                try!(self.render_html(excerpt_str, context, source))
             } else if excerpt_separator.is_empty() {
-                "".to_string()
+                try!(self.render_html("", context, source))
             } else {
-                self.extract_markdown_references() +
-                self.content
-                    .split(excerpt_separator)
-                    .next()
-                    .unwrap_or(&self.content)
-            };
-
-            try!(self.render_html(&excerpt, context, source))
+                try!(self.render_html(&self.extract_markdown_references(excerpt_separator),
+                                      context,
+                                      source))
+            }
         };
 
         self.attributes.insert("excerpt".to_owned(), Value::Str(excerpt_html));
