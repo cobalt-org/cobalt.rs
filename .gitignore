@@ -5,4 +5,5 @@
 *.rs.bk
 
 .*.swp
+/.vscode
 
