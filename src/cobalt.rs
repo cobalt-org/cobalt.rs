@@ -183,10 +183,14 @@ pub fn build(config: &Config) -> Result<()> {
                 .to_str()
                 .ok_or(format!("Cannot convert pathname {:?} to UTF-8", entry.path())));
 
-            let relative = try!(entry_path.split(source_str)
-                .last()
-                .map(|s| s.trim_left_matches("/"))
-                .ok_or("Empty path"));
+            let relative = if source_str == "." {
+                entry_path
+            } else {
+                try!(entry_path.split(source_str)
+                    .last()
+                    .map(|s| s.trim_left_matches("/"))
+                    .ok_or("Empty path"))
+            };
 
             if try!(entry.metadata()).is_dir() {
                 try!(fs::create_dir_all(&dest.join(relative)));
@@ -196,8 +200,12 @@ pub fn build(config: &Config) -> Result<()> {
                     try!(fs::create_dir_all(&dest.join(parent)));
                 }
 
-                try!(fs::copy(entry.path(), &dest.join(relative))
-                    .map_err(|e| format!("Could not copy {:?}: {}", entry.path(), e)));
+                try!(fs::copy(entry.path(), &dest.join(relative)).map_err(|e| {
+                    format!("Could not copy {:?} into {:?}: {}",
+                            entry.path(),
+                            dest.join(relative),
+                            e)
+                }));
                 debug!("Copied {:?} to {:?}", entry.path(), dest.join(relative));
             }
         }
