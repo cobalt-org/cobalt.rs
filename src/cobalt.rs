@@ -164,8 +164,6 @@ pub fn build(config: &Config) -> Result<()> {
     // copy all remaining files in the source to the destination
     if !compare_paths(source, dest) {
         info!("Copying remaining assets");
-        let source_str = try!(source.to_str()
-            .ok_or(format!("Cannot convert pathname {:?} to UTF-8", source)));
 
         let walker = WalkDir::new(&source)
             .into_iter()
@@ -179,14 +177,7 @@ pub fn build(config: &Config) -> Result<()> {
             .filter_map(|e| e.ok());
 
         for entry in walker {
-            let entry_path = try!(entry.path()
-                .to_str()
-                .ok_or(format!("Cannot convert pathname {:?} to UTF-8", entry.path())));
-
-            let relative = try!(entry_path.split(source_str)
-                .last()
-                .map(|s| s.trim_left_matches("/"))
-                .ok_or("Empty path"));
+            let relative = try!(entry.path().strip_prefix(source));
 
             if try!(entry.metadata()).is_dir() {
                 try!(fs::create_dir_all(&dest.join(relative)));

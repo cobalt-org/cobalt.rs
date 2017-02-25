@@ -6,6 +6,7 @@ environment:
     RUST_VERSION: stable
 
     CRATE_NAME: cobalt
+    RUST_BACKTRACE: '1'
 
   matrix:
     # Stable channel
