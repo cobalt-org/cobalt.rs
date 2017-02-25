@@ -1,7 +1,6 @@
 use std::fs::File;
 use std::collections::HashMap;
 use std::collections::hash_map::Entry;
-use std::ffi::OsStr;
 use std::path::{Path, PathBuf};
 use std::default::Default;
 use error::Result;
@@ -10,6 +9,7 @@ use yaml_rust::{Yaml, YamlLoader};
 use std::io::Read;
 use regex::Regex;
 use rss;
+use itertools::Itertools;
 
 #[cfg(all(feature="syntax-highlight", not(windows)))]
 use syntax_highlight::{initialize_codeblock, decorate_markdown};
@@ -83,8 +83,6 @@ fn format_path(p: &str,
         }
     }
 
-    // TODO if title is present inject title slug
-
     let mut path = Path::new(&p);
 
     // remove the root prefix (leading slash on unix systems)
@@ -102,6 +100,32 @@ fn format_path(p: &str,
     }
 
     Ok(path_buf.to_string_lossy().into_owned())
+}
+
+/// The base-name without an extension.  Correlates to Jekyll's :name path tag
+fn file_stem(p: &Path) -> String {
+    p.file_stem().map(|os| os.to_string_lossy().into_owned()).unwrap_or_else(|| "".to_owned())
+}
+
+/// Create a slug for a given file.  Correlates to Jekyll's :slug path tag
+fn slugify(name: &str) -> String {
+    let invalid_re = Regex::new(r"([^a-zA-Z0-9]+)").unwrap();
+    let slug = invalid_re.replace_all(name, "-");
+    slug.trim_matches('-').to_lowercase()
+}
+
+/// Title-case a single word
+fn title_case(s: &str) -> String {
+    let mut c = s.chars();
+    match c.next() {
+        None => String::new(),
+        Some(f) => f.to_uppercase().chain(c.flat_map(|t| t.to_lowercase())).collect(),
+    }
+}
+
+/// Format a user-visible title out of a slug.  Correlates to Jekyll's "title" attribute
+fn titleize_slug(slug: &str) -> String {
+    slug.split('-').map(title_case).join(" ")
 }
 
 impl Document {
@@ -181,9 +205,24 @@ impl Document {
             .and_then(|d| d.as_str())
             .and_then(|d| DateTime::parse_from_str(d, "%d %B %Y %H:%M:%S %z").ok());
 
-        // if the file has a .md extension we assume it's markdown
-        // TODO add a "markdown" flag to yaml front matter
-        let markdown = file_path.extension().unwrap_or_else(|| OsStr::new("")) == OsStr::new("md");
+        let file_stem = file_stem(new_path);
+        let slug = slugify(&file_stem);
+        attributes.entry("title".to_owned())
+            .or_insert_with(|| Value::Str(titleize_slug(slug.as_str())));
+        attributes.entry("slug".to_owned())
+            .or_insert_with(|| Value::Str(slug));
+
+        let mut markdown = false;
+        if let Value::Str(ref ext) =
+            *attributes.entry("ext".to_owned())
+                .or_insert_with(|| {
+                    Value::Str(new_path.extension()
+                        .and_then(|os| os.to_str())
+                        .unwrap_or("")
+                        .to_owned())
+                }) {
+            markdown = ext == "md";
+        }
 
         let layout = attributes.get("extends").and_then(|l| l.as_str()).map(|x| x.to_owned());
 
@@ -387,4 +426,23 @@ impl Document {
             Ok(content_html)
         }
     }
+}
+
+#[test]
+fn test_file_stem() {
+    let input = PathBuf::from("/embedded/path/___filE-worlD-__09___.md");
+    let actual = file_stem(input.as_path());
+    assert_eq!(actual, "___filE-worlD-__09___");
+}
+
+#[test]
+fn test_slugify() {
+    let actual = slugify("___filE-worlD-__09___");
+    assert_eq!(actual, "file-world-09");
+}
+
+#[test]
+fn test_titleize_slug() {
+    let actual = titleize_slug("tItLeIzE-sLuG");
+    assert_eq!(actual, "Titleize Slug");
 }

@@ -33,6 +33,7 @@ regex = "0.1"
 clippy = {version = "0.0", optional = true}
 error-chain = "0.5.0"
 lazy_static = {version = "0.2", optional =true}
+itertools = "0.5.9"
 
 [dependencies.hyper]
 version = "0.9"

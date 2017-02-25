@@ -18,6 +18,8 @@ extern crate rss;
 extern crate glob;
 extern crate regex;
 
+extern crate itertools;
+
 #[cfg(all(feature="syntax-highlight", not(windows)))]
 extern crate syntect;
 
