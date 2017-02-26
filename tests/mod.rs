@@ -200,3 +200,8 @@ pub fn excerpts() {
 pub fn posts_in_subfolder() {
     run_test("posts_in_subfolder").unwrap();
 }
+
+#[test]
+pub fn yaml_dicts() {
+    run_test("yaml_dicts").unwrap();
+}
