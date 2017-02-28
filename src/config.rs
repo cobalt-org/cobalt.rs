@@ -5,6 +5,7 @@ use std::io::Read;
 use glob::Pattern;
 use error::Result;
 use yaml_rust::YamlLoader;
+use std::collections::HashMap;
 
 #[derive(Debug, PartialEq)]
 pub struct Config {
@@ -22,6 +23,8 @@ pub struct Config {
     pub link: Option<String>,
     pub ignore: Vec<Pattern>,
     pub excerpt_separator: String,
+    pub categories: HashMap<String, Vec<String>>,
+    pub categories_flat: Vec<String>,
 }
 
 impl Default for Config {
@@ -41,6 +44,8 @@ impl Default for Config {
             link: None,
             ignore: vec![],
             excerpt_separator: "\n\n".to_owned(),
+            categories: HashMap::new(),
+            categories_flat: vec![],
         }
     }
 }
@@ -115,9 +120,31 @@ impl Config {
             config.excerpt_separator = excerpt_separator.to_owned();
         };
 
+        if let Some(categories) = yaml["categories"].as_vec() {
+            for cat in categories {
+                let d = cat.as_hash();
+                for x in d {
+                    for (g, h) in x {
+                        config.categories_flat.push(g.as_str().unwrap().to_string());
+                        let mut subcat = Vec::new();
+                        for w in h.as_vec().unwrap() {
+                            config.categories_flat.push(w.as_str().unwrap().to_string());
+                            subcat.push(w.as_str().unwrap().to_string());
+                        }
+                        config.categories.insert(g.as_str().unwrap().to_string(), subcat);
+                    }
+                }
+            }
+        };
+
         Ok(config)
     }
+
+    /*pub fn as_liquid() -> Vec::<Value> {
+        Vec::<Value>::new();
+    }*/
 }
+
 
 #[test]
 fn test_from_file_ok() {

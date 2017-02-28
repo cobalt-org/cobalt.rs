@@ -248,9 +248,10 @@ impl Document {
     }
 
     /// Prepares liquid context for further rendering.
-    pub fn get_render_context(&self, posts: &[Value]) -> Context {
+    pub fn get_render_context(&self, posts: &[Value], site: &[Value]) -> Context {
         let mut context = Context::with_values(self.attributes.clone());
         context.set_val("posts", Value::Array(posts.to_vec()));
+        context.set_val("site", Value::Array(site.to_vec()));
         context
     }
 

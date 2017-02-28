@@ -1,0 +1,58 @@
+extends: default.liquid
+
+title: All Blog posts after Categories
+---
+
+<div>
+  <h3>print some site values</h3>
+  <b>site.name:</b> {{ site.name }}<br/>
+  <b>site.description:</b> {{ site.description }}<br/>
+  <b>site.link:</b> {{ site.link }}<br/>
+  <b>site.excerpt_separator:</b>
+    {{ site.excerpt_separator | replace: "<", "&lt;" | replace: ">", "&gt;" }} <br/>
+</div>
+
+<div>
+  <h3>print categories with posts</h3>
+    <!-- check if there are categories in config -->
+    {%if site.categories %}
+      <!-- run over categories -->
+      {% for category in site.categories %}
+        <h4>{{ category.name }}</h4>
+        <!-- run over posts -->
+        {% if category.posts %}
+          Posts in this category<br/>
+          {% for post in category.posts %}
+            {{ post.date | date: "%d.%m.%Y" }} | {{ post.title }}<br/>
+          {% endfor %}
+        {% endif %}
+        <!-- run over subcategories -->
+        {% if category.subcategories %}
+          {% for subcategory in category.subcategories %}
+            <h5>{{ subcategory.name }}</h5>
+            <!-- run over posts -->
+            {% if subcategory.posts %}
+              Posts in this subcategory<br/>
+              {% for post in subcategory.posts %}
+                {{ post.date | date: "%d.%m.%Y" }} | {{ post.title }}<br/>
+              {% endfor %}
+            {% endif %}
+          {% endfor %}
+        {% endif %}
+      {% endfor %}
+    {% endif %}
+</div>
+
+<div>
+  <h3>print post list with categories</h3>
+  {% for post in posts %}
+    <p>
+      {{ post.date | date: "%d.%m.%Y" }} | {{ post.title }}<br/>
+      {% if post.categories %}
+        {% for category in post.categories %}
+         {{ category }} <br/>
+        {% endfor %}
+      {% endif %}
+    </p>
+  {% endfor %}
+</div>

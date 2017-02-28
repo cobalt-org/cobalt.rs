@@ -18,9 +18,11 @@ doc = false
 
 [dependencies]
 clap = "2.4.0"
-liquid = "0.9"
+liquid = { version = "0.9", path = "/Users/uwe/repo/liquid-rust" } 
 walkdir = "0.1"
 yaml-rust = "0.3"
+# doesn't work
+# yaml-rust = { version = "0.3", features = ["preserve_order"] }
 chrono = "0.2"
 log = "0.3"
 env_logger = "0.3"

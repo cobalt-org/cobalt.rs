@@ -1,4 +1,13 @@
 name: cobalt blog testing posts in subfolders
+description: and also categories
+link: http://posts-in-subfolders.cobalt.rs/
+
+categories: [ CatA : [],
+              CatB : [ SubCatC, SubCatD ],
+              CatE : [ SubCatF ]]
+
+excerpt_separator: <!-- more -->
+ 
 source: "."
 dest: "build"
 ignore:

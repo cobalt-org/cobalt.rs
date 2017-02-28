@@ -85,6 +85,24 @@ pub fn build(config: &Config) -> Result<()> {
             let new_path = entry_path.strip_prefix(source).expect("Entry not in source folder");
 
             let doc = try!(Document::parse(&entry_path, new_path, is_post, &config.post_path));
+
+            // Check if categories are in document
+            if is_post == true {
+                if let Some(categories) = doc.attributes.get("categories") {
+                    if let &Value::Array(ref categories_array) = categories {
+                        for category in categories_array {
+                            if let &Value::Str(ref category_string) = category {
+                                if !&config.categories_flat.contains(category_string) {
+                                    info!("file {:?} category \"{}\" not found",
+                                          entry_path,
+                                          category_string);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
             if !doc.is_draft || config.include_drafts {
                 documents.push(doc);
             }
@@ -130,11 +148,67 @@ pub fn build(config: &Config) -> Result<()> {
         .map(|x| Value::Object(x.attributes.clone()))
         .collect();
 
+    // ------------------------------------------------------------------
+    // name, description, link, excerpt_separator, categories
+    let mut config_data = Vec::<Value>::new();
+    let mut val1 = HashMap::<String, Value>::new();
+    val1.insert("name".to_owned(),
+                Value::Str(config.name.to_owned().unwrap_or("".to_string())));
+    config_data.push(Value::Object(val1));
+
+    let mut val2 = HashMap::<String, Value>::new();
+    val2.insert("description".to_owned(),
+                Value::Str(config.description.to_owned().unwrap_or("".to_string())));
+    config_data.push(Value::Object(val2));
+
+    let mut val3 = HashMap::<String, Value>::new();
+    val3.insert("link".to_owned(),
+                Value::Str(config.link.to_owned().unwrap_or("".to_string())));
+    config_data.push(Value::Object(val3));
+
+    let mut val4 = HashMap::<String, Value>::new();
+    val4.insert("excerpt_separator".to_owned(),
+                Value::Str(config.excerpt_separator.to_owned()));
+    config_data.push(Value::Object(val4));
+
+    // ------------------------------------------------------------------
+    // categories
+    let mut cat_vec: Vec<Value> = Vec::new();
+    for (s, v) in config.categories.clone() {
+        let mut subcat: Vec<Value> = Vec::new();
+        for sc in v {
+            let mut val8 = HashMap::<String, Value>::new();
+            let posts_for_cat = get_posts_for_category(&sc, &simple_posts_data);
+            val8.insert("name".to_owned(), Value::Str(sc));
+            val8.insert("posts".to_owned(), Value::Array(posts_for_cat));
+            subcat.push(Value::Object(val8));
+        }
+        let mut val6 = HashMap::<String, Value>::new();
+        let posts_for_cat = get_posts_for_category(&s, &simple_posts_data);
+        val6.insert("name".to_owned(), Value::Str(s));
+        val6.insert("posts".to_owned(), Value::Array(posts_for_cat));
+        cat_vec.push(Value::Object(val6));
+
+        let mut val7 = HashMap::<String, Value>::new();
+        val7.insert("subcategories".to_owned(), Value::Array(subcat));
+        cat_vec.push(Value::Object(val7));
+    }
+    // push into config
+    let mut val5 = HashMap::<String, Value>::new();
+    val5.insert("categories".to_owned(), Value::Array(cat_vec));
+    config_data.push(Value::Object(val5));
+
+    /*println!("---- simple_posts_data --------------------------------------------");
+    println!("{:?}", simple_posts_data);
+    println!("---- config_data --------------------------------------------");
+    println!("{:?}", config_data);
+    println!("------------------------------------------------");*/
+
     trace!("Generating posts");
     for mut post in &mut posts {
         trace!("Generating {}", post.path);
 
-        let mut context = post.get_render_context(&simple_posts_data);
+        let mut context = post.get_render_context(&simple_posts_data, &config_data);
 
         try!(post.render_excerpt(&mut context, &source, &config.excerpt_separator));
         let post_html = try!(post.render(&mut context, &source, &layouts, &mut layouts_cache));
@@ -156,7 +230,7 @@ pub fn build(config: &Config) -> Result<()> {
     for mut doc in documents {
         trace!("Generating {}", doc.path);
 
-        let mut context = doc.get_render_context(&posts_data);
+        let mut context = doc.get_render_context(&posts_data, &config_data);
         let doc_html = try!(doc.render(&mut context, &source, &layouts, &mut layouts_cache));
         try!(create_document_file(&doc_html, &doc.path, dest));
     }
@@ -260,6 +334,30 @@ fn create_document_file<T: AsRef<Path>, R: AsRef<Path>>(content: &str,
     try!(file.write_all(&content.as_bytes()));
     info!("Created {}", file_path.display());
     Ok(())
+}
+
+
+fn get_posts_for_category(search_category: &str, posts: &Vec<Value>) -> Vec<Value> {
+    //println!("Searching for {}", search_category);
+    let mut catposts = Vec::<Value>::new();
+    for post in posts {
+        if let &Value::Object(ref obj) = post {
+            if let Some(categories) = obj.get("categories") {
+                if let &Value::Array(ref categories_array) = categories {
+                    for category in categories_array {
+                        if let &Value::Str(ref category_string) = category {
+                            if category_string == search_category {
+                                //println!("found {}", category_string);
+                                catposts.push(post.clone());
+                            }
+                        }
+                    }
+                }
+
+            }
+        }
+    }
+    return catposts;
 }
 
 // The tests are taken from tests/fixtures/`posts_in_subfolder`/

@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html>
+  <!-- start default.liquid -->
+  <head>
+    
+       <title>Cobalt.rs Blog</title>
+    
+  </head>
+  <body>
+    <div>
+      
+        <div>
+  <h3>print some site values</h3>
+  <b>site.name:</b> cobalt blog testing posts in subfolders<br/>
+  <b>site.description:</b> and also categories<br/>
+  <b>site.link:</b> http://posts-in-subfolders.cobalt.rs/<br/>
+  <b>site.excerpt_separator:</b>
+    &lt;!-- more --&gt; <br/>
+</div>
+
+<div>
+  <h3>print categories with posts</h3>
+    <!-- check if there are categories in config -->
+    
+      <!-- run over categories -->
+      
+        <h4>CatA</h4>
+        <!-- run over posts -->
+        
+          Posts in this category<br/>
+          
+            01.01.2017 | a post inside posts<br/>
+          
+        
+        <!-- run over subcategories -->
+        
+      
+        <h4></h4>
+        <!-- run over posts -->
+        
+        <!-- run over subcategories -->
+        
+          
+        
+      
+        <h4>CatB</h4>
+        <!-- run over posts -->
+        
+          Posts in this category<br/>
+          
+        
+        <!-- run over subcategories -->
+        
+      
+        <h4></h4>
+        <!-- run over posts -->
+        
+        <!-- run over subcategories -->
+        
+          
+            <h5>SubCatC</h5>
+            <!-- run over posts -->
+            
+              Posts in this subcategory<br/>
+              
+                05.01.2017 | a post inside folder posts/2017/01/05/<br/>
+              
+            
+          
+            <h5>SubCatD</h5>
+            <!-- run over posts -->
+            
+              Posts in this subcategory<br/>
+              
+                08.01.2017 | a post inside folder posts/2017/01/08/<br/>
+              
+                03.01.2017 | a post inside folder posts/20170103/<br/>
+              
+                01.01.2017 | a post inside posts<br/>
+              
+            
+          
+        
+      
+        <h4>CatE</h4>
+        <!-- run over posts -->
+        
+          Posts in this category<br/>
+          
+            17.01.2017 | post with wrong category<br/>
+          
+            05.01.2017 | a post inside folder posts/2017/01/05/<br/>
+          
+            03.01.2017 | a post inside folder posts/20170103/<br/>
+          
+        
+        <!-- run over subcategories -->
+        
+      
+        <h4></h4>
+        <!-- run over posts -->
+        
+        <!-- run over subcategories -->
+        
+          
+            <h5>SubCatF</h5>
+            <!-- run over posts -->
+            
+              Posts in this subcategory<br/>
+              
+                08.01.2017 | a post inside folder posts/2017/01/08/<br/>
+              
+            
+          
+        
+      
+    
+</div>
+
+<div>
+  <h3>print post list with categories</h3>
+  
+    <p>
+      17.01.2017 | post with wrong category<br/>
+      
+        
+         CatE <br/>
+        
+         WrongCat <br/>
+        
+      
+    </p>
+  
+    <p>
+      14.01.2017 | post without categories<br/>
+      
+    </p>
+  
+    <p>
+      08.01.2017 | a post inside folder posts/2017/01/08/<br/>
+      
+        
+         SubCatD <br/>
+        
+         SubCatF <br/>
+        
+      
+    </p>
+  
+    <p>
+      05.01.2017 | a post inside folder posts/2017/01/05/<br/>
+      
+        
+         CatE <br/>
+        
+         SubCatC <br/>
+        
+      
+    </p>
+  
+    <p>
+      03.01.2017 | a post inside folder posts/20170103/<br/>
+      
+        
+         CatE <br/>
+        
+         SubCatD <br/>
+        
+      
+    </p>
+  
+    <p>
+      01.01.2017 | a post inside posts<br/>
+      
+        
+         CatA <br/>
+        
+         SubCatD <br/>
+        
+      
+    </p>
+  
+</div>
+
+      
+    </div>
+  </body>
+  <!-- end default.liquid -->
+</html>
