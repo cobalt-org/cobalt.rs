@@ -1,7 +1,7 @@
 use std::fs::{self, File};
 use std::collections::HashMap;
 use std::io::Write;
-use std::path::Path;
+use std::path::{self, Path};
 use std::ffi::OsStr;
 use liquid::Value;
 use walkdir::{WalkDir, DirEntry, WalkDirIterator};
@@ -188,7 +188,7 @@ pub fn build(config: &Config) -> Result<()> {
             } else {
                 try!(entry_path.split(source_str)
                     .last()
-                    .map(|s| s.trim_left_matches("/"))
+                    .map(|s| s.trim_left_matches(path::MAIN_SEPARATOR))
                     .ok_or("Empty path"))
             };
 
