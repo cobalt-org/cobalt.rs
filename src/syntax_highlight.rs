@@ -10,7 +10,7 @@ use liquid::lexer::Element::{self, Expression, Tag, Raw};
 use liquid::Error;
 
 use syntect::parsing::SyntaxSet;
-use syntect::highlighting::ThemeSet;
+use syntect::highlighting::{ThemeSet, Theme};
 use syntect::html::{IncludeBackground, highlighted_snippet_for_string, styles_to_coloured_html,
                     start_coloured_html_snippet};
 use syntect::easy::HighlightLines;
@@ -20,8 +20,7 @@ use std::borrow::Cow::Owned;
 use self::cmark::Parser;
 use self::cmark::Tag as cmarkTag;
 use self::cmark::Event::{self, Start, End, Text, Html};
-
-const THEME_NAME: &'static str = "base16-ocean.dark";
+use config::Config;
 
 struct Setup {
     syntax_set: SyntaxSet,
@@ -41,11 +40,11 @@ lazy_static!{
 struct CodeBlock {
     lang: Option<String>,
     code: String,
+    theme: Theme,
 }
 
 impl Renderable for CodeBlock {
     fn render(&self, _: &mut Context) -> Result<Option<String>, Error> {
-
         let syntax = match self.lang {
                 Some(ref lang) => SETUP.syntax_set.find_syntax_by_token(lang),
                 _ => None,
@@ -54,20 +53,22 @@ impl Renderable for CodeBlock {
 
         Ok(Some(highlighted_snippet_for_string(&self.code,
                                                syntax,
-                                               &SETUP.theme_set.themes[THEME_NAME])))
+                                               &SETUP.theme_set.themes[&self.theme.name.unwrap()])))
     }
 }
 
 pub struct DecoratedParser<'a> {
     h: Option<HighlightLines<'a>>,
     parser: Parser<'a>,
+    config: &'a Config,
 }
 
 impl<'a> DecoratedParser<'a> {
-    pub fn new(parser: Parser<'a>) -> Self {
+    pub fn new(parser: Parser<'a>, config: &'a Config) -> Self {
         DecoratedParser {
             h: None,
             parser: parser,
+            config: config,
         }
     }
 }
@@ -95,10 +96,11 @@ impl<'a> Iterator for DecoratedParser<'a> {
                                 .next()
                                 .and_then(|lang| SETUP.syntax_set.find_syntax_by_token(lang))
                                 .unwrap_or_else(|| SETUP.syntax_set.find_syntax_plain_text());
-                        self.h = Some(HighlightLines::new(cur_syntax,
-                                                          &SETUP.theme_set.themes[THEME_NAME]));
+                        self.h = Some(HighlightLines::new(&cur_syntax,
+                                                          &SETUP.theme_set.themes
+                                                               [&self.config.theme]));
                         let snippet = start_coloured_html_snippet(&SETUP.theme_set.themes
-                                                                       [THEME_NAME]);
+                                                                       [&self.config.theme]);
                         return Some(Html(Owned(snippet)));
                     }
                     if let End(cmarkTag::CodeBlock(_)) = item {
@@ -119,7 +121,8 @@ impl<'a> Iterator for DecoratedParser<'a> {
 pub fn initialize_codeblock(_: &str,
                             arguments: &[Token],
                             tokens: &[Element],
-                            _: &LiquidOptions)
+                            _: &LiquidOptions,
+                            config: &Config)
                             -> Result<Box<Renderable>, Error> {
 
     let content = tokens
@@ -141,11 +144,12 @@ pub fn initialize_codeblock(_: &str,
     Ok(Box::new(CodeBlock {
                     code: content,
                     lang: lang,
+                    theme: config.theme,
                 }))
 }
 
-pub fn decorate_markdown(parser: Parser) -> DecoratedParser {
-    DecoratedParser::new(parser)
+pub fn decorate_markdown<'a>(parser: Parser<'a>, config: &'a Config) -> DecoratedParser<'a> {
+    DecoratedParser::new(parser, config)
 }
 
 #[cfg(test)]
