@@ -32,7 +32,7 @@ glob = "0.2.11"
 regex = "0.1"
 clippy = {version = "0.0", optional = true}
 error-chain = "0.5.0"
-lazy_static = {version = "0.2", optional =true}
+lazy_static = "0.2"
 itertools = "0.5.9"
 
 [dependencies.hyper]
@@ -55,5 +55,5 @@ default = []
 unstable = []
 dev = []
 
-syntax-highlight = ["syntect", "lazy_static"]
+syntax-highlight = ["syntect"]
 

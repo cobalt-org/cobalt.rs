@@ -19,6 +19,13 @@ use liquid::{Renderable, LiquidOptions, Context, Value};
 use pulldown_cmark as cmark;
 use liquid;
 
+lazy_static!{
+    static ref DATE_VARIABLES: Regex = Regex::new(":(year|month|i_month|day|i_day|short_year|hour|minute|second)").unwrap();
+    static ref SLUG_INVALID_CHARS: Regex = Regex::new(r"([^a-zA-Z0-9]+)").unwrap();
+    static ref FRONT_MATTER_DIVIDE: Regex = Regex::new(r"---\s*\r?\n").unwrap();
+    static ref MARKDOWN_REF: Regex = Regex::new(r"(?m:^ {0,3}\[[^\]]+\]:.+$)").unwrap();
+}
+
 #[derive(Debug)]
 pub struct Document {
     pub path: String,
@@ -59,9 +66,7 @@ fn format_path(p: &str,
                -> Result<String> {
     let mut p = p.to_owned();
 
-    let time_vars = Regex::new(":(year|month|i_month|day|i_day|short_year|hour|minute|second)")
-        .unwrap();
-    if time_vars.is_match(&p) {
+    if DATE_VARIABLES.is_match(&p) {
         let date =
             try!(date.ok_or(format!("Can not format file path without a valid date ({:?})", p)));
 
@@ -109,8 +114,7 @@ fn file_stem(p: &Path) -> String {
 
 /// Create a slug for a given file.  Correlates to Jekyll's :slug path tag
 fn slugify(name: &str) -> String {
-    let invalid_re = Regex::new(r"([^a-zA-Z0-9]+)").unwrap();
-    let slug = invalid_re.replace_all(name, "-");
+    let slug = SLUG_INVALID_CHARS.replace_all(name, "-");
     slug.trim_matches('-').to_lowercase()
 }
 
@@ -161,9 +165,8 @@ impl Document {
         let content = try!(read_file(file_path));
 
         // if there is front matter, split the file and parse it
-        let splitter = Regex::new(r"---\s*\r?\n").unwrap();
-        let content = if splitter.is_match(&content) {
-            let mut splits = splitter.splitn(&content, 2);
+        let content = if FRONT_MATTER_DIVIDE.is_match(&content) {
+            let mut splits = FRONT_MATTER_DIVIDE.splitn(&content, 2);
 
             // above the split are the attributes
             let attribute_split = splits.next().unwrap_or("");
@@ -339,10 +342,9 @@ impl Document {
     /// Extracts references iff markdown content.
     pub fn extract_markdown_references(&self, excerpt_separator: &str) -> String {
         let mut trail = String::new();
-        let re = Regex::new(r"(?m:^ {0,3}\[[^\]]+\]:.+$)").unwrap();
 
-        if self.markdown && re.is_match(&self.content) {
-            for mat in re.find_iter(&self.content) {
+        if self.markdown && MARKDOWN_REF.is_match(&self.content) {
+            for mat in MARKDOWN_REF.find_iter(&self.content) {
                 trail.push_str(&self.content[mat.0..mat.1]);
                 trail.push('\n');
             }
