@@ -20,7 +20,8 @@ use pulldown_cmark as cmark;
 use liquid;
 
 lazy_static!{
-    static ref DATE_VARIABLES: Regex = Regex::new(":(year|month|i_month|day|i_day|short_year|hour|minute|second)").unwrap();
+    static ref DATE_VARIABLES: Regex =
+        Regex::new(":(year|month|i_month|day|i_day|short_year|hour|minute|second)").unwrap();
     static ref SLUG_INVALID_CHARS: Regex = Regex::new(r"([^a-zA-Z0-9]+)").unwrap();
     static ref FRONT_MATTER_DIVIDE: Regex = Regex::new(r"---\s*\r?\n").unwrap();
     static ref MARKDOWN_REF: Regex = Regex::new(r"(?m:^ {0,3}\[[^\]]+\]:.+$)").unwrap();
