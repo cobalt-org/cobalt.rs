@@ -18,6 +18,8 @@ extern crate rss;
 extern crate glob;
 extern crate regex;
 
+extern crate itertools;
+
 #[cfg(all(feature="syntax-highlight", not(windows)))]
 extern crate syntect;
 
@@ -42,6 +44,5 @@ mod new;
 #[cfg(feature="syntax-highlight")]
 mod syntax_highlight;
 
-#[cfg(feature="syntax-highlight")]
 #[macro_use]
 extern crate lazy_static;
