@@ -177,6 +177,10 @@ impl Document {
 
             let yaml_result = try!(YamlLoader::load_from_str(attribute_split));
 
+            if yaml_result.is_empty() {
+                return Err(format!("Incorrect front matter format in {:?}", file_path).into());
+            }
+
             let yaml_attributes = try!(yaml_result[0]
                 .as_hash()
                 .ok_or_else(|| format!("Incorrect front matter format in {:?}", file_path)));
