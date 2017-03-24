@@ -233,8 +233,7 @@ fn create_rss(path: &str, dest: &Path, config: &Config, posts: &[Document]) -> R
                 ..Default::default()
             };
 
-            let rss = Rss(channel);
-            let rss_string = rss.to_string();
+            let rss_string = Rss(channel).to_string();
             trace!("RSS data: {}", rss_string);
 
             let rss_path = dest.join(path);

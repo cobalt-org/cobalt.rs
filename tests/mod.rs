@@ -1,3 +1,4 @@
+#[macro_use]
 extern crate difference;
 extern crate cobalt;
 extern crate tempdir;
@@ -52,7 +53,7 @@ fn run_test(name: &str) -> Result<(), cobalt::Error> {
                 .read_to_string(&mut created)
                 .expect("Could not read to string");
 
-            difference::assert_diff(&original, &created, " ", 0);
+            assert_diff!(&original, &created, " ", 0);
         }
 
         // ensure no unnecessary files were created

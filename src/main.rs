@@ -32,7 +32,7 @@ use ghp::import_dir;
 use glob::Pattern;
 use cobalt::create_new_project;
 
-use notify::{RecommendedWatcher, Error, Watcher};
+use notify::{Watcher, RecursiveMode, raw_watcher};
 use std::sync::mpsc::channel;
 use std::thread;
 use std::path::PathBuf;
@@ -296,19 +296,19 @@ fn main() {
             thread::spawn(move || { serve(&dest, &port); });
 
             let (tx, rx) = channel();
-            let w: Result<RecommendedWatcher, Error> = Watcher::new(tx);
+            let w = raw_watcher(tx);
 
             match w {
                 Ok(mut watcher) => {
                     // TODO: clean up this unwrap
-                    watcher.watch(&config.source).unwrap();
+                    watcher.watch(&config.source, RecursiveMode::Recursive).unwrap();
                     info!("Watching {:?} for changes", &config.source);
 
                     loop {
                         match rx.recv() {
-                            Ok(val) => {
-                                trace!("file changed {:?}", val);
-                                if let Some(path) = val.path {
+                            Ok(event) => {
+                                trace!("file changed {:?}", event);
+                                if let Some(path) = event.path {
                                     // get where process was run from
                                     let cwd = std::env::current_dir()
                                         .unwrap_or_else(|_| PathBuf::new());

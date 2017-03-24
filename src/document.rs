@@ -346,7 +346,7 @@ impl Document {
 
         if self.markdown && MARKDOWN_REF.is_match(&self.content) {
             for mat in MARKDOWN_REF.find_iter(&self.content) {
-                trail.push_str(&self.content[mat.0..mat.1]);
+                trail.push_str(mat.as_str());
                 trail.push('\n');
             }
         }
