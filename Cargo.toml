@@ -25,7 +25,7 @@ chrono = "0.3"
 log = "0.3"
 env_logger = "0.4"
 rss = "0.3"
-pulldown-cmark = "0.0.12"
+pulldown-cmark = "0.0.8"
 notify = "4.0"
 ghp = "0.1"
 glob = "0.2.11"
@@ -40,7 +40,7 @@ version = "0.10"
 default-features = false
 
 [dependencies.syntect]
-version = "~1.0"
+version = "1.0"
 optional = true
 features = ["static-onig"]
 
