@@ -7,7 +7,12 @@ description = "Static site generator written in Rust"
 repository = "https://github.com/cobalt-org/cobalt.rs"
 readme = "README.md"
 keywords = ["static", "site", "generator"]
+categories = ["command-line-utilities"]
 license = "MIT"
+
+[badges]
+travis-ci = { repository = "cobalt-org/cobalt.rs" }
+appveyor = { repository = "cobalt-org/cobalt.rs" }
 
 [lib]
 name="cobalt"
