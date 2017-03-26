@@ -17,37 +17,37 @@ name = "cobalt"
 doc = false
 
 [dependencies]
-clap = "2.4.0"
+clap = "2.22.0"
 liquid = "0.9"
-walkdir = "0.1"
+walkdir = "1.0"
 yaml-rust = "0.3"
-chrono = "0.2"
+chrono = "0.3"
 log = "0.3"
-env_logger = "0.3"
-rss = "0.3.1"
+env_logger = "0.4"
+rss = "0.3"
 pulldown-cmark = "0.0.8"
-notify = "^2.5.0"
+notify = "4.0"
 ghp = "0.1"
 glob = "0.2.11"
-regex = "0.1"
+regex = "0.2.1"
 clippy = {version = "0.0", optional = true}
-error-chain = "0.5.0"
+error-chain = "0.10.0"
 lazy_static = "0.2"
 itertools = "0.5.9"
 
 [dependencies.hyper]
-version = "0.9"
+version = "0.10"
 default-features = false
 
 [dependencies.syntect]
-version = "1.0.4"
+version = "1.0"
 optional = true
 features = ["static-onig"]
 
 [dev-dependencies]
 assert_cli = "0.3"
 lazy_static = "0.2"
-difference = "0.4"
+difference = "1.0"
 tempdir = "0.3"
 
 [features]

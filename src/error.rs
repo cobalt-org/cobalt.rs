@@ -10,10 +10,10 @@ error_chain! {
     }
 
     foreign_links {
-        io::Error, Io;
-        liquid::Error, Liquid;
-        walkdir::Error, WalkDir;
-        scanner::ScanError, Yaml;
+        Io(io::Error);
+        Liquid(liquid::Error);
+        WalkDir(walkdir::Error);
+        Yaml(scanner::ScanError);
     }
 
     errors {
