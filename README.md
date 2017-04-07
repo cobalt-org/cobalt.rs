@@ -1,6 +1,6 @@
-# ![Cobalt](https://raw.githubusercontent.com/cobalt-org/logos/master/cobald.logo.02.resize.png)  
+# ![Cobalt](https://raw.githubusercontent.com/cobalt-org/logos/master/cobald.logo.02.resize.png)
 [![](https://img.shields.io/crates/v/cobalt-bin.svg?maxAge=25920)](https://crates.io/crates/cobalt-bin)
-[![](https://travis-ci.org/cobalt-org/cobalt.rs.svg?branch=master)](https://travis-ci.org/cobalt-org/cobalt.rs) [![](https://ci.appveyor.com/api/projects/status/gp2mmvk8dpe8wsmi/branch/master?svg=true)](https://ci.appveyor.com/project/johannhof/cobalt-rs/branch/master) 
+[![](https://travis-ci.org/cobalt-org/cobalt.rs.svg?branch=master)](https://travis-ci.org/cobalt-org/cobalt.rs) [![](https://ci.appveyor.com/api/projects/status/gp2mmvk8dpe8wsmi/branch/master?svg=true)](https://ci.appveyor.com/project/johannhof/cobalt-rs/branch/master)
 [![](https://coveralls.io/repos/cobalt-org/cobalt.rs/badge.svg?branch=master&service=github)](https://coveralls.io/github/cobalt-org/cobalt.rs?branch=master)
 [![](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/cobalt-org/cobalt.rs?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
@@ -11,7 +11,7 @@ A static site generator written in [Rust](http://www.rust-lang.org/).
 - [Installation](#installation)
 - [Examples](#examples)
 - [Usage](#usage)
-  - [Layouts](#layouts)
+  - [Templates](#templates)
   - [Posts](#posts)
   - [Other Files](#other-files)
   - [Attributes](#attributes)
@@ -65,11 +65,11 @@ See more options with
   $ cobalt -h
 ```
 
-### Layouts
+### Templates
 
-You can have custom layouts in the ```_layouts``` directory.
+You can have custom file templates in the `_templates` directory.
 
-Layouts will be compiled as [liquid](https://github.com/cobalt-org/liquid-rust) templates.
+Templates are passed through [liquid-rust](https://github.com/cobalt-org/liquid-rust) and compiled as unminified `.html` markup.
 
 ### Posts
 
@@ -88,11 +88,11 @@ Hey there this is my first blogpost and this is super awesome.
 My Blog is lorem ipsum like, yes it is..
 ```
 
-The content before ```---``` are meta attributes ("front matter") made accessible to the template via their key (see below).
+The content before `---` are meta attributes ("front matter") made accessible to the template via their key (see below).
 
-The ```extends``` attribute specifies which layout will be used.
+The `extends` attribute specifies which template will be used.
 
-The ```date``` attribute will be used to sort blog posts (from last to first). ```date``` must have the format `%dd %Mon %YYYY %HH:%MM:%SS %zzzz`, so for example `27 May 2016 21:00:30 +0100`.
+The `date` attribute will be used to sort blog posts (from last to first). `date` must have the format `%dd %Mon %YYYY %HH:%MM:%SS %zzzz`, so for example `27 May 2016 21:00:30 +0100`.
 
 #### Drafts
 
@@ -104,7 +104,7 @@ To mark a post as draft you can either set `draft: true` in your front matter or
 
 Any file with the .md or .liquid file extension is considered a liquid template and will be parsed for metadata and compiled using liquid, like a post.
 
-Unlike posts, files outside the ``posts`` directory will not be indexed as blog posts and not passed to the index file in the list of contents.
+Unlike posts, files outside the `posts` directory will not be indexed as blog posts and not passed to the index file in the list of contents.
 
 All other files and directories in the source folder will be recursively added to your destination folder.
 
@@ -153,13 +153,13 @@ path: /:author/:year/:month/:day/title
 
 All template files have access to a set of attributes.
 
-In example above _title_ is accessible via ```{{ title }}``` and _date_ via ```{{ date }}```, for the layout template as well as the post template.
+In example above _title_ is accessible via `{{ title }}` and _date_ via `{{ date }}`.
 
 ### Special Attributes
 
 #### content
 
-`{{ content }}` is accessible only to layouts and contains the compiled text below the ```---``` block of the post.
+`{{ content }}` is accessible only to templates and contains the compiled text below the `---` block of the post.
 
 #### posts
 
@@ -218,8 +218,8 @@ script:
   - cobalt build
 
 after_success: |
-  [ $TRAVIS_BRANCH = master ] &&  
-  [ $TRAVIS_PULL_REQUEST = false ] &&  
+  [ $TRAVIS_BRANCH = master ] &&
+  [ $TRAVIS_PULL_REQUEST = false ] &&
   cobalt import &&
   git config user.name "Cobalt Site Deployer" &&
   git config user.email "name@example.com" &&

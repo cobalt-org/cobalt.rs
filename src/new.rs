@@ -21,7 +21,7 @@ const default_liquid: &'static [u8] = b"<!DOCTYPE html>
     <body>
     <div>
       {% if is_post %}
-        {% include '_layouts/post.liquid' %}
+        {% include '_templates/post.liquid' %}
       {% else %}
         {{ content }}
       {% endif %}
@@ -78,9 +78,9 @@ pub fn create_new_project<P: AsRef<Path>>(dest: P) -> Result<()> {
     try!(create_file(&dest.join(".cobalt.yml"), cobalt_yml));
     try!(create_file(&dest.join("index.liquid"), index_liquid));
 
-    try!(create_folder(&dest.join("_layouts")));
-    try!(create_file(&dest.join("_layouts/default.liquid"), default_liquid));
-    try!(create_file(&dest.join("_layouts/post.liquid"), post_liquid));
+    try!(create_folder(&dest.join("_templates")));
+    try!(create_file(&dest.join("_templates/default.liquid"), default_liquid));
+    try!(create_file(&dest.join("_templates/post.liquid"), post_liquid));
 
     try!(create_folder(&dest.join("posts")));
     try!(create_file(&dest.join("posts/post-1.md"), post_1_md));

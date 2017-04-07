@@ -1,10 +1,10 @@
 extends: default.liquid
 
-title: README for different directory layouts
+title: README for different directory templates
 date: 03 Feb 2017 21:00:00 -0000
 ---
 
-# Test for different blog layouts
+# Test for different blog templates
 
 ## posts inside a single directory
 

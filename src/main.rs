@@ -68,11 +68,11 @@ fn main() {
             .help("Destination folder [default: ./]")
             .global(true)
             .takes_value(true))
-        .arg(Arg::with_name("layouts")
-            .short("l")
-            .long("layouts")
+        .arg(Arg::with_name("templates")
+            .short("t")
+            .long("templates")
             .value_name("DIR")
-            .help("Layout templates folder [default: ./_layouts]")
+            .help("Templates folder [default: ./_templates]")
             .global(true)
             .takes_value(true))
         .arg(Arg::with_name("posts")
@@ -232,10 +232,10 @@ fn main() {
         .map(str::to_string)
         .unwrap_or(config.dest);
 
-    config.layouts = matches.value_of("layouts")
-        .or_else(|| global_matches.value_of("layouts"))
+    config.templates = matches.value_of("templates")
+        .or_else(|| global_matches.value_of("templates"))
         .map(str::to_string)
-        .unwrap_or(config.layouts);
+        .unwrap_or(config.templates);
 
     config.posts = matches.value_of("posts")
         .or_else(|| global_matches.value_of("posts"))

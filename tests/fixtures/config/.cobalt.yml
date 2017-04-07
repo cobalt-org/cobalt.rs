@@ -1,6 +1,6 @@
 dest: ./dest
 
-layouts: _my_layouts
+templates: _my_templates
 
 posts: _my_posts
 

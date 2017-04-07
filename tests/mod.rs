@@ -166,7 +166,7 @@ pub fn no_extends_error() {
     assert!(err.is_err());
     assert!(err.unwrap_err()
         .description()
-        .contains("Layout default_nonexistent.liquid can not be read (defined in \
+        .contains("Template default_nonexistent.liquid can not be read (defined in \
                    tests/fixtures/no_extends_error/index.liquid)"));
 }
 

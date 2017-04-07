@@ -53,11 +53,11 @@ pub fn build(config: &Config) -> Result<()> {
         .map(OsStr::new)
         .collect();
 
-    let layouts = source.join(&config.layouts);
-    let mut layouts_cache = HashMap::new();
+    let templates_dir = source.join(&config.templates);
+    let mut templates_cache_dir = HashMap::new();
     let posts_path = source.join(&config.posts);
 
-    debug!("Layouts directory: {:?}", layouts);
+    debug!("Templates directory: {:?}", templates_dir);
     debug!("Posts directory: {:?}", posts_path);
     debug!("Draft mode enabled: {}", config.include_drafts);
     if config.include_drafts {
@@ -137,7 +137,7 @@ pub fn build(config: &Config) -> Result<()> {
         let mut context = post.get_render_context(&simple_posts_data);
 
         try!(post.render_excerpt(&mut context, source, &config.excerpt_separator));
-        let post_html = try!(post.render(&mut context, source, &layouts, &mut layouts_cache));
+        let post_html = try!(post.render(&mut context, source, &templates_dir, &mut templates_cache_dir));
         try!(create_document_file(&post_html, &post.path, dest));
     }
 
@@ -157,7 +157,7 @@ pub fn build(config: &Config) -> Result<()> {
         trace!("Generating {}", doc.path);
 
         let mut context = doc.get_render_context(&posts_data);
-        let doc_html = try!(doc.render(&mut context, source, &layouts, &mut layouts_cache));
+        let doc_html = try!(doc.render(&mut context, source, &templates_dir, &mut templates_cache_dir));
         try!(create_document_file(&doc_html, &doc.path, dest));
     }
 

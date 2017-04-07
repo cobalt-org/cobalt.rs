@@ -10,7 +10,7 @@ use yaml_rust::YamlLoader;
 pub struct Config {
     pub source: String,
     pub dest: String,
-    pub layouts: String,
+    pub templates: String,
     pub drafts: String,
     pub include_drafts: bool,
     pub posts: String,
@@ -29,7 +29,7 @@ impl Default for Config {
         Config {
             source: "./".to_owned(),
             dest: "./".to_owned(),
-            layouts: "_layouts".to_owned(),
+            templates: "_templates".to_owned(),
             drafts: "_drafts".to_owned(),
             include_drafts: false,
             posts: "posts".to_owned(),
@@ -73,8 +73,8 @@ impl Config {
             config.dest = dest.to_owned();
         };
 
-        if let Some(layouts) = yaml["layouts"].as_str() {
-            config.layouts = layouts.to_owned();
+        if let Some(templates) = yaml["templates"].as_str() {
+            config.templates = templates.to_owned();
         };
 
         if let Some(drafts) = yaml["drafts"].as_str() {
@@ -126,7 +126,7 @@ fn test_from_file_ok() {
     assert_eq!(result.unwrap(),
                Config {
                    dest: "./dest".to_owned(),
-                   layouts: "_my_layouts".to_owned(),
+                   templates: "_my_templates".to_owned(),
                    posts: "_my_posts".to_owned(),
                    ..Default::default()
                });

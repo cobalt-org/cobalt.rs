@@ -32,7 +32,7 @@ pub struct Document {
     pub path: String,
     pub attributes: HashMap<String, Value>,
     pub content: String,
-    pub layout: Option<String>,
+    pub template: Option<String>,
     pub is_post: bool,
     pub is_draft: bool,
     pub date: Option<DateTime<FixedOffset>>,
@@ -137,7 +137,7 @@ impl Document {
     pub fn new(path: String,
                attributes: HashMap<String, Value>,
                content: String,
-               layout: Option<String>,
+               template: Option<String>,
                is_post: bool,
                is_draft: bool,
                date: Option<DateTime<FixedOffset>>,
@@ -148,7 +148,7 @@ impl Document {
             path: path,
             attributes: attributes,
             content: content,
-            layout: layout,
+            template: template,
             is_post: is_post,
             is_draft: is_draft,
             date: date,
@@ -229,7 +229,7 @@ impl Document {
             markdown = ext == "md";
         }
 
-        let layout = attributes.get("extends").and_then(|l| l.as_str()).map(|x| x.to_owned());
+        let template = attributes.get("extends").and_then(|l| l.as_str()).map(|x| x.to_owned());
 
         let mut path_buf = PathBuf::from(new_path);
         path_buf.set_extension("html");
@@ -256,7 +256,7 @@ impl Document {
         Ok(Document::new(path.to_owned(),
                          attributes,
                          content,
-                         layout,
+                         template,
                          is_post,
                          is_draft,
                          date,
@@ -395,36 +395,36 @@ impl Document {
     ///
     /// * content is inserted to the attributes of the document
     /// * content is inserted to context
-    /// * layout may be inserted to layouts cache
+    /// * template may be inserted to templates cache
     ///
-    /// When we say "content" we mean only this document without extended layout.
+    /// When we say "content" we mean only this document without extended template.
     pub fn render(&mut self,
                   context: &mut Context,
                   source: &Path,
-                  layouts_dir: &Path,
-                  layouts_cache: &mut HashMap<String, String>)
+                  templates_dir: &Path,
+                  templates_cache: &mut HashMap<String, String>)
                   -> Result<String> {
         let content_html = try!(self.render_html(&self.content, context, source));
         self.attributes.insert("content".to_owned(), Value::Str(content_html.clone()));
         context.set_val("content", Value::Str(content_html.clone()));
 
-        if let Some(ref layout) = self.layout {
-            let layout_data_ref = match layouts_cache.entry(layout.to_owned()) {
+        if let Some(ref template) = self.template {
+            let template_data_ref = match templates_cache.entry(template.to_owned()) {
                 Entry::Vacant(vacant) => {
-                    let layout_data = try!(read_file(layouts_dir.join(layout)).map_err(|e| {
-                        format!("Layout {} can not be read (defined in {}): {}",
-                                layout,
+                    let template_data = try!(read_file(templates_dir.join(template)).map_err(|e| {
+                        format!("Template {} can not be read (defined in {}): {}",
+                                template,
                                 self.file_path,
                                 e)
                     }));
-                    vacant.insert(layout_data)
+                    vacant.insert(template_data)
                 }
                 Entry::Occupied(occupied) => occupied.into_mut(),
             };
 
             let options =
                 LiquidOptions { file_system: Some(source.to_owned()), ..Default::default() };
-            let template = try!(liquid::parse(layout_data_ref, options));
+            let template = try!(liquid::parse(template_data_ref, options));
             Ok(try!(template.render(context)).unwrap_or_default())
         } else {
             Ok(content_html)
