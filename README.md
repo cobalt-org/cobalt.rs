@@ -4,6 +4,8 @@
 [![](https://coveralls.io/repos/cobalt-org/cobalt.rs/badge.svg?branch=master&service=github)](https://coveralls.io/github/cobalt-org/cobalt.rs?branch=master)
 [![](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/cobalt-org/cobalt.rs?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
+[![Join the chat at https://gitter.im/cobalt-org/cobalt.rs](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/cobalt-org/cobalt.rs?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 A static site generator written in [Rust](http://www.rust-lang.org/).
 
 ## Content
