@@ -84,7 +84,7 @@ pub fn build(config: &Config) -> Result<()> {
 
             let new_path = entry_path.strip_prefix(source).expect("Entry not in source folder");
 
-            let doc = try!(Document::parse(&entry_path, new_path, is_post, &config.post_path));
+            let doc = try!(Document::parse(entry_path, new_path, is_post, &config.post_path));
             if !doc.is_draft || config.include_drafts {
                 documents.push(doc);
             }
@@ -109,7 +109,7 @@ pub fn build(config: &Config) -> Result<()> {
                 .join(entry_path.strip_prefix(&drafts).expect("Draft not in draft folder!"));
             let new_path = new_path.strip_prefix(source).expect("Entry not in source folder");
             if template_extensions.contains(extension) {
-                let doc = try!(Document::parse(&entry_path, new_path, true, &config.post_path));
+                let doc = try!(Document::parse(entry_path, new_path, true, &config.post_path));
                 documents.push(doc);
             }
         }
@@ -136,14 +136,14 @@ pub fn build(config: &Config) -> Result<()> {
 
         let mut context = post.get_render_context(&simple_posts_data);
 
-        try!(post.render_excerpt(&mut context, &source, &config.excerpt_separator));
-        let post_html = try!(post.render(&mut context, &source, &layouts, &mut layouts_cache));
+        try!(post.render_excerpt(&mut context, source, &config.excerpt_separator));
+        let post_html = try!(post.render(&mut context, source, &layouts, &mut layouts_cache));
         try!(create_document_file(&post_html, &post.path, dest));
     }
 
     // check if we should create an RSS file and create it!
     if let Some(ref path) = config.rss {
-        try!(create_rss(path, dest, &config, &posts));
+        try!(create_rss(path, dest, config, &posts));
     }
 
     // during post rendering additional attributes such as content were
@@ -157,7 +157,7 @@ pub fn build(config: &Config) -> Result<()> {
         trace!("Generating {}", doc.path);
 
         let mut context = doc.get_render_context(&posts_data);
-        let doc_html = try!(doc.render(&mut context, &source, &layouts, &mut layouts_cache));
+        let doc_html = try!(doc.render(&mut context, source, &layouts, &mut layouts_cache));
         try!(create_document_file(&doc_html, &doc.path, dest));
     }
 
@@ -165,7 +165,7 @@ pub fn build(config: &Config) -> Result<()> {
     if !compare_paths(source, dest) {
         info!("Copying remaining assets");
         let source_str = try!(source.to_str()
-            .ok_or(format!("Cannot convert pathname {:?} to UTF-8", source)));
+            .ok_or_else(|| format!("Cannot convert pathname {:?} to UTF-8", source)));
 
         let walker = WalkDir::new(&source)
             .into_iter()
@@ -181,7 +181,7 @@ pub fn build(config: &Config) -> Result<()> {
         for entry in walker {
             let entry_path = try!(entry.path()
                 .to_str()
-                .ok_or(format!("Cannot convert pathname {:?} to UTF-8", entry.path())));
+                .ok_or_else(|| format!("Cannot convert pathname {:?} to UTF-8", entry.path())));
 
             let relative = if source_str == "." {
                 entry_path
@@ -264,7 +264,7 @@ fn create_document_file<T: AsRef<Path>, R: AsRef<Path>>(content: &str,
     let mut file = try!(File::create(&file_path)
         .map_err(|e| format!("Could not create {:?}: {}", file_path, e)));
 
-    try!(file.write_all(&content.as_bytes()));
+    try!(file.write_all(content.as_bytes()));
     info!("Created {}", file_path.display());
     Ok(())
 }

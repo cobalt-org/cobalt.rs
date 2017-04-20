@@ -162,7 +162,7 @@ impl Document {
                  mut is_post: bool,
                  post_path: &Option<String>)
                  -> Result<Document> {
-        let mut attributes = HashMap::new();
+        let mut attributes: HashMap<String, Value> = HashMap::new();
         let content = try!(read_file(file_path));
 
         // if there is front matter, split the file and parse it
@@ -179,13 +179,14 @@ impl Document {
 
             let yaml_attributes = try!(yaml_result[0]
                 .as_hash()
-                .ok_or(format!("Incorrect front matter format in {:?}", file_path)));
+                .ok_or_else(|| format!("Incorrect front matter format in {:?}", file_path)));
 
             for (key, value) in yaml_attributes {
                 if let Some(v) = yaml_to_liquid(value) {
-                    attributes.insert(try!(key.as_str().ok_or(format!("Invalid key {:?}", key)))
-                                          .to_owned(),
-                                      v);
+                    let key = key.as_str()
+                        .ok_or_else(|| format!("Invalid key {:?}", key))?
+                        .to_owned();
+                    attributes.insert(key, v);
                 }
             }
 
@@ -247,7 +248,7 @@ impl Document {
         };
 
         let path = try!(path_buf.to_str()
-            .ok_or(format!("Cannot convert pathname {:?} to UTF-8", path_buf)));
+            .ok_or_else(|| format!("Cannot convert pathname {:?} to UTF-8", path_buf)));
 
         // Swap back slashes to forward slashes to ensure the URL's are valid on Windows
         attributes.insert("path".to_owned(), Value::Str(path.replace("\\", "/")));
