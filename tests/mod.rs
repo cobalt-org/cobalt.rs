@@ -15,7 +15,7 @@ use cobalt::Config;
 fn run_test(name: &str) -> Result<(), cobalt::Error> {
     let target = format!("tests/target/{}/", name);
     let mut config = Config::from_file(format!("tests/fixtures/{}/.cobalt.yml", name))
-        .unwrap_or(Default::default());
+        .unwrap_or_default();
     let destdir = TempDir::new(name).expect("Tempdir not created");
 
     config.source = format!("tests/fixtures/{}/", name);
