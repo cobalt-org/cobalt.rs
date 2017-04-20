@@ -39,6 +39,7 @@ clippy = {version = "0.0", optional = true}
 error-chain = "0.10.0"
 lazy_static = "0.2"
 itertools = "0.5.9"
+toml = "0.3.2"
 
 [dependencies.hyper]
 version = "0.10"
