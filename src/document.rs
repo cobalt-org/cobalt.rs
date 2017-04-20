@@ -162,7 +162,7 @@ impl Document {
                  mut is_post: bool,
                  post_path: &Option<String>)
                  -> Result<Document> {
-        let mut attributes = HashMap::new();
+        let mut attributes: HashMap<String, Value> = HashMap::new();
         let content = try!(read_file(file_path));
 
         // if there is front matter, split the file and parse it
@@ -184,8 +184,8 @@ impl Document {
             for (key, value) in yaml_attributes {
                 if let Some(v) = yaml_to_liquid(value) {
                     let key = key.as_str()
-                        .ok_or_else(|| format!("Invalid key {:?}", key))
-                        .to_owned()?;
+                        .ok_or_else(|| format!("Invalid key {:?}", key))?
+                        .to_owned();
                     attributes.insert(key, v);
                 }
             }
