@@ -1,5 +1,5 @@
 use std::fs::File;
-use std::collections::HashMap;
+use std::collections::{HashMap, BTreeMap};
 use std::collections::hash_map::Entry;
 use std::path::{Path, PathBuf};
 use std::default::Default;
@@ -47,6 +47,19 @@ fn read_file<P: AsRef<Path>>(path: P) -> Result<String> {
     Ok(text)
 }
 
+fn yaml_btreemap_to_hashmap(input: &BTreeMap<Yaml, Yaml>) -> HashMap<String, Value> {
+    let mut result = HashMap::new();
+    for (yaml_key, yaml_value) in input {
+        if let Yaml::String(ref s) = *yaml_key {
+            let liquid_value = yaml_to_liquid(yaml_value).expect("Value must be liquid data");
+            result.insert(s.to_owned(), liquid_value);
+        } else {
+            panic!("Key in yaml dictionary must be string");
+        }
+    }
+    result
+}
+
 fn yaml_to_liquid(yaml: &Yaml) -> Option<Value> {
     match *yaml {
         Yaml::Real(ref s) |
@@ -54,8 +67,48 @@ fn yaml_to_liquid(yaml: &Yaml) -> Option<Value> {
         Yaml::Integer(i) => Some(Value::Num(i as f32)),
         Yaml::Boolean(b) => Some(Value::Bool(b)),
         Yaml::Array(ref a) => Some(Value::Array(a.iter().filter_map(yaml_to_liquid).collect())),
+        Yaml::Hash(ref dict) => Some(Value::Object(yaml_btreemap_to_hashmap(dict))),
         Yaml::BadValue | Yaml::Null => None,
         _ => panic!("Not implemented yet"),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::collections::{HashMap, BTreeMap};
+    use yaml_rust as yaml;
+    use liquid;
+
+    #[test]
+    fn test_yaml_to_liquid() {
+        let key_str = "key".to_owned();
+        let input = {
+            let mut temp = BTreeMap::new();
+            temp.insert(yaml::Yaml::String(key_str.clone()), yaml::Yaml::Integer(42));
+            yaml::Yaml::Hash(temp)
+        };
+        let expected = {
+            let mut temp = HashMap::new();
+            temp.insert(key_str.clone(), liquid::Value::Num(42.0));
+            Some(liquid::Value::Object(temp))
+        };
+        assert_eq!(super::yaml_to_liquid(&input), expected);
+    }
+
+    #[test]
+    fn test_dictionary_conversion() {
+        let key_str = "key".to_owned();
+        let input = {
+            let mut temp = BTreeMap::new();
+            temp.insert(yaml::Yaml::String(key_str.clone()), yaml::Yaml::Integer(42));
+            temp
+        };
+        let expected = {
+            let mut temp = HashMap::new();
+            temp.insert(key_str.clone(), liquid::Value::Num(42.0));
+            temp
+        };
+        assert_eq!(super::yaml_btreemap_to_hashmap(&input), expected);
     }
 }
 
