@@ -201,3 +201,8 @@ pub fn excerpts() {
 pub fn posts_in_subfolder() {
     run_test("posts_in_subfolder").unwrap();
 }
+
+#[test]
+pub fn empty_frontmatter() {
+    run_test("empty_frontmatter").expect("Build error");
+}
