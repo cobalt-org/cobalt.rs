@@ -1,5 +1,5 @@
 use std::fs::{self, File};
-use std::collections::HashMap;
+use std::collections::{HashMap, BTreeMap};
 use std::io::Write;
 use std::path::{self, Path};
 use std::ffi::OsStr;
@@ -7,11 +7,13 @@ use liquid::Value;
 use walkdir::{WalkDir, DirEntry, WalkDirIterator};
 use document::Document;
 use error::{ErrorKind, Result};
-use config::Config;
+use config::{Config, Dump};
 use chrono::{UTC, FixedOffset};
 use chrono::offset::TimeZone;
 use rss::{Channel, Rss};
 use glob::Pattern;
+use toml;
+use liquid;
 
 fn ignore_filter(entry: &DirEntry, source: &Path, ignore: &[Pattern]) -> bool {
     if compare_paths(entry.path(), source) {
@@ -38,6 +40,26 @@ fn starts_with_path(this: &Path, starts_with: &Path) -> bool {
     match (fs::canonicalize(this), fs::canonicalize(starts_with)) {
         (Ok(p), Ok(p2)) => p.starts_with(p2),
         _ => false,
+    }
+}
+
+fn convert_value(liquid_value: &liquid::Value) -> Result<toml::Value> {
+    match *liquid_value {
+        liquid::Value::Str(ref s) => Ok(toml::Value::String(s.to_string())),
+        liquid::Value::Num(n) => Ok(toml::Value::Float(n as f64)),
+        liquid::Value::Bool(b) => Ok(toml::Value::Boolean(b)),
+        liquid::Value::Array(ref a) => {
+            let toml_array: Result<Vec<toml::Value>> = a.iter().map(convert_value).collect();
+            let toml_array = toml_array?;
+            Ok(toml::Value::Array(toml_array))
+        }
+        liquid::Value::Object(ref t) => {
+            let toml_object: Result<BTreeMap<String, toml::Value>> = t.iter()
+                .map(|(k, v)| convert_value(v).map(|v| (k.to_string(), v)))
+                .collect();
+            let toml_object = toml_object?;
+            Ok(toml::Value::Table(toml_object))
+        }
     }
 }
 
@@ -134,6 +156,10 @@ pub fn build(config: &Config) -> Result<()> {
     for mut post in &mut posts {
         trace!("Generating {}", post.path);
 
+        if config.dump.contains(&Dump::Liquid) {
+            create_liquid_dump(dest, &post.path, &post.content, &post.attributes)?;
+        }
+
         let mut context = post.get_render_context(&simple_posts_data);
 
         try!(post.render_excerpt(&mut context, source, &config.excerpt_separator));
@@ -155,6 +181,10 @@ pub fn build(config: &Config) -> Result<()> {
     trace!("Generating other documents");
     for mut doc in documents {
         trace!("Generating {}", doc.path);
+
+        if config.dump.contains(&Dump::Liquid) {
+            create_liquid_dump(dest, &doc.path, &doc.content, &doc.attributes)?;
+        }
 
         let mut context = doc.get_render_context(&posts_data);
         let doc_html = try!(doc.render(&mut context, source, &layouts, &mut layouts_cache));
@@ -210,6 +240,34 @@ pub fn build(config: &Config) -> Result<()> {
             }
         }
     }
+
+    Ok(())
+}
+
+fn create_liquid_dump(dest: &Path,
+                      path: &str,
+                      content: &str,
+                      attributes: &HashMap<String, Value>)
+                      -> Result<()> {
+    let mut liquid_file_path = dest.join(path);
+    let mut liquid_file_name = OsStr::new(" ").to_os_string();
+    {
+        let original_file_name = liquid_file_path.file_name().ok_or("File name missing")?;
+        liquid_file_name.push(original_file_name);
+        liquid_file_name.push(".liquid");
+    }
+    liquid_file_path.set_file_name(liquid_file_name);
+
+    let mut toml_file_path = liquid_file_path.clone();
+    toml_file_path.set_extension(".toml");
+
+    let mut liquid_out = fs::File::create(liquid_file_path)?;
+    liquid_out.write_all(content.as_bytes())?;
+
+    let mut toml_out = fs::File::create(toml_file_path)?;
+    let values = convert_value(&liquid::Value::Object(attributes.clone()))?;
+    let values = values.to_string();
+    toml_out.write_all(values.as_bytes())?;
 
     Ok(())
 }

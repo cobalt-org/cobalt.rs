@@ -17,6 +17,8 @@ extern crate yaml_rust;
 extern crate rss;
 extern crate glob;
 extern crate regex;
+extern crate toml;
+extern crate notify;
 
 extern crate itertools;
 
@@ -29,9 +31,13 @@ extern crate log;
 #[macro_use]
 extern crate error_chain;
 
+#[macro_use]
+extern crate clap;
+
 pub use cobalt::build;
 pub use error::Error;
 pub use config::Config;
+pub use config::Dump;
 pub use new::create_new_project;
 
 // modules
