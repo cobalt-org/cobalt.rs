@@ -177,17 +177,20 @@ impl Document {
 
             let yaml_result = try!(YamlLoader::load_from_str(attribute_split));
 
-            let yaml_attributes = try!(yaml_result[0]
-                .as_hash()
-                .ok_or_else(|| format!("Incorrect front matter format in {:?}", file_path)));
+            if !yaml_result.is_empty() {
+                let yaml_attributes = try!(yaml_result[0]
+                    .as_hash()
+                    .ok_or_else(|| format!("Incorrect front matter format in {:?}", file_path)));
 
-            for (key, value) in yaml_attributes {
-                if let Some(v) = yaml_to_liquid(value) {
-                    let key = key.as_str()
-                        .ok_or_else(|| format!("Invalid key {:?}", key))?
-                        .to_owned();
-                    attributes.insert(key, v);
+                for (key, value) in yaml_attributes {
+                    if let Some(v) = yaml_to_liquid(value) {
+                        let key = key.as_str()
+                            .ok_or_else(|| format!("Invalid key {:?}", key))?
+                            .to_owned();
+                        attributes.insert(key, v);
+                    }
                 }
+
             }
 
             content_split
