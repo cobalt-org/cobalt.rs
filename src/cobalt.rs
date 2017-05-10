@@ -125,6 +125,10 @@ pub fn build(config: &Config) -> Result<()> {
     // fall back to the default date
     posts.sort_by(|a, b| b.date.unwrap_or(default_date).cmp(&a.date.unwrap_or(default_date)));
 
+    if &config.post_order == "asc" {
+        posts.reverse();
+    }
+
     // collect all posts attributes to pass them to other posts for rendering
     let simple_posts_data: Vec<Value> = posts.iter()
         .map(|x| Value::Object(x.attributes.clone()))

@@ -1,0 +1,7 @@
+name: cobalt blog
+source: "."
+dest: "build"
+post_order: "asc"
+ignore:
+  - .git/*
+  - build/*
