@@ -89,6 +89,9 @@ fn format_path(p: &str,
         }
     }
 
+    p = p.replace(" ", "-");
+    p = p.to_lowercase();
+
     let mut path = Path::new(&p);
 
     // remove the root prefix (leading slash on unix systems)
