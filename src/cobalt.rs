@@ -135,8 +135,18 @@ pub fn build(config: &Config) -> Result<()> {
         .collect();
 
     trace!("Generating posts");
-    for mut post in &mut posts {
+    for (i, mut post) in &mut posts.iter_mut().enumerate() {
         trace!("Generating {}", post.path);
+
+        // posts are in reverse date order, so previous post is the next in the list (+1)
+        if let Some(previous) = simple_posts_data.get(i + 1) {
+            post.attributes.insert("previous".to_owned(), previous.clone());
+        }
+        if i >= 1 {
+            if let Some(next) = simple_posts_data.get(i - 1) {
+                post.attributes.insert("next".to_owned(), next.clone());
+            }
+        }
 
         let mut context = post.get_render_context(&simple_posts_data);
 
