@@ -390,7 +390,7 @@ fn static_file_handler(dest: &str, req: Request, mut res: Response) -> IoResult<
     // and doesn't stick index.html on the end of the path
     // (querystrings often used for cachebusting)
     let stripped_path = &req_path.split('?').collect::<Vec<&str>>()[0];
-    
+
     // find the path of the file in the local system
     // (this gets rid of the '/' in `p`, so the `join()` will not replace the
     // path)
