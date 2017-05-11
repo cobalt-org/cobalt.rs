@@ -15,6 +15,7 @@ pub struct Config {
     pub include_drafts: bool,
     pub posts: String,
     pub post_path: Option<String>,
+    pub post_order: String,
     pub template_extensions: Vec<String>,
     pub rss: Option<String>,
     pub name: Option<String>,
@@ -34,6 +35,7 @@ impl Default for Config {
             include_drafts: false,
             posts: "posts".to_owned(),
             post_path: None,
+            post_order: "desc".to_owned(),
             template_extensions: vec!["md".to_owned(), "liquid".to_owned()],
             rss: None,
             name: None,
@@ -87,6 +89,10 @@ impl Config {
 
         if let Some(posts) = yaml["posts"].as_str() {
             config.posts = posts.to_owned();
+        };
+
+        if let Some(post_order) = yaml["post_order"].as_str() {
+            config.post_order = post_order.to_owned();
         };
 
         if let Some(extensions) = yaml["template_extensions"].as_vec() {

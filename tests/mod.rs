@@ -176,6 +176,11 @@ pub fn sort_posts() {
 }
 
 #[test]
+pub fn post_order() {
+    run_test("post_order").expect("Build error");
+}
+
+#[test]
 pub fn previous_next() {
     run_test("previous_next").expect("Build error");
 }
