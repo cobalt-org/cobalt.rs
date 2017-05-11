@@ -176,6 +176,11 @@ pub fn sort_posts() {
 }
 
 #[test]
+pub fn previous_next() {
+    run_test("previous_next").expect("Build error");
+}
+
+#[test]
 pub fn rss() {
     run_test("rss").expect("Build error");
 }
