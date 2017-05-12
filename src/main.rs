@@ -389,9 +389,8 @@ fn static_file_handler(dest: &str, req: Request, mut res: Response) -> IoResult<
     // strip off any querystrings so path.is_file() matches
     // and doesn't stick index.html on the end of the path
     // (querystrings often used for cachebusting)
-    match req_path.rfind('?') {
-        Some(position) => req_path.truncate(position),
-        None => (),
+    if let Some(position) = req_path.rfind('?') {
+        req_path.truncate(position);
     }
 
     // find the path of the file in the local system
