@@ -375,7 +375,7 @@ fn build(config: &Config) {
 
 fn static_file_handler(dest: &str, req: Request, mut res: Response) -> IoResult<()> {
     // grab the requested path
-    let req_path = match req.uri {
+    let mut req_path = match req.uri {
         RequestUri::AbsolutePath(p) => p,
         _ => {
             // return a 400 and exit from this request
@@ -385,6 +385,13 @@ fn static_file_handler(dest: &str, req: Request, mut res: Response) -> IoResult<
             return Ok(());
         }
     };
+
+    // strip off any querystrings so path.is_file() matches
+    // and doesn't stick index.html on the end of the path
+    // (querystrings often used for cachebusting)
+    if let Some(position) = req_path.rfind('?') {
+        req_path.truncate(position);
+    }
 
     // find the path of the file in the local system
     // (this gets rid of the '/' in `p`, so the `join()` will not replace the

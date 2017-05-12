@@ -216,3 +216,8 @@ pub fn posts_in_subfolder() {
 pub fn empty_frontmatter() {
     run_test("empty_frontmatter").expect("Build error");
 }
+
+#[test]
+pub fn querystrings() {
+    run_test("querystrings").expect("Build error");
+}
