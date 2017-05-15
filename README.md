@@ -55,7 +55,7 @@ There are a few people already using `cobalt`. Here is a list of projects and th
 ## Usage
 
 ```
-  $ cobalt new myBlog
+  $ cobalt init myBlog
   $ cobalt build -s myBlog -d path/to/your/destination
 ```
 
