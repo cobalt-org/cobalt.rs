@@ -104,7 +104,7 @@ fn main() {
             .help("Suppress all output")
             .global(true)
             .takes_value(false))
-        .subcommand(SubCommand::with_name("new")
+        .subcommand(SubCommand::with_name("init")
             .about("create a new cobalt project")
             .arg(Arg::with_name("DIRECTORY")
                 .help("Suppress all output")
@@ -245,7 +245,7 @@ fn main() {
     config.include_drafts = matches.is_present("drafts");
 
     match command {
-        "new" => {
+        "init" => {
             let directory = matches.value_of("DIRECTORY").unwrap();
 
             match create_new_project(&directory.to_string()) {
