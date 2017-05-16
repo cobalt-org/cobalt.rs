@@ -28,7 +28,8 @@ use env_logger::LogBuilder;
 use hyper::server::{Server, Request, Response};
 use hyper::uri::RequestUri;
 use ghp::import_dir;
-use cobalt::create_new_project;
+use glob::Pattern;
+use cobalt::{create_new_project, create_new_post, create_new_layout, create_new_page};
 
 use notify::{Watcher, RecursiveMode, raw_watcher};
 use std::sync::mpsc::channel;
@@ -103,11 +104,22 @@ fn main() {
                  .global(true)
                  .takes_value(false))
         .subcommand(SubCommand::with_name("init")
-                        .about("create a new cobalt project")
-                        .arg(Arg::with_name("DIRECTORY")
-                                 .help("Suppress all output")
-                                 .default_value("./")
-                                 .index(1)))
+            .about("create a new cobalt project")
+            .arg(Arg::with_name("DIRECTORY")
+                .help("Suppress all output")
+                .default_value("./")
+                .index(1)))
+        .subcommand(SubCommand::with_name("new")
+            .about("create a new post or file")
+            .arg(Arg::with_name("FILETYPE")
+                .help("Type of file to create eg post or layout")
+                .default_value("post")
+                .takes_value(true))
+            .arg(Arg::with_name("FILENAME")
+                .help("File to create")
+                .default_value("new_post.md")
+                .takes_value(true)))
+
         .subcommand(SubCommand::with_name("build")
                         .about("build the cobalt project at the source dir")
                         .arg(Arg::with_name("import")
@@ -261,7 +273,54 @@ fn main() {
                     std::process::exit(1);
                 }
             }
-        }
+        },
+
+        "new" => {
+            let filetype = matches.value_of("FILETYPE").unwrap();
+            let mut filename = matches.value_of("FILENAME").unwrap();
+            println!("new called {:?} {:?}", filetype, filename);
+
+            // TODO: fails if folder doesn't exist eg _layouts or posts
+            // TODO: allow user to specify templates
+            match filetype {
+                "layout" => {
+                    if filename == "new_post.md" {
+                        filename = "new_layout.liquid";
+                    }
+                    match create_new_layout(&filename.to_string(), &config) {
+                        Ok(_) => info!("Created new layout at {}{}/{}", &config.source, &config.layouts, filename),
+                        Err(e) => {
+                            error!("{}", e);
+                            error!("Could not create a layout");
+                            std::process::exit(1);
+                        }
+                    }
+                },
+                "page" => {
+                    if filename == "new_post.md" {
+                        filename = "new_page.md"
+                    }
+                    match create_new_page(&filename.to_string()) {
+                        Ok(_) => info!("Created new page at {}", filename),
+                        Err(e) => {
+                            error!("{}", e);
+                            error!("Could not create a page");
+                            std::process::exit(1);
+                        }
+                    }
+                },
+                _ => {
+                    match create_new_post(&filename.to_string(), &config) {
+                        Ok(_) => info!("Created new post at {}{}/{}", &config.source, &config.posts, filename),
+                        Err(e) => {
+                            error!("{}", e);
+                            error!("Could not create a new post");
+                            std::process::exit(1);
+                        }
+                    }
+                }
+            }
+        },
 
         "build" => {
             build(&config);
