@@ -90,27 +90,27 @@ pub fn create_new_project<P: AsRef<Path>>(dest: P) -> Result<()> {
 }
 
 pub fn create_new_post(name: &String, config: &Config) -> Result<()> {
-  let path = Path::new(&config.source);
-  let full_path = &path.join(&config.posts).join(name);
+    let path = Path::new(&config.source);
+    let full_path = &path.join(&config.posts).join(name);
 
-  try!(create_file(full_path, post_1_md));
+    try!(create_file(full_path, post_1_md));
 
-  Ok(())
+    Ok(())
 }
 
 pub fn create_new_layout(name: &String, config: &Config) -> Result<()> {
-  let path = Path::new(&config.source);
-  let full_path = &path.join(&config.layouts).join(name);
+    let path = Path::new(&config.source);
+    let full_path = &path.join(&config.layouts).join(name);
 
-  try!(create_file(full_path, post_liquid));
+    try!(create_file(full_path, post_liquid));
 
-  Ok(())
+    Ok(())
 }
 
 pub fn create_new_page(name: &String) -> Result<()> {
-  try!(create_file(name, index_liquid));
+    try!(create_file(name, index_liquid));
 
-  Ok(())
+    Ok(())
 }
 
 fn create_folder<P: AsRef<Path>>(path: P) -> Result<()> {

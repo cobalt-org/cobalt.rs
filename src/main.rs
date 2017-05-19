@@ -273,7 +273,7 @@ fn main() {
                     std::process::exit(1);
                 }
             }
-        },
+        }
 
         "new" => {
             let filetype = matches.value_of("FILETYPE").unwrap();
@@ -285,7 +285,10 @@ fn main() {
                         filename = "new_layout.liquid";
                     }
                     match create_new_layout(&filename.to_string(), &config) {
-                        Ok(_) => info!("Created new layout at {}{}/{}", &config.source, &config.layouts, filename),
+                        Ok(_) => info!("Created new layout at {}{}/{}",
+                                       &config.source,
+                                       &config.layouts,
+                                       filename),
                         Err(e) => {
                             error!("{}", e);
                             error!("Could not create a layout");
@@ -308,7 +311,10 @@ fn main() {
                 },
                 _ => {
                     match create_new_post(&filename.to_string(), &config) {
-                        Ok(_) => info!("Created new post at {}{}/{}", &config.source, &config.posts, filename),
+                        Ok(_) => info!("Created new post at {}{}/{}",
+                                       &config.source,
+                                       &config.posts,
+                                       filename),
                         Err(e) => {
                             error!("{}", e);
                             error!("Could not create a new post");
@@ -317,7 +323,7 @@ fn main() {
                     }
                 }
             }
-        },
+        }
 
         "build" => {
             build(&config);
