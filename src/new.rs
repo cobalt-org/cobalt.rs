@@ -90,8 +90,6 @@ pub fn create_new_project<P: AsRef<Path>>(dest: P) -> Result<()> {
 }
 
 pub fn create_new_post(name: &String, config: &Config) -> Result<()> {
-  // TODO: check for extension or use default from config
-  // TODO: check if file already exists
   let path = Path::new(&config.source);
   let full_path = &path.join(&config.posts).join(name);
 

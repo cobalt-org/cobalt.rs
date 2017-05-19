@@ -278,10 +278,7 @@ fn main() {
         "new" => {
             let filetype = matches.value_of("FILETYPE").unwrap();
             let mut filename = matches.value_of("FILENAME").unwrap();
-            println!("new called {:?} {:?}", filetype, filename);
 
-            // TODO: fails if folder doesn't exist eg _layouts or posts
-            // TODO: allow user to specify templates
             match filetype {
                 "layout" => {
                     if filename == "new_post.md" {
