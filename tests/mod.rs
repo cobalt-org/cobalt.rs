@@ -19,7 +19,8 @@ fn run_test(name: &str) -> Result<(), cobalt::Error> {
     let destdir = TempDir::new(name).expect("Tempdir not created");
 
     config.source = format!("tests/fixtures/{}/", name);
-    config.dest = destdir.path()
+    config.dest = destdir
+        .path()
         .to_str()
         .expect("Can't convert destdir to str")
         .to_owned();
@@ -37,7 +38,8 @@ fn run_test(name: &str) -> Result<(), cobalt::Error> {
 
         // walk through fixture and created tmp directory and compare files
         for entry in walker {
-            let relative = entry.path()
+            let relative = entry
+                .path()
                 .strip_prefix(&target)
                 .expect("Comparison error");
 
@@ -63,7 +65,8 @@ fn run_test(name: &str) -> Result<(), cobalt::Error> {
             .filter(|e| e.file_type().is_file());
 
         for entry in walker {
-            let relative = entry.path()
+            let relative = entry
+                .path()
                 .strip_prefix(&config.dest)
                 .expect("Comparison error");
             let relative = Path::new(&target).join(&relative);
@@ -165,8 +168,8 @@ pub fn no_extends_error() {
     let err = run_test("no_extends_error");
     assert!(err.is_err());
     assert!(err.unwrap_err()
-        .description()
-        .contains("Layout default_nonexistent.liquid can not be read (defined in \
+                .description()
+                .contains("Layout default_nonexistent.liquid can not be read (defined in \
                    tests/fixtures/no_extends_error/index.liquid)"));
 }
 
