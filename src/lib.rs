@@ -40,6 +40,7 @@ mod config;
 pub mod error;
 mod document;
 mod new;
+mod slug;
 
 #[cfg(feature="syntax-highlight")]
 mod syntax_highlight;
