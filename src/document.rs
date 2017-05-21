@@ -9,7 +9,6 @@ use yaml_rust::{Yaml, YamlLoader};
 use std::io::Read;
 use regex::Regex;
 use rss;
-use itertools::Itertools;
 
 #[cfg(all(feature="syntax-highlight", not(windows)))]
 use syntax_highlight::{initialize_codeblock, decorate_markdown};
@@ -19,10 +18,11 @@ use liquid::{Renderable, LiquidOptions, Context, Value};
 use pulldown_cmark as cmark;
 use liquid;
 
+use slug;
+
 lazy_static!{
     static ref DATE_VARIABLES: Regex =
         Regex::new(":(year|month|i_month|day|i_day|short_year|hour|minute|second)").unwrap();
-    static ref SLUG_INVALID_CHARS: Regex = Regex::new(r"([^a-zA-Z0-9]+)").unwrap();
     static ref FRONT_MATTER_DIVIDE: Regex = Regex::new(r"---\s*\r?\n").unwrap();
     static ref MARKDOWN_REF: Regex = Regex::new(r"(?m:^ {0,3}\[[^\]]+\]:.+$)").unwrap();
 }
@@ -115,30 +115,6 @@ fn file_stem(p: &Path) -> String {
         .unwrap_or_else(|| "".to_owned())
 }
 
-/// Create a slug for a given file.  Correlates to Jekyll's :slug path tag
-fn slugify(name: &str) -> String {
-    let slug = SLUG_INVALID_CHARS.replace_all(name, "-");
-    slug.trim_matches('-').to_lowercase()
-}
-
-/// Title-case a single word
-fn title_case(s: &str) -> String {
-    let mut c = s.chars();
-    match c.next() {
-        None => String::new(),
-        Some(f) => {
-            f.to_uppercase()
-                .chain(c.flat_map(|t| t.to_lowercase()))
-                .collect()
-        }
-    }
-}
-
-/// Format a user-visible title out of a slug.  Correlates to Jekyll's "title" attribute
-fn titleize_slug(slug: &str) -> String {
-    slug.split('-').map(title_case).join(" ")
-}
-
 impl Document {
     pub fn new(path: String,
                attributes: HashMap<String, Value>,
@@ -225,10 +201,10 @@ impl Document {
             .and_then(|d| DateTime::parse_from_str(d, "%d %B %Y %H:%M:%S %z").ok());
 
         let file_stem = file_stem(new_path);
-        let slug = slugify(&file_stem);
+        let slug = slug::slugify(&file_stem);
         attributes
             .entry("title".to_owned())
-            .or_insert_with(|| Value::Str(titleize_slug(slug.as_str())));
+            .or_insert_with(|| Value::Str(slug::titleize_slug(slug.as_str())));
         attributes
             .entry("slug".to_owned())
             .or_insert_with(|| Value::Str(slug));
@@ -476,16 +452,4 @@ fn test_file_stem() {
     let input = PathBuf::from("/embedded/path/___filE-worlD-__09___.md");
     let actual = file_stem(input.as_path());
     assert_eq!(actual, "___filE-worlD-__09___");
-}
-
-#[test]
-fn test_slugify() {
-    let actual = slugify("___filE-worlD-__09___");
-    assert_eq!(actual, "file-world-09");
-}
-
-#[test]
-fn test_titleize_slug() {
-    let actual = titleize_slug("tItLeIzE-sLuG");
-    assert_eq!(actual, "Titleize Slug");
 }
