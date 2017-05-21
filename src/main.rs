@@ -48,124 +48,124 @@ fn main() {
         .setting(AppSettings::SubcommandRequired)
         .setting(AppSettings::GlobalVersion)
         .arg(Arg::with_name("config")
-            .short("c")
-            .long("config")
-            .value_name("FILE")
-            .help("Config file to use [default: .cobalt.yml]")
-            .global(true)
-            .takes_value(true))
+                 .short("c")
+                 .long("config")
+                 .value_name("FILE")
+                 .help("Config file to use [default: .cobalt.yml]")
+                 .global(true)
+                 .takes_value(true))
         .arg(Arg::with_name("source")
-            .short("s")
-            .long("source")
-            .value_name("DIR")
-            .help("Source folder [default: ./]")
-            .global(true)
-            .takes_value(true))
+                 .short("s")
+                 .long("source")
+                 .value_name("DIR")
+                 .help("Source folder [default: ./]")
+                 .global(true)
+                 .takes_value(true))
         .arg(Arg::with_name("destination")
-            .short("d")
-            .long("destination")
-            .value_name("DIR")
-            .help("Destination folder [default: ./]")
-            .global(true)
-            .takes_value(true))
+                 .short("d")
+                 .long("destination")
+                 .value_name("DIR")
+                 .help("Destination folder [default: ./]")
+                 .global(true)
+                 .takes_value(true))
         .arg(Arg::with_name("layouts")
-            .short("l")
-            .long("layouts")
-            .value_name("DIR")
-            .help("Layout templates folder [default: ./_layouts]")
-            .global(true)
-            .takes_value(true))
+                 .short("l")
+                 .long("layouts")
+                 .value_name("DIR")
+                 .help("Layout templates folder [default: ./_layouts]")
+                 .global(true)
+                 .takes_value(true))
         .arg(Arg::with_name("posts")
-            .short("p")
-            .long("posts")
-            .value_name("DIR")
-            .help("Posts folder [default: ./posts]")
-            .global(true)
-            .takes_value(true))
+                 .short("p")
+                 .long("posts")
+                 .value_name("DIR")
+                 .help("Posts folder [default: ./posts]")
+                 .global(true)
+                 .takes_value(true))
         .arg(Arg::with_name("drafts")
-            .long("drafts")
-            .help("Include drafts.")
-            .global(true)
-            .takes_value(false))
+                 .long("drafts")
+                 .help("Include drafts.")
+                 .global(true)
+                 .takes_value(false))
         .arg(Arg::with_name("log-level")
-            .short("L")
-            .long("log-level")
-            .possible_values(&["error", "warn", "info", "debug", "trace", "off"])
-            .help("Log level [default: info]")
-            .global(true)
-            .takes_value(true))
+                 .short("L")
+                 .long("log-level")
+                 .possible_values(&["error", "warn", "info", "debug", "trace", "off"])
+                 .help("Log level [default: info]")
+                 .global(true)
+                 .takes_value(true))
         .arg(Arg::with_name("trace")
-            .long("trace")
-            .help("Log ultra-verbose (trace level) information")
-            .global(true)
-            .takes_value(false))
+                 .long("trace")
+                 .help("Log ultra-verbose (trace level) information")
+                 .global(true)
+                 .takes_value(false))
         .arg(Arg::with_name("silent")
-            .long("silent")
-            .help("Suppress all output")
-            .global(true)
-            .takes_value(false))
+                 .long("silent")
+                 .help("Suppress all output")
+                 .global(true)
+                 .takes_value(false))
         .subcommand(SubCommand::with_name("init")
-            .about("create a new cobalt project")
-            .arg(Arg::with_name("DIRECTORY")
-                .help("Suppress all output")
-                .default_value("./")
-                .index(1)))
+                        .about("create a new cobalt project")
+                        .arg(Arg::with_name("DIRECTORY")
+                                 .help("Suppress all output")
+                                 .default_value("./")
+                                 .index(1)))
         .subcommand(SubCommand::with_name("build")
-            .about("build the cobalt project at the source dir")
-            .arg(Arg::with_name("import")
-                .short("i")
-                .long("import")
-                .help("Import after build to gh-pages branch")
-                .takes_value(false))
-            .arg(Arg::with_name("branch")
-                .short("b")
-                .long("branch")
-                .value_name("BRANCH")
-                .help("Branch that will be used to import the site to")
-                .default_value("gh-pages")
-                .takes_value(true))
-            .arg(Arg::with_name("message")
-                .short("m")
-                .long("message")
-                .value_name("COMMIT-MESSAGE")
-                .help("Commit message that will be used on import")
-                .default_value("cobalt site import")
-                .takes_value(true)))
+                        .about("build the cobalt project at the source dir")
+                        .arg(Arg::with_name("import")
+                                 .short("i")
+                                 .long("import")
+                                 .help("Import after build to gh-pages branch")
+                                 .takes_value(false))
+                        .arg(Arg::with_name("branch")
+                                 .short("b")
+                                 .long("branch")
+                                 .value_name("BRANCH")
+                                 .help("Branch that will be used to import the site to")
+                                 .default_value("gh-pages")
+                                 .takes_value(true))
+                        .arg(Arg::with_name("message")
+                                 .short("m")
+                                 .long("message")
+                                 .value_name("COMMIT-MESSAGE")
+                                 .help("Commit message that will be used on import")
+                                 .default_value("cobalt site import")
+                                 .takes_value(true)))
         .subcommand(SubCommand::with_name("clean").about("cleans directory set as destination"))
         .subcommand(SubCommand::with_name("serve")
-            .about("build and serve the cobalt project at the source dir")
-            .arg(Arg::with_name("port")
-                .short("P")
-                .long("port")
-                .value_name("INT")
-                .help("Port to serve from")
-                .default_value("3000")
-                .takes_value(true)))
+                        .about("build and serve the cobalt project at the source dir")
+                        .arg(Arg::with_name("port")
+                                 .short("P")
+                                 .long("port")
+                                 .value_name("INT")
+                                 .help("Port to serve from")
+                                 .default_value("3000")
+                                 .takes_value(true)))
         .subcommand(SubCommand::with_name("watch")
-            .about("build, serve, and watch the project at the source dir")
-            .arg(Arg::with_name("port")
-                .short("P")
-                .long("port")
-                .value_name("INT")
-                .help("Port to serve from")
-                .default_value("3000")
-                .takes_value(true)))
+                        .about("build, serve, and watch the project at the source dir")
+                        .arg(Arg::with_name("port")
+                                 .short("P")
+                                 .long("port")
+                                 .value_name("INT")
+                                 .help("Port to serve from")
+                                 .default_value("3000")
+                                 .takes_value(true)))
         .subcommand(SubCommand::with_name("import")
-            .about("moves the contents of the dest folder to the gh-pages branch")
-            .arg(Arg::with_name("branch")
-                .short("b")
-                .long("branch")
-                .value_name("BRANCH")
-                .help("Branch that will be used to import the site to")
-                .default_value("gh-pages")
-                .takes_value(true))
-            .arg(Arg::with_name("message")
-                .short("m")
-                .long("message")
-                .value_name("COMMIT-MESSAGE")
-                .help("Commit message that will be used on import")
-                .default_value("cobalt site import")
-                .takes_value(true)))
+                        .about("moves the contents of the dest folder to the gh-pages branch")
+                        .arg(Arg::with_name("branch")
+                                 .short("b")
+                                 .long("branch")
+                                 .value_name("BRANCH")
+                                 .help("Branch that will be used to import the site to")
+                                 .default_value("gh-pages")
+                                 .takes_value(true))
+                        .arg(Arg::with_name("message")
+                                 .short("m")
+                                 .long("message")
+                                 .value_name("COMMIT-MESSAGE")
+                                 .help("Commit message that will be used on import")
+                                 .default_value("cobalt site import")
+                                 .takes_value(true)))
         .get_matches();
 
     let (command, matches) = match global_matches.subcommand() {
@@ -181,7 +181,9 @@ fn main() {
     let mut builder = LogBuilder::new();
     builder.format(format);
 
-    match matches.value_of("log-level").or_else(|| global_matches.value_of("log-level")) {
+    match matches
+              .value_of("log-level")
+              .or_else(|| global_matches.value_of("log-level")) {
         Some("error") => builder.filter(None, LogLevelFilter::Error),
         Some("warn") => builder.filter(None, LogLevelFilter::Warn),
         Some("debug") => builder.filter(None, LogLevelFilter::Debug),
@@ -200,7 +202,8 @@ fn main() {
 
     builder.init().unwrap();
 
-    let config_path = matches.value_of("config")
+    let config_path = matches
+        .value_of("config")
         .or_else(|| global_matches.value_of("config"))
         .unwrap_or(".cobalt.yml")
         .to_string();
@@ -222,22 +225,26 @@ fn main() {
         Default::default()
     };
 
-    config.source = matches.value_of("source")
+    config.source = matches
+        .value_of("source")
         .or_else(|| global_matches.value_of("source"))
         .map(str::to_string)
         .unwrap_or(config.source);
 
-    config.dest = matches.value_of("destination")
+    config.dest = matches
+        .value_of("destination")
         .or_else(|| global_matches.value_of("destination"))
         .map(str::to_string)
         .unwrap_or(config.dest);
 
-    config.layouts = matches.value_of("layouts")
+    config.layouts = matches
+        .value_of("layouts")
         .or_else(|| global_matches.value_of("layouts"))
         .map(str::to_string)
         .unwrap_or(config.layouts);
 
-    config.posts = matches.value_of("posts")
+    config.posts = matches
+        .value_of("posts")
         .or_else(|| global_matches.value_of("posts"))
         .map(str::to_string)
         .unwrap_or(config.posts);
@@ -269,8 +276,8 @@ fn main() {
 
         "clean" => {
             let cwd = std::env::current_dir().unwrap_or_else(|_| PathBuf::new());
-            let destdir = std::fs::canonicalize(PathBuf::from(&config.dest))
-                .unwrap_or_else(|_| PathBuf::new());
+            let destdir = PathBuf::from(&config.dest);
+            let destdir = std::fs::canonicalize(destdir).unwrap_or_else(|_| PathBuf::new());
             if cwd == destdir {
                 error!("Destination directory is same as current directory. \
                        Cancelling the operation");
@@ -301,7 +308,9 @@ fn main() {
             match w {
                 Ok(mut watcher) => {
                     // TODO: clean up this unwrap
-                    watcher.watch(&config.source, RecursiveMode::Recursive).unwrap();
+                    watcher
+                        .watch(&config.source, RecursiveMode::Recursive)
+                        .unwrap();
                     info!("Watching {:?} for changes", &config.source);
 
                     loop {
@@ -310,8 +319,8 @@ fn main() {
                                 trace!("file changed {:?}", event);
                                 if let Some(path) = event.path {
                                     // get where process was run from
-                                    let cwd = std::env::current_dir()
-                                        .unwrap_or_else(|_| PathBuf::new());
+                                    let cwd =
+                                        std::env::current_dir().unwrap_or_else(|_| PathBuf::new());
 
                                     // The final goal is to have a relative path. If we already
                                     // have a relative path, we still convert it to an abs path
@@ -452,9 +461,9 @@ fn serve(dest: &str, port: &str) {
     // bind the handle function and start serving
     if let Err(e) = http_server.handle(move |req: Request, res: Response| if let Err(e) =
         static_file_handler(&dest_clone, req, res) {
-        error!("{}", e);
-        std::process::exit(1);
-    }) {
+                                           error!("{}", e);
+                                           std::process::exit(1);
+                                       }) {
         error!("{}", e);
         std::process::exit(1);
     };

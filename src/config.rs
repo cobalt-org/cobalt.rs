@@ -96,7 +96,8 @@ impl Config {
         };
 
         if let Some(extensions) = yaml["template_extensions"].as_vec() {
-            config.template_extensions = extensions.iter()
+            config.template_extensions = extensions
+                .iter()
                 .filter_map(|k| k.as_str().map(|k| k.to_owned()))
                 .collect();
         };
@@ -110,9 +111,10 @@ impl Config {
         };
 
         if let Some(patterns) = yaml["ignore"].as_vec() {
-            for pattern in patterns.iter()
-                .filter_map(|k| k.as_str())
-                .filter_map(|k| Pattern::new(k).ok()) {
+            for pattern in patterns
+                    .iter()
+                    .filter_map(|k| k.as_str())
+                    .filter_map(|k| Pattern::new(k).ok()) {
                 config.ignore.push(pattern);
             }
         };

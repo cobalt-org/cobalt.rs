@@ -89,11 +89,12 @@ impl<'a> Iterator for DecoratedParser<'a> {
                 } else {
                     if let Start(cmarkTag::CodeBlock(ref info)) = item {
                         // set local highlighter, if found
-                        let cur_syntax = info.clone()
-                            .split(' ')
-                            .next()
-                            .and_then(|lang| SETUP.syntax_set.find_syntax_by_token(lang))
-                            .unwrap_or_else(|| SETUP.syntax_set.find_syntax_plain_text());
+                        let cur_syntax =
+                            info.clone()
+                                .split(' ')
+                                .next()
+                                .and_then(|lang| SETUP.syntax_set.find_syntax_by_token(lang))
+                                .unwrap_or_else(|| SETUP.syntax_set.find_syntax_plain_text());
                         self.h = Some(HighlightLines::new(&cur_syntax,
                                                           &SETUP.theme_set.themes[THEME_NAME]));
                         let snippet = start_coloured_html_snippet(&SETUP.theme_set.themes
@@ -121,14 +122,16 @@ pub fn initialize_codeblock(_: &str,
                             _: &LiquidOptions)
                             -> Result<Box<Renderable>, Error> {
 
-    let content = tokens.iter().fold("".to_owned(), |a, b| {
-        match *b {
-                Expression(_, ref text) |
-                Tag(_, ref text) |
-                Raw(ref text) => text,
-            }
-            .to_owned() + &a
-    });
+    let content = tokens
+        .iter()
+        .fold("".to_owned(), |a, b| {
+            match *b {
+                    Expression(_, ref text) |
+                    Tag(_, ref text) |
+                    Raw(ref text) => text,
+                }
+                .to_owned() + &a
+        });
 
     let lang = match arguments.iter().next() {
         Some(&Identifier(ref x)) => Some(x.clone()),
@@ -136,9 +139,9 @@ pub fn initialize_codeblock(_: &str,
     };
 
     Ok(Box::new(CodeBlock {
-        code: content,
-        lang: lang,
-    }))
+                    code: content,
+                    lang: lang,
+                }))
 }
 
 pub fn decorate_markdown<'a>(parser: Parser<'a>) -> DecoratedParser {
@@ -160,8 +163,7 @@ mod test {
     }
     ";
 
-    const RENDERED: &'static str =
-        "<pre style=\"background-color:#2b303b;\">\n<span \
+    const RENDERED: &'static str = "<pre style=\"background-color:#2b303b;\">\n<span \
          style=\"color:#b48ead;\">mod</span><span style=\"color:#c0c5ce;\"> </span><span \
          style=\"color:#c0c5ce;\">test</span><span style=\"color:#c0c5ce;\"> </span><span \
          style=\"color:#c0c5ce;\">{</span>\n<span style=\"color:#c0c5ce;\">        </span><span \
@@ -180,11 +182,13 @@ mod test {
     #[test]
     fn test_codeblock_renders_rust() {
         let mut options: LiquidOptions = Default::default();
-        options.blocks.insert("codeblock".to_string(), Box::new(initialize_codeblock));
+        options
+            .blocks
+            .insert("codeblock".to_string(), Box::new(initialize_codeblock));
         let template = liquid::parse(&format!("{{% codeblock rust %}}{}{{% endcodeblock %}}",
                                               CODE_BLOCK),
                                      options)
-            .unwrap();
+                .unwrap();
         let mut data = Context::new();
         let output = template.render(&mut data);
         assert_eq!(output.unwrap(), Some(RENDERED.to_string()));

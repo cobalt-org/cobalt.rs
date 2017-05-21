@@ -68,8 +68,8 @@ fn format_path(p: &str,
     let mut p = p.to_owned();
 
     if DATE_VARIABLES.is_match(&p) {
-        let date =
-            try!(date.ok_or(format!("Can not format file path without a valid date ({:?})", p)));
+        let date = try!(date.ok_or(format!("Can not format file path without a valid date ({:?})",
+                                           p)));
 
         p = p.replace(":year", &date.year().to_string());
         p = p.replace(":month", &format!("{:02}", &date.month()));
@@ -110,7 +110,9 @@ fn format_path(p: &str,
 
 /// The base-name without an extension.  Correlates to Jekyll's :name path tag
 fn file_stem(p: &Path) -> String {
-    p.file_stem().map(|os| os.to_string_lossy().into_owned()).unwrap_or_else(|| "".to_owned())
+    p.file_stem()
+        .map(|os| os.to_string_lossy().into_owned())
+        .unwrap_or_else(|| "".to_owned())
 }
 
 /// Create a slug for a given file.  Correlates to Jekyll's :slug path tag
@@ -124,7 +126,11 @@ fn title_case(s: &str) -> String {
     let mut c = s.chars();
     match c.next() {
         None => String::new(),
-        Some(f) => f.to_uppercase().chain(c.flat_map(|t| t.to_lowercase())).collect(),
+        Some(f) => {
+            f.to_uppercase()
+                .chain(c.flat_map(|t| t.to_lowercase()))
+                .collect()
+        }
     }
 }
 
@@ -179,8 +185,11 @@ impl Document {
 
             if !yaml_result.is_empty() {
                 let yaml_attributes = try!(yaml_result[0]
-                    .as_hash()
-                    .ok_or_else(|| format!("Incorrect front matter format in {:?}", file_path)));
+                             .as_hash()
+                             .ok_or_else(|| {
+                                             format!("Incorrect front matter format in {:?}",
+                                                     file_path)
+                                         }));
 
                 for (key, value) in yaml_attributes {
                     if let Some(v) = yaml_to_liquid(value) {
@@ -198,8 +207,9 @@ impl Document {
             content
         };
 
-        if let Value::Bool(val) = *attributes.entry("is_post".to_owned())
-            .or_insert_with(|| Value::Bool(is_post)) {
+        if let Value::Bool(val) = *attributes
+                                       .entry("is_post".to_owned())
+                                       .or_insert_with(|| Value::Bool(is_post)) {
             is_post = val;
         }
 
@@ -209,30 +219,38 @@ impl Document {
             false
         };
 
-        let date = attributes.get("date")
+        let date = attributes
+            .get("date")
             .and_then(|d| d.as_str())
             .and_then(|d| DateTime::parse_from_str(d, "%d %B %Y %H:%M:%S %z").ok());
 
         let file_stem = file_stem(new_path);
         let slug = slugify(&file_stem);
-        attributes.entry("title".to_owned())
+        attributes
+            .entry("title".to_owned())
             .or_insert_with(|| Value::Str(titleize_slug(slug.as_str())));
-        attributes.entry("slug".to_owned())
+        attributes
+            .entry("slug".to_owned())
             .or_insert_with(|| Value::Str(slug));
 
         let mut markdown = false;
         if let Value::Str(ref ext) =
-            *attributes.entry("ext".to_owned())
-                .or_insert_with(|| {
-                    Value::Str(new_path.extension()
-                        .and_then(|os| os.to_str())
-                        .unwrap_or("")
-                        .to_owned())
-                }) {
+            *attributes
+                 .entry("ext".to_owned())
+                 .or_insert_with(|| {
+                                     Value::Str(new_path
+                                                    .extension()
+                                                    .and_then(|os| os.to_str())
+                                                    .unwrap_or("")
+                                                    .to_owned())
+                                 }) {
             markdown = ext == "md";
         }
 
-        let layout = attributes.get("extends").and_then(|l| l.as_str()).map(|x| x.to_owned());
+        let layout = attributes
+            .get("extends")
+            .and_then(|l| l.as_str())
+            .map(|x| x.to_owned());
 
         let mut path_buf = PathBuf::from(new_path);
         path_buf.set_extension("html");
@@ -250,8 +268,12 @@ impl Document {
             }
         };
 
-        let path = try!(path_buf.to_str()
-            .ok_or_else(|| format!("Cannot convert pathname {:?} to UTF-8", path_buf)));
+        let path = try!(path_buf
+                            .to_str()
+                            .ok_or_else(|| {
+                                            format!("Cannot convert pathname {:?} to UTF-8",
+                                                    path_buf)
+                                        }));
 
         // Swap back slashes to forward slashes to ensure the URL's are valid on Windows
         attributes.insert("path".to_owned(), Value::Str(path.replace("\\", "/")));
@@ -285,7 +307,10 @@ impl Document {
         };
 
         rss::Item {
-            title: self.attributes.get("title").and_then(|s| s.as_str()).map(|s| s.to_owned()),
+            title: self.attributes
+                .get("title")
+                .and_then(|s| s.as_str())
+                .map(|s| s.to_owned()),
             link: Some(link),
             guid: Some(guid),
             pub_date: self.date.map(|date| date.to_rfc2822()),
@@ -308,9 +333,13 @@ impl Document {
     /// rendering content or excerpt.
     #[cfg(all(feature="syntax-highlight", not(windows)))]
     fn render_html(&self, content: &str, context: &mut Context, source: &Path) -> Result<String> {
-        let mut options =
-            LiquidOptions { file_system: Some(source.to_owned()), ..Default::default() };
-        options.blocks.insert("highlight".to_string(), Box::new(initialize_codeblock));
+        let mut options = LiquidOptions {
+            file_system: Some(source.to_owned()),
+            ..Default::default()
+        };
+        options
+            .blocks
+            .insert("highlight".to_string(), Box::new(initialize_codeblock));
         let template = try!(liquid::parse(content, options));
         let mut html = try!(template.render(context)).unwrap_or(String::new());
 
@@ -329,7 +358,10 @@ impl Document {
     }
     #[cfg(any(not(feature="syntax-highlight"), windows))]
     fn render_html(&self, content: &str, context: &mut Context, source: &Path) -> Result<String> {
-        let options = LiquidOptions { file_system: Some(source.to_owned()), ..Default::default() };
+        let options = LiquidOptions {
+            file_system: Some(source.to_owned()),
+            ..Default::default()
+        };
         let template = try!(liquid::parse(content, options));
         let mut html = try!(template.render(context)).unwrap_or_default();
 
@@ -388,7 +420,8 @@ impl Document {
             }
         };
 
-        self.attributes.insert("excerpt".to_owned(), Value::Str(excerpt_html));
+        self.attributes
+            .insert("excerpt".to_owned(), Value::Str(excerpt_html));
         Ok(())
     }
 
@@ -408,7 +441,8 @@ impl Document {
                   layouts_cache: &mut HashMap<String, String>)
                   -> Result<String> {
         let content_html = try!(self.render_html(&self.content, context, source));
-        self.attributes.insert("content".to_owned(), Value::Str(content_html.clone()));
+        self.attributes
+            .insert("content".to_owned(), Value::Str(content_html.clone()));
         context.set_val("content", Value::Str(content_html.clone()));
 
         if let Some(ref layout) = self.layout {
@@ -425,8 +459,10 @@ impl Document {
                 Entry::Occupied(occupied) => occupied.into_mut(),
             };
 
-            let options =
-                LiquidOptions { file_system: Some(source.to_owned()), ..Default::default() };
+            let options = LiquidOptions {
+                file_system: Some(source.to_owned()),
+                ..Default::default()
+            };
             let template = try!(liquid::parse(layout_data_ref, options));
             Ok(try!(template.render(context)).unwrap_or_default())
         } else {
