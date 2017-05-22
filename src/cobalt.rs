@@ -1,45 +1,17 @@
 use std::fs::{self, File};
 use std::collections::HashMap;
 use std::io::Write;
-use std::path::{self, Path};
+use std::path::Path;
 use std::ffi::OsStr;
 use liquid::Value;
-use walkdir::{WalkDir, DirEntry, WalkDirIterator};
-use document::Document;
-use error::{ErrorKind, Result};
-use config::Config;
 use chrono::{UTC, FixedOffset};
 use chrono::offset::TimeZone;
 use rss::{Channel, Rss};
-use glob::Pattern;
 
-fn ignore_filter(entry: &DirEntry, source: &Path, ignore: &[Pattern]) -> bool {
-    if compare_paths(entry.path(), source) {
-        return true;
-    }
-    let path = entry.path();
-    let path = path.strip_prefix(&source).unwrap_or(path);
-    let file_name = entry.file_name().to_str().unwrap_or("");
-    if file_name.starts_with('_') || file_name.starts_with('.') {
-        return false;
-    }
-    !ignore.iter().any(|p| p.matches_path(path))
-}
-
-fn compare_paths(a: &Path, b: &Path) -> bool {
-    match (fs::canonicalize(a), fs::canonicalize(b)) {
-        (Ok(p), Ok(p2)) => p == p2,
-        _ => false,
-    }
-}
-
-/// Checks if one path is the starting point of another path.
-fn starts_with_path(this: &Path, starts_with: &Path) -> bool {
-    match (fs::canonicalize(this), fs::canonicalize(starts_with)) {
-        (Ok(p), Ok(p2)) => p.starts_with(p2),
-        _ => false,
-    }
-}
+use document::Document;
+use error::{ErrorKind, Result};
+use config::Config;
+use files::FilesBuilder;
 
 /// The primary build function that transforms a directory into a site
 pub fn build(config: &Config) -> Result<()> {
@@ -67,62 +39,76 @@ pub fn build(config: &Config) -> Result<()> {
 
     let mut documents = vec![];
 
-    let walker = WalkDir::new(&source)
-        .into_iter()
-        .filter_entry(|e| {
-                          (ignore_filter(e, source, &config.ignore) ||
-                           compare_paths(e.path(), &posts_path)) &&
-                          !compare_paths(e.path(), dest)
-                      })
-        .filter_map(|e| e.ok());
+    let ignore_dest = {
+        let rel_dest = dest.strip_prefix(source);
+        if let Ok(rel_dest) = rel_dest {
+            let ignore_dest = rel_dest.join("**/*");
+            let ignore_dest = ignore_dest
+                .to_str()
+                .ok_or_else(|| format!("Cannot convert pathname {:?} to UTF-8", rel_dest))?
+                .to_owned();
+            Some(ignore_dest)
+        } else {
+            None
+        }
+    };
 
-    for entry in walker {
-        let entry_path = entry.path();
-        let extension = &entry_path.extension().unwrap_or_else(|| OsStr::new(""));
-        if template_extensions.contains(extension) {
-            // if the document is in the posts folder it's considered a post
-            let is_post = entry_path
-                .parent()
-                .map(|p| starts_with_path(p, &posts_path))
-                .unwrap_or(false);
+    let mut page_files = FilesBuilder::new(source)?;
+    page_files
+        .add_ignore(&format!("!{}", config.posts))?
+        .add_ignore(&format!("!{}/**", config.posts))?
+        .add_ignore(&format!("{}/**/_*", config.posts))?
+        .add_ignore(&format!("{}/**/_*/**", config.posts))?;
+    for line in &config.ignore {
+        page_files.add_ignore(line.as_str())?;
+    }
+    if let Some(ref ignore_dest) = ignore_dest {
+        page_files.add_ignore(ignore_dest)?;
+    }
+    let page_files = page_files.build()?;
+    for file_path in page_files
+            .files()
+            .filter(|p| {
+                        template_extensions
+                            .contains(&p.extension().unwrap_or_else(|| OsStr::new("")))
+                    }) {
+        let src_path = source.join(file_path.as_path());
 
-            let new_path = entry_path
-                .strip_prefix(source)
-                .expect("Entry not in source folder");
+        let new_path = source.join(file_path);
+        let new_path = new_path
+            .strip_prefix(source)
+            .expect("Entry not in source folder");
 
-            let doc = try!(Document::parse(entry_path, new_path, is_post, &config.post_path));
-            if !doc.is_draft || config.include_drafts {
-                documents.push(doc);
-            }
+        // if the document is in the posts folder it's considered a post
+        let is_post = src_path.starts_with(posts_path.as_path());
+
+        let doc = Document::parse(src_path.as_path(), new_path, is_post, &config.post_path)?;
+        if !doc.is_draft || config.include_drafts {
+            documents.push(doc);
         }
     }
 
     if config.include_drafts {
-        let drafts = source.join(&config.drafts);
+        let drafts_root = source.join(&config.drafts);
+        let mut draft_files = FilesBuilder::new(drafts_root.as_path())?;
+        for line in &config.ignore {
+            draft_files.add_ignore(line.as_str())?;
+        }
+        let draft_files = draft_files.build()?;
+        for file_path in draft_files
+                .files()
+                .filter(|p| {
+                            template_extensions
+                                .contains(&p.extension().unwrap_or_else(|| OsStr::new("")))
+                        }) {
+            let src_path = drafts_root.join(file_path.as_path());
 
-        let walker = WalkDir::new(&drafts)
-            .into_iter()
-            .filter_entry(|e| {
-                              (ignore_filter(e, source, &config.ignore) ||
-                               compare_paths(e.path(), &drafts)) &&
-                              !compare_paths(e.path(), dest)
-                          })
-            .filter_map(|e| e.ok());
-
-        for entry in walker {
-            let entry_path = entry.path();
-            let extension = &entry_path.extension().unwrap_or_else(|| OsStr::new(""));
-            let new_path =
-                posts_path.join(entry_path
-                                    .strip_prefix(&drafts)
-                                    .expect("Draft not in draft folder!"));
+            let new_path = posts_path.join(file_path);
             let new_path = new_path
                 .strip_prefix(source)
                 .expect("Entry not in source folder");
-            if template_extensions.contains(extension) {
-                let doc = try!(Document::parse(entry_path, new_path, true, &config.post_path));
-                documents.push(doc);
-            }
+            let doc = try!(Document::parse(src_path.as_path(), new_path, true, &config.post_path));
+            documents.push(doc);
         }
     }
 
@@ -194,58 +180,36 @@ pub fn build(config: &Config) -> Result<()> {
     }
 
     // copy all remaining files in the source to the destination
-    if !compare_paths(source, dest) {
+    {
         info!("Copying remaining assets");
-        let source_str =
-            try!(source
-                     .to_str()
-                     .ok_or_else(|| format!("Cannot convert pathname {:?} to UTF-8", source)));
-
-        let walker = WalkDir::new(&source)
-            .into_iter()
-            .filter_entry(|e| {
-                ignore_filter(e, source, &config.ignore) &&
-                !template_extensions
-                     .contains(&e.path().extension().unwrap_or_else(|| OsStr::new(""))) &&
-                !compare_paths(e.path(), dest)
-            })
-            .filter_map(|e| e.ok());
-
-        for entry in walker {
-            let entry_path = try!(entry
-                         .path()
-                         .to_str()
-                         .ok_or_else(|| {
-                                         format!("Cannot convert pathname {:?} to UTF-8",
-                                                 entry.path())
-                                     }));
-
-            let relative = if source_str == "." {
-                entry_path
-            } else {
-                try!(entry_path
-                         .split(source_str)
-                         .last()
-                         .map(|s| s.trim_left_matches(path::MAIN_SEPARATOR))
-                         .ok_or("Empty path"))
-            };
-
-            if try!(entry.metadata()).is_dir() {
-                try!(fs::create_dir_all(&dest.join(relative)));
-                debug!("Created new directory {:?}", dest.join(relative));
-            } else {
-                if let Some(parent) = Path::new(relative).parent() {
-                    try!(fs::create_dir_all(&dest.join(parent)));
+        let mut asset_files = FilesBuilder::new(source)?;
+        for line in &config.ignore {
+            asset_files.add_ignore(line.as_str())?;
+        }
+        if let Some(ref ignore_dest) = ignore_dest {
+            asset_files.add_ignore(ignore_dest)?;
+        }
+        let asset_files = asset_files.build()?;
+        for file_path in asset_files
+                .files()
+                .filter(|p| {
+                            !template_extensions
+                                 .contains(&p.extension().unwrap_or_else(|| OsStr::new("")))
+                        }) {
+            {
+                let parent_dir = file_path.parent();
+                if let Some(parent_dir) = parent_dir {
+                    let parent_dir = dest.join(parent_dir);
+                    fs::create_dir_all(parent_dir.as_path())?;
+                    debug!("Created new directory {:?}", parent_dir);
                 }
-
-                try!(fs::copy(entry.path(), &dest.join(relative)).map_err(|e| {
-                    format!("Could not copy {:?} into {:?}: {}",
-                            entry.path(),
-                            dest.join(relative),
-                            e)
-                }));
-                debug!("Copied {:?} to {:?}", entry.path(), dest.join(relative));
             }
+            let src_file = source.join(file_path.as_path());
+            let dest_file = dest.join(file_path);
+
+            fs::copy(src_file.as_path(), dest_file.as_path())
+                .map_err(|e| format!("Could not copy {:?} into {:?}: {}", src_file, dest_file, e))?;
+            debug!("Copied {:?} to {:?}", src_file, dest_file);
         }
     }
 
@@ -306,18 +270,4 @@ fn create_document_file<T: AsRef<Path>, R: AsRef<Path>>(content: &str,
     try!(file.write_all(content.as_bytes()));
     info!("Created {}", file_path.display());
     Ok(())
-}
-
-// The tests are taken from tests/fixtures/`posts_in_subfolder`/
-#[test]
-fn test_starts_with_path() {
-    let posts_folder = Path::new("tests/fixtures/posts_in_subfolder/posts");
-
-    assert!(!starts_with_path(Path::new("tests/fixtures/posts_in_subfolder"), posts_folder));
-    assert!(starts_with_path(Path::new("tests/fixtures/posts_in_subfolder/posts"),
-                             posts_folder));
-    assert!(starts_with_path(Path::new("tests/fixtures/posts_in_subfolder/posts/20170103"),
-                             posts_folder));
-    assert!(starts_with_path(Path::new("tests/fixtures/posts_in_subfolder/posts/2017/01/08"),
-                             posts_folder));
 }

@@ -13,7 +13,6 @@ extern crate cobalt;
 extern crate clap;
 extern crate env_logger;
 extern crate notify;
-extern crate glob;
 extern crate ghp;
 
 extern crate hyper;
@@ -29,7 +28,6 @@ use env_logger::LogBuilder;
 use hyper::server::{Server, Request, Response};
 use hyper::uri::RequestUri;
 use ghp::import_dir;
-use glob::Pattern;
 use cobalt::create_new_project;
 
 use notify::{Watcher, RecursiveMode, raw_watcher};
@@ -317,30 +315,8 @@ fn main() {
                         match rx.recv() {
                             Ok(event) => {
                                 trace!("file changed {:?}", event);
-                                if let Some(path) = event.path {
-                                    // get where process was run from
-                                    let cwd =
-                                        std::env::current_dir().unwrap_or_else(|_| PathBuf::new());
-
-                                    // The final goal is to have a relative path. If we already
-                                    // have a relative path, we still convert it to an abs path
-                                    // first to handle prefix "./" correctly.
-                                    let abs_path = if path.is_absolute() {
-                                        path.clone()
-                                    } else {
-                                        cwd.join(&path)
-                                    };
-                                    let rel_path = abs_path.strip_prefix(&cwd).unwrap_or(&path);
-
-                                    // check whether this path has been marked as ignored in config
-                                    let rel_path_matches =
-                                        |pattern| Pattern::matches_path(pattern, rel_path);
-                                    let path_ignored = &config.ignore.iter().any(rel_path_matches);
-
-                                    if !path_ignored {
-                                        build(&config);
-                                    }
-                                }
+                                // TODO make this check for supported files again
+                                build(&config);
                             }
 
                             Err(e) => {
