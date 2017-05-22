@@ -22,6 +22,7 @@ pub struct Config {
     pub description: Option<String>,
     pub link: Option<String>,
     pub ignore: Vec<Pattern>,
+    pub include: Vec<Pattern>,
     pub excerpt_separator: String,
 }
 
@@ -42,6 +43,7 @@ impl Default for Config {
             description: None,
             link: None,
             ignore: vec![],
+            include: vec![],
             excerpt_separator: "\n\n".to_owned(),
         }
     }
@@ -116,6 +118,15 @@ impl Config {
                     .filter_map(|k| k.as_str())
                     .filter_map(|k| Pattern::new(k).ok()) {
                 config.ignore.push(pattern);
+            }
+        };
+
+        if let Some(patterns) = yaml["include"].as_vec() {
+            for pattern in patterns
+                    .iter()
+                    .filter_map(|k| k.as_str())
+                    .filter_map(|k| Pattern::new(k).ok()) {
+                config.include.push(pattern);
             }
         };
 

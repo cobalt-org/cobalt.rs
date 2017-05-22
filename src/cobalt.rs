@@ -13,12 +13,18 @@ use chrono::offset::TimeZone;
 use rss::{Channel, Rss};
 use glob::Pattern;
 
-fn ignore_filter(entry: &DirEntry, source: &Path, ignore: &[Pattern]) -> bool {
+fn ignore_filter(entry: &DirEntry, source: &Path, ignore: &[Pattern], include: &[Pattern]) -> bool {
+
     if compare_paths(entry.path(), source) {
         return true;
     }
     let path = entry.path();
     let path = path.strip_prefix(&source).unwrap_or(path);
+
+    if include.iter().any(|p| p.matches_path(path)) {
+        return true;
+    }
+
     let file_name = entry.file_name().to_str().unwrap_or("");
     if file_name.starts_with('_') || file_name.starts_with('.') {
         return false;
@@ -70,7 +76,7 @@ pub fn build(config: &Config) -> Result<()> {
     let walker = WalkDir::new(&source)
         .into_iter()
         .filter_entry(|e| {
-                          (ignore_filter(e, source, &config.ignore) ||
+                          (ignore_filter(e, source, &config.ignore, &config.include) ||
                            compare_paths(e.path(), &posts_path)) &&
                           !compare_paths(e.path(), dest)
                       })
@@ -103,7 +109,7 @@ pub fn build(config: &Config) -> Result<()> {
         let walker = WalkDir::new(&drafts)
             .into_iter()
             .filter_entry(|e| {
-                              (ignore_filter(e, source, &config.ignore) ||
+                              (ignore_filter(e, source, &config.ignore, &config.include) ||
                                compare_paths(e.path(), &drafts)) &&
                               !compare_paths(e.path(), dest)
                           })
@@ -204,7 +210,7 @@ pub fn build(config: &Config) -> Result<()> {
         let walker = WalkDir::new(&source)
             .into_iter()
             .filter_entry(|e| {
-                ignore_filter(e, source, &config.ignore) &&
+                ignore_filter(e, source, &config.ignore, &config.include) &&
                 !template_extensions
                      .contains(&e.path().extension().unwrap_or_else(|| OsStr::new(""))) &&
                 !compare_paths(e.path(), dest)
