@@ -1,4 +1,6 @@
 #[macro_use]
+extern crate difference;
+#[macro_use]
 extern crate assert_cli;
 #[macro_use]
 extern crate lazy_static;
@@ -48,12 +50,14 @@ pub fn log_levels() {
     env::set_current_dir(CWD.join("tests/fixtures/example")).unwrap();
 
     let output1 = assert_cli!(&BIN, &["build", "--trace"] => Success).unwrap();
+    let output1_stderr = str::from_utf8(&output1.stderr).to_owned().unwrap();
     assert_contains!(&output1.stderr, "[trace]");
     assert_contains!(&output1.stderr, "[debug]");
     assert_contains!(&output1.stderr, "[info]");
 
     let output2 = assert_cli!(&BIN, &["build", "-L", "trace"] => Success).unwrap();
-    assert_eq!(output1.stderr, output2.stderr);
+    let output2_stderr = str::from_utf8(&output2.stderr).to_owned().unwrap();
+    assert_diff!(&output1_stderr, &output2_stderr, " ", 0);
 
     let output = assert_cli!(&BIN, &["build", "-L", "debug"] => Success).unwrap();
     assert_contains_not!(&output.stderr, "[trace]");
