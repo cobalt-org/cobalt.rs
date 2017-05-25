@@ -89,26 +89,30 @@ pub fn create_new_project<P: AsRef<Path>>(dest: P) -> Result<()> {
     Ok(())
 }
 
-pub fn create_new_post(name: &String, config: &Config) -> Result<()> {
+pub fn create_new_document(doc_type: &str, name: &str, config: &Config) -> Result<()> {
     let path = Path::new(&config.source);
     let full_path = &path.join(&config.posts).join(name);
 
-    try!(create_file(full_path, post_1_md));
+    match doc_type {
+        "page" => {
+            println!("page exists? {:?}", Path::new(name).exists());
+            // if !Path::new(name).exists() {
+                try!(create_file(name, index_liquid))
+            // } else {
+                // return Err();
+            // }
+        },
+        "post" => {
+            println!("post exists? {:?}", Path::new(full_path).exists());
 
-    Ok(())
-}
-
-pub fn create_new_layout(name: &String, config: &Config) -> Result<()> {
-    let path = Path::new(&config.source);
-    let full_path = &path.join(&config.layouts).join(name);
-
-    try!(create_file(full_path, post_liquid));
-
-    Ok(())
-}
-
-pub fn create_new_page(name: &String) -> Result<()> {
-    try!(create_file(name, index_liquid));
+        //     if !Path::new(full_path).exists() {
+                try!(create_file(full_path, post_1_md))
+        //     } else {
+        //         error!("here");
+        //     }
+        },
+        _ => println!("Can only create post or page")
+    }
 
     Ok(())
 }

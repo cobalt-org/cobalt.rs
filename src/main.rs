@@ -29,7 +29,7 @@ use hyper::server::{Server, Request, Response};
 use hyper::uri::RequestUri;
 use ghp::import_dir;
 use glob::Pattern;
-use cobalt::{create_new_project, create_new_post, create_new_layout, create_new_page};
+use cobalt::{create_new_project, create_new_document};
 
 use notify::{Watcher, RecursiveMode, raw_watcher};
 use std::sync::mpsc::channel;
@@ -117,7 +117,8 @@ fn main() {
                 .takes_value(true))
             .arg(Arg::with_name("FILENAME")
                 .help("File to create")
-                .default_value("new_post.md")
+                .default_value_if("FILETYPE", Some("page"), "new_page.md")
+                .default_value_if("FILETYPE", Some("post"), "new_post.md")
                 .takes_value(true)))
 
         .subcommand(SubCommand::with_name("build")
@@ -277,50 +278,16 @@ fn main() {
 
         "new" => {
             let filetype = matches.value_of("FILETYPE").unwrap();
-            let mut filename = matches.value_of("FILENAME").unwrap();
+            let filename = matches.value_of("FILENAME").unwrap();
 
-            match filetype {
-                "layout" => {
-                    if filename == "new_post.md" {
-                        filename = "new_layout.liquid";
-                    }
-                    match create_new_layout(&filename.to_string(), &config) {
-                        Ok(_) => info!("Created new layout at {}{}/{}",
-                                       &config.source,
-                                       &config.layouts,
-                                       filename),
-                        Err(e) => {
-                            error!("{}", e);
-                            error!("Could not create a layout");
-                            std::process::exit(1);
-                        }
-                    }
-                },
-                "page" => {
-                    if filename == "new_post.md" {
-                        filename = "new_page.md"
-                    }
-                    match create_new_page(&filename.to_string()) {
-                        Ok(_) => info!("Created new page at {}", filename),
-                        Err(e) => {
-                            error!("{}", e);
-                            error!("Could not create a page");
-                            std::process::exit(1);
-                        }
-                    }
-                },
-                _ => {
-                    match create_new_post(&filename.to_string(), &config) {
-                        Ok(_) => info!("Created new post at {}{}/{}",
-                                       &config.source,
-                                       &config.posts,
-                                       filename),
-                        Err(e) => {
-                            error!("{}", e);
-                            error!("Could not create a new post");
-                            std::process::exit(1);
-                        }
-                    }
+            match create_new_document(&filetype, &filename, &config) {
+                Ok(_) => info!("Created new {} {}",
+                               filetype,
+                               filename),
+                Err(e) => {
+                    error!("{}", e);
+                    error!("Could not create {}", filetype);
+                    std::process::exit(1);
                 }
             }
         }
