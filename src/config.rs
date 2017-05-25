@@ -2,7 +2,6 @@ use std::default::Default;
 use std::path::Path;
 use std::fs::File;
 use std::io::Read;
-use glob::Pattern;
 use error::Result;
 use yaml_rust::YamlLoader;
 
@@ -21,7 +20,7 @@ pub struct Config {
     pub name: Option<String>,
     pub description: Option<String>,
     pub link: Option<String>,
-    pub ignore: Vec<Pattern>,
+    pub ignore: Vec<String>,
     pub excerpt_separator: String,
 }
 
@@ -111,12 +110,11 @@ impl Config {
         };
 
         if let Some(patterns) = yaml["ignore"].as_vec() {
-            for pattern in patterns
-                    .iter()
-                    .filter_map(|k| k.as_str())
-                    .filter_map(|k| Pattern::new(k).ok()) {
-                config.ignore.push(pattern);
-            }
+            config.ignore = patterns
+                .iter()
+                .filter_map(|k| k.as_str())
+                .map(|k| k.to_owned())
+                .collect();
         };
 
         if let Some(excerpt_separator) = yaml["excerpt_separator"].as_str() {

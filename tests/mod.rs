@@ -49,8 +49,10 @@ fn run_test(name: &str) -> Result<(), cobalt::Error> {
                 .read_to_string(&mut original)
                 .expect("Could not read to string");
 
+            let dest_file = Path::new(config.dest.as_str()).join(&relative);
+            assert!(dest_file.exists(), "{:?} doesn't exist", dest_file);
             let mut created = String::new();
-            File::open(&Path::new(&config.dest).join(&relative))
+            File::open(dest_file.as_path())
                 .expect("Comparison error")
                 .read_to_string(&mut created)
                 .expect("Could not read to string");
@@ -65,15 +67,15 @@ fn run_test(name: &str) -> Result<(), cobalt::Error> {
             .filter(|e| e.file_type().is_file());
 
         for entry in walker {
-            let relative = entry
+            let extra_file = entry
                 .path()
                 .strip_prefix(&config.dest)
                 .expect("Comparison error");
-            let relative = Path::new(&target).join(&relative);
+            let src_file = Path::new(&target).join(&extra_file);
 
-            File::open(&relative).expect(&format!("File {:?} does not exist in reference ({:?}).",
+            File::open(&src_file).expect(&format!("File {:?} does not exist in reference ({:?}).",
                                                   entry.path(),
-                                                  relative));
+                                                  src_file));
         }
     }
 

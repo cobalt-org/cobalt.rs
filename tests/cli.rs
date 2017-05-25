@@ -2,10 +2,13 @@
 extern crate assert_cli;
 #[macro_use]
 extern crate lazy_static;
+extern crate tempdir;
 
 use std::env;
 use std::str;
 use std::path::{Path, PathBuf};
+
+use tempdir::TempDir;
 
 static EMPTY: &'static [&'static str] = &[];
 lazy_static! {
@@ -44,39 +47,115 @@ pub fn invalid_calls() {
 }
 
 #[test]
-pub fn log_levels() {
+pub fn log_levels_trace() {
     env::set_current_dir(CWD.join("tests/fixtures/example")).unwrap();
 
-    let output1 = assert_cli!(&BIN, &["build", "--trace"] => Success).unwrap();
+    let destdir = TempDir::new("trace").expect("Tempdir not created");
+    let dest_param = destdir
+        .path()
+        .to_str()
+        .expect("Can't convert destdir to str")
+        .to_owned();
+
+    let output1 = assert_cli!(&BIN, &["build", "-L", "trace", "-d", &dest_param] => Success)
+        .unwrap();
     assert_contains!(&output1.stderr, "[trace]");
     assert_contains!(&output1.stderr, "[debug]");
     assert_contains!(&output1.stderr, "[info]");
 
-    let output2 = assert_cli!(&BIN, &["build", "-L", "trace"] => Success).unwrap();
-    assert_eq!(output1.stderr, output2.stderr);
+    destdir.close().unwrap();
+}
 
-    let output = assert_cli!(&BIN, &["build", "-L", "debug"] => Success).unwrap();
+#[test]
+pub fn log_levels_trace_alias() {
+    env::set_current_dir(CWD.join("tests/fixtures/example")).unwrap();
+
+    let destdir = TempDir::new("trace_alias").expect("Tempdir not created");
+    let dest_param = destdir
+        .path()
+        .to_str()
+        .expect("Can't convert destdir to str")
+        .to_owned();
+
+    let output1 = assert_cli!(&BIN, &["build", "--trace", "-d", &dest_param] => Success).unwrap();
+    assert_contains!(&output1.stderr, "[trace]");
+    assert_contains!(&output1.stderr, "[debug]");
+    assert_contains!(&output1.stderr, "[info]");
+
+    destdir.close().unwrap();
+}
+
+#[test]
+pub fn log_levels_debug() {
+    env::set_current_dir(CWD.join("tests/fixtures/example")).unwrap();
+
+    let destdir = TempDir::new("debug").expect("Tempdir not created");
+    let dest_param = destdir
+        .path()
+        .to_str()
+        .expect("Can't convert destdir to str")
+        .to_owned();
+
+    let output = assert_cli!(&BIN, &["build", "-L", "debug", "-d", &dest_param] => Success)
+        .unwrap();
     assert_contains_not!(&output.stderr, "[trace]");
     assert_contains!(&output.stderr, "[debug]");
     assert_contains!(&output.stderr, "[info]");
 
-    let output = assert_cli!(&BIN, &["build", "-L", "info"] => Success).unwrap();
+    destdir.close().unwrap();
+}
+
+#[test]
+pub fn log_levels_info() {
+    env::set_current_dir(CWD.join("tests/fixtures/example")).unwrap();
+
+    let destdir = TempDir::new("info").expect("Tempdir not created");
+    let dest_param = destdir
+        .path()
+        .to_str()
+        .expect("Can't convert destdir to str")
+        .to_owned();
+
+    let output = assert_cli!(&BIN, &["build", "-L", "info", "-d", &dest_param] => Success).unwrap();
     assert_contains_not!(&output.stderr, "[trace]");
     assert_contains_not!(&output.stderr, "[debug]");
     assert_contains!(&output.stderr, "[info]");
 
-    assert_cli!(&BIN, &["build", "--silent"] => Success, "").unwrap();
+    destdir.close().unwrap();
+}
+
+#[test]
+pub fn log_levels_silent() {
+    env::set_current_dir(CWD.join("tests/fixtures/example")).unwrap();
+
+    let destdir = TempDir::new("silent").expect("Tempdir not created");
+    let dest_param = destdir
+        .path()
+        .to_str()
+        .expect("Can't convert destdir to str")
+        .to_owned();
+
+    assert_cli!(&BIN, &["build", "--silent", "-d", &dest_param] => Success, "").unwrap();
+
+    destdir.close().unwrap();
 }
 
 #[test]
 pub fn clean() {
     env::set_current_dir(CWD.join("tests/fixtures/example")).unwrap();
-    assert_cli!(&BIN, &["build", "-d", "./test_dest"] => Success).unwrap();
-    assert_eq!(Path::new("./test_dest/").is_dir(), true);
 
-    let output = assert_cli!(&BIN, &["clean", "-d", "./test_dest"] => Success).unwrap();
-    assert_eq!(Path::new("./test_dest").is_dir(), false);
-    assert_contains!(&output.stderr, "directory \"./test_dest\" removed");
+    let destdir = TempDir::new("clean").expect("Tempdir not created");
+    let dest_param = destdir
+        .path()
+        .to_str()
+        .expect("Can't convert destdir to str")
+        .to_owned();
+
+    assert_cli!(&BIN, &["build", "-d", &dest_param] => Success).unwrap();
+    assert_eq!(destdir.path().is_dir(), true);
+
+    assert_cli!(&BIN, &["clean", "-d", &dest_param] => Success).unwrap();
+    assert_eq!(destdir.path().is_dir(), false);
 }
 
 #[cfg(not(windows))]
