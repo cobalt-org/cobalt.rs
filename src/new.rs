@@ -96,7 +96,7 @@ pub fn create_new_document(doc_type: &str, name: &str, config: &Config) -> Resul
     match doc_type {
         "page" => create_file(name, index_liquid)?,
         "post" => create_file(full_path, post_1_md)?,
-        _ => bail!("Can only create post or page")
+        _ => bail!("Unsupported document type {}", doc_type)
     }
 
     Ok(())
