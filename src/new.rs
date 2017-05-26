@@ -94,24 +94,8 @@ pub fn create_new_document(doc_type: &str, name: &str, config: &Config) -> Resul
     let full_path = &path.join(&config.posts).join(name);
 
     match doc_type {
-        "page" => {
-            match Path::new(name).exists() {
-                false => {
-                    info!("Created new {} {}", doc_type, name);
-                    try!(create_file(name, index_liquid))
-                },
-                true => error!("{} already exists", name)
-            };
-        },
-        "post" => {
-            match Path::new(full_path).exists() {
-                false => {
-                    info!("Created new {} {}", doc_type, name);
-                    try!(create_file(full_path, post_1_md))
-                },
-                true => error!("{} already exists", name)
-            };
-        },
+        "page" => create_file(name, index_liquid)?,
+        "post" => create_file(full_path, post_1_md)?,
         _ => println!("Can only create post or page")
     }
 
@@ -129,9 +113,12 @@ fn create_folder<P: AsRef<Path>>(path: P) -> Result<()> {
 fn create_file<P: AsRef<Path>>(name: P, content: &[u8]) -> Result<()> {
     trace!("Creating file {:?}", &name.as_ref());
 
-    let mut file = try!(OpenOptions::new().write(true).create(true).open(name));
+    let mut file = try!(OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .open(name));
 
-    try!(file.write_all(content));
+    file.write_all(content)?;
 
     Ok(())
 }

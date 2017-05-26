@@ -277,11 +277,12 @@ fn main() {
         }
 
         "new" => {
-            let filetype = matches.value_of("FILETYPE").unwrap();
-            let filename = matches.value_of("FILENAME").unwrap();
+            // TODO: 'cobalt new nonsense' + unwrap = crash so provide default again
+            let filetype = matches.value_of("FILETYPE").unwrap_or("post");
+            let filename = matches.value_of("FILENAME").unwrap_or("new_post.md");
 
             match create_new_document(&filetype, &filename, &config) {
-                Ok(_) => (),
+                Ok(_) => info!("Created new {} {}", filetype, filename),
                 Err(e) => {
                     error!("{}", e);
                     error!("Could not create {}", filetype);
