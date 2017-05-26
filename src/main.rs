@@ -118,7 +118,7 @@ fn main() {
             .arg(Arg::with_name("FILENAME")
                 .help("File to create")
                 .default_value_if("FILETYPE", Some("page"), "new_page.md")
-                .default_value_if("FILETYPE", Some("post"), "new_post.md")
+                .default_value("new_post.md")
                 .takes_value(true)))
 
         .subcommand(SubCommand::with_name("build")
@@ -277,9 +277,8 @@ fn main() {
         }
 
         "new" => {
-            // TODO: 'cobalt new nonsense' + unwrap = crash so provide default again
-            let filetype = matches.value_of("FILETYPE").unwrap_or("post");
-            let filename = matches.value_of("FILENAME").unwrap_or("new_post.md");
+            let filetype = matches.value_of("FILETYPE").unwrap();
+            let filename = matches.value_of("FILENAME").unwrap();
 
             match create_new_document(&filetype, &filename, &config) {
                 Ok(_) => info!("Created new {} {}", filetype, filename),
