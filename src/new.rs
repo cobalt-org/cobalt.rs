@@ -95,21 +95,22 @@ pub fn create_new_document(doc_type: &str, name: &str, config: &Config) -> Resul
 
     match doc_type {
         "page" => {
-            println!("page exists? {:?}", Path::new(name).exists());
-            // if !Path::new(name).exists() {
-                try!(create_file(name, index_liquid))
-            // } else {
-                // return Err();
-            // }
+            match Path::new(name).exists() {
+                false => {
+                    info!("Created new {} {}", doc_type, name);
+                    try!(create_file(name, index_liquid))
+                },
+                true => error!("{} already exists", name)
+            };
         },
         "post" => {
-            println!("post exists? {:?}", Path::new(full_path).exists());
-
-        //     if !Path::new(full_path).exists() {
-                try!(create_file(full_path, post_1_md))
-        //     } else {
-        //         error!("here");
-        //     }
+            match Path::new(full_path).exists() {
+                false => {
+                    info!("Created new {} {}", doc_type, name);
+                    try!(create_file(full_path, post_1_md))
+                },
+                true => error!("{} already exists", name)
+            };
         },
         _ => println!("Can only create post or page")
     }

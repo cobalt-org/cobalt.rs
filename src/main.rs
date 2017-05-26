@@ -281,9 +281,7 @@ fn main() {
             let filename = matches.value_of("FILENAME").unwrap();
 
             match create_new_document(&filetype, &filename, &config) {
-                Ok(_) => info!("Created new {} {}",
-                               filetype,
-                               filename),
+                Ok(_) => (),
                 Err(e) => {
                     error!("{}", e);
                     error!("Could not create {}", filetype);
