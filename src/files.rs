@@ -14,10 +14,8 @@ pub struct FilesBuilder {
 impl FilesBuilder {
     pub fn new(root_dir: &Path) -> Result<FilesBuilder> {
         let mut ignore = GitignoreBuilder::new(root_dir);
-        ignore.add_line(None, "**/.*")?;
-        ignore.add_line(None, "**/.*/**")?;
-        ignore.add_line(None, "**/_*")?;
-        ignore.add_line(None, "**/_*/**")?;
+        ignore.add_line(None, ".*")?;
+        ignore.add_line(None, "_*")?;
         let builder = FilesBuilder {
             root_dir: root_dir.to_path_buf(),
             ignore: ignore,
@@ -99,10 +97,25 @@ impl Files {
     }
 
     fn includes_entry(&self, entry: &DirEntry) -> bool {
-        self.includes_path(entry.path(), entry.file_type().is_dir())
+        // Assumption: The parent paths will have been checked before we even get to this point.
+        self.includes_path_leaf(entry.path(), entry.file_type().is_dir())
     }
 
+    #[cfg(test)]
     fn includes_path(&self, path: &Path, is_dir: bool) -> bool {
+        let parent = path.parent();
+        if let Some(parent) = parent {
+            if parent.starts_with(&self.root_dir) {
+                if !self.includes_path(parent, parent.is_dir()) {
+                    return false;
+                }
+            }
+        }
+
+        self.includes_path_leaf(path, is_dir)
+    }
+
+    fn includes_path_leaf(&self, path: &Path, is_dir: bool) -> bool {
         match self.ignore.matched(path, is_dir) {
             Match::None => true,
             Match::Ignore(glob) => {
