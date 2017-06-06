@@ -28,7 +28,6 @@ use env_logger::LogBuilder;
 use hyper::server::{Server, Request, Response};
 use hyper::uri::RequestUri;
 use ghp::import_dir;
-use glob::Pattern;
 use cobalt::{create_new_project, create_new_document};
 
 use notify::{Watcher, RecursiveMode, raw_watcher};
