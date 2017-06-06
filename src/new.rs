@@ -65,11 +65,27 @@ const index_liquid: &'static [u8] = b"extends: default.liquid
 </div>
 ";
 
+const new_post_tmpl: &'static [u8] = b"extends: default.liquid
+
+title: %title%
+date: %date%
+---
+";
+
+
+//const new_page_tmpl: &'static [u8] = b"extends: default.liquid
+//title: %title%
+//route: %title%
+//  ---
+//";
+
+
 use std::path::Path;
 use std::fs::{DirBuilder, OpenOptions};
 use std::io::Write;
 use error::Result;
 use config::Config;
+use chrono::Local;
 
 pub fn create_new_project<P: AsRef<Path>>(dest: P) -> Result<()> {
     let dest = dest.as_ref();
@@ -89,13 +105,24 @@ pub fn create_new_project<P: AsRef<Path>>(dest: P) -> Result<()> {
     Ok(())
 }
 
-pub fn create_new_document(doc_type: &str, name: &str, config: &Config) -> Result<()> {
+pub fn create_post(name: &str, config: &Config) -> Result<()> {
     let path = Path::new(&config.source);
-    let full_path = &path.join(&config.posts).join(name);
+
+    let local = Local::now().format("%d %b %Y %H:%M:%S %z").to_string();
+    let vector: Vec<u8> = Vec::from(new_post_tmpl);
+    let mut out = String::from_utf8(vector).unwrap();
+    out = out.replace("%title%", name);
+    out = out.replace("%date%", &local);
+    let new_post = &path.join(format!("{}/{}.md", &config.posts, name));
+    try!(create_file(new_post, out.as_bytes()));
+    Ok(())
+}
+
+pub fn create_new_document(doc_type: &str, name: &str, config: &Config) -> Result<()> {
 
     match doc_type {
         "page" => create_file(name, index_liquid)?,
-        "post" => create_file(full_path, post_1_md)?,
+        "post" => create_post(name, config)?,
         _ => bail!("Unsupported document type {}", doc_type),
     }
 
