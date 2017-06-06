@@ -73,13 +73,6 @@ date: %date%
 ";
 
 
-//const new_page_tmpl: &'static [u8] = b"extends: default.liquid
-//title: %title%
-//route: %title%
-//  ---
-//";
-
-
 use std::path::Path;
 use std::fs::{DirBuilder, OpenOptions};
 use std::io::Write;
@@ -140,10 +133,7 @@ fn create_folder<P: AsRef<Path>>(path: P) -> Result<()> {
 fn create_file<P: AsRef<Path>>(name: P, content: &[u8]) -> Result<()> {
     trace!("Creating file {:?}", &name.as_ref());
 
-    let mut file = try!(OpenOptions::new()
-                            .write(true)
-                            .create_new(true)
-                            .open(name));
+    let mut file = try!(OpenOptions::new().write(true).create_new(true).open(name));
 
     file.write_all(content)?;
 
