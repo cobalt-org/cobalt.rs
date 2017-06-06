@@ -69,6 +69,7 @@ use std::path::Path;
 use std::fs::{DirBuilder, OpenOptions};
 use std::io::Write;
 use error::Result;
+use config::Config;
 
 pub fn create_new_project<P: AsRef<Path>>(dest: P) -> Result<()> {
     let dest = dest.as_ref();
@@ -88,6 +89,19 @@ pub fn create_new_project<P: AsRef<Path>>(dest: P) -> Result<()> {
     Ok(())
 }
 
+pub fn create_new_document(doc_type: &str, name: &str, config: &Config) -> Result<()> {
+    let path = Path::new(&config.source);
+    let full_path = &path.join(&config.posts).join(name);
+
+    match doc_type {
+        "page" => create_file(name, index_liquid)?,
+        "post" => create_file(full_path, post_1_md)?,
+        _ => bail!("Unsupported document type {}", doc_type),
+    }
+
+    Ok(())
+}
+
 fn create_folder<P: AsRef<Path>>(path: P) -> Result<()> {
     trace!("Creating folder {:?}", &path.as_ref());
 
@@ -99,9 +113,12 @@ fn create_folder<P: AsRef<Path>>(path: P) -> Result<()> {
 fn create_file<P: AsRef<Path>>(name: P, content: &[u8]) -> Result<()> {
     trace!("Creating file {:?}", &name.as_ref());
 
-    let mut file = try!(OpenOptions::new().write(true).create(true).open(name));
+    let mut file = try!(OpenOptions::new()
+                            .write(true)
+                            .create_new(true)
+                            .open(name));
 
-    try!(file.write_all(content));
+    file.write_all(content)?;
 
     Ok(())
 }

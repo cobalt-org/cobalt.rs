@@ -28,7 +28,7 @@ use env_logger::LogBuilder;
 use hyper::server::{Server, Request, Response};
 use hyper::uri::RequestUri;
 use ghp::import_dir;
-use cobalt::create_new_project;
+use cobalt::{create_new_project, create_new_document};
 
 use notify::{Watcher, RecursiveMode, raw_watcher};
 use std::sync::mpsc::channel;
@@ -108,6 +108,19 @@ fn main() {
                                  .help("Suppress all output")
                                  .default_value("./")
                                  .index(1)))
+        .subcommand(SubCommand::with_name("new")
+                        .about("Create a new post or page")
+                        .arg(Arg::with_name("FILETYPE")
+                                 .help("Type of file to create eg post or page")
+                                 .default_value("post")
+                                 .takes_value(true))
+                        .arg(Arg::with_name("FILENAME")
+                                 .help("File to create")
+                                 .default_value_if("FILETYPE",
+                                                   Some("page"),
+                                                   "new_page.md")
+                                 .default_value("new_post.md")
+                                 .takes_value(true)))
         .subcommand(SubCommand::with_name("build")
                         .about("build the cobalt project at the source dir")
                         .arg(Arg::with_name("import")
@@ -258,6 +271,20 @@ fn main() {
                 Err(e) => {
                     error!("{}", e);
                     error!("Could not create a new cobalt project");
+                    std::process::exit(1);
+                }
+            }
+        }
+
+        "new" => {
+            let filetype = matches.value_of("FILETYPE").unwrap();
+            let filename = matches.value_of("FILENAME").unwrap();
+
+            match create_new_document(&filetype, &filename, &config) {
+                Ok(_) => info!("Created new {} {}", filetype, filename),
+                Err(e) => {
+                    error!("{}", e);
+                    error!("Could not create {}", filetype);
                     std::process::exit(1);
                 }
             }
