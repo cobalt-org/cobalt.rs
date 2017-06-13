@@ -280,7 +280,7 @@ fn main() {
             let filetype = matches.value_of("FILETYPE").unwrap();
             let filename = matches.value_of("FILENAME").unwrap();
 
-            match create_new_document(&filetype, &filename, &config) {
+            match create_new_document(filetype, filename, &config) {
                 Ok(_) => info!("Created new {} {}", filetype, filename),
                 Err(e) => {
                     error!("{}", e);
