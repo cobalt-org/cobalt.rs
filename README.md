@@ -51,6 +51,7 @@ There are a few people already using `cobalt`. Here is a list of projects and th
 - [johannh.me](http://johannh.me) [Source](https://github.com/johannhof/johannhof.github.io)
 - [kstep.me](http://kstep.me) [Source](https://github.com/kstep/kstep.github.com)
 - [matthias-endler.de](https://matthias-endler.de/) [Source](https://github.com/mre/mre.github.io)
+- [sda.io](https://sda.io) [Source](https://github.com/mfs/blog)
 
 ## Usage
 
