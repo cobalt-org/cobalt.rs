@@ -22,8 +22,8 @@ name = "cobalt"
 doc = false
 
 [dependencies]
-clap = "2.22.0"
-liquid = "0.9"
+clap = "2.24"
+liquid = "0.10"
 walkdir = "1.0"
 yaml-rust = "0.3"
 chrono = "0.3"
@@ -33,19 +33,19 @@ rss = "0.3"
 pulldown-cmark = "0.0.14"
 notify = "4.0"
 ghp = "0.1"
-regex = "0.2.1"
+regex = "0.2"
 clippy = {version = "0.0", optional = true}
-error-chain = "0.10.0"
+error-chain = "0.10"
 lazy_static = "0.2"
-itertools = "0.5.9"
-ignore = "0.2.0"
+itertools = "0.5"
+ignore = "0.2"
 
 [dependencies.hyper]
 version = "0.10"
 default-features = false
 
 [dependencies.syntect]
-version = "1.0"
+version = "1.5"
 optional = true
 features = ["static-onig"]
 

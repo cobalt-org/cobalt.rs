@@ -118,7 +118,7 @@ impl<'a> Iterator for DecoratedParser<'a> {
 
 pub fn initialize_codeblock(_: &str,
                             arguments: &[Token],
-                            tokens: Vec<Element>,
+                            tokens: &[Element],
                             _: &LiquidOptions)
                             -> Result<Box<Renderable>, Error> {
 

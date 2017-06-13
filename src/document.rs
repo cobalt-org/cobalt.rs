@@ -13,7 +13,7 @@ use rss;
 #[cfg(all(feature="syntax-highlight", not(windows)))]
 use syntax_highlight::{initialize_codeblock, decorate_markdown};
 
-use liquid::{Renderable, LiquidOptions, Context, Value};
+use liquid::{Renderable, LiquidOptions, Context, Value, LocalTemplateRepository};
 
 use pulldown_cmark as cmark;
 use liquid;
@@ -309,13 +309,10 @@ impl Document {
     /// rendering content or excerpt.
     #[cfg(all(feature="syntax-highlight", not(windows)))]
     fn render_html(&self, content: &str, context: &mut Context, source: &Path) -> Result<String> {
-        let mut options = LiquidOptions {
-            file_system: Some(source.to_owned()),
-            ..Default::default()
-        };
-        options
-            .blocks
-            .insert("highlight".to_string(), Box::new(initialize_codeblock));
+        let mut options = LiquidOptions::default();
+        options.template_repository = Box::new(LocalTemplateRepository::new(source.to_owned()));
+        let highlight: Box<liquid::Block> = Box::new(initialize_codeblock);
+        options.blocks.insert("highlight".to_string(), highlight);
         let template = try!(liquid::parse(content, options));
         let mut html = try!(template.render(context)).unwrap_or(String::new());
 
@@ -334,10 +331,8 @@ impl Document {
     }
     #[cfg(any(not(feature="syntax-highlight"), windows))]
     fn render_html(&self, content: &str, context: &mut Context, source: &Path) -> Result<String> {
-        let options = LiquidOptions {
-            file_system: Some(source.to_owned()),
-            ..Default::default()
-        };
+        let mut options = LiquidOptions::default();
+        options.template_repository = Box::new(LocalTemplateRepository::new(source.to_owned()));
         let template = try!(liquid::parse(content, options));
         let mut html = try!(template.render(context)).unwrap_or_default();
 
@@ -435,10 +430,9 @@ impl Document {
                 Entry::Occupied(occupied) => occupied.into_mut(),
             };
 
-            let options = LiquidOptions {
-                file_system: Some(source.to_owned()),
-                ..Default::default()
-            };
+            let mut options = LiquidOptions::default();
+            options.template_repository =
+                Box::new(LocalTemplateRepository::new(source.to_owned()));
             let template = try!(liquid::parse(layout_data_ref, options));
             Ok(try!(template.render(context)).unwrap_or_default())
         } else {
