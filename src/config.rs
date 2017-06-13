@@ -104,7 +104,7 @@ impl Config {
         if let Some(link) = yaml["link"].as_str() {
             let mut link = link.to_owned();
             if !link.ends_with('/') {
-                link = link + "/";
+                link += "/";
             }
             config.link = Some(link);
         };
