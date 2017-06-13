@@ -121,236 +121,224 @@ impl Files {
 mod tests {
     use super::*;
 
+    macro_rules! assert_includes_dir {
+        ($root: expr, $ignores: expr, $test: expr, $included: expr) => {
+            let mut files = FilesBuilder::new(Path::new($root)).unwrap();
+            let ignores: &[&str] = $ignores;
+            for ignore in ignores {
+                files.add_ignore(ignore).unwrap();
+            }
+            let files = files.build().unwrap();
+            assert_eq!(files.includes_dir(Path::new($test)), $included);
+        }
+    }
+    macro_rules! assert_includes_file {
+        ($root: expr, $ignores: expr, $test: expr, $included: expr) => {
+            let mut files = FilesBuilder::new(Path::new($root)).unwrap();
+            let ignores: &[&str] = $ignores;
+            for ignore in ignores {
+                files.add_ignore(ignore).unwrap();
+            }
+            let files = files.build().unwrap();
+            assert_eq!(files.includes_file(Path::new($test)), $included);
+        }
+    }
+
     #[test]
     fn files_includes_root_dir() {
-        let files = FilesBuilder::new(Path::new("/user/cobalt/site"))
-            .unwrap()
-            .build()
-            .unwrap();
-        assert!(files.includes_dir(Path::new("/usr/cobalt/site")));
+        assert_includes_dir!("/usr/cobalt/site", &[], "/usr/cobalt/site", true);
     }
 
     #[test]
     fn files_includes_child_dir() {
-        let files = FilesBuilder::new(Path::new("/user/cobalt/site"))
-            .unwrap()
-            .build()
-            .unwrap();
-        assert!(files.includes_dir(Path::new("/usr/cobalt/site/child")));
+        assert_includes_dir!("/usr/cobalt/site", &[], "/usr/cobalt/site/child", true);
     }
 
     #[test]
     fn files_excludes_hidden_dir() {
-        let files = FilesBuilder::new(Path::new("/user/cobalt/site"))
-            .unwrap()
-            .build()
-            .unwrap();
-        assert!(!files.includes_dir(Path::new("/usr/cobalt/site/_child")));
-
-        let files = FilesBuilder::new(Path::new("/user/cobalt/site"))
-            .unwrap()
-            .build()
-            .unwrap();
-        assert!(!files.includes_dir(Path::new("/usr/cobalt/site/child/_child")));
-
-        let files = FilesBuilder::new(Path::new("/user/cobalt/site"))
-            .unwrap()
-            .build()
-            .unwrap();
-        assert!(!files.includes_dir(Path::new("/usr/cobalt/site/_child/child")));
+        assert_includes_dir!("/usr/cobalt/site", &[], "/usr/cobalt/site/_child", false);
+        assert_includes_dir!("/usr/cobalt/site",
+                             &[],
+                             "/usr/cobalt/site/child/_child",
+                             false);
+        assert_includes_dir!("/usr/cobalt/site",
+                             &[],
+                             "/usr/cobalt/site/_child/child",
+                             false);
     }
 
     #[test]
     fn files_excludes_dot_dir() {
-        let files = FilesBuilder::new(Path::new("/user/cobalt/site"))
-            .unwrap()
-            .build()
-            .unwrap();
-        assert!(!files.includes_dir(Path::new("/usr/cobalt/site/.child")));
-
-        let files = FilesBuilder::new(Path::new("/user/cobalt/site"))
-            .unwrap()
-            .build()
-            .unwrap();
-        assert!(!files.includes_dir(Path::new("/usr/cobalt/site/.child/child")));
+        assert_includes_dir!("/usr/cobalt/site", &[], "/usr/cobalt/site/.child", false);
+        assert_includes_dir!("/usr/cobalt/site",
+                             &[],
+                             "/usr/cobalt/site/child/.child",
+                             false);
+        assert_includes_dir!("/usr/cobalt/site",
+                             &[],
+                             "/usr/cobalt/site/.child/child",
+                             false);
     }
 
     #[test]
     fn files_includes_file() {
-        let files = FilesBuilder::new(Path::new("/user/cobalt/site"))
-            .unwrap()
-            .build()
-            .unwrap();
-        assert!(files.includes_file(Path::new("/usr/cobalt/site/child.txt")));
+        assert_includes_file!("/usr/cobalt/site", &[], "/usr/cobalt/site/child.txt", true);
     }
 
     #[test]
     fn files_includes_child_dir_file() {
-        let files = FilesBuilder::new(Path::new("/user/cobalt/site"))
-            .unwrap()
-            .build()
-            .unwrap();
-        assert!(files.includes_file(Path::new("/usr/cobalt/site/child/child.txt")));
+        assert_includes_file!("/usr/cobalt/site",
+                              &[],
+                              "/usr/cobalt/site/child/child.txt",
+                              true);
     }
 
     #[test]
     fn files_excludes_hidden_file() {
-        let files = FilesBuilder::new(Path::new("/user/cobalt/site"))
-            .unwrap()
-            .build()
-            .unwrap();
-        assert!(!files.includes_file(Path::new("/usr/cobalt/site/_child.txt")));
-
-        let files = FilesBuilder::new(Path::new("/user/cobalt/site"))
-            .unwrap()
-            .build()
-            .unwrap();
-        assert!(!files.includes_file(Path::new("/usr/cobalt/site/child/_child.txt")));
+        assert_includes_file!("/usr/cobalt/site",
+                              &[],
+                              "/usr/cobalt/site/_child.txt",
+                              false);
+        assert_includes_file!("/usr/cobalt/site",
+                              &[],
+                              "/usr/cobalt/site/child/_child.txt",
+                              false);
     }
 
     #[test]
     fn files_excludes_hidden_dir_file() {
-        let files = FilesBuilder::new(Path::new("/user/cobalt/site"))
-            .unwrap()
-            .build()
-            .unwrap();
-        assert!(!files.includes_file(Path::new("/usr/cobalt/site/_child/child.txt")));
-
-        let files = FilesBuilder::new(Path::new("/user/cobalt/site"))
-            .unwrap()
-            .build()
-            .unwrap();
-        assert!(!files.includes_file(Path::new("/usr/cobalt/site/child/_child/child.txt")));
+        assert_includes_file!("/usr/cobalt/site",
+                              &[],
+                              "/usr/cobalt/site/_child/child.txt",
+                              false);
+        assert_includes_file!("/usr/cobalt/site",
+                              &[],
+                              "/usr/cobalt/site/child/_child/child.txt",
+                              false);
     }
 
     #[test]
     fn files_excludes_dot_file() {
-        let files = FilesBuilder::new(Path::new("/user/cobalt/site"))
-            .unwrap()
-            .build()
-            .unwrap();
-        assert!(!files.includes_file(Path::new("/usr/cobalt/site/.child.txt")));
-
-        let files = FilesBuilder::new(Path::new("/user/cobalt/site"))
-            .unwrap()
-            .build()
-            .unwrap();
-        assert!(!files.includes_file(Path::new("/usr/cobalt/site/child/.child.txt")));
+        assert_includes_file!("/usr/cobalt/site",
+                              &[],
+                              "/usr/cobalt/site/.child.txt",
+                              false);
+        assert_includes_file!("/usr/cobalt/site",
+                              &[],
+                              "/usr/cobalt/site/child/.child.txt",
+                              false);
     }
 
     #[test]
     fn files_excludes_dot_dir_file() {
-        let files = FilesBuilder::new(Path::new("/user/cobalt/site"))
-            .unwrap()
-            .build()
-            .unwrap();
-        assert!(!files.includes_file(Path::new("/usr/cobalt/site/.child/child.txt")));
-
-        let files = FilesBuilder::new(Path::new("/user/cobalt/site"))
-            .unwrap()
-            .build()
-            .unwrap();
-        assert!(!files.includes_file(Path::new("/usr/cobalt/site/child/.child/child.txt")));
+        assert_includes_file!("/usr/cobalt/site",
+                              &[],
+                              "/usr/cobalt/site/.child/child.txt",
+                              false);
+        assert_includes_file!("/usr/cobalt/site",
+                              &[],
+                              "/usr/cobalt/site/child/.child/child.txt",
+                              false);
     }
 
     #[test]
     fn files_excludes_ignored_file() {
-        let files = FilesBuilder::new(Path::new("/user/cobalt/site"))
-            .unwrap()
-            .add_ignore("README")
-            .unwrap()
-            .add_ignore("**/*.scss")
-            .unwrap()
-            .build()
-            .unwrap();
+        let ignores = &["README", "**/*.scss"];
 
-        assert!(!files.includes_file(Path::new("/usr/cobalt/site/README")));
-        assert!(!files.includes_file(Path::new("/usr/cobalt/site/child/README")));
-
-        assert!(!files.includes_file(Path::new("/usr/cobalt/site/blog.scss")));
-        assert!(!files.includes_file(Path::new("/usr/cobalt/site/child/blog.scss")));
+        assert_includes_file!("/usr/cobalt/site",
+                              ignores,
+                              "/usr/cobalt/site/README",
+                              false);
+        assert_includes_file!("/usr/cobalt/site",
+                              ignores,
+                              "/usr/cobalt/site/child/README",
+                              false);
+        assert_includes_file!("/usr/cobalt/site",
+                              ignores,
+                              "/usr/cobalt/site/blog.scss",
+                              false);
+        assert_includes_file!("/usr/cobalt/site",
+                              ignores,
+                              "/usr/cobalt/site/child/blog.scss",
+                              false);
     }
 
     #[test]
     fn files_includes_overriden_file() {
-        let files = FilesBuilder::new(Path::new("/user/cobalt/site"))
-            .unwrap()
-            .add_ignore("!.htaccess")
-            .unwrap()
-            .build()
-            .unwrap();
+        let ignores = &["!.htaccess"];
 
-        assert!(files.includes_file(Path::new("/usr/cobalt/site/.htaccess")));
-        assert!(files.includes_file(Path::new("/usr/cobalt/site/child/.htaccess")));
+        assert_includes_file!("/usr/cobalt/site",
+                              ignores,
+                              "/usr/cobalt/site/.htaccess",
+                              true);
+        assert_includes_file!("/usr/cobalt/site",
+                              ignores,
+                              "/usr/cobalt/site/child/.htaccess",
+                              true);
     }
 
     #[test]
     fn files_includes_overriden_dir() {
-        let files = FilesBuilder::new(Path::new("/user/cobalt/site"))
-            .unwrap()
-            .add_ignore("!_posts")
-            .unwrap()
-            .add_ignore("!_posts/**")
-            .unwrap()
-            .add_ignore("_posts/**/_*")
-            .unwrap()
-            .add_ignore("_posts/**/_*/**")
-            .unwrap()
-            .build()
-            .unwrap();
+        let ignores = &["!_posts", "!_posts/**", "_posts/**/_*", "_posts/**/_*/**"];
 
-        assert!(files.includes_dir(Path::new("/usr/cobalt/site/_posts")));
-        assert!(files.includes_dir(Path::new("/usr/cobalt/site/_posts/child")));
+        assert_includes_dir!("/usr/cobalt/site", ignores, "/usr/cobalt/site/_posts", true);
+        assert_includes_dir!("/usr/cobalt/site",
+                             ignores,
+                             "/usr/cobalt/site/_posts/child",
+                             true);
 
         // TODO These two cases should instead fail
-        assert!(files.includes_dir(Path::new("/usr/cobalt/site/child/_posts")));
-        assert!(files.includes_dir(Path::new("/usr/cobalt/site/child/_posts/child")));
+        assert_includes_dir!("/usr/cobalt/site",
+                             ignores,
+                             "/usr/cobalt/site/child/_posts",
+                             true);
+        assert_includes_dir!("/usr/cobalt/site",
+                             ignores,
+                             "/usr/cobalt/site/child/_posts/child",
+                             true);
 
-        assert!(!files.includes_dir(Path::new("/usr/cobalt/site/_posts/child/_child")));
-        assert!(!files.includes_dir(Path::new("/usr/cobalt/site/_posts/child/_child/child")));
-
-        let files = FilesBuilder::new(Path::new("./"))
-            .unwrap()
-            .add_ignore("!_posts")
-            .unwrap()
-            .add_ignore("!_posts/**")
-            .unwrap()
-            .add_ignore("_posts/**/_*")
-            .unwrap()
-            .add_ignore("_posts/**/_*/**")
-            .unwrap()
-            .build()
-            .unwrap();
-
-        assert!(files.includes_dir(Path::new("./_posts")));
-        assert!(files.includes_dir(Path::new("./_posts/child")));
+        assert_includes_dir!("/usr/cobalt/site",
+                             ignores,
+                             "/usr/cobalt/site/_posts/child/_child",
+                             false);
+        assert_includes_dir!("/usr/cobalt/site",
+                             ignores,
+                             "/usr/cobalt/site/_posts/child/_child/child",
+                             false);
     }
 
 
     #[test]
     fn files_includes_overriden_dir_file() {
-        let files = FilesBuilder::new(Path::new("/user/cobalt/site"))
-            .unwrap()
-            .add_ignore("!_posts")
-            .unwrap()
-            .add_ignore("!_posts/**")
-            .unwrap()
-            .add_ignore("_posts/**/_*")
-            .unwrap()
-            .add_ignore("_posts/**/_*/**")
-            .unwrap()
-            .build()
-            .unwrap();
+        let ignores = &["!_posts", "!_posts/**", "_posts/**/_*", "_posts/**/_*/**"];
 
-        assert!(files.includes_file(Path::new("/usr/cobalt/site/_posts/child.txt")));
-        assert!(files.includes_file(Path::new("/usr/cobalt/site/_posts/child/child.txt")));
+        assert_includes_file!("/usr/cobalt/site",
+                              ignores,
+                              "/usr/cobalt/site/_posts/child.txt",
+                              true);
+        assert_includes_file!("/usr/cobalt/site",
+                              ignores,
+                              "/usr/cobalt/site/_posts/child/child.txt",
+                              true);
 
         // TODO These two cases should instead fail
-        assert!(files.includes_file(Path::new("/usr/cobalt/site/child/_posts/child.txt")));
-        assert!(files.includes_file(Path::new("/usr/cobalt/site/child/_posts/child/child.txt")));
+        assert_includes_file!("/usr/cobalt/site",
+                              ignores,
+                              "/usr/cobalt/site/child/_posts/child.txt",
+                              true);
+        assert_includes_file!("/usr/cobalt/site",
+                              ignores,
+                              "/usr/cobalt/site/child/_posts/child/child.txt",
+                              true);
 
-        assert!(!files.includes_file(Path::new("/usr/cobalt/site/_posts/child/_child.txt")));
-        assert!(!files.includes_file(Path::new("/usr/cobalt/site/_posts/child/_child/child.txt")));
+        assert_includes_file!("/usr/cobalt/site",
+                              ignores,
+                              "/usr/cobalt/site/_posts/child/_child.txt",
+                              false);
+        assert_includes_file!("/usr/cobalt/site",
+                              ignores,
+                              "/usr/cobalt/site/_posts/child/_child/child.txt",
+                              false);
     }
 
     #[test]
