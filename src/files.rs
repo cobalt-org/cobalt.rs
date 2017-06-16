@@ -147,11 +147,15 @@ mod tests {
     #[test]
     fn files_includes_root_dir() {
         assert_includes_dir!("/usr/cobalt/site", &[], "/usr/cobalt/site", true);
+
+        assert_includes_dir!("./", &[], "./", true);
     }
 
     #[test]
     fn files_includes_child_dir() {
         assert_includes_dir!("/usr/cobalt/site", &[], "/usr/cobalt/site/child", true);
+
+        assert_includes_dir!("./", &[], "./child", true);
     }
 
     #[test]
@@ -165,6 +169,10 @@ mod tests {
                              &[],
                              "/usr/cobalt/site/_child/child",
                              false);
+
+        assert_includes_dir!("./", &[], "./_child", false);
+        assert_includes_dir!("./", &[], "./child/_child", false);
+        assert_includes_dir!("./", &[], "./_child/child", false);
     }
 
     #[test]
@@ -178,11 +186,17 @@ mod tests {
                              &[],
                              "/usr/cobalt/site/.child/child",
                              false);
+
+        assert_includes_dir!("./", &[], "./.child", false);
+        assert_includes_dir!("./", &[], "./child/.child", false);
+        assert_includes_dir!("./", &[], "./.child/child", false);
     }
 
     #[test]
     fn files_includes_file() {
         assert_includes_file!("/usr/cobalt/site", &[], "/usr/cobalt/site/child.txt", true);
+
+        assert_includes_file!("./", &[], "./child.txt", true);
     }
 
     #[test]
@@ -191,6 +205,8 @@ mod tests {
                               &[],
                               "/usr/cobalt/site/child/child.txt",
                               true);
+
+        assert_includes_file!("./", &[], "./child/child.txt", true);
     }
 
     #[test]
@@ -203,6 +219,9 @@ mod tests {
                               &[],
                               "/usr/cobalt/site/child/_child.txt",
                               false);
+
+        assert_includes_file!("./", &[], "./_child.txt", false);
+        assert_includes_file!("./", &[], "./child/_child.txt", false);
     }
 
     #[test]
@@ -215,6 +234,9 @@ mod tests {
                               &[],
                               "/usr/cobalt/site/child/_child/child.txt",
                               false);
+
+        assert_includes_file!("./", &[], "./_child/child.txt", false);
+        assert_includes_file!("./", &[], "./child/_child/child.txt", false);
     }
 
     #[test]
@@ -227,6 +249,9 @@ mod tests {
                               &[],
                               "/usr/cobalt/site/child/.child.txt",
                               false);
+
+        assert_includes_file!("./", &[], "./.child.txt", false);
+        assert_includes_file!("./", &[], "./child/.child.txt", false);
     }
 
     #[test]
@@ -239,6 +264,9 @@ mod tests {
                               &[],
                               "/usr/cobalt/site/child/.child/child.txt",
                               false);
+
+        assert_includes_file!("./", &[], "./.child/child.txt", false);
+        assert_includes_file!("./", &[], "./child/.child/child.txt", false);
     }
 
     #[test]
@@ -261,6 +289,11 @@ mod tests {
                               ignores,
                               "/usr/cobalt/site/child/blog.scss",
                               false);
+
+        assert_includes_file!("./", ignores, "./README", false);
+        assert_includes_file!("./", ignores, "./child/README", false);
+        assert_includes_file!("./", ignores, "./blog.scss", false);
+        assert_includes_file!("./", ignores, "./child/blog.scss", false);
     }
 
     #[test]
@@ -275,6 +308,9 @@ mod tests {
                               ignores,
                               "/usr/cobalt/site/child/.htaccess",
                               true);
+
+        assert_includes_file!("./", ignores, "./.htaccess", true);
+        assert_includes_file!("./", ignores, "./child/.htaccess", true);
     }
 
     #[test]
@@ -305,6 +341,16 @@ mod tests {
                              ignores,
                              "/usr/cobalt/site/_posts/child/_child/child",
                              false);
+
+        assert_includes_dir!("./", ignores, "./_posts", true);
+        assert_includes_dir!("./", ignores, "./_posts/child", true);
+
+        // TODO These two cases should instead fail
+        assert_includes_dir!("./", ignores, "./child/_posts", true);
+        assert_includes_dir!("./", ignores, "./child/_posts/child", true);
+
+        assert_includes_dir!("./", ignores, "./_posts/child/_child", false);
+        assert_includes_dir!("./", ignores, "./_posts/child/_child/child", false);
     }
 
 
@@ -339,6 +385,16 @@ mod tests {
                               ignores,
                               "/usr/cobalt/site/_posts/child/_child/child.txt",
                               false);
+
+        assert_includes_file!("./", ignores, "./_posts/child.txt", true);
+        assert_includes_file!("./", ignores, "./_posts/child/child.txt", true);
+
+        // TODO These two cases should instead fail
+        assert_includes_file!("./", ignores, "./child/_posts/child.txt", true);
+        assert_includes_file!("./", ignores, "./child/_posts/child/child.txt", true);
+
+        assert_includes_file!("./", ignores, "./_posts/child/_child.txt", false);
+        assert_includes_file!("./", ignores, "./_posts/child/_child/child.txt", false);
     }
 
     #[test]
