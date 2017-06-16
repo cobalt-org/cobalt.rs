@@ -23,7 +23,7 @@ doc = false
 
 [dependencies]
 clap = "2.24"
-liquid = "0.10"
+liquid = {version = "0.10", features=["serde"]}
 walkdir = "1.0"
 yaml-rust = "0.3"
 chrono = "0.3"
@@ -39,6 +39,8 @@ error-chain = "0.10"
 lazy_static = "0.2"
 itertools = "0.5"
 ignore = "0.2"
+serde = "1.0"
+serde_yaml = "0.7"
 
 [dependencies.hyper]
 version = "0.10"

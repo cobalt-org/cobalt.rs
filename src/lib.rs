@@ -17,6 +17,8 @@ extern crate regex;
 extern crate rss;
 extern crate walkdir;
 extern crate yaml_rust;
+extern crate serde;
+extern crate serde_yaml;
 
 extern crate itertools;
 
@@ -27,6 +29,9 @@ extern crate syntect;
 extern crate log;
 
 #[macro_use]
+extern crate clap;
+
+#[macro_use]
 extern crate error_chain;
 
 #[macro_use]
@@ -35,6 +40,7 @@ extern crate lazy_static;
 pub use cobalt::build;
 pub use error::Error;
 pub use config::Config;
+pub use config::Dump;
 pub use new::{create_new_project, create_new_document};
 
 pub mod error;

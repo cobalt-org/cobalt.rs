@@ -5,6 +5,13 @@ use std::io::Read;
 use error::Result;
 use yaml_rust::YamlLoader;
 
+arg_enum! {
+    #[derive(Debug, PartialEq)]
+    pub enum Dump {
+        Liquid
+    }
+}
+
 #[derive(Debug, PartialEq)]
 pub struct Config {
     pub source: String,
@@ -22,6 +29,7 @@ pub struct Config {
     pub link: Option<String>,
     pub ignore: Vec<String>,
     pub excerpt_separator: String,
+    pub dump: Vec<Dump>,
 }
 
 impl Default for Config {
@@ -42,6 +50,7 @@ impl Default for Config {
             link: None,
             ignore: vec![],
             excerpt_separator: "\n\n".to_owned(),
+            dump: vec![],
         }
     }
 }

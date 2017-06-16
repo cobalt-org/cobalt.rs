@@ -4,6 +4,7 @@ use yaml_rust::scanner;
 use walkdir;
 use liquid;
 use ignore;
+use serde_yaml;
 
 error_chain! {
 
@@ -15,6 +16,7 @@ error_chain! {
         Liquid(liquid::Error);
         WalkDir(walkdir::Error);
         Yaml(scanner::ScanError);
+        SerdeYaml(serde_yaml::Error);
         Ignore(ignore::Error);
     }
 
