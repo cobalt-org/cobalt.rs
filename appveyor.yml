@@ -28,14 +28,13 @@ install:
   - curl -sSf -o rustup-init.exe https://win.rustup.rs/
   - rustup-init.exe -y --default-host %TARGET% --default-toolchain %RUST_VERSION%
   - set PATH=%PATH%;C:\Users\appveyor\.cargo\bin
-  - rustc -Vv
-  - cargo -V
 
 test_script:
+  - rustc -Vv
+  - cargo -V
   # we don't run the "test phase" when doing deploys
-  - if [%APPVEYOR_REPO_TAG%]==[false] (
-      cargo build --verbose && cargo test
-    )
+  - if [%APPVEYOR_REPO_TAG%]==[false] ( cargo check --verbose )
+  - if [%APPVEYOR_REPO_TAG%]==[false] ( cargo test --verbose )
 
 before_deploy:
   - cargo rustc --target %TARGET% --release --bin cobalt -- -C lto
@@ -65,5 +64,5 @@ notifications:
   - provider: Email
     on_build_success: false
 
-# disable automatic builds
+# Building is done in the test phase, so we disable Appveyor's build phase.
 build: false
