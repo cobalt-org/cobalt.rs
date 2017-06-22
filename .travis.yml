@@ -1,18 +1,6 @@
-dist: trusty
 sudo: false
 language: rust
-
 rust: stable
-
-addons:
-  apt:
-    packages:
-      - libcurl4-openssl-dev
-      - libelf-dev
-      - libdw-dev
-      - cmake
-      - gcc
-      - binutils-dev
 
 env:
   global:
@@ -37,34 +25,26 @@ matrix:
       rust: nightly
 
 install:
-  - sh ci/install.sh
+  - curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain $TRAVIS_RUST_VERSION
   - source ~/.cargo/env || true
+  - which cargo-coveralls || cargo install cargo-travis
+  - if [ "$TRAVIS_RUST_VERSION" = "stable" ]; then (travis_wait cargo install rustfmt --force --vers 0.8.3) fi
+  - if [ "$TRAVIS_RUST_VERSION" = "nightly" ]; then (cargo install clippy --force || true) fi
 
 script:
-  - bash ci/script.sh
+  - rustc -Vv
+  - cargo -V
+  - cargo check --verbose
+  - cargo check --verbose --features "syntax-highlight"
+  - cargo test  --verbose --features "syntax-highlight"
+  - if [ "$TRAVIS_RUST_VERSION" = "nightly" ]; then (! which cargo-clippy || cargo clippy -- --version) fi
+  - if [ "$TRAVIS_RUST_VERSION" = "nightly" ]; then (! which cargo-clippy || cargo clippy --features "syntax-highlight") fi
+  - if [ "$TRAVIS_RUST_VERSION" = "stable" ]; then (cargo doc --no-deps --all-features) fi
+  - if [ "$TRAVIS_RUST_VERSION" = "stable" ]; then (cargo fmt -- --version) fi
+  - if [ "$TRAVIS_RUST_VERSION" = "stable" ]; then (cargo fmt -- --write-mode=diff) fi
 
 before_deploy:
   - sh ci/before_deploy.sh
-
-cache:
-  apt: true
-  directories:
-    - $HOME/.cargo
-    - target/debug/deps
-    - target/debug/build
-
-before_cache:
-    # Travis can't cache files that are not readable by "others"
-    - chmod -R a+r $HOME/.cargo
-
-branches:
-  only:
-    # release tags
-    - /^v\d+\.\d+\.\d+.*$/
-    - master
-
-after_success:
-  - bash ci/coverage.sh
 
 deploy:
   provider: releases
@@ -77,7 +57,34 @@ deploy:
     tags: true
   skip_cleanup: true
 
+after_success:
+  - if [ "$TRAVIS_RUST_VERSION" = "stable" -a "$TARGET" = "x86_64-unknown-linux-gnu" ]; then (cargo coverage) fi
+
+addons:
+  apt:
+    packages:
+      # necessary for `cargo coveralls`
+      - libcurl4-openssl-dev
+      - libelf-dev
+      - libdw-dev
+      - binutils-dev
+      - cmake
+    sources:
+      - kalakris-cmake
+
+cache:
+  apt: true
+  directories:
+    - $HOME/.cargo
+    - target/debug/deps
+    - target/debug/build
+before_cache:
+    # Travis can't cache files that are not readable by "others"
+    - chmod -R a+r $HOME/.cargo
+
 notifications:
+  email:
+    on_success: never
   webhooks:
     urls:
       - https://webhooks.gitter.im/e/7e08f15b115326957c31
