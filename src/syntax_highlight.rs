@@ -95,7 +95,7 @@ impl<'a> Iterator for DecoratedParser<'a> {
                                 .next()
                                 .and_then(|lang| SETUP.syntax_set.find_syntax_by_token(lang))
                                 .unwrap_or_else(|| SETUP.syntax_set.find_syntax_plain_text());
-                        self.h = Some(HighlightLines::new(&cur_syntax,
+                        self.h = Some(HighlightLines::new(cur_syntax,
                                                           &SETUP.theme_set.themes[THEME_NAME]));
                         let snippet = start_coloured_html_snippet(&SETUP.theme_set.themes
                                                                        [THEME_NAME]);
@@ -144,7 +144,7 @@ pub fn initialize_codeblock(_: &str,
                 }))
 }
 
-pub fn decorate_markdown<'a>(parser: Parser<'a>) -> DecoratedParser {
+pub fn decorate_markdown(parser: Parser) -> DecoratedParser {
     DecoratedParser::new(parser)
 }
 
