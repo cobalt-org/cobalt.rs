@@ -39,7 +39,6 @@ script:
   - cargo test  --verbose --features "syntax-highlight"
   - if [ "$TRAVIS_RUST_VERSION" = "nightly" ]; then (! which cargo-clippy || cargo clippy -- --version) fi
   - if [ "$TRAVIS_RUST_VERSION" = "nightly" ]; then (! which cargo-clippy || cargo clippy --features "syntax-highlight") fi
-  - if [ "$TRAVIS_RUST_VERSION" = "stable" ]; then (cargo doc --no-deps --all-features) fi
   - if [ "$TRAVIS_RUST_VERSION" = "stable" ]; then (cargo fmt -- --version) fi
   - if [ "$TRAVIS_RUST_VERSION" = "stable" ]; then (cargo fmt -- --write-mode=diff) fi
 
