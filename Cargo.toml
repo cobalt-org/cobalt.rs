@@ -49,7 +49,8 @@ default-features = false
 [dependencies.syntect]
 version = "1.5"
 optional = true
-features = ["static-onig"]
+default-features = false
+features =  ["parsing", "assets", "html", "static-onig"]
 
 [dev-dependencies]
 assert_cli = "0.3"
