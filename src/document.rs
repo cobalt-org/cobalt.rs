@@ -314,7 +314,7 @@ impl Document {
         let highlight: Box<liquid::Block> = Box::new(initialize_codeblock);
         options.blocks.insert("highlight".to_string(), highlight);
         let template = try!(liquid::parse(content, options));
-        let mut html = try!(template.render(context)).unwrap_or(String::new());
+        let mut html = try!(template.render(context)).unwrap_or_default();
 
         if self.markdown {
             html = {
