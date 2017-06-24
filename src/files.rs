@@ -104,8 +104,13 @@ impl Files {
     #[cfg(test)]
     fn includes_path(&self, path: &Path, is_dir: bool) -> bool {
         let parent = path.parent();
-        if let Some(parent) = parent {
+        if let Some(mut parent) = parent {
             if parent.starts_with(&self.root_dir) {
+                // HACK: Gitignore seems to act differently on Windows/Linux, so putting this in to
+                // get them to act the same
+                if parent == Path::new(".") {
+                    parent = Path::new("./");
+                }
                 if !self.includes_path(parent, parent.is_dir()) {
                     return false;
                 }
