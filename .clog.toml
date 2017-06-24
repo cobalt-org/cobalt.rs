@@ -1,0 +1,4 @@
+[clog]
+repository = "https://github.com/cobalt-org/cobalt.rs"
+changelog = "CHANGELOG.md"
+from-latest-tag = true
