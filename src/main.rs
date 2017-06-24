@@ -9,8 +9,6 @@
         ))]
 
 extern crate cobalt;
-#[macro_use]
-extern crate clap;
 extern crate env_logger;
 extern crate notify;
 extern crate ghp;
@@ -18,11 +16,17 @@ extern crate ghp;
 extern crate hyper;
 
 #[macro_use]
+extern crate error_chain;
+
+#[macro_use]
+extern crate clap;
+
+#[macro_use]
 extern crate log;
 
 use clap::{Arg, App, SubCommand, AppSettings};
 use std::fs;
-use cobalt::Config;
+use cobalt::{Config, Dump};
 use log::{LogRecord, LogLevelFilter};
 use env_logger::LogBuilder;
 use hyper::server::{Server, Request, Response};
@@ -38,7 +42,24 @@ use std::io::prelude::*;
 use std::io::Result as IoResult;
 use std::fs::File;
 
-fn main() {
+error_chain! {
+
+    links {
+    }
+
+    foreign_links {
+        Cobalt(cobalt::Error);
+        Notify(notify::Error);
+        Clap(clap::Error);
+    }
+
+    errors {
+    }
+}
+
+quick_main!(run);
+
+fn run() -> Result<()> {
     let global_matches = App::new("Cobalt")
         .version(crate_version!())
         .author("Benny Klotz <r3qnbenni@gmail.com>, Johann Hofmann")
@@ -102,6 +123,13 @@ fn main() {
                  .help("Suppress all output")
                  .global(true)
                  .takes_value(false))
+        .arg(Arg::with_name("dump")
+                 .long("dump")
+                 .possible_values(&Dump::variants())
+                 .help("Dump the specified internal state")
+                 .global(true)
+                 .multiple(true)
+                 .takes_value(true))
         .subcommand(SubCommand::with_name("init")
                         .about("create a new cobalt project")
                         .arg(Arg::with_name("DIRECTORY")
@@ -262,6 +290,12 @@ fn main() {
 
     config.include_drafts = matches.is_present("drafts");
 
+    if global_matches.is_present("dump") {
+        let dump = values_t!(global_matches, "dump", Dump)?;
+        config.dump = dump;
+        info!("Setting: {:?}", config.dump);
+    }
+
     match command {
         "init" => {
             let directory = matches.value_of("DIRECTORY").unwrap();
@@ -332,10 +366,7 @@ fn main() {
 
             match w {
                 Ok(mut watcher) => {
-                    // TODO: clean up this unwrap
-                    watcher
-                        .watch(&config.source, RecursiveMode::Recursive)
-                        .unwrap();
+                    watcher.watch(&config.source, RecursiveMode::Recursive)?;
                     info!("Watching {:?} for changes", &config.source);
 
                     loop {
@@ -367,10 +398,11 @@ fn main() {
         }
 
         _ => {
-            println!("{}", global_matches.usage());
-            return;
+            bail!(global_matches.usage());
         }
-    }
+    };
+
+    Ok(())
 }
 
 fn build(config: &Config) {
