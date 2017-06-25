@@ -1,18 +1,15 @@
 sudo: false
 language: rust
-rust: stable
 
 env:
   global:
     - CRATE_NAME=cobalt
-    # default job
-    - TARGET=x86_64-unknown-linux-gnu
 
 matrix:
   fast_finish: true
   include:
     # Linux
-    # - env: TARGET=x86_64-unknown-linux-gnu  # this is the default job
+    - env: TARGET=x86_64-unknown-linux-gnu
 
     # OSX
     - env: TARGET=x86_64-apple-darwin
