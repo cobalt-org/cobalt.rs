@@ -1,5 +1,12 @@
-## 0.7.0 (2017-06-24)
+## 0.7.1 (2017-06-25)
 
+#### Bug Fixes
+
+* **CI:**
+  *  Show all build failures, not just first ([52916cd8](https://github.com/cobalt-org/cobalt.rs/commit/52916cd8b448e84c691e4d0517b53b287ff56efb))
+  *  Re-enable Stable builds on Linux ([24f3b209](https://github.com/cobalt-org/cobalt.rs/commit/24f3b2093580b26a0aef5c9ed81fb53f6fc614d7))
+
+## 0.7.0 (2017-06-24)
 
 #### Bug Fixes
 
