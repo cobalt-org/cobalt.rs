@@ -6,7 +6,6 @@ env:
     - CRATE_NAME=cobalt
 
 matrix:
-  fast_finish: true
   include:
     # Linux
     - env: TARGET=x86_64-unknown-linux-gnu
