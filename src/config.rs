@@ -24,6 +24,7 @@ pub struct Config {
     pub post_order: String,
     pub template_extensions: Vec<String>,
     pub rss: Option<String>,
+    pub jsonfeed: Option<String>,
     pub name: Option<String>,
     pub description: Option<String>,
     pub link: Option<String>,
@@ -45,6 +46,7 @@ impl Default for Config {
             post_order: "desc".to_owned(),
             template_extensions: vec!["md".to_owned(), "liquid".to_owned()],
             rss: None,
+            jsonfeed: None,
             name: None,
             description: None,
             link: None,
@@ -70,6 +72,7 @@ impl Config {
         let mut config = Config {
             name: yaml["name"].as_str().map(|s| s.to_owned()),
             rss: yaml["rss"].as_str().map(|s| s.to_owned()),
+            jsonfeed: yaml["jsonfeed"].as_str().map(|s| s.to_owned()),
             description: yaml["description"].as_str().map(|s| s.to_owned()),
             post_path: yaml["post_path"].as_str().map(|s| s.to_owned()),
             ..Default::default()

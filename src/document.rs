@@ -9,6 +9,9 @@ use yaml_rust::{Yaml, YamlLoader};
 use std::io::Read;
 use regex::Regex;
 use rss;
+use jsonfeed;
+use jsonfeed::Item;
+use jsonfeed::Content;
 
 #[cfg(all(feature="syntax-highlight", not(windows)))]
 use syntax_highlight::{initialize_codeblock, decorate_markdown};
@@ -292,6 +295,34 @@ impl Document {
             pub_date: self.date.map(|date| date.to_rfc2822()),
             description: description,
             ..Default::default()
+        }
+    }
+
+    /// Metadata for generating JSON feeds
+    pub fn to_jsonfeed(&self, root_url: &str) -> jsonfeed::Item {
+        let description = self.attributes
+            .get("description")
+            .or_else(|| self.attributes.get("excerpt"))
+            .or_else(|| self.attributes.get("content"))
+            .and_then(|s| s.as_str())
+            .map(|s| s.to_owned());
+
+        let link = root_url.to_owned() + &self.path.replace("\\", "/");
+
+        Item {
+            id: "1".into(),
+            url: Some(link.to_string()),
+            external_url: Some(link.to_string()),
+            title: description,
+            content: Content::Html("<p>content</p>".into()),
+            summary: None,
+            image: None,
+            banner_image: None,
+            date_published: self.date.map(|date| date.to_rfc2822()),
+            date_modified: self.date.map(|date| date.to_rfc2822()),
+            author: None,
+            tags: Some(vec!["json".into(), "feed".into()]),
+            attachments: Some(vec![]),
         }
     }
 

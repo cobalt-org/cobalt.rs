@@ -7,6 +7,8 @@ use liquid::{Value, Object};
 use chrono::{UTC, FixedOffset};
 use chrono::offset::TimeZone;
 use rss::{Channel, Rss};
+use jsonfeed::Feed;
+use jsonfeed;
 use serde_yaml;
 
 use document::Document;
@@ -167,6 +169,10 @@ pub fn build(config: &Config) -> Result<()> {
     if let Some(ref path) = config.rss {
         try!(create_rss(path, dest, config, &posts));
     }
+    // check if we should create an jsonfeed file and create it!
+    if let Some(ref path) = config.jsonfeed {
+        try!(create_jsonfeed(path, dest, config, &posts));
+    }
 
     // during post rendering additional attributes such as content were
     // added to posts. collect them so that non-post documents can access them
@@ -281,6 +287,33 @@ fn create_rss(path: &str, dest: &Path, config: &Config, posts: &[Document]) -> R
         _ => Err(ErrorKind::ConfigFileMissingFields.into()),
     }
 }
+// creates a new jsonfeed file with the contents of the site blog
+fn create_jsonfeed(path: &str, dest: &Path, config: &Config, posts: &[Document]) -> Result<()> {
+    match (&config.name, &config.description, &config.link) {
+        (&Some(ref name), &Some(ref desc), &Some(ref link)) => {
+            trace!("Generating jsonfeed data");
+
+            let jsonitems = posts.iter().map(|doc| doc.to_jsonfeed(link)).collect();
+
+            let feed = Feed {
+              title: name.to_string(),
+              items: jsonitems,
+              home_page_url: Some(link.to_string()),
+              description: Some(desc.to_string()),
+              ..Default::default()
+            };
+
+            let jsonfeed_string = jsonfeed::to_string(&feed).unwrap();
+            let jsonfeed_path = dest.join(path);
+            let mut jsonfeed_file = try!(File::create(&jsonfeed_path));
+            try!(jsonfeed_file.write_all(&jsonfeed_string.into_bytes()));
+
+            info!("Created jsonfeed file at {}", jsonfeed_path.display());
+            Ok(())
+        }
+        _ => Err(ErrorKind::ConfigFileMissingFields.into()),
+    }    
+}    
 
 fn create_document_file<T: AsRef<Path>, R: AsRef<Path>>(content: &str,
                                                         path: T,
