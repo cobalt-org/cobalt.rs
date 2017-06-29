@@ -308,21 +308,31 @@ impl Document {
             .map(|s| s.to_owned());
 
         let link = root_url.to_owned() + &self.path.replace("\\", "/");
+        let itemtitle = self.attributes.get("title").and_then(|s| s.as_str()).map(
+            |s| {
+                s.to_owned()
+            },
+        );
+        let mut cat = Vec::new();
+        if let Some(categories) = self.attributes.get("categories") {
+            if let &Value::Array(ref categories_array) = categories {
+                for category in categories_array {
+                    if let &Value::Str(ref category_string) = category {
+                        cat.push(category_string.clone());
+                    }
+                }
+            }
+        }
 
         Item {
-            id: "1".into(),
+            id: link.to_string(),
             url: Some(link.to_string()),
-            external_url: Some(link.to_string()),
-            title: description,
-            content: Content::Html("<p>content</p>".into()),
-            summary: None,
-            image: None,
-            banner_image: None,
+            title: Some(itemtitle.unwrap_or("unknown title".into())),
+            content: Content::Html(description.unwrap_or("".into())),
             date_published: self.date.map(|date| date.to_rfc2822()),
-            date_modified: self.date.map(|date| date.to_rfc2822()),
-            author: None,
-            tags: Some(vec!["json".into(), "feed".into()]),
-            attachments: Some(vec![]),
+            // TODO completely implement categories, see Issue 131
+            tags: Some(cat),
+            ..Default::default()
         }
     }
 

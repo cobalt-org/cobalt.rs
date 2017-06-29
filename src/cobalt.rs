@@ -296,11 +296,11 @@ fn create_jsonfeed(path: &str, dest: &Path, config: &Config, posts: &[Document])
             let jsonitems = posts.iter().map(|doc| doc.to_jsonfeed(link)).collect();
 
             let feed = Feed {
-              title: name.to_string(),
-              items: jsonitems,
-              home_page_url: Some(link.to_string()),
-              description: Some(desc.to_string()),
-              ..Default::default()
+                title: name.to_string(),
+                items: jsonitems,
+                home_page_url: Some(link.to_string()),
+                description: Some(desc.to_string()),
+                ..Default::default()
             };
 
             let jsonfeed_string = jsonfeed::to_string(&feed).unwrap();
@@ -312,27 +312,27 @@ fn create_jsonfeed(path: &str, dest: &Path, config: &Config, posts: &[Document])
             Ok(())
         }
         _ => Err(ErrorKind::ConfigFileMissingFields.into()),
-    }    
-}    
+    }
+}
 
-fn create_document_file<T: AsRef<Path>, R: AsRef<Path>>(content: &str,
-                                                        path: T,
-                                                        dest: R)
-                                                        -> Result<()> {
+fn create_document_file<T: AsRef<Path>, R: AsRef<Path>>(
+    content: &str,
+    path: T,
+    dest: R,
+) -> Result<()> {
     // construct target path
     let file_path = dest.as_ref().join(path);
 
     // create target directories if any exist
     if let Some(parent) = file_path.parent() {
         try!(fs::create_dir_all(parent).map_err(|e| {
-                                                    format!("Could not create {:?}: {}", parent, e)
-                                                }));
+            format!("Could not create {:?}: {}", parent, e)
+        }));
     }
 
-    let mut file =
-        try!(File::create(&file_path).map_err(|e| {
-                                                  format!("Could not create {:?}: {}", file_path, e)
-                                              }));
+    let mut file = try!(File::create(&file_path).map_err(|e| {
+        format!("Could not create {:?}: {}", file_path, e)
+    }));
 
     try!(file.write_all(content.as_bytes()));
     info!("Created {}", file_path.display());
