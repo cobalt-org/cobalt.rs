@@ -24,8 +24,9 @@ install:
   - curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain $TRAVIS_RUST_VERSION
   - source ~/.cargo/env || true
   - which cargo-coveralls || cargo install cargo-travis
-  - if [ "$TRAVIS_RUST_VERSION" = "stable" ]; then (travis_wait cargo install rustfmt --force --vers 0.8.3) fi
-  - if [ "$TRAVIS_RUST_VERSION" = "nightly" ]; then (cargo install clippy --force || true) fi
+  - which cargo-when || cargo install cargo-when
+  - travis_wait cargo when --channel stable install rustfmt --force --vers 0.8.3
+  - travis_wait cargo when --channel nightly install clippy --force || true
 
 script:
   - rustc -Vv
@@ -33,10 +34,10 @@ script:
   - cargo check --verbose
   - cargo check --verbose --features "syntax-highlight"
   - cargo test  --verbose --features "syntax-highlight"
-  - if [ "$TRAVIS_RUST_VERSION" = "nightly" ]; then (! which cargo-clippy || cargo clippy -- --version) fi
-  - if [ "$TRAVIS_RUST_VERSION" = "nightly" ]; then (! which cargo-clippy || cargo clippy --features "syntax-highlight") fi
-  - if [ "$TRAVIS_RUST_VERSION" = "stable" ]; then (cargo fmt -- --version) fi
-  - if [ "$TRAVIS_RUST_VERSION" = "stable" ]; then (cargo fmt -- --write-mode=diff) fi
+  - ! which cargo-clippy || cargo when --channel nightly clippy -- --version
+  - ! which cargo-clippy || cargo when --channel nightly clippy --features "syntax-highlight"
+  - cargo when --channel stable fmt -- --version
+  - cargo when --channel stable fmt -- --write-mode=diff
 
 before_deploy:
   - sh ci/before_deploy.sh
@@ -53,7 +54,7 @@ deploy:
   skip_cleanup: true
 
 after_success:
-  - if [ "$TRAVIS_RUST_VERSION" = "stable" -a "$TARGET" = "x86_64-unknown-linux-gnu" ]; then (cargo coverage) fi
+  - cargo when --channel stable -e TARGET=x86_64-unknown-linux-gnu coverage
 
 addons:
   apt:
