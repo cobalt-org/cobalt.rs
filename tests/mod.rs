@@ -196,6 +196,11 @@ pub fn rss() {
 }
 
 #[test]
+pub fn jsonfeed() {
+    run_test("jsonfeed").expect("Build error");
+}
+
+#[test]
 pub fn ignore_files() {
     run_test("ignore_files").unwrap();
 }

@@ -308,11 +308,10 @@ impl Document {
             .map(|s| s.to_owned());
 
         let link = root_url.to_owned() + &self.path.replace("\\", "/");
-        let itemtitle = self.attributes.get("title").and_then(|s| s.as_str()).map(
-            |s| {
-                s.to_owned()
-            },
-        );
+        let itemtitle = self.attributes
+            .get("title")
+            .and_then(|s| s.as_str())
+            .map(|s| s.to_owned());
         let mut cat = Vec::new();
         if let Some(categories) = self.attributes.get("categories") {
             if let &Value::Array(ref categories_array) = categories {

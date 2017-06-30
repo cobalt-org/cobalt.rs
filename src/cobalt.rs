@@ -315,24 +315,24 @@ fn create_jsonfeed(path: &str, dest: &Path, config: &Config, posts: &[Document])
     }
 }
 
-fn create_document_file<T: AsRef<Path>, R: AsRef<Path>>(
-    content: &str,
-    path: T,
-    dest: R,
-) -> Result<()> {
+fn create_document_file<T: AsRef<Path>, R: AsRef<Path>>(content: &str,
+                                                        path: T,
+                                                        dest: R)
+                                                        -> Result<()> {
     // construct target path
     let file_path = dest.as_ref().join(path);
 
     // create target directories if any exist
     if let Some(parent) = file_path.parent() {
         try!(fs::create_dir_all(parent).map_err(|e| {
-            format!("Could not create {:?}: {}", parent, e)
-        }));
+                                                    format!("Could not create {:?}: {}", parent, e)
+                                                }));
     }
 
-    let mut file = try!(File::create(&file_path).map_err(|e| {
-        format!("Could not create {:?}: {}", file_path, e)
-    }));
+    let mut file =
+        try!(File::create(&file_path).map_err(|e| {
+                                                  format!("Could not create {:?}: {}", file_path, e)
+                                              }));
 
     try!(file.write_all(content.as_bytes()));
     info!("Created {}", file_path.display());
