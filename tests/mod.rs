@@ -13,8 +13,8 @@ use tempdir::TempDir;
 use walkdir::WalkDir;
 use std::error::Error;
 use cobalt::Config;
-use chrono::{UTC};
-use regex::{Regex};
+use chrono::UTC;
+use regex::Regex;
 
 fn run_test(name: &str) -> Result<(), cobalt::Error> {
     let target = format!("tests/target/{}/", name);
@@ -234,8 +234,7 @@ pub fn querystrings() {
 #[test]
 pub fn timestamp() {
     // timestamp adds current ms time so need to build the target folder at run time
-    let mut config = Config::from_file("tests/fixtures/timestamp/.cobalt.yml")
-        .unwrap_or_default();
+    let mut config = Config::from_file("tests/fixtures/timestamp/.cobalt.yml").unwrap_or_default();
     config.source = "tests/fixtures/timestamp/".to_string();
     config.dest = "tests/target/timestamp/".to_string();
 
@@ -247,7 +246,9 @@ pub fn timestamp() {
     if result.is_ok() {
         // check timestamp is in the target layout
         let mut content = String::new();
-        let _file = File::open("tests/target/timestamp/index.html").unwrap().read_to_string(&mut content);
+        let _file = File::open("tests/target/timestamp/index.html")
+            .unwrap()
+            .read_to_string(&mut content);
         let re = Regex::new(&timestamp.as_str()).unwrap();
         assert!(re.is_match(&content.as_str()));
 

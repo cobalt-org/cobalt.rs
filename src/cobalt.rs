@@ -183,7 +183,8 @@ pub fn build(config: &Config) -> Result<()> {
         if config.dump.contains(&Dump::Liquid) {
             create_liquid_dump(dest, &doc.path, &doc.content, &doc.attributes)?;
         }
-        doc.attributes.insert("timestamp".to_owned(), timestamp.clone());
+        doc.attributes
+            .insert("timestamp".to_owned(), timestamp.clone());
 
         let mut context = doc.get_render_context(&posts_data);
         let doc_html = try!(doc.render(&mut context, source, &layouts, &mut layouts_cache));
