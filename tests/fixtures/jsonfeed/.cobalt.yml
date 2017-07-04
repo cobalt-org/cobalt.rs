@@ -1,0 +1,4 @@
+jsonfeed: feed.json
+name: My blog!
+description: Blog description
+link: http://example.com

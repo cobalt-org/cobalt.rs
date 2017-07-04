@@ -9,6 +9,9 @@ use yaml_rust::{Yaml, YamlLoader};
 use std::io::Read;
 use regex::Regex;
 use rss;
+use jsonfeed;
+use jsonfeed::Item;
+use jsonfeed::Content;
 
 #[cfg(all(feature="syntax-highlight", not(windows)))]
 use syntax_highlight::{initialize_codeblock, decorate_markdown};
@@ -291,6 +294,43 @@ impl Document {
             guid: Some(guid),
             pub_date: self.date.map(|date| date.to_rfc2822()),
             description: description,
+            ..Default::default()
+        }
+    }
+
+    /// Metadata for generating JSON feeds
+    pub fn to_jsonfeed(&self, root_url: &str) -> jsonfeed::Item {
+        let description = self.attributes
+            .get("description")
+            .or_else(|| self.attributes.get("excerpt"))
+            .or_else(|| self.attributes.get("content"))
+            .and_then(|s| s.as_str())
+            .map(|s| s.to_owned());
+
+        let link = root_url.to_owned() + &self.path.replace("\\", "/");
+        let itemtitle = self.attributes
+            .get("title")
+            .and_then(|s| s.as_str())
+            .map(|s| s.to_owned());
+        let mut cat = Vec::new();
+        if let Some(categories) = self.attributes.get("categories") {
+            if let &Value::Array(ref categories_array) = categories {
+                for category in categories_array {
+                    if let &Value::Str(ref category_string) = category {
+                        cat.push(category_string.clone());
+                    }
+                }
+            }
+        }
+
+        Item {
+            id: link.to_string(),
+            url: Some(link.to_string()),
+            title: Some(itemtitle.unwrap_or("unknown title".into())),
+            content: Content::Html(description.unwrap_or("".into())),
+            date_published: self.date.map(|date| date.to_rfc2822()),
+            // TODO completely implement categories, see Issue 131
+            tags: Some(cat),
             ..Default::default()
         }
     }
