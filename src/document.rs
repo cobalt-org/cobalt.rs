@@ -4,7 +4,7 @@ use std::collections::hash_map::Entry;
 use std::path::{Path, PathBuf};
 use std::default::Default;
 use error::Result;
-use chrono::{DateTime, FixedOffset, Datelike, Timelike};
+use chrono::{Datelike, Timelike};
 use yaml_rust::{Yaml, YamlLoader};
 use std::io::Read;
 use regex::Regex;
@@ -18,6 +18,7 @@ use syntax_highlight::{initialize_codeblock, decorate_markdown};
 
 use liquid::{Renderable, LiquidOptions, Context, Value, LocalTemplateRepository};
 
+use datetime;
 use pulldown_cmark as cmark;
 use liquid;
 
@@ -38,7 +39,7 @@ pub struct Document {
     pub layout: Option<String>,
     pub is_post: bool,
     pub is_draft: bool,
-    pub date: Option<DateTime<FixedOffset>>,
+    pub date: Option<datetime::DateTime>,
     file_path: String,
     markdown: bool,
 }
@@ -66,7 +67,7 @@ fn yaml_to_liquid(yaml: &Yaml) -> Option<Value> {
 /// and "exploding" the URL.
 fn format_path(p: &str,
                attributes: &HashMap<String, Value>,
-               date: &Option<DateTime<FixedOffset>>)
+               date: &Option<datetime::DateTime>)
                -> Result<String> {
     let mut p = p.to_owned();
 
@@ -125,7 +126,7 @@ impl Document {
                layout: Option<String>,
                is_post: bool,
                is_draft: bool,
-               date: Option<DateTime<FixedOffset>>,
+               date: Option<datetime::DateTime>,
                file_path: String,
                markdown: bool)
                -> Document {
@@ -201,7 +202,7 @@ impl Document {
         let date = attributes
             .get("date")
             .and_then(|d| d.as_str())
-            .and_then(|d| DateTime::parse_from_str(d, "%d %B %Y %H:%M:%S %z").ok());
+            .and_then(datetime::DateTime::parse);
 
         let file_stem = file_stem(new_path);
         let slug = slug::slugify(&file_stem);

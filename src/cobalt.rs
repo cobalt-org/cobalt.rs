@@ -4,13 +4,12 @@ use std::io::Write;
 use std::path::Path;
 use std::ffi::OsStr;
 use liquid::{Value, Object};
-use chrono::{UTC, FixedOffset};
-use chrono::offset::TimeZone;
 use rss::{Channel, Rss};
 use jsonfeed::Feed;
 use jsonfeed;
 use serde_yaml;
 
+use datetime;
 use document::Document;
 use error::{ErrorKind, Result};
 use config::{Config, Dump};
@@ -116,7 +115,7 @@ pub fn build(config: &Config) -> Result<()> {
     }
 
     // January 1, 1970 0:00:00 UTC, the beginning of time
-    let default_date = UTC.timestamp(0, 0).with_timezone(&FixedOffset::east(0));
+    let default_date = datetime::DateTime::default();
 
     let (mut posts, documents): (Vec<Document>, Vec<Document>) =
         documents.into_iter().partition(|x| x.is_post);

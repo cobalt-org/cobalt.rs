@@ -52,6 +52,7 @@ mod document;
 mod new;
 mod slug;
 mod files;
+mod datetime;
 
 #[cfg(feature="syntax-highlight")]
 mod syntax_highlight;
