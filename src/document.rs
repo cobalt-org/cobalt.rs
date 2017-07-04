@@ -304,7 +304,7 @@ impl Document {
             id: link.clone(),
             url: Some(link),
             title: Some(self.title_to_str().unwrap_or("unknown title".into())),
-            content: Content::Html(self.description_to_str().unwrap_or("".into())),
+            content: Content::Html(self.description_to_str().unwrap_or_else(|| "".into())),
             date_published: self.date.map(|date| date.to_rfc2822()),
             // TODO completely implement categories, see Issue 131
             tags: Some(cat),
