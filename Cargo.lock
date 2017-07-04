@@ -1,6 +1,6 @@
 [root]
 name = "cobalt-bin"
-version = "0.7.1"
+version = "0.7.2"
 dependencies = [
  "assert_cli 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "chrono 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
