@@ -271,69 +271,67 @@ impl Document {
 
     /// Metadata for generating RSS feeds
     pub fn to_rss(&self, root_url: &str) -> rss::Item {
-        let description = self.attributes
-            .get("description")
-            .or_else(|| self.attributes.get("excerpt"))
-            .or_else(|| self.attributes.get("content"))
-            .and_then(|s| s.as_str())
-            .map(|s| s.to_owned());
+        let link = self.link_to_str(root_url);
 
-        // Swap back slashes to forward slashes to ensure the URL's are valid on Windows
-        let link = root_url.to_owned() + &self.path.replace("\\", "/");
         let guid = rss::Guid {
             value: link.clone(),
             is_perma_link: true,
         };
 
         rss::Item {
-            title: self.attributes
-                .get("title")
-                .and_then(|s| s.as_str())
-                .map(|s| s.to_owned()),
+            title: self.title_to_str(),
             link: Some(link),
             guid: Some(guid),
             pub_date: self.date.map(|date| date.to_rfc2822()),
-            description: description,
+            description: self.description_to_str(),
             ..Default::default()
         }
     }
 
     /// Metadata for generating JSON feeds
     pub fn to_jsonfeed(&self, root_url: &str) -> jsonfeed::Item {
-        let description = self.attributes
-            .get("description")
-            .or_else(|| self.attributes.get("excerpt"))
-            .or_else(|| self.attributes.get("content"))
-            .and_then(|s| s.as_str())
-            .map(|s| s.to_owned());
+        let link = self.link_to_str(root_url);
 
-        let link = root_url.to_owned() + &self.path.replace("\\", "/");
-        let itemtitle = self.attributes
-            .get("title")
-            .and_then(|s| s.as_str())
-            .map(|s| s.to_owned());
-        let mut cat = Vec::new();
-        if let Some(categories) = self.attributes.get("categories") {
-            if let &Value::Array(ref categories_array) = categories {
-                for category in categories_array {
-                    if let &Value::Str(ref category_string) = category {
-                        cat.push(category_string.clone());
-                    }
-                }
-            }
-        }
+        let cat: Vec<_> = self.attributes
+            .get("categories")
+            .and_then(|v| v.as_array())
+            .unwrap_or(&vec![])
+            .iter()
+            .map(|v| v.to_string())
+            .collect();
 
         Item {
-            id: link.to_string(),
-            url: Some(link.to_string()),
-            title: Some(itemtitle.unwrap_or("unknown title".into())),
-            content: Content::Html(description.unwrap_or("".into())),
+            id: link.clone(),
+            url: Some(link),
+            title: Some(self.title_to_str().unwrap_or("unknown title".into())),
+            content: Content::Html(self.description_to_str().unwrap_or("".into())),
             date_published: self.date.map(|date| date.to_rfc2822()),
             // TODO completely implement categories, see Issue 131
             tags: Some(cat),
             ..Default::default()
         }
     }
+
+    /// Factor out some funtions common to rss and jsonfeed
+    fn link_to_str(&self, root_url: &str) -> String {
+        // Swap back slashes to forward slashes to ensure the URL's are valid on Windows
+        root_url.to_owned() + &self.path.replace("\\", "/")
+    }
+    fn title_to_str(&self) -> Option<String> {
+        self.attributes
+            .get("title")
+            .and_then(|s| s.as_str())
+            .map(|s| s.to_owned())
+    }
+    fn description_to_str(&self) -> Option<String> {
+        self.attributes
+            .get("description")
+            .or_else(|| self.attributes.get("excerpt"))
+            .or_else(|| self.attributes.get("content"))
+            .and_then(|s| s.as_str())
+            .map(|s| s.to_owned())
+    }
+
 
     /// Prepares liquid context for further rendering.
     pub fn get_render_context(&self, posts: &[Value]) -> Context {
