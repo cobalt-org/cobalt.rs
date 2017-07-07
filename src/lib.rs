@@ -60,5 +60,5 @@ mod frontmatter;
 #[cfg(feature="syntax-highlight")]
 mod syntax_highlight;
 
-#[cfg(all(feature="syntax-highlight", not(windows)))]
+#[cfg(all(feature="syntax-highlight"))]
 pub use syntax_highlight::list_syntax_themes;

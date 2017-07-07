@@ -209,7 +209,7 @@ fn run() -> Result<()> {
                                  .default_value("cobalt site import")
                                  .takes_value(true)));
 
-    #[cfg(all(feature="syntax-highlight", not(windows)))]
+    #[cfg(all(feature="syntax-highlight"))]
     let app_cli =
         app_cli
             .subcommand(SubCommand::with_name("list-syntax-themes").about("list available themes"));
@@ -412,12 +412,12 @@ fn run() -> Result<()> {
         }
 
         "list-syntax-themes" => {
-            #[cfg(all(feature="syntax-highlight", not(windows)))]
+            #[cfg(all(feature="syntax-highlight"))]
             for name in list_syntax_themes() {
                 println!("{}", name);
             }
 
-            #[cfg(any(not(feature="syntax-highlight"), windows))]
+            #[cfg(not(feature="syntax-highlight"))]
             bail!(global_matches.usage());
         }
 

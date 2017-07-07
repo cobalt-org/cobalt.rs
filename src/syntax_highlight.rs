@@ -150,7 +150,11 @@ pub fn has_syntax_theme(name: &str) -> bool {
 }
 
 pub fn list_syntax_themes<'a>() -> Vec<&'a String> {
-    SETUP.theme_set.themes.keys().collect::<Vec<_>>()
+    #[cfg(not(windows))]
+    return SETUP.theme_set.themes.keys().collect::<Vec<_>>();
+
+    #[cfg(windows)]
+    return vec![];
 }
 
 #[cfg(test)]
