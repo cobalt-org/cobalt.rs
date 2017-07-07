@@ -386,9 +386,11 @@ impl Document {
                    source: &Path,
                    config: &Config)
                    -> Result<String> {
+        let theme_name = config.syntax_theme.clone();
         let mut options = LiquidOptions::default();
         options.template_repository = Box::new(LocalTemplateRepository::new(source.to_owned()));
-        let highlight: Box<liquid::Block> = Box::new(initialize_codeblock);
+        let highlight: Box<liquid::Block> =
+            Box::new(move |_, args, tokens, _| initialize_codeblock(args, tokens, &theme_name));
         options.blocks.insert("highlight".to_string(), highlight);
         let template = try!(liquid::parse(content, options));
         let html = try!(template.render(context)).unwrap_or_default();

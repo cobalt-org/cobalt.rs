@@ -4,7 +4,6 @@ extern crate pulldown_cmark as cmark;
 
 use liquid::Renderable;
 use liquid::Context;
-use liquid::LiquidOptions;
 use liquid::Token::{self, Identifier};
 use liquid::lexer::Element::{self, Expression, Tag, Raw};
 use liquid::Error;
@@ -51,9 +50,7 @@ impl Renderable for CodeBlock {
             }
             .unwrap_or_else(|| SETUP.syntax_set.find_syntax_plain_text());
 
-        Ok(Some(highlighted_snippet_for_string(&self.code,
-                                               syntax,
-                                               &SETUP.theme_set.themes[&self.theme.name.unwrap()])))
+        Ok(Some(highlighted_snippet_for_string(&self.code, syntax, &self.theme)))
     }
 }
 
@@ -96,11 +93,9 @@ impl<'a> Iterator for DecoratedParser<'a> {
                                 .next()
                                 .and_then(|lang| SETUP.syntax_set.find_syntax_by_token(lang))
                                 .unwrap_or_else(|| SETUP.syntax_set.find_syntax_plain_text());
-                        self.h = Some(HighlightLines::new(&cur_syntax,
-                                                          &SETUP.theme_set.themes
-                                                               [&self.config.syntax_theme]));
-                        let snippet = start_coloured_html_snippet(&SETUP.theme_set.themes
-                                                                       [&self.config.syntax_theme]);
+                        let theme = &SETUP.theme_set.themes[&self.config.syntax_theme];
+                        self.h = Some(HighlightLines::new(&cur_syntax, theme));
+                        let snippet = start_coloured_html_snippet(theme);
                         return Some(Html(Owned(snippet)));
                     }
                     if let End(cmarkTag::CodeBlock(_)) = item {
@@ -118,11 +113,9 @@ impl<'a> Iterator for DecoratedParser<'a> {
     }
 }
 
-pub fn initialize_codeblock(_: &str,
-                            arguments: &[Token],
+pub fn initialize_codeblock(arguments: &[Token],
                             tokens: &[Element],
-                            _: &LiquidOptions,
-                            config: &Config)
+                            theme_name: &str)
                             -> Result<Box<Renderable>, Error> {
 
     let content = tokens
@@ -144,7 +137,7 @@ pub fn initialize_codeblock(_: &str,
     Ok(Box::new(CodeBlock {
                     code: content,
                     lang: lang,
-                    theme: config.syntax_theme,
+                    theme: SETUP.theme_set.themes[theme_name].clone(),
                 }))
 }
 
@@ -188,7 +181,10 @@ mod test {
         let mut options: LiquidOptions = Default::default();
         options
             .blocks
-            .insert("codeblock".to_string(), Box::new(initialize_codeblock));
+            .insert("codeblock".to_string(),
+                    Box::new(|_, args, tokens, _| {
+                                 initialize_codeblock(args, tokens, "base16-ocean.dark")
+                             }));
         let template = liquid::parse(&format!("{{% codeblock rust %}}{}{{% endcodeblock %}}",
                                               CODE_BLOCK),
                                      options)
