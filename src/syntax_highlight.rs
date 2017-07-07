@@ -145,6 +145,10 @@ pub fn decorate_markdown<'a>(parser: Parser<'a>, config: &'a Config) -> Decorate
     DecoratedParser::new(parser, config)
 }
 
+pub fn has_syntax_theme(name: &str) -> bool {
+    SETUP.theme_set.themes.contains_key(name)
+}
+
 #[cfg(test)]
 mod test {
 

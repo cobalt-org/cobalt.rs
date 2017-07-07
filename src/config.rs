@@ -5,6 +5,9 @@ use std::io::Read;
 use error::Result;
 use yaml_rust::YamlLoader;
 
+#[cfg(all(feature="syntax-highlight", not(windows)))]
+use syntax_highlight::has_syntax_theme;
+
 arg_enum! {
     #[derive(Debug, PartialEq, Copy, Clone)]
     pub enum Dump {
@@ -143,9 +146,17 @@ impl Config {
             config.excerpt_separator = excerpt_separator.to_owned();
         };
 
-        if let Some(theme) = yaml["syntax-highlight"]["theme"].as_str() {
-            config.syntax_theme = theme.to_owned();
-        };
+        #[cfg(all(feature="syntax-highlight", not(windows)))]
+        {
+            if let Some(theme) = yaml["syntax-highlight"]["theme"].as_str() {
+                if has_syntax_theme(theme) {
+                    config.syntax_theme = theme.to_owned();
+                } else {
+                    warn!("Theme named '{}' is not found.  Using default 'base16-ocean.dark'.",
+                          theme);
+                }
+            };
+        }
 
         Ok(config)
     }
