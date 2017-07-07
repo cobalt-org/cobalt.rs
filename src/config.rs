@@ -152,7 +152,7 @@ impl Config {
                 if has_syntax_theme(theme) {
                     config.syntax_theme = theme.to_owned();
                 } else {
-                    warn!("Theme named '{}' is not found.  Using default 'base16-ocean.dark'.",
+                    warn!("Theme named '{}' is not found.  Using default 'base16-ocean.dark'.  Run `cobalt list-syntax-themes` to see available themes.",
                           theme);
                 }
             };

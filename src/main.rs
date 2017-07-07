@@ -42,6 +42,9 @@ use std::io::prelude::*;
 use std::io::Result as IoResult;
 use std::fs::File;
 
+#[cfg(all(feature="syntax-highlight", not(windows)))]
+use cobalt::list_syntax_themes;
+
 error_chain! {
 
     links {
@@ -60,7 +63,7 @@ error_chain! {
 quick_main!(run);
 
 fn run() -> Result<()> {
-    let global_matches = App::new("Cobalt")
+    let app_cli = App::new("Cobalt")
         .version(crate_version!())
         .author("Benny Klotz <r3qnbenni@gmail.com>, Johann Hofmann")
         .about("A static site generator written in Rust.")
@@ -204,8 +207,14 @@ fn run() -> Result<()> {
                                  .value_name("COMMIT-MESSAGE")
                                  .help("Commit message that will be used on import")
                                  .default_value("cobalt site import")
-                                 .takes_value(true)))
-        .get_matches();
+                                 .takes_value(true)));
+
+    #[cfg(all(feature="syntax-highlight", not(windows)))]
+    let app_cli =
+        app_cli
+            .subcommand(SubCommand::with_name("list-syntax-themes").about("list available themes"));
+
+    let global_matches = app_cli.get_matches();
 
     let (command, matches) = match global_matches.subcommand() {
         (command, Some(matches)) => (command, matches),
@@ -400,6 +409,16 @@ fn run() -> Result<()> {
             let branch = matches.value_of("branch").unwrap().to_string();
             let message = matches.value_of("message").unwrap().to_string();
             import(&config, &branch, &message);
+        }
+
+        "list-syntax-themes" => {
+            #[cfg(all(feature="syntax-highlight", not(windows)))]
+            for name in list_syntax_themes() {
+                println!("{}", name);
+            }
+
+            #[cfg(any(not(feature="syntax-highlight"), windows))]
+            bail!(global_matches.usage());
         }
 
         _ => {

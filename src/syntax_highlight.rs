@@ -149,6 +149,10 @@ pub fn has_syntax_theme(name: &str) -> bool {
     SETUP.theme_set.themes.contains_key(name)
 }
 
+pub fn list_syntax_themes<'a>() -> Vec<&'a String> {
+    SETUP.theme_set.themes.keys().collect::<Vec<_>>()
+}
+
 #[cfg(test)]
 mod test {
 
