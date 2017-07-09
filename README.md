@@ -52,6 +52,7 @@ There are a few people already using `cobalt`. Here is a list of projects and th
 - [kstep.me](http://kstep.me) [Source](https://github.com/kstep/kstep.github.com)
 - [matthias-endler.de](https://matthias-endler.de/) [Source](https://github.com/mre/mre.github.io)
 - [sda.io](https://sda.io) [Source](https://github.com/mfs/blog)
+- [booyaa.wtf](https://booyaa.wtf/tags/cobalt/) [Source](https://github.com/booyaa/booyaa.github.io)
 
 ## Usage
 
