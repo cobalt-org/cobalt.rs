@@ -74,17 +74,11 @@ pub fn build(config: &Config) -> Result<()> {
                         template_extensions
                             .contains(&p.extension().unwrap_or_else(|| OsStr::new("")))
                     }) {
-        let src_path = source.join(file_path.as_path());
-
-        let new_path = source.join(file_path);
-        let new_path = new_path
-            .strip_prefix(source)
-            .expect("Entry not in source folder");
-
         // if the document is in the posts folder it's considered a post
+        let src_path = source.join(file_path.as_path());
         let is_post = src_path.starts_with(posts_path.as_path());
 
-        let doc = Document::parse(src_path.as_path(), new_path, is_post, &config.post_path)?;
+        let doc = Document::parse(source, &file_path, &file_path, is_post, &config.post_path)?;
         if !doc.is_draft || config.include_drafts {
             documents.push(doc);
         }
@@ -103,13 +97,12 @@ pub fn build(config: &Config) -> Result<()> {
                             template_extensions
                                 .contains(&p.extension().unwrap_or_else(|| OsStr::new("")))
                         }) {
-            let src_path = drafts_root.join(file_path.as_path());
-
-            let new_path = posts_path.join(file_path);
+            let new_path = posts_path.join(&file_path);
             let new_path = new_path
                 .strip_prefix(source)
                 .expect("Entry not in source folder");
-            let doc = try!(Document::parse(src_path.as_path(), new_path, true, &config.post_path));
+            let doc =
+                try!(Document::parse(&drafts_root, &file_path, new_path, true, &config.post_path));
             documents.push(doc);
         }
     }

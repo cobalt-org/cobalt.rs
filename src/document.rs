@@ -31,6 +31,21 @@ lazy_static!{
     static ref MARKDOWN_REF: Regex = Regex::new(r"(?m:^ {0,3}\[[^\]]+\]:.+$)").unwrap();
 }
 
+fn read_file<P: AsRef<Path>>(path: P) -> Result<String> {
+    let mut file = File::open(path.as_ref())?;
+    let mut text = String::new();
+    file.read_to_string(&mut text)?;
+    Ok(text)
+}
+
+fn read_document<PB: Into<PathBuf>, P: AsRef<Path>>(root: PB, relpath: P) -> Result<String> {
+    let path = root.into().join(relpath);
+    let mut file = File::open(path)?;
+    let mut text = String::new();
+    file.read_to_string(&mut text)?;
+    Ok(text)
+}
+
 fn split_document(content: &str) -> Result<(Option<&str>, &str)> {
     if FRONT_MATTER_DIVIDE.is_match(content) {
         let mut splits = FRONT_MATTER_DIVIDE.splitn(content, 2);
@@ -45,13 +60,6 @@ fn split_document(content: &str) -> Result<(Option<&str>, &str)> {
     } else {
         Ok((None, content))
     }
-}
-
-fn read_file<P: AsRef<Path>>(path: P) -> Result<String> {
-    let mut file = try!(File::open(path));
-    let mut text = String::new();
-    try!(file.read_to_string(&mut text));
-    Ok(text)
 }
 
 fn yaml_to_liquid(yaml: &Yaml) -> Option<Value> {
@@ -159,15 +167,16 @@ impl Document {
         }
     }
 
-    pub fn parse(file_path: &Path,
-                 new_path: &Path,
+    pub fn parse(root_path: &Path,
+                 source_file: &Path,
+                 dest_file: &Path,
                  mut is_post: bool,
                  post_path: &Option<String>)
                  -> Result<Document> {
-        let mut attributes: HashMap<String, Value> = HashMap::new();
-        let content = try!(read_file(file_path));
+        let content = read_document(root_path, source_file)?;
         let (front, content) = split_document(&content)?;
 
+        let mut attributes: HashMap<String, Value> = HashMap::new();
         // if there is front matter, split the file and parse it
         if let Some(front) = front {
             let yaml_result = try!(YamlLoader::load_from_str(front));
@@ -177,7 +186,7 @@ impl Document {
                              .as_hash()
                              .ok_or_else(|| {
                                              format!("Incorrect front matter format in {:?}",
-                                                     file_path)
+                                                     source_file)
                                          }));
 
                 for (key, value) in yaml_attributes {
@@ -209,7 +218,7 @@ impl Document {
             .and_then(|d| d.as_str())
             .and_then(datetime::DateTime::parse);
 
-        let file_stem = file_stem(new_path);
+        let file_stem = file_stem(dest_file);
         let slug = slug::slugify(&file_stem);
         attributes
             .entry("title".to_owned())
@@ -223,7 +232,7 @@ impl Document {
             *attributes
                  .entry("ext".to_owned())
                  .or_insert_with(|| {
-                                     Value::Str(new_path
+                                     Value::Str(dest_file
                                                     .extension()
                                                     .and_then(|os| os.to_str())
                                                     .unwrap_or("")
@@ -237,7 +246,7 @@ impl Document {
             .and_then(|l| l.as_str())
             .map(|x| x.to_owned());
 
-        let mut path_buf = PathBuf::from(new_path);
+        let mut path_buf = PathBuf::from(dest_file);
         path_buf.set_extension("html");
 
         // if the user specified a custom path override
@@ -270,7 +279,7 @@ impl Document {
                          is_post,
                          is_draft,
                          date,
-                         file_path.to_string_lossy().into_owned(),
+                         dest_file.to_string_lossy().into_owned(),
                          markdown))
     }
 
