@@ -98,9 +98,9 @@ impl<'a> Iterator for DecoratedParser<'a> {
                                 .unwrap_or_else(|| SETUP.syntax_set.find_syntax_plain_text());
                         self.h = Some(HighlightLines::new(&cur_syntax,
                                                           &SETUP.theme_set.themes
-                                                               [&self.config.theme]));
+                                                               [&self.config.syntax_theme]));
                         let snippet = start_coloured_html_snippet(&SETUP.theme_set.themes
-                                                                       [&self.config.theme]);
+                                                                       [&self.config.syntax_theme]);
                         return Some(Html(Owned(snippet)));
                     }
                     if let End(cmarkTag::CodeBlock(_)) = item {
@@ -144,7 +144,7 @@ pub fn initialize_codeblock(_: &str,
     Ok(Box::new(CodeBlock {
                     code: content,
                     lang: lang,
-                    theme: config.theme,
+                    theme: config.syntax_theme,
                 }))
 }
 
