@@ -61,4 +61,4 @@ mod frontmatter;
 mod syntax_highlight;
 
 #[cfg(all(feature="syntax-highlight"))]
-pub use syntax_highlight::list_syntax_themes;
+pub use syntax_highlight::{list_syntax_themes, list_syntaxes};
