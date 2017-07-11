@@ -1,7 +1,7 @@
 use std::fs::{self, File};
 use std::collections::HashMap;
 use std::io::Write;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::ffi::OsStr;
 use liquid::{Value, Object};
 use rss::{Channel, Rss};
@@ -230,8 +230,21 @@ pub fn build(config: &Config) -> Result<()> {
     Ok(())
 }
 
-fn create_liquid_dump(dest: &Path, path: &str, content: &str, attributes: &Object) -> Result<()> {
-    let mut liquid_file_path = dest.join(path);
+fn create_liquid_dump<B: Into<PathBuf>, P: AsRef<Path>, S: AsRef<str>>(dest: B,
+                                                                       relpath: P,
+                                                                       content: S,
+                                                                       attributes: &Object)
+                                                                       -> Result<()> {
+    create_liquid_dump_internal(dest.into(), relpath.as_ref(), content.as_ref(), attributes)
+}
+
+fn create_liquid_dump_internal(dest: PathBuf,
+                               relpath: &Path,
+                               content: &str,
+                               attributes: &Object)
+                               -> Result<()> {
+    let mut liquid_file_path = dest;
+    liquid_file_path.push(relpath);
     let mut liquid_file_name = OsStr::new("_").to_os_string();
     {
         let original_file_name = liquid_file_path.file_name().ok_or("File name missing")?;
@@ -314,26 +327,28 @@ fn create_jsonfeed(path: &str, dest: &Path, config: &Config, posts: &[Document])
     }
 }
 
-fn create_document_file<T: AsRef<Path>, R: AsRef<Path>>(content: &str,
-                                                        path: T,
-                                                        dest: R)
-                                                        -> Result<()> {
+fn create_document_file<S: AsRef<str>, T: AsRef<Path>, R: Into<PathBuf>>(content: S,
+                                                                         relpath: T,
+                                                                         dest: R)
+                                                                         -> Result<()> {
+    create_document_file_internal(content.as_ref(), relpath.as_ref(), dest.into())
+}
+
+fn create_document_file_internal(content: &str, relpath: &Path, dest: PathBuf) -> Result<()> {
     // construct target path
-    let file_path = dest.as_ref().join(path);
+    let mut file_path = dest;
+    file_path.push(relpath);
 
     // create target directories if any exist
     if let Some(parent) = file_path.parent() {
-        try!(fs::create_dir_all(parent).map_err(|e| {
-                                                    format!("Could not create {:?}: {}", parent, e)
-                                                }));
+        fs::create_dir_all(parent)
+            .map_err(|e| format!("Could not create {:?}: {}", parent, e))?;
     }
 
-    let mut file =
-        try!(File::create(&file_path).map_err(|e| {
-                                                  format!("Could not create {:?}: {}", file_path, e)
-                                              }));
+    let mut file = File::create(&file_path)
+        .map_err(|e| format!("Could not create {:?}: {}", file_path, e))?;
 
-    try!(file.write_all(content.as_bytes()));
+    file.write_all(content.as_bytes())?;
     info!("Created {}", file_path.display());
     Ok(())
 }
