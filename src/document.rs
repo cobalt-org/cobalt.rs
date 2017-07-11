@@ -104,7 +104,16 @@ fn format_path(p: &str,
         }
     }
 
-    let mut path = Path::new(&p);
+    let trimmed = p.trim_left_matches('/');
+    Ok(trimmed.to_owned())
+}
+
+fn format_permalink_path<S: AsRef<str>>(permalink: S) -> PathBuf {
+    format_permalink_path_str(permalink.as_ref())
+}
+
+fn format_permalink_path_str(permalink: &str) -> PathBuf {
+    let mut path = Path::new(&permalink);
 
     // remove the root prefix (leading slash on unix systems)
     if path.has_root() {
@@ -120,7 +129,7 @@ fn format_path(p: &str,
         path_buf.push("index.html")
     }
 
-    Ok(path_buf.to_string_lossy().into_owned())
+    path_buf
 }
 
 /// The base-name without an extension.  Correlates to Jekyll's :name path tag
@@ -132,37 +141,37 @@ fn file_stem(p: &Path) -> String {
 
 #[derive(Debug)]
 pub struct Document {
-    pub path: String,
+    pub url_path: String,
+    pub file_path: PathBuf,
     pub attributes: HashMap<String, Value>,
     pub content: String,
     pub layout: Option<String>,
     pub is_post: bool,
     pub is_draft: bool,
     pub date: Option<datetime::DateTime>,
-    file_path: String,
     markdown: bool,
 }
 
 impl Document {
-    pub fn new(path: String,
+    pub fn new(url_path: String,
+               file_path: PathBuf,
                attributes: HashMap<String, Value>,
                content: String,
                layout: Option<String>,
                is_post: bool,
                is_draft: bool,
                date: Option<datetime::DateTime>,
-               file_path: String,
                markdown: bool)
                -> Document {
         Document {
-            path: path,
+            url_path: url_path,
+            file_path: file_path,
             attributes: attributes,
             content: content,
             layout: layout,
             is_post: is_post,
             is_draft: is_draft,
             date: date,
-            file_path: file_path,
             markdown: markdown,
         }
     }
@@ -253,41 +262,40 @@ impl Document {
         // format it and push it over the original file name
         // TODO replace "date", "pretty", "ordinal" and "none"
         // for Jekyl compatibility
+        let mut url_path = path_buf
+            .to_str()
+            .ok_or_else(|| format!("Invalid path {:?}", path_buf))?
+            .to_owned()
+            .replace("\\", "/");
         if let Some(path) = attributes.get("path").and_then(|p| p.as_str()) {
-            path_buf = PathBuf::from(try!(format_path(path, &attributes, &date)));
+            url_path = format_path(path, &attributes, &date)?;
+            path_buf = format_permalink_path(&url_path);
         } else if is_post {
             // check if there is a global setting for post paths
             if let Some(ref path) = *post_path {
-                path_buf = PathBuf::from(try!(format_path(path, &attributes, &date)));
+                url_path = format_path(path, &attributes, &date)?;
+                path_buf = format_permalink_path(&url_path);
             }
         };
 
-        let path = try!(path_buf
-                            .to_str()
-                            .ok_or_else(|| {
-                                            format!("Cannot convert pathname {:?} to UTF-8",
-                                                    path_buf)
-                                        }));
-
         // Swap back slashes to forward slashes to ensure the URL's are valid on Windows
-        attributes.insert("path".to_owned(), Value::Str(path.replace("\\", "/")));
+        attributes.insert("path".to_owned(), Value::str(&url_path));
 
-        Ok(Document::new(path.to_owned(),
+        Ok(Document::new(url_path,
+                         path_buf,
                          attributes,
                          content.to_string(),
                          layout,
                          is_post,
                          is_draft,
                          date,
-                         dest_file.to_string_lossy().into_owned(),
                          markdown))
     }
 
 
     /// Metadata for generating RSS feeds
     pub fn to_rss(&self, root_url: &str) -> rss::Item {
-        let link = self.link_to_str(root_url);
-
+        let link = root_url.to_owned() + &self.url_path;
         let guid = rss::Guid {
             value: link.clone(),
             is_perma_link: true,
@@ -305,8 +313,7 @@ impl Document {
 
     /// Metadata for generating JSON feeds
     pub fn to_jsonfeed(&self, root_url: &str) -> jsonfeed::Item {
-        let link = self.link_to_str(root_url);
-
+        let link = root_url.to_owned() + &self.url_path;
         let cat: Vec<_> = self.attributes
             .get("categories")
             .and_then(|v| v.as_array())
@@ -327,11 +334,6 @@ impl Document {
         }
     }
 
-    /// Factor out some funtions common to rss and jsonfeed
-    fn link_to_str(&self, root_url: &str) -> String {
-        // Swap back slashes to forward slashes to ensure the URL's are valid on Windows
-        root_url.to_owned() + &self.path.replace("\\", "/")
-    }
     fn title_to_str(&self) -> Option<String> {
         self.attributes
             .get("title")
@@ -473,7 +475,7 @@ impl Document {
             let layout_data_ref = match layouts_cache.entry(layout.to_owned()) {
                 Entry::Vacant(vacant) => {
                     let layout_data = try!(read_file(layouts_dir.join(layout)).map_err(|e| {
-                        format!("Layout {} can not be read (defined in {}): {}",
+                        format!("Layout {} can not be read (defined in {:?}): {}",
                                 layout,
                                 self.file_path,
                                 e)
@@ -535,5 +537,23 @@ mod test {
         let (frontmatter, content) = split_document(input).unwrap();
         assert_eq!(frontmatter.unwrap(), "frontmatter");
         assert_eq!(content, "");
+    }
+
+    #[test]
+    fn format_permalink_path_absolute() {
+        let actual = format_permalink_path("/hello/world.html");
+        assert_eq!(actual, Path::new("hello/world.html"));
+    }
+
+    #[test]
+    fn format_permalink_path_no_explode() {
+        let actual = format_permalink_path("/hello/world.custom");
+        assert_eq!(actual, Path::new("hello/world.custom"));
+    }
+
+    #[test]
+    fn format_permalink_path_explode() {
+        let actual = format_permalink_path("/hello/world");
+        assert_eq!(actual, Path::new("hello/world/index.html"));
     }
 }

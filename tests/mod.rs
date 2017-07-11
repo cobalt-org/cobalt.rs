@@ -12,6 +12,14 @@ use walkdir::WalkDir;
 use std::error::Error;
 use cobalt::Config;
 
+macro_rules! assert_contains {
+    ($haystack: expr, $needle: expr) => {
+        let text = $haystack.to_owned();
+        println!("{}", text);
+        assert!(text.contains($needle))
+    }
+}
+
 fn run_test(name: &str) -> Result<(), cobalt::Error> {
     let target = format!("tests/target/{}/", name);
     let mut config = Config::from_file(format!("tests/fixtures/{}/.cobalt.yml", name))
@@ -169,10 +177,9 @@ pub fn liquid_raw() {
 pub fn no_extends_error() {
     let err = run_test("no_extends_error");
     assert!(err.is_err());
-    assert!(err.unwrap_err()
-                .description()
-                .contains("Layout default_nonexistent.liquid can not be read (defined in \
-                   index.liquid)"));
+    assert_contains!(err.unwrap_err().description(),
+                     "Layout default_nonexistent.liquid can not be read (defined in \
+                   \"index.html\")");
 }
 
 #[test]

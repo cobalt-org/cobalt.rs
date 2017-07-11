@@ -133,7 +133,7 @@ pub fn build(config: &Config) -> Result<()> {
 
     trace!("Generating posts");
     for (i, mut post) in &mut posts.iter_mut().enumerate() {
-        trace!("Generating {}", post.path);
+        trace!("Generating {}", post.url_path);
 
         // posts are in reverse date order, so previous post is the next in the list (+1)
         if let Some(previous) = simple_posts_data.get(i + 1) {
@@ -147,14 +147,14 @@ pub fn build(config: &Config) -> Result<()> {
         }
 
         if config.dump.contains(&Dump::Liquid) {
-            create_liquid_dump(dest, &post.path, &post.content, &post.attributes)?;
+            create_liquid_dump(dest, &post.file_path, &post.content, &post.attributes)?;
         }
 
         let mut context = post.get_render_context(&simple_posts_data);
 
-        try!(post.render_excerpt(&mut context, source, &config.excerpt_separator));
-        let post_html = try!(post.render(&mut context, source, &layouts, &mut layouts_cache));
-        try!(create_document_file(&post_html, &post.path, dest));
+        post.render_excerpt(&mut context, source, &config.excerpt_separator)?;
+        let post_html = post.render(&mut context, source, &layouts, &mut layouts_cache)?;
+        create_document_file(post_html, &post.file_path, dest)?;
     }
 
     // check if we should create an RSS file and create it!
@@ -175,15 +175,15 @@ pub fn build(config: &Config) -> Result<()> {
 
     trace!("Generating other documents");
     for mut doc in documents {
-        trace!("Generating {}", doc.path);
+        trace!("Generating {}", doc.url_path);
 
         if config.dump.contains(&Dump::Liquid) {
-            create_liquid_dump(dest, &doc.path, &doc.content, &doc.attributes)?;
+            create_liquid_dump(dest, &doc.file_path, &doc.content, &doc.attributes)?;
         }
 
         let mut context = doc.get_render_context(&posts_data);
-        let doc_html = try!(doc.render(&mut context, source, &layouts, &mut layouts_cache));
-        try!(create_document_file(&doc_html, &doc.path, dest));
+        let doc_html = doc.render(&mut context, source, &layouts, &mut layouts_cache)?;
+        create_document_file(doc_html, doc.file_path, dest)?;
     }
 
     // copy all remaining files in the source to the destination
