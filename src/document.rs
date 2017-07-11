@@ -31,17 +31,20 @@ lazy_static!{
     static ref MARKDOWN_REF: Regex = Regex::new(r"(?m:^ {0,3}\[[^\]]+\]:.+$)").unwrap();
 }
 
-#[derive(Debug)]
-pub struct Document {
-    pub path: String,
-    pub attributes: HashMap<String, Value>,
-    pub content: String,
-    pub layout: Option<String>,
-    pub is_post: bool,
-    pub is_draft: bool,
-    pub date: Option<datetime::DateTime>,
-    file_path: String,
-    markdown: bool,
+fn split_document(content: &str) -> Result<(Option<&str>, &str)> {
+    if FRONT_MATTER_DIVIDE.is_match(content) {
+        let mut splits = FRONT_MATTER_DIVIDE.splitn(content, 2);
+
+        // above the split are the attributes
+        let front_split = splits.next().unwrap_or("");
+
+        // everything below the split becomes the new content
+        let content_split = splits.next().unwrap_or("");
+
+        Ok((Some(front_split), content_split))
+    } else {
+        Ok((None, content))
+    }
 }
 
 fn read_file<P: AsRef<Path>>(path: P) -> Result<String> {
@@ -119,6 +122,19 @@ fn file_stem(p: &Path) -> String {
         .unwrap_or_else(|| "".to_owned())
 }
 
+#[derive(Debug)]
+pub struct Document {
+    pub path: String,
+    pub attributes: HashMap<String, Value>,
+    pub content: String,
+    pub layout: Option<String>,
+    pub is_post: bool,
+    pub is_draft: bool,
+    pub date: Option<datetime::DateTime>,
+    file_path: String,
+    markdown: bool,
+}
+
 impl Document {
     pub fn new(path: String,
                attributes: HashMap<String, Value>,
@@ -150,18 +166,11 @@ impl Document {
                  -> Result<Document> {
         let mut attributes: HashMap<String, Value> = HashMap::new();
         let content = try!(read_file(file_path));
+        let (front, content) = split_document(&content)?;
 
         // if there is front matter, split the file and parse it
-        let content = if FRONT_MATTER_DIVIDE.is_match(&content) {
-            let mut splits = FRONT_MATTER_DIVIDE.splitn(&content, 2);
-
-            // above the split are the attributes
-            let attribute_split = splits.next().unwrap_or("");
-
-            // everything below the split becomes the new content
-            let content_split = splits.next().unwrap_or("").to_owned();
-
-            let yaml_result = try!(YamlLoader::load_from_str(attribute_split));
+        if let Some(front) = front {
+            let yaml_result = try!(YamlLoader::load_from_str(front));
 
             if !yaml_result.is_empty() {
                 let yaml_attributes = try!(yaml_result[0]
@@ -181,11 +190,7 @@ impl Document {
                 }
 
             }
-
-            content_split
-        } else {
-            content
-        };
+        }
 
         if let Value::Bool(val) = *attributes
                                        .entry("is_post".to_owned())
@@ -260,7 +265,7 @@ impl Document {
 
         Ok(Document::new(path.to_owned(),
                          attributes,
-                         content,
+                         content.to_string(),
                          layout,
                          is_post,
                          is_draft,
@@ -480,9 +485,46 @@ impl Document {
     }
 }
 
-#[test]
-fn test_file_stem() {
-    let input = PathBuf::from("/embedded/path/___filE-worlD-__09___.md");
-    let actual = file_stem(input.as_path());
-    assert_eq!(actual, "___filE-worlD-__09___");
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn file_stem_absolute_path() {
+        let input = PathBuf::from("/embedded/path/___filE-worlD-__09___.md");
+        let actual = file_stem(input.as_path());
+        assert_eq!(actual, "___filE-worlD-__09___");
+    }
+
+    #[test]
+    fn split_document_empty() {
+        let input = "";
+        let (frontmatter, content) = split_document(input).unwrap();
+        assert!(frontmatter.is_none());
+        assert_eq!(content, "");
+    }
+
+    #[test]
+    fn split_document_no_front_matter() {
+        let input = "Body";
+        let (frontmatter, content) = split_document(input).unwrap();
+        assert!(frontmatter.is_none());
+        assert_eq!(content, "Body");
+    }
+
+    #[test]
+    fn split_document_empty_front_matter() {
+        let input = "---\nBody";
+        let (frontmatter, content) = split_document(input).unwrap();
+        assert_eq!(frontmatter.unwrap(), "");
+        assert_eq!(content, "Body");
+    }
+
+    #[test]
+    fn split_document_empty_body() {
+        let input = "frontmatter---\n";
+        let (frontmatter, content) = split_document(input).unwrap();
+        assert_eq!(frontmatter.unwrap(), "frontmatter");
+        assert_eq!(content, "");
+    }
 }
