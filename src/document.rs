@@ -171,6 +171,38 @@ fn format_url_as_file_str(permalink: &str) -> PathBuf {
     path_buf
 }
 
+fn document_attributes(front: &frontmatter::Frontmatter,
+                       source_file: &str,
+                       url_path: &str)
+                       -> liquid::Object {
+    let mut attributes = liquid::Object::new();
+
+    attributes.insert("path".to_owned(), liquid::Value::str(url_path));
+    attributes.insert("source".to_owned(), liquid::Value::str(source_file));
+    attributes.insert("title".to_owned(), liquid::Value::str(&front.title));
+    if let Some(ref description) = front.description {
+        attributes.insert("description".to_owned(), liquid::Value::str(description));
+    }
+    attributes.insert("categories".to_owned(),
+                      liquid::Value::Array(front
+                                               .categories
+                                               .iter()
+                                               .map(|c| liquid::Value::str(c))
+                                               .collect()));
+    if let Some(ref published_date) = front.published_date {
+        attributes.insert("date".to_owned(),
+                          liquid::Value::Str(published_date.format()));
+    }
+    attributes.insert("draft".to_owned(), liquid::Value::Bool(front.is_draft));
+    attributes.insert("is_post".to_owned(), liquid::Value::Bool(front.is_post));
+
+    for (key, val) in front.custom.iter() {
+        attributes.insert(key.clone(), val.clone());
+    }
+
+    attributes
+}
+
 #[derive(Debug)]
 pub struct Document {
     pub url_path: String,
@@ -205,7 +237,7 @@ impl Document {
         trace!("Parsing {:?}", source_file);
         let content = read_document(root_path, source_file)?;
         let (front, content) = split_document(&content)?;
-        let mut attributes = front
+        let attributes = front
             .map(|s| serde_yaml::from_str(s))
             .map_or(Ok(None), |r| r.map(Some))?
             .unwrap_or_else(|| liquid::Object::new());
@@ -244,14 +276,16 @@ impl Document {
             .merge_path(dest_file)?
             .merge(default_front);
 
-        let mut custom_attributes = attributes.clone();
-        // Moved to frontmatter and may conflict with a perma_attributes
-        custom_attributes.remove("slug");
-        custom_attributes.remove("path");
-        // Moved to frontmatter and is pointless in `attributes`
-        custom_attributes.remove("excerpt_separator");
-        custom_attributes.remove("extends");
-        custom_attributes.remove("date");
+        let mut custom_attributes = attributes;
+        custom_attributes.remove("title"); // in frontmatter
+        custom_attributes.remove("description"); // in frontmatter
+        custom_attributes.remove("slug"); // in frontmatter, breaks perma_attributes
+        custom_attributes.remove("path"); // in frontmatter, breaks perma_attributes
+        custom_attributes.remove("draft"); // in frontmatter
+        custom_attributes.remove("is_post"); // in frontmatter
+        custom_attributes.remove("excerpt_separator"); // in frontmatter, pointless in doc_attributes
+        custom_attributes.remove("extends"); // in frontmatter, pointless in doc_attributes
+        custom_attributes.remove("date"); // in frontmatter
         front = front.merge_custom(&custom_attributes);
 
         if front.is_post.unwrap_or(false) {
@@ -259,14 +293,6 @@ impl Document {
         }
 
         let front = front.build()?;
-
-        attributes
-            .entry("is_post".to_owned())
-            .or_insert_with(|| Value::Bool(front.is_post));
-
-        attributes
-            .entry("title".to_owned())
-            .or_insert_with(|| Value::str(&front.title));
 
         let perma_attributes = permalink_attributes(&front, dest_file);
         let (file_path, url_path) = {
@@ -276,9 +302,15 @@ impl Document {
             (file_path, url_path)
         };
 
-        attributes.insert("path".to_owned(), Value::str(&url_path));
+        let doc_attributes = document_attributes(&front,
+                                                 source_file.to_str().unwrap_or(""),
+                                                 url_path.as_ref());
 
-        Ok(Document::new(url_path, file_path, content.to_string(), attributes, front))
+        Ok(Document::new(url_path,
+                         file_path,
+                         content.to_string(),
+                         doc_attributes,
+                         front))
     }
 
 
