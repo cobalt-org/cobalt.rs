@@ -237,61 +237,62 @@ impl Document {
         trace!("Parsing {:?}", source_file);
         let content = read_document(root_path, source_file)?;
         let (front, content) = split_document(&content)?;
-        let attributes = front
+        let mut custom_attributes = front
             .map(|s| serde_yaml::from_str(s))
             .map_or(Ok(None), |r| r.map(Some))?
             .unwrap_or_else(liquid::Object::new);
 
+        // Convert legacy frontmatter into frontmatter (with `custom`)
+        // In some cases, we need to remove them to successfully run perma_attributes
+        // Otherwise, we can remove the converted values because most frontmatter content gets
+        // populated into the final attributes (see `document_attributes`).
+        // Exceptions
+        // - excerpt_separator: internal-only
+        // - extends internal-only
         let mut front = frontmatter::FrontmatterBuilder::new()
-            .merge_title(attributes
-                             .get("title")
-                             .and_then(|v| v.as_str())
-                             .map(|s| s.to_owned()))
-            .merge_description(attributes
-                                   .get("description")
-                                   .and_then(|v| v.as_str())
-                                   .map(|s| s.to_owned()))
-            .merge_categories(attributes
-                                  .get("categories")
-                                  .and_then(|v| v.as_array())
-                                  .map(|v| v.iter().map(|v| v.to_string()).collect()))
-            .merge_slug(attributes
-                            .get("slug")
-                            .and_then(|v| v.as_str())
-                            .map(|s| s.to_owned()))
-            .merge_permalink(attributes
-                                 .get("path")
-                                 .and_then(|v| v.as_str())
-                                 .map(|s| s.to_owned()))
-            .merge_draft(attributes.get("draft").and_then(|v| v.as_bool()))
-            .merge_post(attributes.get("is_post").and_then(|v| v.as_bool()))
-            .merge_excerpt_separator(attributes
-                                         .get("excerpt_separator")
-                                         .and_then(|v| v.as_str())
-                                         .map(|s| s.to_owned()))
-            .merge_layout(attributes
-                              .get("extends")
-                              .and_then(|v| v.as_str())
-                              .map(|s| s.to_owned()))
-            .merge_published_date(attributes
-                                      .get("date")
-                                      .and_then(|d| d.as_str())
-                                      .and_then(datetime::DateTime::parse))
+            .merge_title(custom_attributes
+                             .remove("title")
+                             .and_then(|v| v.as_str().map(|s| s.to_owned())))
+            .merge_description(custom_attributes
+                                   .remove("description")
+                                   .and_then(|v| v.as_str().map(|s| s.to_owned())))
+            .merge_categories(custom_attributes
+                                  .remove("categories")
+                                  .and_then(|v| {
+                                                v.as_array()
+                                                    .map(|v| {
+                                                             v.iter()
+                                                                 .map(|v| v.to_string())
+                                                                 .collect()
+                                                         })
+                                            }))
+            .merge_slug(custom_attributes
+                            .remove("slug")
+                            .and_then(|v| v.as_str().map(|s| s.to_owned())))
+            .merge_permalink(custom_attributes
+                                 .remove("path")
+                                 .and_then(|v| v.as_str().map(|s| s.to_owned())))
+            .merge_draft(custom_attributes
+                             .remove("draft")
+                             .and_then(|v| v.as_bool()))
+            .merge_post(custom_attributes
+                            .remove("is_post")
+                            .and_then(|v| v.as_bool()))
+            .merge_excerpt_separator(custom_attributes
+                                         .remove("excerpt_separator")
+                                         .and_then(|v| v.as_str().map(|s| s.to_owned())))
+            .merge_layout(custom_attributes
+                              .remove("extends")
+                              .and_then(|v| v.as_str().map(|s| s.to_owned())))
+            .merge_published_date(custom_attributes
+                                      .remove("date")
+                                      .and_then(|d| {
+                                                    d.as_str().and_then(datetime::DateTime::parse)
+                                                }))
             .merge_path(dest_file)?
             .merge(default_front);
 
-        let mut custom_attributes = attributes;
-        custom_attributes.remove("title"); // in frontmatter
-        custom_attributes.remove("description"); // in frontmatter
-        custom_attributes.remove("categories"); // in frontmatter
-        custom_attributes.remove("slug"); // in frontmatter, breaks perma_attributes
-        custom_attributes.remove("path"); // in frontmatter, breaks perma_attributes
-        custom_attributes.remove("draft"); // in frontmatter
-        custom_attributes.remove("is_post"); // in frontmatter
-        custom_attributes.remove("excerpt_separator"); // in frontmatter, pointless in doc_attributes
-        custom_attributes.remove("extends"); // in frontmatter, pointless in doc_attributes
-        custom_attributes.remove("date"); // in frontmatter
-        front = front.merge_custom(&custom_attributes);
+        front = front.merge_custom(custom_attributes);
 
         if front.is_post.unwrap_or(false) {
             front = front.merge_permalink(default_post_permalink.clone());

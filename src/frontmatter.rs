@@ -178,7 +178,7 @@ impl FrontmatterBuilder {
         self.merge(FrontmatterBuilder::new().set_post(post.into()))
     }
 
-    pub fn merge_custom(self, other_custom: &liquid::Object) -> FrontmatterBuilder {
+    pub fn merge_custom(self, other_custom: liquid::Object) -> FrontmatterBuilder {
         let FrontmatterBuilder {
             path,
             slug,
@@ -250,7 +250,7 @@ impl FrontmatterBuilder {
             layout: layout.or_else(|| other_layout),
             is_draft: is_draft.or_else(|| other_is_draft),
             is_post: is_post.or_else(|| other_is_post),
-            custom: merge_objects(custom, &other_custom),
+            custom: merge_objects(custom, other_custom),
         }
     }
 
@@ -353,7 +353,7 @@ pub struct Frontmatter {
 }
 
 /// Shallow merge of `liquid::Object`'s
-fn merge_objects(primary: liquid::Object, secondary: &liquid::Object) -> liquid::Object {
+fn merge_objects(primary: liquid::Object, secondary: liquid::Object) -> liquid::Object {
     let mut primary = primary;
     for (key, value) in secondary.iter() {
         primary
