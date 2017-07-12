@@ -270,8 +270,6 @@ impl FrontmatterBuilder {
                 .unwrap_or("");
             let format = match ext {
                 "md" => SourceFormat::Markdown,
-                "liquid" => SourceFormat::Raw,
-                // TODO Evaluate making this an error when we break compatibility
                 _ => SourceFormat::Raw,
             };
             fm.format = Some(format);
@@ -356,7 +354,7 @@ pub struct Frontmatter {
     pub custom: liquid::Object,
 }
 
-/// Shallow merge of liquid::Object's
+/// Shallow merge of `liquid::Object`'s
 fn merge_objects(primary: liquid::Object, secondary: &liquid::Object) -> liquid::Object {
     let mut primary = primary;
     for (key, value) in secondary.iter() {

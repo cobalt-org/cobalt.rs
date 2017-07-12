@@ -76,7 +76,7 @@ fn format_path_variable(source_file: &Path) -> String {
     if path.starts_with("./") {
         path.remove(0);
     }
-    if path.starts_with("/") {
+    if path.starts_with('/') {
         path.remove(0);
     }
     path
@@ -116,7 +116,7 @@ fn permalink_attributes(front: &frontmatter::Frontmatter,
     }
 
     // Allow customizing any of the above with custom frontmatter attributes
-    for (key, val) in front.custom.iter() {
+    for (key, val) in &front.custom {
         let key = format!(":{}", key);
         // HACK: We really should support nested types
         let val = val.to_string();
@@ -140,7 +140,7 @@ fn explode_permalink_string(permalink: String, attributes: HashMap<String, Strin
     // Handle cases where substutions were blank
     p = p.replace("//", "/");
 
-    if p.starts_with("/") {
+    if p.starts_with('/') {
         p.remove(0);
     }
 
@@ -196,7 +196,7 @@ fn document_attributes(front: &frontmatter::Frontmatter,
     attributes.insert("draft".to_owned(), liquid::Value::Bool(front.is_draft));
     attributes.insert("is_post".to_owned(), liquid::Value::Bool(front.is_post));
 
-    for (key, val) in front.custom.iter() {
+    for (key, val) in &front.custom {
         attributes.insert(key.clone(), val.clone());
     }
 
@@ -240,7 +240,7 @@ impl Document {
         let attributes = front
             .map(|s| serde_yaml::from_str(s))
             .map_or(Ok(None), |r| r.map(Some))?
-            .unwrap_or_else(|| liquid::Object::new());
+            .unwrap_or_else(liquid::Object::new);
 
         let mut front = frontmatter::FrontmatterBuilder::new()
             .merge_title(attributes
