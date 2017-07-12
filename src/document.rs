@@ -18,11 +18,10 @@ use syntax_highlight::{initialize_codeblock, decorate_markdown};
 
 use liquid::{Renderable, LiquidOptions, Context, Value, LocalTemplateRepository};
 
+use frontmatter;
 use datetime;
 use pulldown_cmark as cmark;
 use liquid;
-
-use slug;
 
 lazy_static!{
     static ref DATE_VARIABLES: Regex =
@@ -124,13 +123,6 @@ fn format_permalink_path_str(permalink: &str) -> PathBuf {
     path_buf
 }
 
-/// The base-name without an extension.  Correlates to Jekyll's :name path tag
-fn file_stem(p: &Path) -> String {
-    p.file_stem()
-        .map(|os| os.to_string_lossy().into_owned())
-        .unwrap_or_else(|| "".to_owned())
-}
-
 #[derive(Debug)]
 pub struct Document {
     pub url_path: String,
@@ -171,7 +163,7 @@ impl Document {
     pub fn parse(root_path: &Path,
                  source_file: &Path,
                  dest_file: &Path,
-                 mut is_post: bool,
+                 is_post: bool,
                  post_path: &Option<String>)
                  -> Result<Document> {
         let content = read_document(root_path, source_file)?;
@@ -181,50 +173,36 @@ impl Document {
             .map_or(Ok(None), |r| r.map(Some))?
             .unwrap_or_else(|| liquid::Object::new());
 
-        if let Value::Bool(val) = *attributes
-                                       .entry("is_post".to_owned())
-                                       .or_insert_with(|| Value::Bool(is_post)) {
-            is_post = val;
-        }
+        let front = frontmatter::FrontmatterBuilder::new()
+            .merge_title(attributes
+                             .get("title")
+                             .and_then(|v| v.as_str())
+                             .map(|s| s.to_owned()))
+            .merge_slug(attributes
+                            .get("slug")
+                            .and_then(|v| v.as_str())
+                            .map(|s| s.to_owned()))
+            .merge_draft(attributes.get("draft").and_then(|v| v.as_bool()))
+            .merge_post(attributes.get("is_post").and_then(|v| v.as_bool()))
+            .merge_post(is_post)
+            .merge_layout(attributes
+                              .get("extends")
+                              .and_then(|v| v.as_str())
+                              .map(|s| s.to_owned()))
+            .merge_published_date(attributes
+                                      .get("date")
+                                      .and_then(|d| d.as_str())
+                                      .and_then(datetime::DateTime::parse))
+            .merge_path(dest_file)?
+            .build()?;
 
-        let is_draft = if let Some(&Value::Bool(true)) = attributes.get("draft") {
-            true
-        } else {
-            false
-        };
+        attributes
+            .entry("is_post".to_owned())
+            .or_insert_with(|| Value::Bool(front.is_post));
 
-        let date = attributes
-            .get("date")
-            .and_then(|d| d.as_str())
-            .and_then(datetime::DateTime::parse);
-
-        let file_stem = file_stem(dest_file);
-        let slug = slug::slugify(&file_stem);
         attributes
             .entry("title".to_owned())
-            .or_insert_with(|| Value::Str(slug::titleize_slug(slug.as_str())));
-        attributes
-            .entry("slug".to_owned())
-            .or_insert_with(|| Value::Str(slug));
-
-        let mut markdown = false;
-        if let Value::Str(ref ext) =
-            *attributes
-                 .entry("ext".to_owned())
-                 .or_insert_with(|| {
-                                     Value::Str(dest_file
-                                                    .extension()
-                                                    .and_then(|os| os.to_str())
-                                                    .unwrap_or("")
-                                                    .to_owned())
-                                 }) {
-            markdown = ext == "md";
-        }
-
-        let layout = attributes
-            .get("extends")
-            .and_then(|l| l.as_str())
-            .map(|x| x.to_owned());
+            .or_insert_with(|| Value::str(&front.title));
 
         let mut path_buf = PathBuf::from(dest_file);
         path_buf.set_extension("html");
@@ -239,12 +217,12 @@ impl Document {
             .to_owned()
             .replace("\\", "/");
         if let Some(path) = attributes.get("path").and_then(|p| p.as_str()) {
-            url_path = format_path(path, &attributes, &date)?;
+            url_path = format_path(path, &attributes, &front.published_date)?;
             path_buf = format_permalink_path(&url_path);
         } else if is_post {
             // check if there is a global setting for post paths
             if let Some(ref path) = *post_path {
-                url_path = format_path(path, &attributes, &date)?;
+                url_path = format_path(path, &attributes, &front.published_date)?;
                 path_buf = format_permalink_path(&url_path);
             }
         };
@@ -256,11 +234,11 @@ impl Document {
                          path_buf,
                          attributes,
                          content.to_string(),
-                         layout,
-                         is_post,
-                         is_draft,
-                         date,
-                         markdown))
+                         front.layout,
+                         front.is_post,
+                         front.is_draft,
+                         front.published_date,
+                         front.format == frontmatter::SourceFormat::Markdown))
     }
 
 
@@ -470,13 +448,6 @@ impl Document {
 #[cfg(test)]
 mod test {
     use super::*;
-
-    #[test]
-    fn file_stem_absolute_path() {
-        let input = PathBuf::from("/embedded/path/___filE-worlD-__09___.md");
-        let actual = file_stem(input.as_path());
-        assert_eq!(actual, "___filE-worlD-__09___");
-    }
 
     #[test]
     fn split_document_empty() {

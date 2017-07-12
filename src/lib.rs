@@ -18,7 +18,6 @@ extern crate rss;
 extern crate jsonfeed;
 extern crate walkdir;
 extern crate yaml_rust;
-extern crate serde;
 extern crate serde_yaml;
 
 extern crate itertools;
@@ -38,6 +37,9 @@ extern crate error_chain;
 #[macro_use]
 extern crate lazy_static;
 
+#[macro_use]
+extern crate serde;
+
 pub use cobalt::build;
 pub use error::Error;
 pub use config::Config;
@@ -53,6 +55,7 @@ mod new;
 mod slug;
 mod files;
 mod datetime;
+mod frontmatter;
 
 #[cfg(feature="syntax-highlight")]
 mod syntax_highlight;
