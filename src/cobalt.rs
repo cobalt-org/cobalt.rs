@@ -1,20 +1,20 @@
 use std::fs::{self, File};
 use std::collections::HashMap;
 use std::io::Write;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::ffi::OsStr;
 use liquid::{Value, Object};
-use chrono::{UTC, FixedOffset};
-use chrono::offset::TimeZone;
 use rss::{Channel, Rss};
 use jsonfeed::Feed;
 use jsonfeed;
 use serde_yaml;
 
+use datetime;
 use document::Document;
 use error::{ErrorKind, Result};
 use config::{Config, Dump};
 use files::FilesBuilder;
+use frontmatter;
 
 /// The primary build function that transforms a directory into a site
 pub fn build(config: &Config) -> Result<()> {
@@ -75,18 +75,21 @@ pub fn build(config: &Config) -> Result<()> {
                         template_extensions
                             .contains(&p.extension().unwrap_or_else(|| OsStr::new("")))
                     }) {
-        let src_path = source.join(file_path.as_path());
-
-        let new_path = source.join(file_path);
-        let new_path = new_path
-            .strip_prefix(source)
-            .expect("Entry not in source folder");
-
         // if the document is in the posts folder it's considered a post
+        let src_path = source.join(file_path.as_path());
         let is_post = src_path.starts_with(posts_path.as_path());
 
-        let doc = Document::parse(src_path.as_path(), new_path, is_post, &config.post_path)?;
-        if !doc.is_draft || config.include_drafts {
+        let default_front = frontmatter::FrontmatterBuilder::new()
+            .set_post(is_post)
+            .set_draft(false)
+            .set_excerpt_separator(config.excerpt_separator.clone());
+
+        let doc = Document::parse(source,
+                                  &file_path,
+                                  &file_path,
+                                  default_front,
+                                  &config.post_path)?;
+        if !doc.front.is_draft || config.include_drafts {
             documents.push(doc);
         }
     }
@@ -104,29 +107,39 @@ pub fn build(config: &Config) -> Result<()> {
                             template_extensions
                                 .contains(&p.extension().unwrap_or_else(|| OsStr::new("")))
                         }) {
-            let src_path = drafts_root.join(file_path.as_path());
-
-            let new_path = posts_path.join(file_path);
+            let new_path = posts_path.join(&file_path);
             let new_path = new_path
                 .strip_prefix(source)
                 .expect("Entry not in source folder");
-            let doc = try!(Document::parse(src_path.as_path(), new_path, true, &config.post_path));
+
+            let is_post = true;
+
+            let default_front = frontmatter::FrontmatterBuilder::new()
+                .set_post(is_post)
+                .set_draft(true)
+                .set_excerpt_separator(config.excerpt_separator.clone());
+            let doc = Document::parse(&drafts_root,
+                                      &file_path,
+                                      new_path,
+                                      default_front,
+                                      &config.post_path)?;
             documents.push(doc);
         }
     }
 
     // January 1, 1970 0:00:00 UTC, the beginning of time
-    let default_date = UTC.timestamp(0, 0).with_timezone(&FixedOffset::east(0));
+    let default_date = datetime::DateTime::default();
 
     let (mut posts, documents): (Vec<Document>, Vec<Document>) =
-        documents.into_iter().partition(|x| x.is_post);
+        documents.into_iter().partition(|x| x.front.is_post);
 
     // sort documents by date, if there's no date (none was provided or it couldn't be read) then
     // fall back to the default date
     posts.sort_by(|a, b| {
-                      b.date
+                      b.front
+                          .published_date
                           .unwrap_or(default_date)
-                          .cmp(&a.date.unwrap_or(default_date))
+                          .cmp(&a.front.published_date.unwrap_or(default_date))
                   });
 
     if &config.post_order == "asc" {
@@ -141,7 +154,7 @@ pub fn build(config: &Config) -> Result<()> {
 
     trace!("Generating posts");
     for (i, mut post) in &mut posts.iter_mut().enumerate() {
-        trace!("Generating {}", post.path);
+        trace!("Generating {}", post.url_path);
 
         // posts are in reverse date order, so previous post is the next in the list (+1)
         if let Some(previous) = simple_posts_data.get(i + 1) {
@@ -155,14 +168,14 @@ pub fn build(config: &Config) -> Result<()> {
         }
 
         if config.dump.contains(&Dump::Liquid) {
-            create_liquid_dump(dest, &post.path, &post.content, &post.attributes)?;
+            create_liquid_dump(dest, &post.file_path, &post.content, &post.attributes)?;
         }
 
         let mut context = post.get_render_context(&simple_posts_data);
 
-        try!(post.render_excerpt(&mut context, source, &config.excerpt_separator));
-        let post_html = try!(post.render(&mut context, source, &layouts, &mut layouts_cache));
-        try!(create_document_file(&post_html, &post.path, dest));
+        post.render_excerpt(&mut context, source)?;
+        let post_html = post.render(&mut context, source, &layouts, &mut layouts_cache)?;
+        create_document_file(post_html, &post.file_path, dest)?;
     }
 
     // check if we should create an RSS file and create it!
@@ -183,15 +196,15 @@ pub fn build(config: &Config) -> Result<()> {
 
     trace!("Generating other documents");
     for mut doc in documents {
-        trace!("Generating {}", doc.path);
+        trace!("Generating {}", doc.url_path);
 
         if config.dump.contains(&Dump::Liquid) {
-            create_liquid_dump(dest, &doc.path, &doc.content, &doc.attributes)?;
+            create_liquid_dump(dest, &doc.file_path, &doc.content, &doc.attributes)?;
         }
 
         let mut context = doc.get_render_context(&posts_data);
-        let doc_html = try!(doc.render(&mut context, source, &layouts, &mut layouts_cache));
-        try!(create_document_file(&doc_html, &doc.path, dest));
+        let doc_html = doc.render(&mut context, source, &layouts, &mut layouts_cache)?;
+        create_document_file(doc_html, doc.file_path, dest)?;
     }
 
     // copy all remaining files in the source to the destination
@@ -231,8 +244,21 @@ pub fn build(config: &Config) -> Result<()> {
     Ok(())
 }
 
-fn create_liquid_dump(dest: &Path, path: &str, content: &str, attributes: &Object) -> Result<()> {
-    let mut liquid_file_path = dest.join(path);
+fn create_liquid_dump<B: Into<PathBuf>, P: AsRef<Path>, S: AsRef<str>>(dest: B,
+                                                                       relpath: P,
+                                                                       content: S,
+                                                                       attributes: &Object)
+                                                                       -> Result<()> {
+    create_liquid_dump_internal(dest.into(), relpath.as_ref(), content.as_ref(), attributes)
+}
+
+fn create_liquid_dump_internal(dest: PathBuf,
+                               relpath: &Path,
+                               content: &str,
+                               attributes: &Object)
+                               -> Result<()> {
+    let mut liquid_file_path = dest;
+    liquid_file_path.push(relpath);
     let mut liquid_file_name = OsStr::new("_").to_os_string();
     {
         let original_file_name = liquid_file_path.file_name().ok_or("File name missing")?;
@@ -315,26 +341,28 @@ fn create_jsonfeed(path: &str, dest: &Path, config: &Config, posts: &[Document])
     }
 }
 
-fn create_document_file<T: AsRef<Path>, R: AsRef<Path>>(content: &str,
-                                                        path: T,
-                                                        dest: R)
-                                                        -> Result<()> {
+fn create_document_file<S: AsRef<str>, T: AsRef<Path>, R: Into<PathBuf>>(content: S,
+                                                                         relpath: T,
+                                                                         dest: R)
+                                                                         -> Result<()> {
+    create_document_file_internal(content.as_ref(), relpath.as_ref(), dest.into())
+}
+
+fn create_document_file_internal(content: &str, relpath: &Path, dest: PathBuf) -> Result<()> {
     // construct target path
-    let file_path = dest.as_ref().join(path);
+    let mut file_path = dest;
+    file_path.push(relpath);
 
     // create target directories if any exist
     if let Some(parent) = file_path.parent() {
-        try!(fs::create_dir_all(parent).map_err(|e| {
-                                                    format!("Could not create {:?}: {}", parent, e)
-                                                }));
+        fs::create_dir_all(parent)
+            .map_err(|e| format!("Could not create {:?}: {}", parent, e))?;
     }
 
-    let mut file =
-        try!(File::create(&file_path).map_err(|e| {
-                                                  format!("Could not create {:?}: {}", file_path, e)
-                                              }));
+    let mut file = File::create(&file_path)
+        .map_err(|e| format!("Could not create {:?}: {}", file_path, e))?;
 
-    try!(file.write_all(content.as_bytes()));
+    file.write_all(content.as_bytes())?;
     info!("Created {}", file_path.display());
     Ok(())
 }

@@ -6,7 +6,11 @@ lazy_static!{
 }
 
 /// Create a slug for a given file.  Correlates to Jekyll's :slug path tag
-pub fn slugify(name: &str) -> String {
+pub fn slugify<S: AsRef<str>>(name: S) -> String {
+    slugify_str(name.as_ref())
+}
+
+fn slugify_str(name: &str) -> String {
     let slug = SLUG_INVALID_CHARS.replace_all(name, "-");
     slug.trim_matches('-').to_lowercase()
 }
@@ -25,7 +29,11 @@ fn title_case(s: &str) -> String {
 }
 
 /// Format a user-visible title out of a slug.  Correlates to Jekyll's "title" attribute
-pub fn titleize_slug(slug: &str) -> String {
+pub fn titleize_slug<S: AsRef<str>>(slug: S) -> String {
+    titleize_slug_str(slug.as_ref())
+}
+
+fn titleize_slug_str(slug: &str) -> String {
     slug.split('-').map(title_case).join(" ")
 }
 
