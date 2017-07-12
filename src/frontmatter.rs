@@ -66,7 +66,6 @@ impl FrontmatterBuilder {
         }
     }
 
-    #[cfg(test)]
     pub fn set_description<S: Into<Option<String>>>(self, description: S) -> FrontmatterBuilder {
         FrontmatterBuilder {
             description: description.into(),
@@ -141,7 +140,6 @@ impl FrontmatterBuilder {
         self.merge(FrontmatterBuilder::new().set_title(title.into()))
     }
 
-    #[cfg(test)]
     pub fn merge_description<S: Into<Option<String>>>(self, description: S) -> FrontmatterBuilder {
         self.merge(FrontmatterBuilder::new().set_description(description.into()))
     }

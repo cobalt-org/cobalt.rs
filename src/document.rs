@@ -215,6 +215,10 @@ impl Document {
                              .get("title")
                              .and_then(|v| v.as_str())
                              .map(|s| s.to_owned()))
+            .merge_description(attributes
+                                   .get("description")
+                                   .and_then(|v| v.as_str())
+                                   .map(|s| s.to_owned()))
             .merge_slug(attributes
                             .get("slug")
                             .and_then(|v| v.as_str())
