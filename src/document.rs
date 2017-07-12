@@ -12,6 +12,7 @@ use jsonfeed;
 use jsonfeed::Item;
 use jsonfeed::Content;
 use serde_yaml;
+use itertools;
 
 #[cfg(all(feature="syntax-highlight", not(windows)))]
 use syntax_highlight::{initialize_codeblock, decorate_markdown};
@@ -97,6 +98,9 @@ fn permalink_attributes(front: &frontmatter::Frontmatter,
     }
 
     attributes.insert(":slug".to_owned(), front.slug.clone());
+
+    attributes.insert(":categories".to_owned(),
+                      itertools::join(front.categories.iter(), "/"));
 
     attributes.insert(":output_ext".to_owned(), ".html".to_owned());
 
