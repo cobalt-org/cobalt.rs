@@ -151,8 +151,8 @@ impl Document {
     pub fn parse(root_path: &Path,
                  source_file: &Path,
                  dest_file: &Path,
-                 is_post: bool,
-                 post_path: &Option<String>)
+                 default_front: frontmatter::FrontmatterBuilder,
+                 default_post_permalink: &Option<String>)
                  -> Result<Document> {
         let content = read_document(root_path, source_file)?;
         let (front, content) = split_document(&content)?;
@@ -161,7 +161,7 @@ impl Document {
             .map_or(Ok(None), |r| r.map(Some))?
             .unwrap_or_else(|| liquid::Object::new());
 
-        let front = frontmatter::FrontmatterBuilder::new()
+        let mut front = frontmatter::FrontmatterBuilder::new()
             .merge_title(attributes
                              .get("title")
                              .and_then(|v| v.as_str())
@@ -172,7 +172,10 @@ impl Document {
                             .map(|s| s.to_owned()))
             .merge_draft(attributes.get("draft").and_then(|v| v.as_bool()))
             .merge_post(attributes.get("is_post").and_then(|v| v.as_bool()))
-            .merge_post(is_post)
+            .merge_excerpt_separator(attributes
+                                         .get("excerpt_separator")
+                                         .and_then(|v| v.as_str())
+                                         .map(|s| s.to_owned()))
             .merge_layout(attributes
                               .get("extends")
                               .and_then(|v| v.as_str())
@@ -182,7 +185,13 @@ impl Document {
                                       .and_then(|d| d.as_str())
                                       .and_then(datetime::DateTime::parse))
             .merge_path(dest_file)?
-            .build()?;
+            .merge(default_front);
+
+        if front.is_post.unwrap_or(false) {
+            front = front.merge_permalink(default_post_permalink.clone());
+        }
+
+        let front = front.build()?;
 
         attributes
             .entry("is_post".to_owned())
@@ -207,9 +216,9 @@ impl Document {
         if let Some(path) = attributes.get("path").and_then(|p| p.as_str()) {
             url_path = format_path(path, &attributes, &front.published_date)?;
             path_buf = format_permalink_path(&url_path);
-        } else if is_post {
+        } else if front.is_post {
             // check if there is a global setting for post paths
-            if let Some(ref path) = *post_path {
+            if let Some(ref path) = *default_post_permalink {
                 url_path = format_path(path, &attributes, &front.published_date)?;
                 path_buf = format_permalink_path(&url_path);
             }
@@ -352,20 +361,13 @@ impl Document {
     }
 
     /// Renders excerpt and adds it to attributes of the document.
-    pub fn render_excerpt(&mut self,
-                          context: &mut Context,
-                          source: &Path,
-                          default_excerpt_separator: &str)
-                          -> Result<()> {
+    pub fn render_excerpt(&mut self, context: &mut Context, source: &Path) -> Result<()> {
         let excerpt_html = {
             let excerpt_attr = self.attributes
                 .get("excerpt")
                 .and_then(|attr| attr.as_str());
 
-            let excerpt_separator: &str = self.attributes
-                .get("excerpt_separator")
-                .and_then(|attr| attr.as_str())
-                .unwrap_or(default_excerpt_separator);
+            let excerpt_separator = &self.front.excerpt_separator;
 
             if let Some(excerpt_str) = excerpt_attr {
                 try!(self.render_html(excerpt_str, context, source))

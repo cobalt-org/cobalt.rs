@@ -45,7 +45,6 @@ impl FrontmatterBuilder {
         FrontmatterBuilder::default()
     }
 
-    #[cfg(test)]
     pub fn set_permalink<S: Into<Option<String>>>(self, permalink: S) -> FrontmatterBuilder {
         FrontmatterBuilder {
             path: permalink.into(),
@@ -83,7 +82,6 @@ impl FrontmatterBuilder {
         }
     }
 
-    #[cfg(test)]
     pub fn set_excerpt_separator<S: Into<Option<String>>>(self,
                                                           excerpt_separator: S)
                                                           -> FrontmatterBuilder {
@@ -131,62 +129,60 @@ impl FrontmatterBuilder {
         }
     }
 
-    #[cfg(test)]
     pub fn merge_permalink<S: Into<Option<String>>>(self, permalink: S) -> FrontmatterBuilder {
-        self.merge(&FrontmatterBuilder::new().set_permalink(permalink.into()))
+        self.merge(FrontmatterBuilder::new().set_permalink(permalink.into()))
     }
 
     pub fn merge_slug<S: Into<Option<String>>>(self, slug: S) -> FrontmatterBuilder {
-        self.merge(&FrontmatterBuilder::new().set_slug(slug.into()))
+        self.merge(FrontmatterBuilder::new().set_slug(slug.into()))
     }
 
     pub fn merge_title<S: Into<Option<String>>>(self, title: S) -> FrontmatterBuilder {
-        self.merge(&FrontmatterBuilder::new().set_title(title.into()))
+        self.merge(FrontmatterBuilder::new().set_title(title.into()))
     }
 
     #[cfg(test)]
     pub fn merge_description<S: Into<Option<String>>>(self, description: S) -> FrontmatterBuilder {
-        self.merge(&FrontmatterBuilder::new().set_description(description.into()))
+        self.merge(FrontmatterBuilder::new().set_description(description.into()))
     }
 
     #[cfg(test)]
     pub fn merge_categories<S: Into<Option<Vec<String>>>>(self,
                                                           categories: S)
                                                           -> FrontmatterBuilder {
-        self.merge(&FrontmatterBuilder::new().set_categories(categories.into()))
+        self.merge(FrontmatterBuilder::new().set_categories(categories.into()))
     }
 
-    #[cfg(test)]
     pub fn merge_excerpt_separator<S: Into<Option<String>>>(self,
                                                             excerpt_separator: S)
                                                             -> FrontmatterBuilder {
-        self.merge(&FrontmatterBuilder::new().set_excerpt_separator(excerpt_separator.into()))
+        self.merge(FrontmatterBuilder::new().set_excerpt_separator(excerpt_separator.into()))
     }
 
     pub fn merge_published_date<D: Into<Option<datetime::DateTime>>>(self,
                                                                      published_date: D)
                                                                      -> FrontmatterBuilder {
-        self.merge(&FrontmatterBuilder::new().set_published_date(published_date.into()))
+        self.merge(FrontmatterBuilder::new().set_published_date(published_date.into()))
     }
 
     #[cfg(test)]
     pub fn merge_format<S: Into<Option<SourceFormat>>>(self, format: S) -> FrontmatterBuilder {
-        self.merge(&FrontmatterBuilder::new().set_format(format.into()))
+        self.merge(FrontmatterBuilder::new().set_format(format.into()))
     }
 
     pub fn merge_layout<S: Into<Option<String>>>(self, layout: S) -> FrontmatterBuilder {
-        self.merge(&FrontmatterBuilder::new().set_layout(layout.into()))
+        self.merge(FrontmatterBuilder::new().set_layout(layout.into()))
     }
 
     pub fn merge_draft<B: Into<Option<bool>>>(self, draft: B) -> FrontmatterBuilder {
-        self.merge(&FrontmatterBuilder::new().set_draft(draft.into()))
+        self.merge(FrontmatterBuilder::new().set_draft(draft.into()))
     }
 
     pub fn merge_post<B: Into<Option<bool>>>(self, post: B) -> FrontmatterBuilder {
-        self.merge(&FrontmatterBuilder::new().set_post(post.into()))
+        self.merge(FrontmatterBuilder::new().set_post(post.into()))
     }
 
-    pub fn merge(self, other: &FrontmatterBuilder) -> FrontmatterBuilder {
+    pub fn merge(self, other: FrontmatterBuilder) -> FrontmatterBuilder {
         let FrontmatterBuilder {
             path,
             slug,
@@ -201,19 +197,33 @@ impl FrontmatterBuilder {
             is_post,
             custom,
         } = self;
+        let FrontmatterBuilder {
+            path: other_path,
+            slug: other_slug,
+            title: other_title,
+            description: other_description,
+            categories: other_categories,
+            excerpt_separator: other_excerpt_separator,
+            published_date: other_published_date,
+            format: other_format,
+            layout: other_layout,
+            is_draft: other_is_draft,
+            is_post: other_is_post,
+            custom: other_custom,
+        } = other;
         FrontmatterBuilder {
-            path: path.or_else(|| other.path.clone()),
-            slug: slug.or_else(|| other.slug.clone()),
-            title: title.or_else(|| other.title.clone()),
-            description: description.or_else(|| other.description.clone()),
-            categories: categories.or_else(|| other.categories.clone()),
-            excerpt_separator: excerpt_separator.or_else(|| other.excerpt_separator.clone()),
-            published_date: published_date.or_else(|| other.published_date.clone()),
-            format: format.or_else(|| other.format.clone()),
-            layout: layout.or_else(|| other.layout.clone()),
-            is_draft: is_draft.or_else(|| other.is_draft.clone()),
-            is_post: is_post.or_else(|| other.is_post.clone()),
-            custom: merge_objects(custom, &other.custom),
+            path: path.or_else(|| other_path),
+            slug: slug.or_else(|| other_slug),
+            title: title.or_else(|| other_title),
+            description: description.or_else(|| other_description),
+            categories: categories.or_else(|| other_categories),
+            excerpt_separator: excerpt_separator.or_else(|| other_excerpt_separator),
+            published_date: published_date.or_else(|| other_published_date),
+            format: format.or_else(|| other_format),
+            layout: layout.or_else(|| other_layout),
+            is_draft: is_draft.or_else(|| other_is_draft),
+            is_post: is_post.or_else(|| other_is_post),
+            custom: merge_objects(custom, &other_custom),
         }
     }
 
@@ -427,13 +437,13 @@ mod test {
             custom: liquid::Object::new(),
         };
 
-        let merge_b_into_a = a.clone().merge(&b);
+        let merge_b_into_a = a.clone().merge(b.clone());
         assert_eq!(merge_b_into_a, a);
 
-        let merge_empty_into_a = a.clone().merge(&empty);
+        let merge_empty_into_a = a.clone().merge(empty.clone());
         assert_eq!(merge_empty_into_a, a);
 
-        let merge_a_into_empty = empty.clone().merge(&a);
+        let merge_a_into_empty = empty.clone().merge(a.clone());
         assert_eq!(merge_a_into_empty, a);
     }
 

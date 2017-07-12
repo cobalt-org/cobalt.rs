@@ -14,6 +14,7 @@ use document::Document;
 use error::{ErrorKind, Result};
 use config::{Config, Dump};
 use files::FilesBuilder;
+use frontmatter;
 
 /// The primary build function that transforms a directory into a site
 pub fn build(config: &Config) -> Result<()> {
@@ -78,7 +79,16 @@ pub fn build(config: &Config) -> Result<()> {
         let src_path = source.join(file_path.as_path());
         let is_post = src_path.starts_with(posts_path.as_path());
 
-        let doc = Document::parse(source, &file_path, &file_path, is_post, &config.post_path)?;
+        let default_front = frontmatter::FrontmatterBuilder::new()
+            .set_post(is_post)
+            .set_draft(false)
+            .set_excerpt_separator(config.excerpt_separator.clone());
+
+        let doc = Document::parse(source,
+                                  &file_path,
+                                  &file_path,
+                                  default_front,
+                                  &config.post_path)?;
         if !doc.front.is_draft || config.include_drafts {
             documents.push(doc);
         }
@@ -101,8 +111,18 @@ pub fn build(config: &Config) -> Result<()> {
             let new_path = new_path
                 .strip_prefix(source)
                 .expect("Entry not in source folder");
-            let doc =
-                try!(Document::parse(&drafts_root, &file_path, new_path, true, &config.post_path));
+
+            let is_post = true;
+
+            let default_front = frontmatter::FrontmatterBuilder::new()
+                .set_post(is_post)
+                .set_draft(true)
+                .set_excerpt_separator(config.excerpt_separator.clone());
+            let doc = Document::parse(&drafts_root,
+                                      &file_path,
+                                      new_path,
+                                      default_front,
+                                      &config.post_path)?;
             documents.push(doc);
         }
     }
@@ -153,7 +173,7 @@ pub fn build(config: &Config) -> Result<()> {
 
         let mut context = post.get_render_context(&simple_posts_data);
 
-        post.render_excerpt(&mut context, source, &config.excerpt_separator)?;
+        post.render_excerpt(&mut context, source)?;
         let post_html = post.render(&mut context, source, &layouts, &mut layouts_cache)?;
         create_document_file(post_html, &post.file_path, dest)?;
     }
