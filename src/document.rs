@@ -5,13 +5,13 @@ use std::path::{Path, PathBuf};
 use std::default::Default;
 use error::Result;
 use chrono::{Datelike, Timelike};
-use yaml_rust::{Yaml, YamlLoader};
 use std::io::Read;
 use regex::Regex;
 use rss;
 use jsonfeed;
 use jsonfeed::Item;
 use jsonfeed::Content;
+use serde_yaml;
 
 #[cfg(all(feature="syntax-highlight", not(windows)))]
 use syntax_highlight::{initialize_codeblock, decorate_markdown};
@@ -56,21 +56,13 @@ fn split_document(content: &str) -> Result<(Option<&str>, &str)> {
         // everything below the split becomes the new content
         let content_split = splits.next().unwrap_or("");
 
-        Ok((Some(front_split), content_split))
+        if front_split.is_empty() {
+            Ok((None, content_split))
+        } else {
+            Ok((Some(front_split), content_split))
+        }
     } else {
         Ok((None, content))
-    }
-}
-
-fn yaml_to_liquid(yaml: &Yaml) -> Option<Value> {
-    match *yaml {
-        Yaml::Real(ref s) |
-        Yaml::String(ref s) => Some(Value::Str(s.to_owned())),
-        Yaml::Integer(i) => Some(Value::Num(i as f32)),
-        Yaml::Boolean(b) => Some(Value::Bool(b)),
-        Yaml::Array(ref a) => Some(Value::Array(a.iter().filter_map(yaml_to_liquid).collect())),
-        Yaml::BadValue | Yaml::Null => None,
-        _ => panic!("Not implemented yet"),
     }
 }
 
@@ -184,31 +176,10 @@ impl Document {
                  -> Result<Document> {
         let content = read_document(root_path, source_file)?;
         let (front, content) = split_document(&content)?;
-
-        let mut attributes: HashMap<String, Value> = HashMap::new();
-        // if there is front matter, split the file and parse it
-        if let Some(front) = front {
-            let yaml_result = try!(YamlLoader::load_from_str(front));
-
-            if !yaml_result.is_empty() {
-                let yaml_attributes = try!(yaml_result[0]
-                             .as_hash()
-                             .ok_or_else(|| {
-                                             format!("Incorrect front matter format in {:?}",
-                                                     source_file)
-                                         }));
-
-                for (key, value) in yaml_attributes {
-                    if let Some(v) = yaml_to_liquid(value) {
-                        let key = key.as_str()
-                            .ok_or_else(|| format!("Invalid key {:?}", key))?
-                            .to_owned();
-                        attributes.insert(key, v);
-                    }
-                }
-
-            }
-        }
+        let mut attributes = front
+            .map(|s| serde_yaml::from_str(s))
+            .map_or(Ok(None), |r| r.map(Some))?
+            .unwrap_or_else(|| liquid::Object::new());
 
         if let Value::Bool(val) = *attributes
                                        .entry("is_post".to_owned())
@@ -527,7 +498,7 @@ mod test {
     fn split_document_empty_front_matter() {
         let input = "---\nBody";
         let (frontmatter, content) = split_document(input).unwrap();
-        assert_eq!(frontmatter.unwrap(), "");
+        assert!(frontmatter.is_none());
         assert_eq!(content, "Body");
     }
 

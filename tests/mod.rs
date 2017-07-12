@@ -216,7 +216,7 @@ pub fn ignore_files() {
 pub fn yaml_error() {
     let err = run_test("yaml_error");
     assert!(err.is_err());
-    assert_eq!(err.unwrap_err().description(), "unexpected character: `@'");
+    assert_eq!(err.unwrap_err().description(), "scan error");
 }
 
 #[test]
