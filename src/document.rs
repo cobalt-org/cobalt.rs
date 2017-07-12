@@ -127,36 +127,24 @@ fn format_permalink_path_str(permalink: &str) -> PathBuf {
 pub struct Document {
     pub url_path: String,
     pub file_path: PathBuf,
-    pub attributes: HashMap<String, Value>,
     pub content: String,
-    pub layout: Option<String>,
-    pub is_post: bool,
-    pub is_draft: bool,
-    pub date: Option<datetime::DateTime>,
-    markdown: bool,
+    pub attributes: liquid::Object,
+    pub front: frontmatter::Frontmatter,
 }
 
 impl Document {
     pub fn new(url_path: String,
                file_path: PathBuf,
-               attributes: HashMap<String, Value>,
                content: String,
-               layout: Option<String>,
-               is_post: bool,
-               is_draft: bool,
-               date: Option<datetime::DateTime>,
-               markdown: bool)
+               attributes: liquid::Object,
+               front: frontmatter::Frontmatter)
                -> Document {
         Document {
             url_path: url_path,
             file_path: file_path,
-            attributes: attributes,
             content: content,
-            layout: layout,
-            is_post: is_post,
-            is_draft: is_draft,
-            date: date,
-            markdown: markdown,
+            attributes: attributes,
+            front: front,
         }
     }
 
@@ -230,15 +218,7 @@ impl Document {
         // Swap back slashes to forward slashes to ensure the URL's are valid on Windows
         attributes.insert("path".to_owned(), Value::str(&url_path));
 
-        Ok(Document::new(url_path,
-                         path_buf,
-                         attributes,
-                         content.to_string(),
-                         front.layout,
-                         front.is_post,
-                         front.is_draft,
-                         front.published_date,
-                         front.format == frontmatter::SourceFormat::Markdown))
+        Ok(Document::new(url_path, path_buf, content.to_string(), attributes, front))
     }
 
 
@@ -254,7 +234,7 @@ impl Document {
             title: self.title_to_str(),
             link: Some(link),
             guid: Some(guid),
-            pub_date: self.date.map(|date| date.to_rfc2822()),
+            pub_date: self.front.published_date.map(|date| date.to_rfc2822()),
             description: self.description_to_str(),
             ..Default::default()
         }
@@ -276,7 +256,7 @@ impl Document {
             url: Some(link),
             title: Some(self.title_to_str().unwrap_or("unknown title".into())),
             content: Content::Html(self.description_to_str().unwrap_or_else(|| "".into())),
-            date_published: self.date.map(|date| date.to_rfc2822()),
+            date_published: self.front.published_date.map(|date| date.to_rfc2822()),
             // TODO completely implement categories, see Issue 131
             tags: Some(cat),
             ..Default::default()
@@ -318,10 +298,11 @@ impl Document {
         let highlight: Box<liquid::Block> = Box::new(initialize_codeblock);
         options.blocks.insert("highlight".to_string(), highlight);
         let template = try!(liquid::parse(content, options));
-        let mut html = try!(template.render(context)).unwrap_or_default();
+        let html = try!(template.render(context)).unwrap_or_default();
 
-        if self.markdown {
-            html = {
+        let html = match self.front.format {
+            frontmatter::SourceFormat::Raw => html,
+            frontmatter::SourceFormat::Markdown => {
                 let mut buf = String::new();
                 let parser = cmark::Parser::new(&html);
                 #[cfg(feature="syntax-highlight")]
@@ -329,25 +310,26 @@ impl Document {
                 #[cfg(not(feature="syntax-highlight"))]
                 cmark::html::push_html(&mut buf, parser);
                 buf
-            };
-        }
+            }
+        };
         Ok(html.to_owned())
     }
     #[cfg(any(not(feature="syntax-highlight"), windows))]
     fn render_html(&self, content: &str, context: &mut Context, source: &Path) -> Result<String> {
         let mut options = LiquidOptions::default();
         options.template_repository = Box::new(LocalTemplateRepository::new(source.to_owned()));
-        let template = try!(liquid::parse(content, options));
-        let mut html = try!(template.render(context)).unwrap_or_default();
+        let template = liquid::parse(content, options)?;
+        let html = template.render(context)?.unwrap_or_default();
 
-        if self.markdown {
-            html = {
+        let html = match self.front.format {
+            frontmatter::SourceFormat::Raw => html,
+            frontmatter::SourceFormat::Markdown => {
                 let mut buf = String::new();
                 let parser = cmark::Parser::new(&html);
                 cmark::html::push_html(&mut buf, parser);
                 buf
-            };
-        }
+            }
+        };
         Ok(html.to_owned())
     }
 
@@ -355,7 +337,8 @@ impl Document {
     pub fn extract_markdown_references(&self, excerpt_separator: &str) -> String {
         let mut trail = String::new();
 
-        if self.markdown && MARKDOWN_REF.is_match(&self.content) {
+        if self.front.format == frontmatter::SourceFormat::Markdown &&
+           MARKDOWN_REF.is_match(&self.content) {
             for mat in MARKDOWN_REF.find_iter(&self.content) {
                 trail.push_str(mat.as_str());
                 trail.push('\n');
@@ -420,7 +403,7 @@ impl Document {
             .insert("content".to_owned(), Value::Str(content_html.clone()));
         context.set_val("content", Value::Str(content_html.clone()));
 
-        if let Some(ref layout) = self.layout {
+        if let Some(ref layout) = self.front.layout {
             let layout_data_ref = match layouts_cache.entry(layout.to_owned()) {
                 Entry::Vacant(vacant) => {
                     let layout_data = try!(read_file(layouts_dir.join(layout)).map_err(|e| {

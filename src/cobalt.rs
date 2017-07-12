@@ -79,7 +79,7 @@ pub fn build(config: &Config) -> Result<()> {
         let is_post = src_path.starts_with(posts_path.as_path());
 
         let doc = Document::parse(source, &file_path, &file_path, is_post, &config.post_path)?;
-        if !doc.is_draft || config.include_drafts {
+        if !doc.front.is_draft || config.include_drafts {
             documents.push(doc);
         }
     }
@@ -111,14 +111,15 @@ pub fn build(config: &Config) -> Result<()> {
     let default_date = datetime::DateTime::default();
 
     let (mut posts, documents): (Vec<Document>, Vec<Document>) =
-        documents.into_iter().partition(|x| x.is_post);
+        documents.into_iter().partition(|x| x.front.is_post);
 
     // sort documents by date, if there's no date (none was provided or it couldn't be read) then
     // fall back to the default date
     posts.sort_by(|a, b| {
-                      b.date
+                      b.front
+                          .published_date
                           .unwrap_or(default_date)
-                          .cmp(&a.date.unwrap_or(default_date))
+                          .cmp(&a.front.published_date.unwrap_or(default_date))
                   });
 
     if &config.post_order == "asc" {
