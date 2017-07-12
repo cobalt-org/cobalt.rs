@@ -182,6 +182,37 @@ impl FrontmatterBuilder {
         self.merge(FrontmatterBuilder::new().set_post(post.into()))
     }
 
+    pub fn merge_custom(self, other_custom: &liquid::Object) -> FrontmatterBuilder {
+        let FrontmatterBuilder {
+            path,
+            slug,
+            title,
+            description,
+            categories,
+            excerpt_separator,
+            published_date,
+            format,
+            layout,
+            is_draft,
+            is_post,
+            custom,
+        } = self;
+        FrontmatterBuilder {
+            path: path,
+            slug: slug,
+            title: title,
+            description: description,
+            categories: categories,
+            excerpt_separator: excerpt_separator,
+            published_date: published_date,
+            format: format,
+            layout: layout,
+            is_draft: is_draft,
+            is_post: is_post,
+            custom: merge_objects(custom, other_custom),
+        }
+    }
+
     pub fn merge(self, other: FrontmatterBuilder) -> FrontmatterBuilder {
         let FrontmatterBuilder {
             path,
@@ -284,14 +315,10 @@ impl FrontmatterBuilder {
         let is_post = is_post.unwrap_or(false);
 
         let path = path.unwrap_or_else(|| {
-            let default_path = if is_post {
-                "/:categories/:year/:month/:day/:slug.html"
-            } else {
-                "/:path/:slug.:output_ext"
-            };
+                                           let default_path = "/:path/:filename:output_ext";
 
-            default_path.to_owned()
-        });
+                                           default_path.to_owned()
+                                       });
 
         let fm = Frontmatter {
             path: path,

@@ -24,8 +24,6 @@ use pulldown_cmark as cmark;
 use liquid;
 
 lazy_static!{
-    static ref DATE_VARIABLES: Regex =
-        Regex::new(":(year|month|i_month|day|i_day|short_year|hour|minute|second)").unwrap();
     static ref FRONT_MATTER_DIVIDE: Regex = Regex::new(r"---\s*\r?\n").unwrap();
     static ref MARKDOWN_REF: Regex = Regex::new(r"(?m:^ {0,3}\[[^\]]+\]:.+$)").unwrap();
 }
@@ -65,45 +63,91 @@ fn split_document(content: &str) -> Result<(Option<&str>, &str)> {
     }
 }
 
-/// Formats a user specified custom path, adding custom parameters
-/// and "exploding" the URL.
-fn format_path(p: &str,
-               attributes: &HashMap<String, Value>,
-               date: &Option<datetime::DateTime>)
-               -> Result<String> {
-    let mut p = p.to_owned();
-
-    if DATE_VARIABLES.is_match(&p) {
-        let date = try!(date.ok_or(format!("Can not format file path without a valid date ({:?})",
-                                           p)));
-
-        p = p.replace(":year", &date.year().to_string());
-        p = p.replace(":month", &format!("{:02}", &date.month()));
-        p = p.replace(":i_month", &date.month().to_string());
-        p = p.replace(":day", &format!("{:02}", &date.day()));
-        p = p.replace(":i_day", &date.day().to_string());
-        p = p.replace(":hour", &format!("{:02}", &date.hour()));
-        p = p.replace(":minute", &format!("{:02}", &date.minute()));
-        p = p.replace(":second", &format!("{:02}", &date.second()));
+/// Convert the source file's relative path into a format useful for generating permalinks that
+/// mirror the source directory hierarchy.
+fn format_path_variable(source_file: &Path) -> String {
+    let parent = source_file
+        .parent()
+        .and_then(|p| p.to_str())
+        .unwrap_or("")
+        .to_owned();
+    let mut path = parent.replace("\\", "/");
+    if path.starts_with("./") {
+        path.remove(0);
     }
+    if path.starts_with("/") {
+        path.remove(0);
+    }
+    path
+}
+
+fn permalink_attributes(front: &frontmatter::Frontmatter,
+                        dest_file: &Path)
+                        -> HashMap<String, String> {
+    // TODO replace "date", "pretty", "ordinal" and "none"
+    // for Jekyl compatibility
+
+    let mut attributes = HashMap::new();
+
+    attributes.insert(":path".to_owned(), format_path_variable(dest_file));
+
+    let filename = dest_file.file_stem().and_then(|s| s.to_str());
+    if let Some(filename) = filename {
+        attributes.insert(":filename".to_owned(), filename.to_owned());
+    }
+
+    attributes.insert(":slug".to_owned(), front.slug.clone());
+
+    attributes.insert(":output_ext".to_owned(), ".html".to_owned());
+
+    if let Some(ref date) = front.published_date {
+        attributes.insert(":year".to_owned(), date.year().to_string());
+        attributes.insert(":month".to_owned(), format!("{:02}", &date.month()));
+        attributes.insert(":i_month".to_owned(), date.month().to_string());
+        attributes.insert(":day".to_owned(), format!("{:02}", &date.day()));
+        attributes.insert(":i_day".to_owned(), date.day().to_string());
+        attributes.insert(":hour".to_owned(), format!("{:02}", &date.hour()));
+        attributes.insert(":minute".to_owned(), format!("{:02}", &date.minute()));
+        attributes.insert(":second".to_owned(), format!("{:02}", &date.second()));
+    }
+
+    // Allow customizing any of the above with custom frontmatter attributes
+    for (key, val) in front.custom.iter() {
+        let key = format!(":{}", key);
+        // HACK: We really should support nested types
+        let val = val.to_string();
+        attributes.insert(key, val);
+    }
+
+    attributes
+}
+
+fn explode_permalink<S: Into<String>>(permalink: S, attributes: HashMap<String, String>) -> String {
+    explode_permalink_string(permalink.into(), attributes)
+}
+
+fn explode_permalink_string(permalink: String, attributes: HashMap<String, String>) -> String {
+    let mut p = permalink;
 
     for (key, val) in attributes {
-        p = match *val {
-            Value::Str(ref v) => p.replace(&(String::from(":") + key), v),
-            Value::Num(ref v) => p.replace(&(String::from(":") + key), &v.to_string()),
-            _ => p,
-        }
+        p = p.replace(&key, &val);
     }
 
-    let trimmed = p.trim_left_matches('/');
-    Ok(trimmed.to_owned())
+    // Handle cases where substutions were blank
+    p = p.replace("//", "/");
+
+    if p.starts_with("/") {
+        p.remove(0);
+    }
+
+    p
 }
 
-fn format_permalink_path<S: AsRef<str>>(permalink: S) -> PathBuf {
-    format_permalink_path_str(permalink.as_ref())
+fn format_url_as_file<S: AsRef<str>>(permalink: S) -> PathBuf {
+    format_url_as_file_str(permalink.as_ref())
 }
 
-fn format_permalink_path_str(permalink: &str) -> PathBuf {
+fn format_url_as_file_str(permalink: &str) -> PathBuf {
     let mut path = Path::new(&permalink);
 
     // remove the root prefix (leading slash on unix systems)
@@ -154,6 +198,7 @@ impl Document {
                  default_front: frontmatter::FrontmatterBuilder,
                  default_post_permalink: &Option<String>)
                  -> Result<Document> {
+        trace!("Parsing {:?}", source_file);
         let content = read_document(root_path, source_file)?;
         let (front, content) = split_document(&content)?;
         let mut attributes = front
@@ -170,6 +215,10 @@ impl Document {
                             .get("slug")
                             .and_then(|v| v.as_str())
                             .map(|s| s.to_owned()))
+            .merge_permalink(attributes
+                                 .get("path")
+                                 .and_then(|v| v.as_str())
+                                 .map(|s| s.to_owned()))
             .merge_draft(attributes.get("draft").and_then(|v| v.as_bool()))
             .merge_post(attributes.get("is_post").and_then(|v| v.as_bool()))
             .merge_excerpt_separator(attributes
@@ -187,6 +236,16 @@ impl Document {
             .merge_path(dest_file)?
             .merge(default_front);
 
+        let mut custom_attributes = attributes.clone();
+        // Moved to frontmatter and may conflict with a perma_attributes
+        custom_attributes.remove("slug");
+        custom_attributes.remove("path");
+        // Moved to frontmatter and is pointless in `attributes`
+        custom_attributes.remove("excerpt_separator");
+        custom_attributes.remove("extends");
+        custom_attributes.remove("date");
+        front = front.merge_custom(&custom_attributes);
+
         if front.is_post.unwrap_or(false) {
             front = front.merge_permalink(default_post_permalink.clone());
         }
@@ -201,33 +260,17 @@ impl Document {
             .entry("title".to_owned())
             .or_insert_with(|| Value::str(&front.title));
 
-        let mut path_buf = PathBuf::from(dest_file);
-        path_buf.set_extension("html");
-
-        // if the user specified a custom path override
-        // format it and push it over the original file name
-        // TODO replace "date", "pretty", "ordinal" and "none"
-        // for Jekyl compatibility
-        let mut url_path = path_buf
-            .to_str()
-            .ok_or_else(|| format!("Invalid path {:?}", path_buf))?
-            .to_owned()
-            .replace("\\", "/");
-        if let Some(path) = attributes.get("path").and_then(|p| p.as_str()) {
-            url_path = format_path(path, &attributes, &front.published_date)?;
-            path_buf = format_permalink_path(&url_path);
-        } else if front.is_post {
-            // check if there is a global setting for post paths
-            if let Some(ref path) = *default_post_permalink {
-                url_path = format_path(path, &attributes, &front.published_date)?;
-                path_buf = format_permalink_path(&url_path);
-            }
+        let perma_attributes = permalink_attributes(&front, dest_file);
+        let (file_path, url_path) = {
+            let permalink = front.path.as_ref();
+            let url_path = explode_permalink(permalink, perma_attributes);
+            let file_path = format_url_as_file(&url_path);
+            (file_path, url_path)
         };
 
-        // Swap back slashes to forward slashes to ensure the URL's are valid on Windows
         attributes.insert("path".to_owned(), Value::str(&url_path));
 
-        Ok(Document::new(url_path, path_buf, content.to_string(), attributes, front))
+        Ok(Document::new(url_path, file_path, content.to_string(), attributes, front))
     }
 
 
@@ -467,20 +510,59 @@ mod test {
     }
 
     #[test]
-    fn format_permalink_path_absolute() {
-        let actual = format_permalink_path("/hello/world.html");
+    fn format_path_variable_file() {
+        let input = Path::new("/hello/world/file.liquid");
+        let actual = format_path_variable(input);
+        assert_eq!(actual, "hello/world");
+    }
+
+    #[test]
+    fn format_path_variable_relative() {
+        let input = Path::new("hello/world/file.liquid");
+        let actual = format_path_variable(input);
+        assert_eq!(actual, "hello/world");
+
+        let input = Path::new("./hello/world/file.liquid");
+        let actual = format_path_variable(input);
+        assert_eq!(actual, "hello/world");
+    }
+
+    #[test]
+    fn explode_permalink_relative() {
+        let attributes = HashMap::new();
+        let actual = explode_permalink("relative/path", attributes);
+        assert_eq!(actual, "relative/path");
+    }
+
+    #[test]
+    fn explode_permalink_absolute() {
+        let attributes = HashMap::new();
+        let actual = explode_permalink("/abs/path", attributes);
+        assert_eq!(actual, "abs/path");
+    }
+
+    #[test]
+    fn explode_permalink_blank_substitution() {
+        let attributes = HashMap::new();
+        let actual = explode_permalink("//path/middle//end", attributes);
+        assert_eq!(actual, "path/middle/end");
+    }
+
+    #[test]
+    fn format_url_as_file_absolute() {
+        let actual = format_url_as_file("/hello/world.html");
         assert_eq!(actual, Path::new("hello/world.html"));
     }
 
     #[test]
-    fn format_permalink_path_no_explode() {
-        let actual = format_permalink_path("/hello/world.custom");
+    fn format_url_as_file_no_explode() {
+        let actual = format_url_as_file("/hello/world.custom");
         assert_eq!(actual, Path::new("hello/world.custom"));
     }
 
     #[test]
-    fn format_permalink_path_explode() {
-        let actual = format_permalink_path("/hello/world");
+    fn format_url_as_file_explode() {
+        let actual = format_url_as_file("/hello/world");
         assert_eq!(actual, Path::new("hello/world/index.html"));
     }
 }
