@@ -251,6 +251,10 @@ impl Document {
                                    .get("description")
                                    .and_then(|v| v.as_str())
                                    .map(|s| s.to_owned()))
+            .merge_categories(attributes
+                                  .get("categories")
+                                  .and_then(|v| v.as_array())
+                                  .map(|v| v.iter().map(|v| v.to_string()).collect()))
             .merge_slug(attributes
                             .get("slug")
                             .and_then(|v| v.as_str())
@@ -279,6 +283,7 @@ impl Document {
         let mut custom_attributes = attributes;
         custom_attributes.remove("title"); // in frontmatter
         custom_attributes.remove("description"); // in frontmatter
+        custom_attributes.remove("categories"); // in frontmatter
         custom_attributes.remove("slug"); // in frontmatter, breaks perma_attributes
         custom_attributes.remove("path"); // in frontmatter, breaks perma_attributes
         custom_attributes.remove("draft"); // in frontmatter
@@ -323,7 +328,7 @@ impl Document {
         };
 
         rss::Item {
-            title: self.title_to_str(),
+            title: Some(self.front.title.clone()),
             link: Some(link),
             guid: Some(guid),
             pub_date: self.front.published_date.map(|date| date.to_rfc2822()),
@@ -335,38 +340,26 @@ impl Document {
     /// Metadata for generating JSON feeds
     pub fn to_jsonfeed(&self, root_url: &str) -> jsonfeed::Item {
         let link = root_url.to_owned() + &self.url_path;
-        let cat: Vec<_> = self.attributes
-            .get("categories")
-            .and_then(|v| v.as_array())
-            .unwrap_or(&vec![])
-            .iter()
-            .map(|v| v.to_string())
-            .collect();
 
         Item {
             id: link.clone(),
             url: Some(link),
-            title: Some(self.title_to_str().unwrap_or("unknown title".into())),
+            title: Some(self.front.title.clone()),
             content: Content::Html(self.description_to_str().unwrap_or_else(|| "".into())),
             date_published: self.front.published_date.map(|date| date.to_rfc2822()),
             // TODO completely implement categories, see Issue 131
-            tags: Some(cat),
+            tags: Some(self.front.categories.clone()),
             ..Default::default()
         }
     }
 
-    fn title_to_str(&self) -> Option<String> {
-        self.attributes
-            .get("title")
-            .and_then(|s| s.as_str())
-            .map(|s| s.to_owned())
-    }
     fn description_to_str(&self) -> Option<String> {
-        self.attributes
-            .get("description")
-            .or_else(|| self.attributes.get("excerpt"))
-            .or_else(|| self.attributes.get("content"))
-            .and_then(|s| s.as_str())
+        self.front
+            .description
+            .as_ref()
+            .map(|s| s.as_str())
+            .or_else(|| self.attributes.get("excerpt").and_then(|s| s.as_str()))
+            .or_else(|| self.attributes.get("content").and_then(|s| s.as_str()))
             .map(|s| s.to_owned())
     }
 

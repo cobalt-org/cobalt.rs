@@ -73,7 +73,6 @@ impl FrontmatterBuilder {
         }
     }
 
-    #[cfg(test)]
     pub fn set_categories<S: Into<Option<Vec<String>>>>(self, categories: S) -> FrontmatterBuilder {
         FrontmatterBuilder {
             categories: categories.into(),
@@ -144,7 +143,6 @@ impl FrontmatterBuilder {
         self.merge(FrontmatterBuilder::new().set_description(description.into()))
     }
 
-    #[cfg(test)]
     pub fn merge_categories<S: Into<Option<Vec<String>>>>(self,
                                                           categories: S)
                                                           -> FrontmatterBuilder {
