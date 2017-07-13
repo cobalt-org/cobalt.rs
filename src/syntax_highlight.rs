@@ -2,6 +2,8 @@ extern crate syntect;
 extern crate liquid;
 extern crate pulldown_cmark as cmark;
 
+use error;
+
 use liquid::Renderable;
 use liquid::Context;
 use liquid::Token::{self, Identifier};
@@ -143,8 +145,15 @@ pub fn decorate_markdown<'a>(parser: Parser<'a>, theme_name: &str) -> DecoratedP
     DecoratedParser::new(parser, &SETUP.theme_set.themes[theme_name])
 }
 
-pub fn has_syntax_theme(name: &str) -> bool {
-    SETUP.theme_set.themes.contains_key(name)
+pub fn has_syntax_theme(name: &str) -> error::Result<bool> {
+    #[cfg(not(windows))]
+    return Ok(SETUP.theme_set.themes.contains_key(name));
+
+    #[cfg(windows)]
+    {
+        use error::ErrorKind;
+        return Err(ErrorKind::UnsupportedPlatform("syntax highlighting", "windows").into());
+    }
 }
 
 pub fn list_syntax_themes<'a>() -> Vec<&'a String> {

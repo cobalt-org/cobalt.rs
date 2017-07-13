@@ -5,7 +5,7 @@ use std::io::Read;
 use error::Result;
 use yaml_rust::YamlLoader;
 
-#[cfg(all(feature="syntax-highlight", not(windows)))]
+#[cfg(all(feature="syntax-highlight"))]
 use syntax_highlight::has_syntax_theme;
 
 arg_enum! {
@@ -146,14 +146,26 @@ impl Config {
             config.excerpt_separator = excerpt_separator.to_owned();
         };
 
-        #[cfg(all(feature="syntax-highlight", not(windows)))]
+        #[cfg(all(feature="syntax-highlight"))]
         {
+            use error::{Error, ErrorKind};
+
             if let Some(theme) = yaml["syntax-highlight"]["theme"].as_str() {
-                if has_syntax_theme(theme) {
-                    config.syntax_theme = theme.to_owned();
-                } else {
-                    warn!("Theme named '{}' is not found.  Using default 'base16-ocean.dark'.  Run `cobalt list-syntax-themes` to see available themes.",
-                          theme);
+                match has_syntax_theme(theme) {
+                    Ok(true) => config.syntax_theme = theme.to_owned(),
+                    Ok(false) => {
+                        info!(concat!("Theme named '{}' is not found.",
+                                      "  Using default 'base16-ocean.dark'.",
+                                      "  Run `cobalt list-syntax-themes` to see available themes."),
+                              theme)
+                    }
+                    Err(Error(ErrorKind::UnsupportedPlatform(..), _)) => {
+                        info!(concat!("Theme named '{}' ignored.",
+                                      "  This build of cobalt does not include support",
+                                      " for syntax highlighting."),
+                              theme)
+                    }
+                    Err(_) => unreachable!(),
                 }
             };
         }
