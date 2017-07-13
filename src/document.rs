@@ -13,7 +13,6 @@ use jsonfeed::Item;
 use jsonfeed::Content;
 use serde_yaml;
 use itertools;
-use config::Config;
 
 #[cfg(all(feature="syntax-highlight", not(windows)))]
 use syntax_highlight::{initialize_codeblock, decorate_markdown};
@@ -384,13 +383,14 @@ impl Document {
                    content: &str,
                    context: &mut Context,
                    source: &Path,
-                   config: &Config)
+                   syntax_theme: &str)
                    -> Result<String> {
-        let theme_name = config.syntax_theme.clone();
         let mut options = LiquidOptions::default();
         options.template_repository = Box::new(LocalTemplateRepository::new(source.to_owned()));
-        let highlight: Box<liquid::Block> =
-            Box::new(move |_, args, tokens, _| initialize_codeblock(args, tokens, &theme_name));
+        let highlight: Box<liquid::Block> = {
+            let syntax_theme = syntax_theme.to_owned();
+            Box::new(move |_, args, tokens, _| initialize_codeblock(args, tokens, &syntax_theme))
+        };
         options.blocks.insert("highlight".to_string(), highlight);
         let template = try!(liquid::parse(content, options));
         let html = try!(template.render(context)).unwrap_or_default();
@@ -401,7 +401,7 @@ impl Document {
                 let mut buf = String::new();
                 let parser = cmark::Parser::new(&html);
                 #[cfg(feature="syntax-highlight")]
-                cmark::html::push_html(&mut buf, decorate_markdown(parser, config));
+                cmark::html::push_html(&mut buf, decorate_markdown(parser, syntax_theme));
                 #[cfg(not(feature="syntax-highlight"))]
                 cmark::html::push_html(&mut buf, parser);
                 buf
@@ -414,7 +414,7 @@ impl Document {
                    content: &str,
                    context: &mut Context,
                    source: &Path,
-                   _: &Config)
+                   _syntax_theme: &str)
                    -> Result<String> {
         let mut options = LiquidOptions::default();
         options.template_repository = Box::new(LocalTemplateRepository::new(source.to_owned()));
@@ -455,7 +455,7 @@ impl Document {
     pub fn render_excerpt(&mut self,
                           context: &mut Context,
                           source: &Path,
-                          config: &Config)
+                          syntax_theme: &str)
                           -> Result<()> {
         let excerpt_html = {
             let excerpt_attr = self.attributes
@@ -465,14 +465,14 @@ impl Document {
             let excerpt_separator = &self.front.excerpt_separator;
 
             if let Some(excerpt_str) = excerpt_attr {
-                try!(self.render_html(excerpt_str, context, source, config))
+                try!(self.render_html(excerpt_str, context, source, syntax_theme))
             } else if excerpt_separator.is_empty() {
-                try!(self.render_html("", context, source, config))
+                try!(self.render_html("", context, source, syntax_theme))
             } else {
                 try!(self.render_html(&self.extract_markdown_references(excerpt_separator),
                                       context,
                                       source,
-                                      config))
+                                      syntax_theme))
             }
         };
 
@@ -495,9 +495,9 @@ impl Document {
                   source: &Path,
                   layouts_dir: &Path,
                   layouts_cache: &mut HashMap<String, String>,
-                  config: &Config)
+                  syntax_theme: &str)
                   -> Result<String> {
-        let content_html = try!(self.render_html(&self.content, context, source, config));
+        let content_html = try!(self.render_html(&self.content, context, source, syntax_theme));
         self.attributes
             .insert("content".to_owned(), Value::Str(content_html.clone()));
         context.set_val("content", Value::Str(content_html.clone()));

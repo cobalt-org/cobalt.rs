@@ -19,7 +19,6 @@ use std::borrow::Cow::Owned;
 use self::cmark::Parser;
 use self::cmark::Tag as cmarkTag;
 use self::cmark::Event::{self, Start, End, Text, Html};
-use config::Config;
 
 struct Setup {
     syntax_set: SyntaxSet,
@@ -57,15 +56,15 @@ impl Renderable for CodeBlock {
 pub struct DecoratedParser<'a> {
     h: Option<HighlightLines<'a>>,
     parser: Parser<'a>,
-    config: &'a Config,
+    theme: &'a Theme,
 }
 
 impl<'a> DecoratedParser<'a> {
-    pub fn new(parser: Parser<'a>, config: &'a Config) -> Self {
+    pub fn new(parser: Parser<'a>, theme: &'a Theme) -> Self {
         DecoratedParser {
             h: None,
             parser: parser,
-            config: config,
+            theme: &theme,
         }
     }
 }
@@ -93,9 +92,8 @@ impl<'a> Iterator for DecoratedParser<'a> {
                                 .next()
                                 .and_then(|lang| SETUP.syntax_set.find_syntax_by_token(lang))
                                 .unwrap_or_else(|| SETUP.syntax_set.find_syntax_plain_text());
-                        let theme = &SETUP.theme_set.themes[&self.config.syntax_theme];
-                        self.h = Some(HighlightLines::new(&cur_syntax, theme));
-                        let snippet = start_coloured_html_snippet(theme);
+                        self.h = Some(HighlightLines::new(&cur_syntax, self.theme));
+                        let snippet = start_coloured_html_snippet(self.theme);
                         return Some(Html(Owned(snippet)));
                     }
                     if let End(cmarkTag::CodeBlock(_)) = item {
@@ -141,8 +139,8 @@ pub fn initialize_codeblock(arguments: &[Token],
                 }))
 }
 
-pub fn decorate_markdown<'a>(parser: Parser<'a>, config: &'a Config) -> DecoratedParser<'a> {
-    DecoratedParser::new(parser, config)
+pub fn decorate_markdown<'a>(parser: Parser<'a>, theme_name: &str) -> DecoratedParser<'a> {
+    DecoratedParser::new(parser, &SETUP.theme_set.themes[theme_name])
 }
 
 pub fn has_syntax_theme(name: &str) -> bool {

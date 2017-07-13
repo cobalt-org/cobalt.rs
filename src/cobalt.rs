@@ -183,8 +183,12 @@ pub fn build(config: &Config) -> Result<()> {
 
         let mut context = post.get_render_context(&simple_posts_data);
 
-        post.render_excerpt(&mut context, source, config)?;
-        let post_html = post.render(&mut context, source, &layouts, &mut layouts_cache, config)?;
+        post.render_excerpt(&mut context, source, &config.syntax_theme)?;
+        let post_html = post.render(&mut context,
+                                    source,
+                                    &layouts,
+                                    &mut layouts_cache,
+                                    &config.syntax_theme)?;
         create_document_file(post_html, &post.file_path, dest)?;
     }
 
@@ -224,7 +228,11 @@ pub fn build(config: &Config) -> Result<()> {
         }
 
         let mut context = doc.get_render_context(&posts_data);
-        let doc_html = doc.render(&mut context, source, &layouts, &mut layouts_cache, config)?;
+        let doc_html = doc.render(&mut context,
+                                  source,
+                                  &layouts,
+                                  &mut layouts_cache,
+                                  &config.syntax_theme)?;
         create_document_file(doc_html, doc.file_path, dest)?;
     }
 
