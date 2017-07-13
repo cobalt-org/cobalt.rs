@@ -355,7 +355,7 @@ pub struct Frontmatter {
 /// Shallow merge of `liquid::Object`'s
 fn merge_objects(primary: liquid::Object, secondary: liquid::Object) -> liquid::Object {
     let mut primary = primary;
-    for (key, value) in secondary.iter() {
+    for (key, value) in secondary {
         primary
             .entry(key.to_owned())
             .or_insert_with(|| value.clone());

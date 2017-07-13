@@ -19,6 +19,7 @@ use syntax_highlight::{initialize_codeblock, decorate_markdown};
 
 use liquid::{Renderable, LiquidOptions, Context, Value, LocalTemplateRepository};
 
+use config;
 use frontmatter;
 use datetime;
 use pulldown_cmark as cmark;
@@ -503,6 +504,21 @@ impl Document {
             Ok(try!(template.render(context)).unwrap_or_default())
         } else {
             Ok(content_html)
+        }
+    }
+
+    pub fn render_dump(&self, dump: config::Dump) -> Result<(String, String)> {
+        match dump {
+            config::Dump::DocObject => {
+                let content = serde_yaml::to_string(&self.attributes)?;
+                Ok((content, "yml".to_owned()))
+            }
+            config::Dump::DocTemplate => Ok((self.content.clone(), "liquid".to_owned())),
+            config::Dump::DocLinkObject => {
+                let perma_attributes = permalink_attributes(&self.front, Path::new("<null>"));
+                let content = serde_yaml::to_string(&perma_attributes)?;
+                Ok((content, "yml".to_owned()))
+            }
         }
     }
 }
