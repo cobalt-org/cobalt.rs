@@ -3,16 +3,15 @@ use std::collections::HashMap;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::ffi::OsStr;
-use liquid::{Value, Object};
+use liquid::Value;
 use rss::{Channel, Rss};
 use jsonfeed::Feed;
 use jsonfeed;
-use serde_yaml;
 
 use datetime;
 use document::Document;
 use error::{ErrorKind, Result};
-use config::{Config, Dump};
+use config::Config;
 use files::FilesBuilder;
 use frontmatter;
 
@@ -167,8 +166,19 @@ pub fn build(config: &Config) -> Result<()> {
             }
         }
 
-        if config.dump.contains(&Dump::Liquid) {
-            create_liquid_dump(dest, &post.file_path, &post.content, &post.attributes)?;
+        for dump in config.dump.iter().filter(|d| d.is_doc()) {
+            trace!("Dumping {:?}", dump);
+            let (content, ext) = post.render_dump(*dump)?;
+            let mut file_path = post.file_path.clone();
+            let file_name = file_path
+                .file_stem()
+                .and_then(|p| p.to_str())
+                .expect("page must have file name")
+                .to_owned();
+            let file_name = format!("_{}.{}.{}", file_name, dump, ext);
+            file_path.set_file_name(file_name);
+            trace!("Generating {:?}", file_path);
+            create_document_file(content, &file_path, dest)?;
         }
 
         let mut context = post.get_render_context(&simple_posts_data);
@@ -198,8 +208,19 @@ pub fn build(config: &Config) -> Result<()> {
     for mut doc in documents {
         trace!("Generating {}", doc.url_path);
 
-        if config.dump.contains(&Dump::Liquid) {
-            create_liquid_dump(dest, &doc.file_path, &doc.content, &doc.attributes)?;
+        for dump in config.dump.iter().filter(|d| d.is_doc()) {
+            trace!("Dumping {:?}", dump);
+            let (content, ext) = doc.render_dump(*dump)?;
+            let mut file_path = doc.file_path.clone();
+            let file_name = file_path
+                .file_stem()
+                .and_then(|p| p.to_str())
+                .expect("page must have file name")
+                .to_owned();
+            let file_name = format!("_{}.{}.{}", file_name, dump, ext);
+            file_path.set_file_name(file_name);
+            trace!("Generating {:?}", file_path);
+            create_document_file(content, &file_path, dest)?;
         }
 
         let mut context = doc.get_render_context(&posts_data);
@@ -240,44 +261,6 @@ pub fn build(config: &Config) -> Result<()> {
             debug!("Copied {:?} to {:?}", src_file, dest_file);
         }
     }
-
-    Ok(())
-}
-
-fn create_liquid_dump<B: Into<PathBuf>, P: AsRef<Path>, S: AsRef<str>>(dest: B,
-                                                                       relpath: P,
-                                                                       content: S,
-                                                                       attributes: &Object)
-                                                                       -> Result<()> {
-    create_liquid_dump_internal(dest.into(), relpath.as_ref(), content.as_ref(), attributes)
-}
-
-fn create_liquid_dump_internal(dest: PathBuf,
-                               relpath: &Path,
-                               content: &str,
-                               attributes: &Object)
-                               -> Result<()> {
-    let mut liquid_file_path = dest;
-    liquid_file_path.push(relpath);
-    let mut liquid_file_name = OsStr::new("_").to_os_string();
-    {
-        let original_file_name = liquid_file_path.file_name().ok_or("File name missing")?;
-        liquid_file_name.push(original_file_name);
-        liquid_file_name.push(".liquid");
-    }
-    liquid_file_path.set_file_name(liquid_file_name);
-
-    let mut dump_file_path = liquid_file_path.clone();
-    dump_file_path.set_extension(".yml");
-
-    info!("Dumping content at {}", liquid_file_path.display());
-    let mut liquid_out = fs::File::create(liquid_file_path)?;
-    liquid_out.write_all(content.as_bytes())?;
-
-    info!("Dumping attributes at {}", dump_file_path.display());
-    let mut dump_out = fs::File::create(dump_file_path)?;
-    let values = serde_yaml::to_string(attributes)?;
-    dump_out.write_all(values.as_bytes())?;
 
     Ok(())
 }

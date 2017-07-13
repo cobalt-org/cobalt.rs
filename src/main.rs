@@ -291,8 +291,13 @@ fn run() -> Result<()> {
     config.include_drafts = matches.is_present("drafts");
 
     if global_matches.is_present("dump") {
-        let dump = values_t!(global_matches, "dump", Dump)?;
-        config.dump = dump;
+        let mut dump = values_t!(global_matches, "dump", Dump)?;
+        config.dump.append(&mut dump);
+        info!("Setting: {:?}", config.dump);
+    }
+    if matches.is_present("dump") {
+        let mut dump = values_t!(matches, "dump", Dump)?;
+        config.dump.append(&mut dump);
         info!("Setting: {:?}", config.dump);
     }
 

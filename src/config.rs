@@ -6,9 +6,17 @@ use error::Result;
 use yaml_rust::YamlLoader;
 
 arg_enum! {
-    #[derive(Debug, PartialEq)]
+    #[derive(Debug, PartialEq, Copy, Clone)]
     pub enum Dump {
-        Liquid
+        DocObject,
+        DocTemplate,
+        DocLinkObject
+    }
+}
+
+impl Dump {
+    pub fn is_doc(&self) -> bool {
+        true
     }
 }
 
