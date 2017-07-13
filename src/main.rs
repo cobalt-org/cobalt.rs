@@ -207,12 +207,8 @@ fn run() -> Result<()> {
                                  .value_name("COMMIT-MESSAGE")
                                  .help("Commit message that will be used on import")
                                  .default_value("cobalt site import")
-                                 .takes_value(true)));
-
-    #[cfg(all(feature="syntax-highlight"))]
-    let app_cli =
-        app_cli
-            .subcommand(SubCommand::with_name("list-syntax-themes").about("list available themes"));
+                                 .takes_value(true)))
+        .subcommand(SubCommand::with_name("list-syntax-themes").about("list available themes"));
 
     let global_matches = app_cli.get_matches();
 
@@ -418,7 +414,9 @@ fn run() -> Result<()> {
             }
 
             #[cfg(not(feature="syntax-highlight"))]
-            bail!(global_matches.usage());
+            bail!(concat!("No themes available.",
+                          "  This build of cobalt does not include",
+                          " support for syntax highlighting."));
         }
 
         _ => {
