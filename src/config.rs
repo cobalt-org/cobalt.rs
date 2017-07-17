@@ -13,7 +13,8 @@ arg_enum! {
     pub enum Dump {
         DocObject,
         DocTemplate,
-        DocLinkObject
+        DocLinkObject,
+        Document
     }
 }
 

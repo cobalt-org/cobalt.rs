@@ -538,6 +538,17 @@ impl Document {
                 let content = serde_yaml::to_string(&perma_attributes)?;
                 Ok((content, "yml".to_owned()))
             }
+            config::Dump::Document => {
+                let frontmatter = serde_yaml::to_string(&self.front)?;
+                let content = self.content.clone();
+                let ext = match self.front.format {
+                        frontmatter::SourceFormat::Raw => "liquid",
+                        frontmatter::SourceFormat::Markdown => "md",
+                    }
+                    .to_owned();
+                let content = itertools::join(&[frontmatter, "---".to_owned(), content], "\n");
+                Ok((content, ext))
+            }
         }
     }
 }
