@@ -2,15 +2,16 @@ extern crate syntect;
 extern crate liquid;
 extern crate pulldown_cmark as cmark;
 
+use error;
+
 use liquid::Renderable;
 use liquid::Context;
-use liquid::LiquidOptions;
 use liquid::Token::{self, Identifier};
 use liquid::lexer::Element::{self, Expression, Tag, Raw};
 use liquid::Error;
 
 use syntect::parsing::SyntaxSet;
-use syntect::highlighting::ThemeSet;
+use syntect::highlighting::{ThemeSet, Theme};
 use syntect::html::{IncludeBackground, highlighted_snippet_for_string, styles_to_coloured_html,
                     start_coloured_html_snippet};
 use syntect::easy::HighlightLines;
@@ -20,8 +21,6 @@ use std::borrow::Cow::Owned;
 use self::cmark::Parser;
 use self::cmark::Tag as cmarkTag;
 use self::cmark::Event::{self, Start, End, Text, Html};
-
-const THEME_NAME: &'static str = "base16-ocean.dark";
 
 struct Setup {
     syntax_set: SyntaxSet,
@@ -41,33 +40,33 @@ lazy_static!{
 struct CodeBlock {
     lang: Option<String>,
     code: String,
+    theme: Theme,
 }
 
 impl Renderable for CodeBlock {
     fn render(&self, _: &mut Context) -> Result<Option<String>, Error> {
-
         let syntax = match self.lang {
                 Some(ref lang) => SETUP.syntax_set.find_syntax_by_token(lang),
                 _ => None,
             }
             .unwrap_or_else(|| SETUP.syntax_set.find_syntax_plain_text());
 
-        Ok(Some(highlighted_snippet_for_string(&self.code,
-                                               syntax,
-                                               &SETUP.theme_set.themes[THEME_NAME])))
+        Ok(Some(highlighted_snippet_for_string(&self.code, syntax, &self.theme)))
     }
 }
 
 pub struct DecoratedParser<'a> {
     h: Option<HighlightLines<'a>>,
     parser: Parser<'a>,
+    theme: &'a Theme,
 }
 
 impl<'a> DecoratedParser<'a> {
-    pub fn new(parser: Parser<'a>) -> Self {
+    pub fn new(parser: Parser<'a>, theme: &'a Theme) -> Self {
         DecoratedParser {
             h: None,
             parser: parser,
+            theme: &theme,
         }
     }
 }
@@ -95,10 +94,8 @@ impl<'a> Iterator for DecoratedParser<'a> {
                                 .next()
                                 .and_then(|lang| SETUP.syntax_set.find_syntax_by_token(lang))
                                 .unwrap_or_else(|| SETUP.syntax_set.find_syntax_plain_text());
-                        self.h = Some(HighlightLines::new(cur_syntax,
-                                                          &SETUP.theme_set.themes[THEME_NAME]));
-                        let snippet = start_coloured_html_snippet(&SETUP.theme_set.themes
-                                                                       [THEME_NAME]);
+                        self.h = Some(HighlightLines::new(&cur_syntax, self.theme));
+                        let snippet = start_coloured_html_snippet(self.theme);
                         return Some(Html(Owned(snippet)));
                     }
                     if let End(cmarkTag::CodeBlock(_)) = item {
@@ -116,10 +113,9 @@ impl<'a> Iterator for DecoratedParser<'a> {
     }
 }
 
-pub fn initialize_codeblock(_: &str,
-                            arguments: &[Token],
+pub fn initialize_codeblock(arguments: &[Token],
                             tokens: &[Element],
-                            _: &LiquidOptions)
+                            theme_name: &str)
                             -> Result<Box<Renderable>, Error> {
 
     let content = tokens
@@ -141,11 +137,31 @@ pub fn initialize_codeblock(_: &str,
     Ok(Box::new(CodeBlock {
                     code: content,
                     lang: lang,
+                    theme: SETUP.theme_set.themes[theme_name].clone(),
                 }))
 }
 
-pub fn decorate_markdown(parser: Parser) -> DecoratedParser {
-    DecoratedParser::new(parser)
+pub fn decorate_markdown<'a>(parser: Parser<'a>, theme_name: &str) -> DecoratedParser<'a> {
+    DecoratedParser::new(parser, &SETUP.theme_set.themes[theme_name])
+}
+
+pub fn has_syntax_theme(name: &str) -> error::Result<bool> {
+    #[cfg(not(windows))]
+    return Ok(SETUP.theme_set.themes.contains_key(name));
+
+    #[cfg(windows)]
+    {
+        use error::ErrorKind;
+        return Err(ErrorKind::UnsupportedPlatform("syntax highlighting", "windows").into());
+    }
+}
+
+pub fn list_syntax_themes<'a>() -> Vec<&'a String> {
+    #[cfg(not(windows))]
+    return SETUP.theme_set.themes.keys().collect::<Vec<_>>();
+
+    #[cfg(windows)]
+    return vec![];
 }
 
 #[cfg(test)]
@@ -184,7 +200,10 @@ mod test {
         let mut options: LiquidOptions = Default::default();
         options
             .blocks
-            .insert("codeblock".to_string(), Box::new(initialize_codeblock));
+            .insert("codeblock".to_string(),
+                    Box::new(|_, args, tokens, _| {
+                                 initialize_codeblock(args, tokens, "base16-ocean.dark")
+                             }));
         let template = liquid::parse(&format!("{{% codeblock rust %}}{}{{% endcodeblock %}}",
                                               CODE_BLOCK),
                                      options)

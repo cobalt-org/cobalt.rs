@@ -5,6 +5,9 @@ use std::io::Read;
 use error::Result;
 use yaml_rust::YamlLoader;
 
+#[cfg(all(feature="syntax-highlight"))]
+use syntax_highlight::has_syntax_theme;
+
 arg_enum! {
     #[derive(Debug, PartialEq, Copy, Clone)]
     pub enum Dump {
@@ -39,6 +42,7 @@ pub struct Config {
     pub ignore: Vec<String>,
     pub excerpt_separator: String,
     pub dump: Vec<Dump>,
+    pub syntax_theme: String,
 }
 
 impl Default for Config {
@@ -61,6 +65,7 @@ impl Default for Config {
             ignore: vec![],
             excerpt_separator: "\n\n".to_owned(),
             dump: vec![],
+            syntax_theme: "base16-ocean.dark".to_owned(),
         }
     }
 }
@@ -140,6 +145,30 @@ impl Config {
         if let Some(excerpt_separator) = yaml["excerpt_separator"].as_str() {
             config.excerpt_separator = excerpt_separator.to_owned();
         };
+
+        #[cfg(all(feature="syntax-highlight"))]
+        {
+            use error::{Error, ErrorKind};
+
+            if let Some(theme) = yaml["syntax-highlight"]["theme"].as_str() {
+                match has_syntax_theme(theme) {
+                    Ok(true) => config.syntax_theme = theme.to_owned(),
+                    Ok(false) => {
+                        info!(concat!("Theme named '{}' is not found.",
+                                      "  Using default 'base16-ocean.dark'.",
+                                      "  Run `cobalt list-syntax-themes` to see available themes."),
+                              theme)
+                    }
+                    Err(Error(ErrorKind::UnsupportedPlatform(..), _)) => {
+                        info!(concat!("Theme named '{}' ignored.",
+                                      "  This build of cobalt does not include support",
+                                      " for syntax highlighting."),
+                              theme)
+                    }
+                    Err(_) => unreachable!(),
+                }
+            };
+        }
 
         Ok(config)
     }

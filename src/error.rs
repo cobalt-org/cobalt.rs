@@ -26,5 +26,10 @@ error_chain! {
             display("name, description and link need to be defined in the config file to \
                     generate RSS")
         }
+
+        UnsupportedPlatform(functionality: &'static str, platform: &'static str) {
+            description("functionality is not implemented for this platform")
+            display("{} is not implemented for the {} platform", functionality, platform)
+        }
     }
 }

@@ -379,10 +379,18 @@ impl Document {
     /// take `"extends"` attribute into account. This function can be used for
     /// rendering content or excerpt.
     #[cfg(all(feature="syntax-highlight", not(windows)))]
-    fn render_html(&self, content: &str, context: &mut Context, source: &Path) -> Result<String> {
+    fn render_html(&self,
+                   content: &str,
+                   context: &mut Context,
+                   source: &Path,
+                   syntax_theme: &str)
+                   -> Result<String> {
         let mut options = LiquidOptions::default();
         options.template_repository = Box::new(LocalTemplateRepository::new(source.to_owned()));
-        let highlight: Box<liquid::Block> = Box::new(initialize_codeblock);
+        let highlight: Box<liquid::Block> = {
+            let syntax_theme = syntax_theme.to_owned();
+            Box::new(move |_, args, tokens, _| initialize_codeblock(args, tokens, &syntax_theme))
+        };
         options.blocks.insert("highlight".to_string(), highlight);
         let template = try!(liquid::parse(content, options));
         let html = try!(template.render(context)).unwrap_or_default();
@@ -393,7 +401,7 @@ impl Document {
                 let mut buf = String::new();
                 let parser = cmark::Parser::new(&html);
                 #[cfg(feature="syntax-highlight")]
-                cmark::html::push_html(&mut buf, decorate_markdown(parser));
+                cmark::html::push_html(&mut buf, decorate_markdown(parser, syntax_theme));
                 #[cfg(not(feature="syntax-highlight"))]
                 cmark::html::push_html(&mut buf, parser);
                 buf
@@ -402,7 +410,12 @@ impl Document {
         Ok(html.to_owned())
     }
     #[cfg(any(not(feature="syntax-highlight"), windows))]
-    fn render_html(&self, content: &str, context: &mut Context, source: &Path) -> Result<String> {
+    fn render_html(&self,
+                   content: &str,
+                   context: &mut Context,
+                   source: &Path,
+                   _syntax_theme: &str)
+                   -> Result<String> {
         let mut options = LiquidOptions::default();
         options.template_repository = Box::new(LocalTemplateRepository::new(source.to_owned()));
         let template = liquid::parse(content, options)?;
@@ -439,7 +452,11 @@ impl Document {
     }
 
     /// Renders excerpt and adds it to attributes of the document.
-    pub fn render_excerpt(&mut self, context: &mut Context, source: &Path) -> Result<()> {
+    pub fn render_excerpt(&mut self,
+                          context: &mut Context,
+                          source: &Path,
+                          syntax_theme: &str)
+                          -> Result<()> {
         let excerpt_html = {
             let excerpt_attr = self.attributes
                 .get("excerpt")
@@ -448,13 +465,14 @@ impl Document {
             let excerpt_separator = &self.front.excerpt_separator;
 
             if let Some(excerpt_str) = excerpt_attr {
-                try!(self.render_html(excerpt_str, context, source))
+                try!(self.render_html(excerpt_str, context, source, syntax_theme))
             } else if excerpt_separator.is_empty() {
-                try!(self.render_html("", context, source))
+                try!(self.render_html("", context, source, syntax_theme))
             } else {
                 try!(self.render_html(&self.extract_markdown_references(excerpt_separator),
                                       context,
-                                      source))
+                                      source,
+                                      syntax_theme))
             }
         };
 
@@ -476,9 +494,10 @@ impl Document {
                   context: &mut Context,
                   source: &Path,
                   layouts_dir: &Path,
-                  layouts_cache: &mut HashMap<String, String>)
+                  layouts_cache: &mut HashMap<String, String>,
+                  syntax_theme: &str)
                   -> Result<String> {
-        let content_html = try!(self.render_html(&self.content, context, source));
+        let content_html = try!(self.render_html(&self.content, context, source, syntax_theme));
         self.attributes
             .insert("content".to_owned(), Value::Str(content_html.clone()));
         context.set_val("content", Value::Str(content_html.clone()));
