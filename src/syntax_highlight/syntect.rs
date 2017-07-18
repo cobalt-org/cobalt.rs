@@ -156,28 +156,22 @@ pub fn list_syntax_themes<'a>() -> Vec<&'a String> {
 }
 
 pub fn list_syntaxes<'a>() -> Vec<String> {
-    #[cfg(not(windows))]
-    {
-        fn definition_to_string(sd: &SyntaxDefinition) -> String {
-            let extensions = sd.file_extensions.iter().join(&", ".to_owned());
-            format!("{} [{}]", sd.name, extensions)
-        }
-
-        let mut syntaxes = SETUP
-            .syntax_set
-            .syntaxes()
-            .iter()
-            .map(definition_to_string)
-            .collect::<Vec<_>>();
-
-        // sort alphabetically with insensitive ascii case
-        syntaxes.sort_by_key(|a| (a as &str).to_ascii_lowercase());
-
-        return syntaxes;
+    fn definition_to_string(sd: &SyntaxDefinition) -> String {
+        let extensions = sd.file_extensions.iter().join(&", ".to_owned());
+        format!("{} [{}]", sd.name, extensions)
     }
 
-    #[cfg(windows)]
-    return vec![];
+    let mut syntaxes = SETUP
+        .syntax_set
+        .syntaxes()
+        .iter()
+        .map(definition_to_string)
+        .collect::<Vec<_>>();
+
+    // sort alphabetically with insensitive ascii case
+    syntaxes.sort_by_key(|a| (a as &str).to_ascii_lowercase());
+
+    return syntaxes;
 }
 
 #[cfg(test)]
