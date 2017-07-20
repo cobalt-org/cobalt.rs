@@ -3,6 +3,7 @@ extern crate liquid;
 extern crate pulldown_cmark as cmark;
 
 use error;
+use itertools::Itertools;
 
 use liquid::Renderable;
 use liquid::Context;
@@ -10,12 +11,13 @@ use liquid::Token::{self, Identifier};
 use liquid::lexer::Element::{self, Expression, Tag, Raw};
 use liquid::Error;
 
-use syntect::parsing::SyntaxSet;
+use syntect::parsing::{SyntaxDefinition, SyntaxSet};
 use syntect::highlighting::{ThemeSet, Theme};
 use syntect::html::{IncludeBackground, highlighted_snippet_for_string, styles_to_coloured_html,
                     start_coloured_html_snippet};
 use syntect::easy::HighlightLines;
 
+use std::ascii::AsciiExt;
 use std::borrow::Cow::Owned;
 
 use self::cmark::Parser;
@@ -159,6 +161,31 @@ pub fn has_syntax_theme(name: &str) -> error::Result<bool> {
 pub fn list_syntax_themes<'a>() -> Vec<&'a String> {
     #[cfg(not(windows))]
     return SETUP.theme_set.themes.keys().collect::<Vec<_>>();
+
+    #[cfg(windows)]
+    return vec![];
+}
+
+pub fn list_syntaxes<'a>() -> Vec<String> {
+    #[cfg(not(windows))]
+    {
+        fn definition_to_string(sd: &SyntaxDefinition) -> String {
+            let extensions = sd.file_extensions.iter().join(&", ".to_owned());
+            format!("{} [{}]", sd.name, extensions)
+        }
+
+        let mut syntaxes = SETUP
+            .syntax_set
+            .syntaxes()
+            .iter()
+            .map(definition_to_string)
+            .collect::<Vec<_>>();
+
+        // sort alphabetically with insensitive ascii case
+        syntaxes.sort_by_key(|a| (a as &str).to_ascii_lowercase());
+
+        return syntaxes;
+    }
 
     #[cfg(windows)]
     return vec![];
