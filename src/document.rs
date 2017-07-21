@@ -14,7 +14,6 @@ use jsonfeed::Content;
 use serde_yaml;
 use itertools;
 
-#[cfg(all(feature="syntax-highlight", not(windows)))]
 use syntax_highlight::{initialize_codeblock, decorate_markdown};
 
 use liquid::{Renderable, LiquidOptions, Context, Value, LocalTemplateRepository};
@@ -378,7 +377,6 @@ impl Document {
     /// Takes `content` string and returns rendered HTML. This function doesn't
     /// take `"extends"` attribute into account. This function can be used for
     /// rendering content or excerpt.
-    #[cfg(all(feature="syntax-highlight", not(windows)))]
     fn render_html(&self,
                    content: &str,
                    context: &mut Context,
@@ -400,33 +398,7 @@ impl Document {
             frontmatter::SourceFormat::Markdown => {
                 let mut buf = String::new();
                 let parser = cmark::Parser::new(&html);
-                #[cfg(feature="syntax-highlight")]
                 cmark::html::push_html(&mut buf, decorate_markdown(parser, syntax_theme));
-                #[cfg(not(feature="syntax-highlight"))]
-                cmark::html::push_html(&mut buf, parser);
-                buf
-            }
-        };
-        Ok(html.to_owned())
-    }
-    #[cfg(any(not(feature="syntax-highlight"), windows))]
-    fn render_html(&self,
-                   content: &str,
-                   context: &mut Context,
-                   source: &Path,
-                   _syntax_theme: &str)
-                   -> Result<String> {
-        let mut options = LiquidOptions::default();
-        options.template_repository = Box::new(LocalTemplateRepository::new(source.to_owned()));
-        let template = liquid::parse(content, options)?;
-        let html = template.render(context)?.unwrap_or_default();
-
-        let html = match self.front.format {
-            frontmatter::SourceFormat::Raw => html,
-            frontmatter::SourceFormat::Markdown => {
-                let mut buf = String::new();
-                let parser = cmark::Parser::new(&html);
-                cmark::html::push_html(&mut buf, parser);
                 buf
             }
         };

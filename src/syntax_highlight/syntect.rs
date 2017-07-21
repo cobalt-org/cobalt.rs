@@ -1,3 +1,6 @@
+use std::ascii::AsciiExt;
+
+use std::borrow::Cow::Owned;
 use itertools::Itertools;
 
 use liquid;
@@ -9,9 +12,6 @@ use syntect::highlighting::{ThemeSet, Theme};
 use syntect::html::{IncludeBackground, highlighted_snippet_for_string, styles_to_coloured_html,
                     start_coloured_html_snippet};
 use syntect::easy::HighlightLines;
-
-use std::ascii::AsciiExt;
-use std::borrow::Cow::Owned;
 
 use pulldown_cmark as cmark;
 use pulldown_cmark::Event::{self, Start, End, Text, Html};
@@ -172,8 +172,9 @@ pub fn decorate_markdown<'a>(parser: cmark::Parser<'a>, theme_name: &str) -> Dec
 mod test {
 
     use std::default::Default;
-    use syntax_highlight::initialize_codeblock;
     use liquid::{self, Renderable, LiquidOptions, Context};
+
+    use super::*;
 
     const CODE_BLOCK: &'static str = "mod test {
         fn hello(arg: int) -> bool {
@@ -183,7 +184,7 @@ mod test {
     }
     ";
 
-    const RENDERED: &'static str = "<pre style=\"background-color:#2b303b;\">\n<span \
+    const CODEBLOCK_RENDERED: &'static str = "<pre style=\"background-color:#2b303b;\">\n<span \
          style=\"color:#b48ead;\">mod</span><span style=\"color:#c0c5ce;\"> </span><span \
          style=\"color:#c0c5ce;\">test</span><span style=\"color:#c0c5ce;\"> </span><span \
          style=\"color:#c0c5ce;\">{</span>\n<span style=\"color:#c0c5ce;\">        </span><span \
@@ -199,22 +200,72 @@ mod test {
          </span><span style=\"color:#c0c5ce;\">}</span>\n<span style=\"color:#c0c5ce;\">    \
          </span><span style=\"color:#c0c5ce;\">}</span>\n<span style=\"color:#c0c5ce;\">    \
          </span>\n</pre>\n";
-    #[test]
-    fn test_codeblock_renders_rust() {
-        let mut options: LiquidOptions = Default::default();
-        options
-            .blocks
-            .insert("codeblock".to_string(),
-                    Box::new(|_, args, tokens, _| {
-                                 initialize_codeblock(args, tokens, "base16-ocean.dark")
-                             }));
-        let template = liquid::parse(&format!("{{% codeblock rust %}}{}{{% endcodeblock %}}",
-                                              CODE_BLOCK),
-                                     options)
-                .unwrap();
-        let mut data = Context::new();
-        let output = template.render(&mut data);
-        assert_eq!(output.unwrap(), Some(RENDERED.to_string()));
-    }
 
+    const MARKDOWN_RENDERED: &'static str = "<pre style=\"background-color:#2b303b\">\n<span \
+        style=\"background-color:#2b303b;color:#b48ead;\">mod</span><span \
+        style=\"background-color:#2b303b;color:#c0c5ce;\"> </span><span \
+        style=\"background-color:#2b303b;color:#c0c5ce;\">test</span><span \
+        style=\"background-color:#2b303b;color:#c0c5ce;\"> </span><span \
+        style=\"background-color:#2b303b;color:#c0c5ce;\">{</span><span \
+        style=\"background-color:#2b303b;color:#c0c5ce;\">\n</span><span \
+        style=\"background-color:#2b303b;color:#c0c5ce;\">        </span><span \
+        style=\"background-color:#2b303b;color:#b48ead;\">fn</span><span \
+        style=\"background-color:#2b303b;color:#c0c5ce;\"> </span><span \
+        style=\"background-color:#2b303b;color:#8fa1b3;\">hello</span><span \
+        style=\"background-color:#2b303b;color:#c0c5ce;\">(</span><span \
+        style=\"background-color:#2b303b;color:#bf616a;\">arg</span><span \
+        style=\"background-color:#2b303b;color:#c0c5ce;\">:</span><span \
+        style=\"background-color:#2b303b;color:#c0c5ce;\"> int</span><span \
+        style=\"background-color:#2b303b;color:#c0c5ce;\">)</span><span \
+        style=\"background-color:#2b303b;color:#c0c5ce;\"> </span><span \
+        style=\"background-color:#2b303b;color:#c0c5ce;\">-&gt;</span><span \
+        style=\"background-color:#2b303b;color:#c0c5ce;\"> </span><span \
+        style=\"background-color:#2b303b;color:#b48ead;\">bool</span><span \
+        style=\"background-color:#2b303b;color:#c0c5ce;\"> </span><span \
+        style=\"background-color:#2b303b;color:#c0c5ce;\">{</span><span \
+        style=\"background-color:#2b303b;color:#c0c5ce;\">\n</span><span \
+        style=\"background-color:#2b303b;color:#c0c5ce;\">            </span><span \
+        style=\"background-color:#2b303b;color:#d08770;\">true</span><span \
+        style=\"background-color:#2b303b;color:#c0c5ce;\">\n</span><span \
+        style=\"background-color:#2b303b;color:#c0c5ce;\">        </span><span \
+        style=\"background-color:#2b303b;color:#c0c5ce;\">}</span><span \
+        style=\"background-color:#2b303b;color:#c0c5ce;\">\n</span><span \
+        style=\"background-color:#2b303b;color:#c0c5ce;\">    </span><span \
+        style=\"background-color:#2b303b;color:#c0c5ce;\">}</span><span \
+        style=\"background-color:#2b303b;color:#c0c5ce;\">\n</span><span \
+        style=\"background-color:#2b303b;color:#c0c5ce;\">    </span><span \
+        style=\"background-color:#2b303b;color:#c0c5ce;\">\n</span></pre>";
+
+    #[test]
+    fn codeblock_renders_rust() {
+        // Syntect isn't thread safe, for now run everything in the same test.
+        {
+            let mut options: LiquidOptions = Default::default();
+            options
+                .blocks
+                .insert("codeblock".to_string(),
+                        Box::new(|_, args, tokens, _| {
+                                     initialize_codeblock(args, tokens, "base16-ocean.dark")
+                                 }));
+            let template = liquid::parse(&format!("{{% codeblock rust %}}{}{{% endcodeblock %}}",
+                                                  CODE_BLOCK),
+                                         options)
+                    .unwrap();
+            let mut data = Context::new();
+            let output = template.render(&mut data);
+            assert_eq!(output.unwrap(), Some(CODEBLOCK_RENDERED.to_string()));
+        }
+
+        {
+            let html = format!("```rust
+{}
+```",
+                               CODE_BLOCK);
+
+            let mut buf = String::new();
+            let parser = cmark::Parser::new(&html);
+            cmark::html::push_html(&mut buf, decorate_markdown(parser, "base16-ocean.dark"));
+            assert_eq!(buf, MARKDOWN_RENDERED);
+        }
+    }
 }

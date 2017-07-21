@@ -1,5 +1,7 @@
 #![cfg_attr(feature = "cargo-clippy", allow(redundant_closure))]
+
 use std::io;
+
 use yaml_rust::scanner;
 use walkdir;
 use liquid;
