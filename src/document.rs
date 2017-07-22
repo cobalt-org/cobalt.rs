@@ -20,7 +20,6 @@ use liquid::{Renderable, LiquidOptions, Context, Value, LocalTemplateRepository}
 
 use config;
 use frontmatter;
-use datetime;
 use pulldown_cmark as cmark;
 use liquid;
 
@@ -94,7 +93,7 @@ fn permalink_attributes(front: &frontmatter::Frontmatter,
 
     let filename = dest_file.file_stem().and_then(|s| s.to_str());
     if let Some(filename) = filename {
-        attributes.insert(":filename".to_owned(), filename.to_owned());
+        attributes.insert(":name".to_owned(), filename.to_owned());
     }
 
     attributes.insert(":slug".to_owned(), front.slug.clone());
@@ -115,9 +114,8 @@ fn permalink_attributes(front: &frontmatter::Frontmatter,
         attributes.insert(":second".to_owned(), format!("{:02}", &date.second()));
     }
 
-    // Allow customizing any of the above with custom frontmatter attributes
     for (key, val) in &front.custom {
-        let key = format!(":{}", key);
+        let key = format!(":custom.{}", key);
         // HACK: We really should support nested types
         let val = val.to_string();
         attributes.insert(key, val);
@@ -177,8 +175,8 @@ fn document_attributes(front: &frontmatter::Frontmatter,
                        -> liquid::Object {
     let mut attributes = liquid::Object::new();
 
-    attributes.insert("path".to_owned(), liquid::Value::str(url_path));
-    attributes.insert("source".to_owned(), liquid::Value::str(source_file));
+    attributes.insert("url".to_owned(), liquid::Value::str(url_path));
+    attributes.insert("path".to_owned(), liquid::Value::str(source_file));
     attributes.insert("title".to_owned(), liquid::Value::str(&front.title));
     if let Some(ref description) = front.description {
         attributes.insert("description".to_owned(), liquid::Value::str(description));
@@ -190,15 +188,14 @@ fn document_attributes(front: &frontmatter::Frontmatter,
                                                .map(|c| liquid::Value::str(c))
                                                .collect()));
     if let Some(ref published_date) = front.published_date {
-        attributes.insert("date".to_owned(),
+        attributes.insert("published_date".to_owned(),
                           liquid::Value::Str(published_date.format()));
     }
-    attributes.insert("draft".to_owned(), liquid::Value::Bool(front.is_draft));
+    attributes.insert("is_draft".to_owned(), liquid::Value::Bool(front.is_draft));
     attributes.insert("is_post".to_owned(), liquid::Value::Bool(front.is_post));
 
-    for (key, val) in &front.custom {
-        attributes.insert(key.clone(), val.clone());
-    }
+    attributes.insert("custom".to_owned(),
+                      liquid::Value::Object(front.custom.clone()));
 
     attributes
 }
@@ -231,72 +228,17 @@ impl Document {
     pub fn parse(root_path: &Path,
                  source_file: &Path,
                  dest_file: &Path,
-                 default_front: frontmatter::FrontmatterBuilder,
-                 default_post_permalink: &Option<String>)
+                 default_front: frontmatter::FrontmatterBuilder)
                  -> Result<Document> {
         trace!("Parsing {:?}", source_file);
         let content = read_document(root_path, source_file)?;
         let (front, content) = split_document(&content)?;
-        let mut custom_attributes = front
+        let front = front
             .map(|s| serde_yaml::from_str(s))
             .map_or(Ok(None), |r| r.map(Some))?
-            .unwrap_or_else(liquid::Object::new);
-
-        // Convert legacy frontmatter into frontmatter (with `custom`)
-        // In some cases, we need to remove them to successfully run perma_attributes
-        // Otherwise, we can remove the converted values because most frontmatter content gets
-        // populated into the final attributes (see `document_attributes`).
-        // Exceptions
-        // - excerpt_separator: internal-only
-        // - extends internal-only
-        let mut front = frontmatter::FrontmatterBuilder::new()
-            .merge_title(custom_attributes
-                             .remove("title")
-                             .and_then(|v| v.as_str().map(|s| s.to_owned())))
-            .merge_description(custom_attributes
-                                   .remove("description")
-                                   .and_then(|v| v.as_str().map(|s| s.to_owned())))
-            .merge_categories(custom_attributes
-                                  .remove("categories")
-                                  .and_then(|v| {
-                                                v.as_array()
-                                                    .map(|v| {
-                                                             v.iter()
-                                                                 .map(|v| v.to_string())
-                                                                 .collect()
-                                                         })
-                                            }))
-            .merge_slug(custom_attributes
-                            .remove("slug")
-                            .and_then(|v| v.as_str().map(|s| s.to_owned())))
-            .merge_permalink(custom_attributes
-                                 .remove("path")
-                                 .and_then(|v| v.as_str().map(|s| s.to_owned())))
-            .merge_draft(custom_attributes
-                             .remove("draft")
-                             .and_then(|v| v.as_bool()))
-            .merge_post(custom_attributes
-                            .remove("is_post")
-                            .and_then(|v| v.as_bool()))
-            .merge_excerpt_separator(custom_attributes
-                                         .remove("excerpt_separator")
-                                         .and_then(|v| v.as_str().map(|s| s.to_owned())))
-            .merge_layout(custom_attributes
-                              .remove("extends")
-                              .and_then(|v| v.as_str().map(|s| s.to_owned())))
-            .merge_published_date(custom_attributes
-                                      .remove("date")
-                                      .and_then(|d| {
-                                                    d.as_str().and_then(datetime::DateTime::parse)
-                                                }))
-            .merge_path(dest_file)?
+            .unwrap_or_else(|| frontmatter::FrontmatterBuilder::new())
+            .merge_path(source_file)?
             .merge(default_front);
-
-        front = front.merge_custom(custom_attributes);
-
-        if front.is_post.unwrap_or(false) {
-            front = front.merge_permalink(default_post_permalink.clone());
-        }
 
         let front = front.build()?;
 
@@ -375,7 +317,7 @@ impl Document {
     /// Renders liquid templates into HTML in the context of current document.
     ///
     /// Takes `content` string and returns rendered HTML. This function doesn't
-    /// take `"extends"` attribute into account. This function can be used for
+    /// take `"layout"` attribute into account. This function can be used for
     /// rendering content or excerpt.
     fn render_html(&self,
                    content: &str,

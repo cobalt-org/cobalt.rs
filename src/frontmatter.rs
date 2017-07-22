@@ -52,6 +52,7 @@ impl FrontmatterBuilder {
         }
     }
 
+    #[cfg(test)]
     pub fn set_slug<S: Into<Option<String>>>(self, slug: S) -> FrontmatterBuilder {
         FrontmatterBuilder {
             slug: slug.into(),
@@ -59,6 +60,7 @@ impl FrontmatterBuilder {
         }
     }
 
+    #[cfg(test)]
     pub fn set_title<S: Into<Option<String>>>(self, title: S) -> FrontmatterBuilder {
         FrontmatterBuilder {
             title: title.into(),
@@ -66,6 +68,7 @@ impl FrontmatterBuilder {
         }
     }
 
+    #[cfg(test)]
     pub fn set_description<S: Into<Option<String>>>(self, description: S) -> FrontmatterBuilder {
         FrontmatterBuilder {
             description: description.into(),
@@ -73,6 +76,7 @@ impl FrontmatterBuilder {
         }
     }
 
+    #[cfg(test)]
     pub fn set_categories<S: Into<Option<Vec<String>>>>(self, categories: S) -> FrontmatterBuilder {
         FrontmatterBuilder {
             categories: categories.into(),
@@ -89,6 +93,7 @@ impl FrontmatterBuilder {
         }
     }
 
+    #[cfg(test)]
     pub fn set_published_date<D: Into<Option<datetime::DateTime>>>(self,
                                                                    published_date: D)
                                                                    -> FrontmatterBuilder {
@@ -106,6 +111,7 @@ impl FrontmatterBuilder {
         }
     }
 
+    #[cfg(test)]
     pub fn set_layout<S: Into<Option<String>>>(self, layout: S) -> FrontmatterBuilder {
         FrontmatterBuilder {
             layout: layout.into(),
@@ -127,34 +133,41 @@ impl FrontmatterBuilder {
         }
     }
 
+    #[cfg(test)]
     pub fn merge_permalink<S: Into<Option<String>>>(self, permalink: S) -> FrontmatterBuilder {
         self.merge(FrontmatterBuilder::new().set_permalink(permalink.into()))
     }
 
+    #[cfg(test)]
     pub fn merge_slug<S: Into<Option<String>>>(self, slug: S) -> FrontmatterBuilder {
         self.merge(FrontmatterBuilder::new().set_slug(slug.into()))
     }
 
+    #[cfg(test)]
     pub fn merge_title<S: Into<Option<String>>>(self, title: S) -> FrontmatterBuilder {
         self.merge(FrontmatterBuilder::new().set_title(title.into()))
     }
 
+    #[cfg(test)]
     pub fn merge_description<S: Into<Option<String>>>(self, description: S) -> FrontmatterBuilder {
         self.merge(FrontmatterBuilder::new().set_description(description.into()))
     }
 
+    #[cfg(test)]
     pub fn merge_categories<S: Into<Option<Vec<String>>>>(self,
                                                           categories: S)
                                                           -> FrontmatterBuilder {
         self.merge(FrontmatterBuilder::new().set_categories(categories.into()))
     }
 
+    #[cfg(test)]
     pub fn merge_excerpt_separator<S: Into<Option<String>>>(self,
                                                             excerpt_separator: S)
                                                             -> FrontmatterBuilder {
         self.merge(FrontmatterBuilder::new().set_excerpt_separator(excerpt_separator.into()))
     }
 
+    #[cfg(test)]
     pub fn merge_published_date<D: Into<Option<datetime::DateTime>>>(self,
                                                                      published_date: D)
                                                                      -> FrontmatterBuilder {
@@ -166,18 +179,22 @@ impl FrontmatterBuilder {
         self.merge(FrontmatterBuilder::new().set_format(format.into()))
     }
 
+    #[cfg(test)]
     pub fn merge_layout<S: Into<Option<String>>>(self, layout: S) -> FrontmatterBuilder {
         self.merge(FrontmatterBuilder::new().set_layout(layout.into()))
     }
 
+    #[cfg(test)]
     pub fn merge_draft<B: Into<Option<bool>>>(self, draft: B) -> FrontmatterBuilder {
         self.merge(FrontmatterBuilder::new().set_draft(draft.into()))
     }
 
+    #[cfg(test)]
     pub fn merge_post<B: Into<Option<bool>>>(self, post: B) -> FrontmatterBuilder {
         self.merge(FrontmatterBuilder::new().set_post(post.into()))
     }
 
+    #[cfg(test)]
     pub fn merge_custom(self, other_custom: liquid::Object) -> FrontmatterBuilder {
         let FrontmatterBuilder {
             path,
@@ -267,9 +284,10 @@ impl FrontmatterBuilder {
                 .and_then(|os| os.to_str())
                 .unwrap_or("");
             let format = match ext {
-                "md" => SourceFormat::Markdown,
-                _ => SourceFormat::Raw,
-            };
+                "md" => Ok(SourceFormat::Markdown),
+                "liquid" => Ok(SourceFormat::Raw),
+                _ => Err(format!("Unsupported format '{}'", ext)),
+            }?;
             fm.format = Some(format);
         }
 
@@ -309,10 +327,14 @@ impl FrontmatterBuilder {
         let is_post = is_post.unwrap_or(false);
 
         let path = path.unwrap_or_else(|| {
-                                           let default_path = "/:path/:filename:output_ext";
+            let default_path = if is_post {
+                "/:categories/:year/:month/:day/:slug.html"
+            } else {
+                "/:path/:name:output_ext"
+            };
 
-                                           default_path.to_owned()
-                                       });
+            default_path.to_owned()
+        });
 
         let fm = Frontmatter {
             path: path,
