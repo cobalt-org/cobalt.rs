@@ -78,16 +78,15 @@ pub fn build(config: &Config) -> Result<()> {
         let src_path = source.join(file_path.as_path());
         let is_post = src_path.starts_with(posts_path.as_path());
 
-        let default_front = frontmatter::FrontmatterBuilder::new()
+        let mut default_front = frontmatter::FrontmatterBuilder::new()
             .set_post(is_post)
             .set_draft(false)
             .set_excerpt_separator(config.excerpt_separator.clone());
+        if is_post {
+            default_front = default_front.set_permalink(config.post_path.clone());
+        }
 
-        let doc = Document::parse(source,
-                                  &file_path,
-                                  &file_path,
-                                  default_front,
-                                  &config.post_path)?;
+        let doc = Document::parse(source, &file_path, &file_path, default_front)?;
         if !doc.front.is_draft || config.include_drafts {
             documents.push(doc);
         }
@@ -113,15 +112,15 @@ pub fn build(config: &Config) -> Result<()> {
 
             let is_post = true;
 
-            let default_front = frontmatter::FrontmatterBuilder::new()
+            let mut default_front = frontmatter::FrontmatterBuilder::new()
                 .set_post(is_post)
                 .set_draft(true)
                 .set_excerpt_separator(config.excerpt_separator.clone());
-            let doc = Document::parse(&drafts_root,
-                                      &file_path,
-                                      new_path,
-                                      default_front,
-                                      &config.post_path)?;
+            if is_post {
+                default_front = default_front.set_permalink(config.post_path.clone());
+            }
+
+            let doc = Document::parse(&drafts_root, &file_path, new_path, default_front)?;
             documents.push(doc);
         }
     }

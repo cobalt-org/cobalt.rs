@@ -231,8 +231,7 @@ impl Document {
     pub fn parse(root_path: &Path,
                  source_file: &Path,
                  dest_file: &Path,
-                 default_front: frontmatter::FrontmatterBuilder,
-                 default_post_permalink: &Option<String>)
+                 default_front: frontmatter::FrontmatterBuilder)
                  -> Result<Document> {
         trace!("Parsing {:?}", source_file);
         let content = read_document(root_path, source_file)?;
@@ -275,9 +274,6 @@ impl Document {
             .merge_draft(custom_attributes
                              .remove("draft")
                              .and_then(|v| v.as_bool()))
-            .merge_post(custom_attributes
-                            .remove("is_post")
-                            .and_then(|v| v.as_bool()))
             .merge_excerpt_separator(custom_attributes
                                          .remove("excerpt_separator")
                                          .and_then(|v| v.as_str().map(|s| s.to_owned())))
@@ -293,10 +289,6 @@ impl Document {
             .merge(default_front);
 
         front = front.merge_custom(custom_attributes);
-
-        if front.is_post.unwrap_or(false) {
-            front = front.merge_permalink(default_post_permalink.clone());
-        }
 
         let front = front.build()?;
 

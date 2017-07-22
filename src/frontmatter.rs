@@ -174,6 +174,7 @@ impl FrontmatterBuilder {
         self.merge(FrontmatterBuilder::new().set_draft(draft.into()))
     }
 
+    #[cfg(test)]
     pub fn merge_post<B: Into<Option<bool>>>(self, post: B) -> FrontmatterBuilder {
         self.merge(FrontmatterBuilder::new().set_post(post.into()))
     }
