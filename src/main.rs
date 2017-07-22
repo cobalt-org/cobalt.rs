@@ -42,7 +42,6 @@ use std::io::prelude::*;
 use std::io::Result as IoResult;
 use std::fs::File;
 
-#[cfg(all(feature="syntax-highlight", not(windows)))]
 use cobalt::{list_syntaxes, list_syntax_themes};
 
 error_chain! {
@@ -409,27 +408,15 @@ fn run() -> Result<()> {
         }
 
         "list-syntax-themes" => {
-            #[cfg(all(feature="syntax-highlight"))]
             for name in list_syntax_themes() {
                 println!("{}", name);
             }
-
-            #[cfg(not(feature="syntax-highlight"))]
-            bail!(concat!("No themes available.",
-                          "  This build of cobalt does not include",
-                          " support for syntax highlighting."));
         }
 
         "list-syntaxes" => {
-            #[cfg(all(feature="syntax-highlight"))]
             for name in list_syntaxes() {
                 println!("{}", name);
             }
-
-            #[cfg(not(feature="syntax-highlight"))]
-            bail!(concat!("No syntaxes available.",
-                          "  This build of cobalt does not include",
-                          " support for syntax highlighting."));
         }
 
         _ => {
