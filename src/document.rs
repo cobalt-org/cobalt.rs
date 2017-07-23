@@ -20,9 +20,9 @@ use liquid::{Renderable, LiquidOptions, Context, Value, LocalTemplateRepository}
 
 use config;
 use frontmatter;
-use datetime;
 use pulldown_cmark as cmark;
 use liquid;
+use legacy::wildwest;
 
 lazy_static!{
     static ref FRONT_MATTER_DIVIDE: Regex = Regex::new(r"---\s*\r?\n").unwrap();
@@ -236,59 +236,14 @@ impl Document {
         trace!("Parsing {:?}", source_file);
         let content = read_document(root_path, source_file)?;
         let (front, content) = split_document(&content)?;
-        let mut custom_attributes = front
-            .map(|s| serde_yaml::from_str(s))
-            .map_or(Ok(None), |r| r.map(Some))?
-            .unwrap_or_else(liquid::Object::new);
+        let legacy_front: wildwest::FrontmatterBuilder =
+            front
+                .map(|s| serde_yaml::from_str(s))
+                .map_or(Ok(None), |r| r.map(Some))?
+                .unwrap_or_else(wildwest::FrontmatterBuilder::new);
 
-        // Convert legacy frontmatter into frontmatter (with `custom`)
-        // In some cases, we need to remove them to successfully run perma_attributes
-        // Otherwise, we can remove the converted values because most frontmatter content gets
-        // populated into the final attributes (see `document_attributes`).
-        // Exceptions
-        // - excerpt_separator: internal-only
-        // - extends internal-only
-        let mut front = frontmatter::FrontmatterBuilder::new()
-            .merge_title(custom_attributes
-                             .remove("title")
-                             .and_then(|v| v.as_str().map(|s| s.to_owned())))
-            .merge_description(custom_attributes
-                                   .remove("description")
-                                   .and_then(|v| v.as_str().map(|s| s.to_owned())))
-            .merge_categories(custom_attributes
-                                  .remove("categories")
-                                  .and_then(|v| {
-                                                v.as_array()
-                                                    .map(|v| {
-                                                             v.iter()
-                                                                 .map(|v| v.to_string())
-                                                                 .collect()
-                                                         })
-                                            }))
-            .merge_slug(custom_attributes
-                            .remove("slug")
-                            .and_then(|v| v.as_str().map(|s| s.to_owned())))
-            .merge_permalink(custom_attributes
-                                 .remove("path")
-                                 .and_then(|v| v.as_str().map(|s| s.to_owned())))
-            .merge_draft(custom_attributes
-                             .remove("draft")
-                             .and_then(|v| v.as_bool()))
-            .merge_excerpt_separator(custom_attributes
-                                         .remove("excerpt_separator")
-                                         .and_then(|v| v.as_str().map(|s| s.to_owned())))
-            .merge_layout(custom_attributes
-                              .remove("extends")
-                              .and_then(|v| v.as_str().map(|s| s.to_owned())))
-            .merge_published_date(custom_attributes
-                                      .remove("date")
-                                      .and_then(|d| {
-                                                    d.as_str().and_then(datetime::DateTime::parse)
-                                                }))
-            .merge_path(dest_file)
-            .merge(default_front);
-
-        front = front.merge_custom(custom_attributes);
+        let front: frontmatter::FrontmatterBuilder = legacy_front.into();
+        let front = front.merge_path(dest_file).merge(default_front);
 
         let front = front.build()?;
 
