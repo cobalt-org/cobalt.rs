@@ -14,7 +14,7 @@ pub fn list_syntax_themes<'a>() -> Vec<&'a String> {
     vec![]
 }
 
-pub fn list_syntaxes<'a>() -> Vec<String> {
+pub fn list_syntaxes() -> Vec<String> {
     vec![]
 }
 
