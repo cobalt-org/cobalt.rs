@@ -255,11 +255,11 @@ impl FrontmatterBuilder {
         }
     }
 
-    pub fn merge_path<P: AsRef<path::Path>>(self, relpath: P) -> Result<FrontmatterBuilder> {
+    pub fn merge_path<P: AsRef<path::Path>>(self, relpath: P) -> FrontmatterBuilder {
         self.merge_path_ref(relpath.as_ref())
     }
 
-    fn merge_path_ref(self, relpath: &path::Path) -> Result<FrontmatterBuilder> {
+    fn merge_path_ref(self, relpath: &path::Path) -> FrontmatterBuilder {
         let mut fm = self;
 
         if fm.format.is_none() {
@@ -288,7 +288,7 @@ impl FrontmatterBuilder {
             fm.title = Some(title);
         }
 
-        Ok(fm)
+        fm
     }
 
     pub fn build(self) -> Result<Frontmatter> {
@@ -391,7 +391,6 @@ mod test {
     fn frontmatter_title_from_path() {
         let front = FrontmatterBuilder::new()
             .merge_path("./parent/file.md")
-            .unwrap()
             .build()
             .unwrap();
         assert_eq!(front.title, "File");
@@ -401,7 +400,6 @@ mod test {
     fn frontmatter_slug_from_md_path() {
         let front = FrontmatterBuilder::new()
             .merge_path("./parent/file.md")
-            .unwrap()
             .build()
             .unwrap();
         assert_eq!(front.slug, "file");
@@ -411,7 +409,6 @@ mod test {
     fn frontmatter_markdown_from_path() {
         let front = FrontmatterBuilder::new()
             .merge_path("./parent/file.md")
-            .unwrap()
             .build()
             .unwrap();
         assert_eq!(front.format, SourceFormat::Markdown);
@@ -421,7 +418,6 @@ mod test {
     fn frontmatter_raw_from_path() {
         let front = FrontmatterBuilder::new()
             .merge_path("./parent/file.liquid")
-            .unwrap()
             .build()
             .unwrap();
         assert_eq!(front.format, SourceFormat::Raw);

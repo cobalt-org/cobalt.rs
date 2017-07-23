@@ -285,7 +285,7 @@ impl Document {
                                       .and_then(|d| {
                                                     d.as_str().and_then(datetime::DateTime::parse)
                                                 }))
-            .merge_path(dest_file)?
+            .merge_path(dest_file)
             .merge(default_front);
 
         front = front.merge_custom(custom_attributes);
