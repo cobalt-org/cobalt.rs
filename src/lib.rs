@@ -57,6 +57,7 @@ mod files;
 mod datetime;
 mod frontmatter;
 
+mod legacy;
 mod syntax_highlight;
 
 pub use syntax_highlight::{list_syntax_themes, list_syntaxes};
