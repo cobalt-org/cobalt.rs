@@ -17,7 +17,6 @@ extern crate regex;
 extern crate rss;
 extern crate jsonfeed;
 extern crate walkdir;
-extern crate yaml_rust;
 extern crate serde_yaml;
 
 extern crate itertools;
