@@ -23,6 +23,20 @@ impl Dump {
     }
 }
 
+#[derive(Debug, Eq, PartialEq, Hash, Copy, Clone)]
+#[derive(Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub enum SortOrder {
+    Asc,
+    Desc,
+}
+
+impl Default for SortOrder {
+    fn default() -> SortOrder {
+        SortOrder::Desc
+    }
+}
+
 #[derive(Debug, PartialEq)]
 #[derive(Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -47,7 +61,7 @@ pub struct Config {
     pub include_drafts: bool,
     pub posts: String,
     pub post_path: Option<String>,
-    pub post_order: String,
+    pub post_order: SortOrder,
     pub template_extensions: Vec<String>,
     pub rss: Option<String>,
     pub jsonfeed: Option<String>,
@@ -72,7 +86,7 @@ impl Default for Config {
             include_drafts: false,
             posts: "posts".to_owned(),
             post_path: None,
-            post_order: "desc".to_owned(),
+            post_order: SortOrder::default(),
             template_extensions: vec!["md".to_owned(), "liquid".to_owned()],
             rss: None,
             jsonfeed: None,

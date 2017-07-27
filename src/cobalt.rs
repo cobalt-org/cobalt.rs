@@ -11,7 +11,7 @@ use jsonfeed;
 use datetime;
 use document::Document;
 use error::{ErrorKind, Result};
-use config::Config;
+use config::{Config, SortOrder};
 use files::FilesBuilder;
 use frontmatter;
 
@@ -140,8 +140,9 @@ pub fn build(config: &Config) -> Result<()> {
                           .cmp(&a.front.published_date.unwrap_or(default_date))
                   });
 
-    if &config.post_order == "asc" {
-        posts.reverse();
+    match config.post_order {
+        SortOrder::Asc => posts.reverse(),
+        SortOrder::Desc => (),
     }
 
     // collect all posts attributes to pass them to other posts for rendering
