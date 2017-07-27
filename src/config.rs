@@ -3,7 +3,7 @@ use std::path::Path;
 use std::fs::File;
 use std::io::Read;
 use error::Result;
-use yaml_rust::YamlLoader;
+use serde_yaml;
 
 use syntax_highlight::has_syntax_theme;
 
@@ -24,6 +24,21 @@ impl Dump {
 }
 
 #[derive(Debug, PartialEq)]
+#[derive(Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct SyntaxHighlight {
+    pub theme: String,
+}
+
+impl Default for SyntaxHighlight {
+    fn default() -> SyntaxHighlight {
+        SyntaxHighlight { theme: "base16-ocean.dark".to_owned() }
+    }
+}
+
+#[derive(Debug, PartialEq)]
+#[derive(Serialize, Deserialize)]
+#[serde(deny_unknown_fields, default)]
 pub struct Config {
     pub source: String,
     pub dest: String,
@@ -41,8 +56,10 @@ pub struct Config {
     pub link: Option<String>,
     pub ignore: Vec<String>,
     pub excerpt_separator: String,
+    // This is a debug-only field and should be transient rather than persistently set.
+    #[serde(skip)]
     pub dump: Vec<Dump>,
-    pub syntax_theme: String,
+    pub syntax_highlight: SyntaxHighlight,
 }
 
 impl Default for Config {
@@ -65,101 +82,51 @@ impl Default for Config {
             ignore: vec![],
             excerpt_separator: "\n\n".to_owned(),
             dump: vec![],
-            syntax_theme: "base16-ocean.dark".to_owned(),
+            syntax_highlight: SyntaxHighlight::default(),
         }
     }
 }
 
 impl Config {
     pub fn from_file<P: AsRef<Path>>(path: P) -> Result<Config> {
-        let mut buffer = String::new();
-        let mut f = try!(File::open(path));
-        try!(f.read_to_string(&mut buffer));
-
-        let yaml = try!(YamlLoader::load_from_str(&buffer));
-        let yaml = match yaml.get(0) {
-            Some(y) => y,
-            None => return Ok(Default::default()),
+        let content = {
+            let mut buffer = String::new();
+            let mut f = File::open(path)?;
+            f.read_to_string(&mut buffer)?;
+            buffer
         };
 
-        let mut config = Config {
-            name: yaml["name"].as_str().map(|s| s.to_owned()),
-            rss: yaml["rss"].as_str().map(|s| s.to_owned()),
-            jsonfeed: yaml["jsonfeed"].as_str().map(|s| s.to_owned()),
-            description: yaml["description"].as_str().map(|s| s.to_owned()),
-            post_path: yaml["post_path"].as_str().map(|s| s.to_owned()),
-            ..Default::default()
-        };
+        if content.trim().is_empty() {
+            return Ok(Config::default());
+        }
 
-        if let Some(source) = yaml["source"].as_str() {
-            config.source = source.to_owned();
-        };
+        let mut config: Config = serde_yaml::from_str(&content)?;
 
-        if let Some(dest) = yaml["dest"].as_str() {
-            config.dest = dest.to_owned();
-        };
-
-        if let Some(layouts) = yaml["layouts"].as_str() {
-            config.layouts = layouts.to_owned();
-        };
-
-        if let Some(drafts) = yaml["drafts"].as_str() {
-            config.drafts = drafts.to_owned();
-        };
-
-        if let Some(include_drafts) = yaml["include_drafts"].as_bool() {
-            config.include_drafts = include_drafts;
-        };
-
-        if let Some(posts) = yaml["posts"].as_str() {
-            config.posts = posts.to_owned();
-        };
-
-        if let Some(post_order) = yaml["post_order"].as_str() {
-            config.post_order = post_order.to_owned();
-        };
-
-        if let Some(extensions) = yaml["template_extensions"].as_vec() {
-            config.template_extensions = extensions
-                .iter()
-                .filter_map(|k| k.as_str().map(|k| k.to_owned()))
-                .collect();
-        };
-
-        if let Some(link) = yaml["link"].as_str() {
+        config.link = if let Some(ref link) = config.link {
             let mut link = link.to_owned();
             if !link.ends_with('/') {
                 link += "/";
             }
-            config.link = Some(link);
+            Some(link)
+        } else {
+            None
         };
 
-        if let Some(patterns) = yaml["ignore"].as_vec() {
-            config.ignore = patterns
-                .iter()
-                .filter_map(|k| k.as_str())
-                .map(|k| k.to_owned())
-                .collect();
+        let result: Result<()> = match has_syntax_theme(&config.syntax_highlight.theme) {
+            Ok(true) => Ok(()),
+            Ok(false) => {
+                Err(format!("Syntax theme '{}' is unsupported",
+                            config.syntax_highlight.theme)
+                            .into())
+            }
+            Err(err) => {
+                warn!("Syntax theme named '{}' ignored. Reason: {:?}",
+                      config.syntax_highlight.theme,
+                      err);
+                Ok(())
+            }
         };
-
-        if let Some(excerpt_separator) = yaml["excerpt_separator"].as_str() {
-            config.excerpt_separator = excerpt_separator.to_owned();
-        };
-
-        if let Some(theme) = yaml["syntax-highlight"]["theme"].as_str() {
-            let result: Result<()> = match has_syntax_theme(theme) {
-                Ok(true) => {
-                    config.syntax_theme = theme.to_owned();
-                    Ok(())
-                }
-                Ok(false) => Err(format!("Syntax theme '{}' is unsupported", theme).into()),
-                Err(err) => {
-                    warn!("Syntax theme named '{}' ignored. Reason: {:?}", theme, err);
-                    Ok(())
-                }
-            };
-            result?;
-        };
+        result?;
 
         Ok(config)
     }
@@ -167,9 +134,8 @@ impl Config {
 
 #[test]
 fn test_from_file_ok() {
-    let result = Config::from_file("tests/fixtures/config/.cobalt.yml");
-    assert!(result.is_ok());
-    assert_eq!(result.unwrap(),
+    let result = Config::from_file("tests/fixtures/config/.cobalt.yml").unwrap();
+    assert_eq!(result,
                Config {
                    dest: "./dest".to_owned(),
                    layouts: "_my_layouts".to_owned(),
@@ -180,9 +146,8 @@ fn test_from_file_ok() {
 
 #[test]
 fn test_from_file_rss() {
-    let result = Config::from_file("tests/fixtures/config/rss.yml");
-    assert!(result.is_ok());
-    assert_eq!(result.unwrap(),
+    let result = Config::from_file("tests/fixtures/config/rss.yml").unwrap();
+    assert_eq!(result,
                Config {
                    rss: Some("rss.xml".to_owned()),
                    name: Some("My blog!".to_owned()),
@@ -194,9 +159,8 @@ fn test_from_file_rss() {
 
 #[test]
 fn test_from_file_empty() {
-    let result = Config::from_file("tests/fixtures/config/empty.yml");
-    assert!(result.is_ok());
-    assert_eq!(result.unwrap(), Config { ..Default::default() });
+    let result = Config::from_file("tests/fixtures/config/empty.yml").unwrap();
+    assert_eq!((result), Config { ..Default::default() });
 }
 
 #[test]

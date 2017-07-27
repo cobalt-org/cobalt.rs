@@ -2,7 +2,6 @@
 
 use std::io;
 
-use yaml_rust::scanner;
 use walkdir;
 use liquid;
 use ignore;
@@ -17,7 +16,6 @@ error_chain! {
         Io(io::Error);
         Liquid(liquid::Error);
         WalkDir(walkdir::Error);
-        Yaml(scanner::ScanError);
         SerdeYaml(serde_yaml::Error);
         Ignore(ignore::Error);
     }
