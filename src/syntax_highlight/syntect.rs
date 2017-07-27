@@ -82,7 +82,6 @@ pub fn initialize_codeblock(arguments: &[Token],
                             tokens: &[Element],
                             theme_name: &str)
                             -> Result<Box<liquid::Renderable>, liquid::Error> {
-
     let content = tokens
         .iter()
         .fold("".to_owned(), |a, b| {
