@@ -167,9 +167,8 @@ impl Config {
 
 #[test]
 fn test_from_file_ok() {
-    let result = Config::from_file("tests/fixtures/config/.cobalt.yml");
-    assert!(result.is_ok());
-    assert_eq!(result.unwrap(),
+    let result = Config::from_file("tests/fixtures/config/.cobalt.yml").unwrap();
+    assert_eq!(result,
                Config {
                    dest: "./dest".to_owned(),
                    layouts: "_my_layouts".to_owned(),
@@ -180,9 +179,8 @@ fn test_from_file_ok() {
 
 #[test]
 fn test_from_file_rss() {
-    let result = Config::from_file("tests/fixtures/config/rss.yml");
-    assert!(result.is_ok());
-    assert_eq!(result.unwrap(),
+    let result = Config::from_file("tests/fixtures/config/rss.yml").unwrap();
+    assert_eq!(result,
                Config {
                    rss: Some("rss.xml".to_owned()),
                    name: Some("My blog!".to_owned()),
@@ -194,9 +192,8 @@ fn test_from_file_rss() {
 
 #[test]
 fn test_from_file_empty() {
-    let result = Config::from_file("tests/fixtures/config/empty.yml");
-    assert!(result.is_ok());
-    assert_eq!(result.unwrap(), Config { ..Default::default() });
+    let result = Config::from_file("tests/fixtures/config/empty.yml").unwrap();
+    assert_eq!((result), Config { ..Default::default() });
 }
 
 #[test]
