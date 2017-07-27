@@ -146,7 +146,10 @@ pub fn custom_template_extensions() {
 #[cfg(feature = "syntax-highlight")]
 #[test]
 pub fn syntax_highlight() {
+    // Syntect isn't thread safe, for now run everything in the same test.
     run_test("syntax_highlight").expect("Build error");
+
+    run_test("syntax_highlight_theme").expect("Build error");
 }
 
 #[test]
