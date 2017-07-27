@@ -1,7 +1,7 @@
 name: cobalt blog
 source: "."
 dest: "build"
-post_order: "asc"
+post_order: Asc
 ignore:
   - .git/*
   - build/*
