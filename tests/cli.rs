@@ -172,3 +172,25 @@ pub fn clean_warning() {
               operation")
         .unwrap();
 }
+
+#[test]
+pub fn init_project_can_build() {
+    let initdir = TempDir::new("init").expect("Tempdir not created");
+
+    let destdir = TempDir::new("dest").expect("Tempdir not created");
+    let dest_param = destdir
+        .path()
+        .to_str()
+        .expect("Can't convert destdir to str")
+        .to_owned();
+
+    assert_cli::Assert::command(&[&BIN, "init", "--trace"])
+        .current_dir(initdir.path())
+        .unwrap();
+    assert_cli::Assert::command(&[&BIN, "build", "--trace", "-d", &dest_param])
+        .current_dir(initdir.path())
+        .unwrap();
+
+    destdir.close().unwrap();
+    initdir.close().unwrap();
+}
