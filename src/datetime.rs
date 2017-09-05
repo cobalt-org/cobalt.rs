@@ -31,7 +31,7 @@ impl DateTime {
 
 impl Default for DateTime {
     fn default() -> DateTime {
-        let d = chrono::UTC
+        let d = chrono::Utc
             .timestamp(0, 0)
             .with_timezone(&chrono::FixedOffset::east(0));
         DateTime(d)
@@ -97,8 +97,8 @@ impl chrono::Datelike for DateTime {
         self.0.weekday()
     }
     #[inline]
-    fn isoweekdate(&self) -> (i32, u32, chrono::Weekday) {
-        self.0.isoweekdate()
+    fn iso_week(&self) -> chrono::IsoWeek {
+        self.0.iso_week()
     }
 
     #[inline]
