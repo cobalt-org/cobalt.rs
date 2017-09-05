@@ -1,5 +1,7 @@
 // Deny warnings, except in dev mode
 #![deny(warnings)]
+#![allow(unknown_lints)]
+#![allow(unused_doc_comment)] // error-chain 0.11 should fix this.
 #![cfg_attr(feature="dev", warn(warnings))]
 
 // stuff we want clippy to ignore

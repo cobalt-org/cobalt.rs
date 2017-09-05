@@ -152,7 +152,7 @@ pub fn build(config: &Config) -> Result<()> {
         .collect();
 
     trace!("Generating posts");
-    for (i, mut post) in &mut posts.iter_mut().enumerate() {
+    for (i, post) in &mut posts.iter_mut().enumerate() {
         trace!("Generating {}", post.url_path);
 
         // posts are in reverse date order, so previous post is the next in the list (+1)
