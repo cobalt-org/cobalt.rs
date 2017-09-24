@@ -4,7 +4,7 @@ use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::ffi::OsStr;
 use liquid::Value;
-use rss::{Channel, Rss};
+use rss;
 use jsonfeed::Feed;
 use jsonfeed;
 
@@ -280,23 +280,26 @@ fn create_rss(path: &str, dest: &Path, config: &Config, posts: &[Document]) -> R
         (&Some(ref name), &Some(ref description), &Some(ref link)) => {
             trace!("Generating RSS data");
 
-            let items = posts.iter().map(|doc| doc.to_rss(link)).collect();
+            let items: Result<Vec<rss::Item>> = posts.iter().map(|doc| doc.to_rss(link)).collect();
+            let items = items?;
 
-            let channel = Channel {
-                title: name.to_owned(),
-                link: link.to_owned(),
-                description: description.to_owned(),
-                items: items,
-                ..Default::default()
-            };
+            let channel = rss::ChannelBuilder::default()
+                .title(name.to_owned())
+                .link(link.to_owned())
+                .description(description.to_owned())
+                .items(items)
+                .build()?;
 
-            let rss_string = Rss(channel).to_string();
+            let rss_string = channel.to_string();
             trace!("RSS data: {}", rss_string);
 
             let rss_path = dest.join(path);
 
-            let mut rss_file = try!(File::create(&rss_path));
-            try!(rss_file.write_all(&rss_string.into_bytes()));
+            let mut rss_file = File::create(&rss_path)?;
+            rss_file
+                .write_all(r#"<?xml version="1.0" encoding="UTF-8"?>"#.as_bytes())?;
+            rss_file.write_all(&rss_string.into_bytes())?;
+            rss_file.write_all("\n".as_bytes())?;
 
             info!("Created RSS file at {}", rss_path.display());
             Ok(())

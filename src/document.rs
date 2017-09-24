@@ -268,21 +268,21 @@ impl Document {
 
 
     /// Metadata for generating RSS feeds
-    pub fn to_rss(&self, root_url: &str) -> rss::Item {
+    pub fn to_rss(&self, root_url: &str) -> Result<rss::Item> {
         let link = root_url.to_owned() + &self.url_path;
-        let guid = rss::Guid {
-            value: link.clone(),
-            is_perma_link: true,
-        };
+        let guid = rss::GuidBuilder::default()
+            .value(link.clone())
+            .permalink(true)
+            .build()?;
 
-        rss::Item {
-            title: Some(self.front.title.clone()),
-            link: Some(link),
-            guid: Some(guid),
-            pub_date: self.front.published_date.map(|date| date.to_rfc2822()),
-            description: self.description_to_str(),
-            ..Default::default()
-        }
+        let item = rss::ItemBuilder::default()
+            .title(Some(self.front.title.clone()))
+            .link(Some(link))
+            .guid(Some(guid))
+            .pub_date(self.front.published_date.map(|date| date.to_rfc2822()))
+            .description(self.description_to_str())
+            .build()?;
+        Ok(item)
     }
 
     /// Metadata for generating JSON feeds
