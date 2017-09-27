@@ -297,9 +297,9 @@ fn create_rss(path: &str, dest: &Path, config: &Config, posts: &[Document]) -> R
 
             let mut rss_file = File::create(&rss_path)?;
             rss_file
-                .write_all(r#"<?xml version="1.0" encoding="UTF-8"?>"#.as_bytes())?;
+                .write_all(br#"<?xml version="1.0" encoding="UTF-8"?>"#)?;
             rss_file.write_all(&rss_string.into_bytes())?;
-            rss_file.write_all("\n".as_bytes())?;
+            rss_file.write_all(b"\n")?;
 
             info!("Created RSS file at {}", rss_path.display());
             Ok(())
