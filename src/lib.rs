@@ -56,6 +56,7 @@ extern crate rss;
 extern crate jsonfeed;
 extern crate walkdir;
 extern crate serde_yaml;
+extern crate sass_rs;
 
 extern crate itertools;
 

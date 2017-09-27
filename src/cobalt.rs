@@ -7,6 +7,7 @@ use liquid::Value;
 use rss;
 use jsonfeed::Feed;
 use jsonfeed;
+use sass_rs::{compile_file as sass_compile_file, Options as SassOptions};
 
 use datetime;
 use document::Document;
@@ -235,8 +236,13 @@ pub fn build(config: &Config) -> Result<()> {
     }
 
     // copy all remaining files in the source to the destination
+    // compile SASS along the way
     {
         info!("Copying remaining assets");
+        let mut sass_opts = SassOptions::default();
+        //  FIXME: make this a config option
+        sass_opts.include_paths =
+            vec![source.join("_sass").into_os_string().into_string().unwrap()];
         let mut asset_files = FilesBuilder::new(source)?;
         for line in &config.ignore {
             asset_files.add_ignore(line.as_str())?;
@@ -260,11 +266,24 @@ pub fn build(config: &Config) -> Result<()> {
                 }
             }
             let src_file = source.join(file_path.as_path());
-            let dest_file = dest.join(file_path);
 
-            debug!("Copying {:?} to {:?}", src_file, dest_file);
-            fs::copy(src_file.as_path(), dest_file.as_path())
-                .map_err(|e| format!("Could not copy {:?} into {:?}: {}", src_file, dest_file, e))?;
+            if file_path.extension().unwrap_or_else(|| OsStr::new("")) == "scss" {
+                let content = sass_compile_file(src_file.as_path(), sass_opts.clone())?;
+                let mut dest_file = dest.join(file_path.clone());
+                dest_file.set_extension("css");
+
+                let mut file =
+                    File::create(&dest_file)
+                        .map_err(|e| format!("Could not create {:?}: {}", file_path, e))?;
+
+                file.write_all(content.as_bytes())?;
+
+            } else {
+                let dest_file = dest.join(file_path);
+                debug!("Copying {:?} to {:?}", src_file, dest_file);
+                fs::copy(src_file.as_path(), dest_file.as_path())
+                    .map_err(|e| format!("Could not copy {:?} into {:?}: {}", src_file, dest_file, e))?;
+            }
         }
     }
 
