@@ -55,6 +55,9 @@ error_chain! {
         Cobalt(cobalt::Error);
         Notify(notify::Error);
         Clap(clap::Error);
+        Ghp(ghp::Error);
+        Io(std::io::Error);
+        Hyper(hyper::Error);
     }
 
     errors {
@@ -337,11 +340,15 @@ fn run() -> Result<()> {
         }
 
         "build" => {
-            build(&config);
+            if build(&config).is_err() {
+                std::process::exit(1);
+            }
             if matches.is_present("import") {
                 let branch = matches.value_of("branch").unwrap().to_string();
                 let message = matches.value_of("message").unwrap().to_string();
-                import(&config, &branch, &message);
+                if import(&config, &branch, &message).is_err() {
+                    std::process::exit(1);
+                }
             }
         }
 
@@ -361,17 +368,25 @@ fn run() -> Result<()> {
         }
 
         "serve" => {
-            build(&config);
+            if build(&config).is_err() {
+                std::process::exit(1);
+            }
             let port = matches.value_of("port").unwrap().to_string();
-            serve(&config.dest, &port);
+            if serve(&config.dest, &port).is_err() {
+                std::process::exit(1);
+            }
         }
 
         "watch" => {
-            build(&config);
+            if build(&config).is_err() {
+                std::process::exit(1);
+            }
 
             let dest = config.dest.clone();
             let port = matches.value_of("port").unwrap().to_string();
-            thread::spawn(move || { serve(&dest, &port); });
+            thread::spawn(move || if serve(&dest, &port).is_err() {
+                              std::process::exit(1)
+                          });
 
             let (tx, rx) = channel();
             let w = raw_watcher(tx);
@@ -386,7 +401,9 @@ fn run() -> Result<()> {
                             Ok(event) => {
                                 trace!("file changed {:?}", event);
                                 // TODO make this check for supported files again
-                                build(&config);
+                                if build(&config).is_err() {
+                                    std::process::exit(1);
+                                }
                             }
 
                             Err(e) => {
@@ -406,7 +423,9 @@ fn run() -> Result<()> {
         "import" => {
             let branch = matches.value_of("branch").unwrap().to_string();
             let message = matches.value_of("message").unwrap().to_string();
-            import(&config, &branch, &message);
+            if import(&config, &branch, &message).is_err() {
+                std::process::exit(1);
+            }
         }
 
         "list-syntax-themes" => {
@@ -429,16 +448,18 @@ fn run() -> Result<()> {
     Ok(())
 }
 
-fn build(config: &Config) {
+fn build(config: &Config) -> Result<()> {
     info!("Building from {} into {}", config.source, config.dest);
     match cobalt::build(config) {
         Ok(_) => info!("Build successful"),
         Err(e) => {
             error!("{}", e);
             error!("Build not successful");
-            std::process::exit(1);
+            return Err(e.into());
         }
     };
+
+    Ok(())
 }
 
 fn static_file_handler(dest: &str, req: Request, mut res: Response) -> IoResult<()> {
@@ -498,7 +519,7 @@ fn static_file_handler(dest: &str, req: Request, mut res: Response) -> IoResult<
     Ok(())
 }
 
-fn serve(dest: &str, port: &str) {
+fn serve(dest: &str, port: &str) -> Result<()> {
     info!("Serving {:?} through static file server", dest);
 
     let ip = format!("127.0.0.1:{}", port);
@@ -510,7 +531,7 @@ fn serve(dest: &str, port: &str) {
         Ok(server) => server,
         Err(e) => {
             error!("{}", e);
-            std::process::exit(1);
+            return Err(e.into());
         }
     };
 
@@ -524,11 +545,13 @@ fn serve(dest: &str, port: &str) {
                                            std::process::exit(1);
                                        }) {
         error!("{}", e);
-        std::process::exit(1);
+        return Err(e.into());
     };
+
+    Ok(())
 }
 
-fn import(config: &Config, branch: &str, message: &str) {
+fn import(config: &Config, branch: &str, message: &str) -> Result<()> {
     info!("Importing {} to {}", config.dest, branch);
 
     let meta = match fs::metadata(&config.dest) {
@@ -537,7 +560,7 @@ fn import(config: &Config, branch: &str, message: &str) {
         Err(e) => {
             error!("{}", e);
             error!("Import not successful");
-            std::process::exit(1);
+            return Err(e.into());
         }
     };
 
@@ -547,12 +570,14 @@ fn import(config: &Config, branch: &str, message: &str) {
             Err(e) => {
                 error!("{}", e);
                 error!("Import not successful");
-                std::process::exit(1);
+                return Err(e.into());
             }
         }
     } else {
         error!("Build dir is not a directory: {}", config.dest);
         error!("Import not successful");
-        std::process::exit(1);
+        bail!("Failed:");
     }
+
+    Ok(())
 }
