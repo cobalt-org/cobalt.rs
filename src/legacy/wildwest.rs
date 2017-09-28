@@ -1,5 +1,8 @@
+use std::default::Default;
+
 use liquid;
 
+use super::super::config;
 use super::super::frontmatter;
 use super::super::datetime;
 
@@ -61,5 +64,117 @@ impl From<FrontmatterBuilder> for frontmatter::FrontmatterBuilder {
                                                     d.as_str().and_then(datetime::DateTime::parse)
                                                 }))
             .merge_custom(custom_attributes)
+    }
+}
+
+#[derive(Debug, PartialEq)]
+#[derive(Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct SyntaxHighlight {
+    pub theme: String,
+}
+
+impl Default for SyntaxHighlight {
+    fn default() -> SyntaxHighlight {
+        SyntaxHighlight { theme: "base16-ocean.dark".to_owned() }
+    }
+}
+
+#[derive(Debug, PartialEq)]
+#[derive(Serialize, Deserialize)]
+#[serde(deny_unknown_fields, default)]
+pub struct GlobalConfig {
+    pub source: String,
+    pub dest: String,
+    pub layouts: String,
+    pub drafts: String,
+    pub include_drafts: bool,
+    pub posts: String,
+    pub post_path: Option<String>,
+    pub post_order: String,
+    pub template_extensions: Vec<String>,
+    pub rss: Option<String>,
+    pub jsonfeed: Option<String>,
+    pub name: Option<String>,
+    pub description: Option<String>,
+    pub link: Option<String>,
+    pub ignore: Vec<String>,
+    pub excerpt_separator: String,
+    pub syntax_highlight: SyntaxHighlight,
+}
+
+impl Default for GlobalConfig {
+    fn default() -> GlobalConfig {
+        GlobalConfig {
+            source: "./".to_owned(),
+            dest: "./".to_owned(),
+            layouts: "_layouts".to_owned(),
+            drafts: "_drafts".to_owned(),
+            include_drafts: false,
+            posts: "posts".to_owned(),
+            post_path: None,
+            post_order: "desc".to_owned(),
+            template_extensions: vec!["md".to_owned(), "liquid".to_owned()],
+            rss: None,
+            jsonfeed: None,
+            name: None,
+            description: None,
+            link: None,
+            ignore: vec![],
+            excerpt_separator: "\n\n".to_owned(),
+            syntax_highlight: SyntaxHighlight::default(),
+        }
+    }
+}
+
+impl From<GlobalConfig> for config::Config {
+    fn from(legacy: GlobalConfig) -> Self {
+        let GlobalConfig {
+            source,
+            dest,
+            layouts,
+            drafts,
+            include_drafts,
+            posts,
+            post_path,
+            post_order,
+            template_extensions,
+            rss,
+            jsonfeed,
+            name,
+            description,
+            link,
+            ignore,
+            excerpt_separator,
+            syntax_highlight,
+        } = legacy;
+
+        let post_order = match post_order.as_ref() {
+            "asc" | "Asc" => config::SortOrder::Asc,
+            _ => config::SortOrder::Desc,
+        };
+
+        let syntax_highlight = config::SyntaxHighlight { theme: syntax_highlight.theme };
+
+        config::Config {
+            source: source,
+            dest: dest,
+            layouts: layouts,
+            drafts: drafts,
+            include_drafts: include_drafts,
+            posts: posts,
+            post_path: post_path,
+            post_order: post_order,
+            template_extensions: template_extensions,
+            rss: rss,
+            jsonfeed: jsonfeed,
+            name: name,
+            description: description,
+            link: link,
+            ignore: ignore,
+            excerpt_separator: excerpt_separator,
+            dump: vec![],
+            syntax_highlight: syntax_highlight,
+        }
     }
 }

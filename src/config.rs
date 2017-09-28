@@ -5,6 +5,7 @@ use std::io::Read;
 use error::Result;
 use serde_yaml;
 
+use legacy::wildwest;
 use syntax_highlight::has_syntax_theme;
 
 arg_enum! {
@@ -114,7 +115,8 @@ impl Config {
             return Ok(Config::default());
         }
 
-        let mut config: Config = serde_yaml::from_str(&content)?;
+        let config: wildwest::GlobalConfig = serde_yaml::from_str(&content)?;
+        let mut config: Config = config.into();
 
         config.link = if let Some(ref link) = config.link {
             let mut link = link.to_owned();
