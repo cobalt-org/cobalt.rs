@@ -250,7 +250,7 @@ pub fn querystrings() {
     run_test("querystrings").expect("Build error");
 }
 
-
+#[cfg(feature = "sass")]
 #[test]
 pub fn sass() {
     run_test("sass").expect("Build error");

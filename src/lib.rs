@@ -56,6 +56,8 @@ extern crate rss;
 extern crate jsonfeed;
 extern crate walkdir;
 extern crate serde_yaml;
+
+#[cfg(feature = "sass")]
 extern crate sass_rs;
 
 extern crate itertools;
