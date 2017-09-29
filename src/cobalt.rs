@@ -7,7 +7,7 @@ use liquid::Value;
 use rss;
 use jsonfeed::Feed;
 use jsonfeed;
-use sass_rs::{compile_file as sass_compile_file, Options as SassOptions};
+use sass_rs;
 
 use datetime;
 use document::Document;
@@ -239,7 +239,7 @@ pub fn build(config: &Config) -> Result<()> {
     // compile SASS along the way
     {
         info!("Copying remaining assets");
-        let mut sass_opts = SassOptions::default();
+        let mut sass_opts = sass_rs::Options::default();
         //  FIXME: make this a config option
         sass_opts.include_paths =
             vec![source.join("_sass").into_os_string().into_string().unwrap()];
@@ -267,8 +267,8 @@ pub fn build(config: &Config) -> Result<()> {
             }
             let src_file = source.join(file_path.as_path());
 
-            if file_path.extension().unwrap_or_else(|| OsStr::new("")) == "scss" {
-                let content = sass_compile_file(src_file.as_path(), sass_opts.clone())?;
+            if file_path.extension() == Some(OsStr::new("scss")) {
+                let content = sass_rs::compile_file(src_file.as_path(), sass_opts.clone())?;
                 let mut dest_file = dest.join(file_path.clone());
                 dest_file.set_extension("css");
 
