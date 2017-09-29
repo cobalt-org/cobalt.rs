@@ -7,6 +7,8 @@ use liquid::Value;
 use rss;
 use jsonfeed::Feed;
 use jsonfeed;
+
+#[cfg(feature = "sass")]
 use sass_rs;
 
 use datetime;
@@ -239,10 +241,7 @@ pub fn build(config: &Config) -> Result<()> {
     // compile SASS along the way
     {
         info!("Copying remaining assets");
-        let mut sass_opts = sass_rs::Options::default();
-        //  FIXME: make this a config option
-        sass_opts.include_paths =
-            vec![source.join("_sass").into_os_string().into_string().unwrap()];
+
         let mut asset_files = FilesBuilder::new(source)?;
         for line in &config.ignore {
             asset_files.add_ignore(line.as_str())?;
@@ -265,27 +264,47 @@ pub fn build(config: &Config) -> Result<()> {
                     fs::create_dir_all(parent_dir)?;
                 }
             }
-            let src_file = source.join(file_path.as_path());
 
-            if file_path.extension() == Some(OsStr::new("scss")) {
-                let content = sass_rs::compile_file(src_file.as_path(), sass_opts.clone())?;
-                let mut dest_file = dest.join(file_path.clone());
-                dest_file.set_extension("css");
+            #[cfg(feature = "sass")]
+            {
+                let mut sass_opts = sass_rs::Options::default();
+                //  FIXME: make this a config option
+                sass_opts.include_paths =
+                    vec![source.join("_sass").into_os_string().into_string().unwrap()];
+                    
+                let src_file = source.join(file_path.as_path());
+                if file_path.extension() == Some(OsStr::new("scss")) {
+                    let content = sass_rs::compile_file(src_file.as_path(), sass_opts.clone())?;
+                    let mut dest_file = dest.join(file_path.clone());
+                    dest_file.set_extension("css");
 
-                let mut file =
-                    File::create(&dest_file)
-                        .map_err(|e| format!("Could not create {:?}: {}", file_path, e))?;
+                    let mut file =
+                        File::create(&dest_file)
+                            .map_err(|e| format!("Could not create {:?}: {}", file_path, e))?;
 
-                file.write_all(content.as_bytes())?;
+                    file.write_all(content.as_bytes())?;
 
-            } else {
-                let dest_file = dest.join(file_path);
-                debug!("Copying {:?} to {:?}", src_file, dest_file);
-                fs::copy(src_file.as_path(), dest_file.as_path())
-                    .map_err(|e| format!("Could not copy {:?} into {:?}: {}", src_file, dest_file, e))?;
+                } else {
+                    copy_file(src_file.as_path(), dest.join(file_path).as_path())?;
+                }
+            }
+
+            #[cfg(not(feature = "sass"))]
+            {
+
+                let src_file = source.join(file_path.as_path());
+                copy_file(src_file.as_path(), dest.join(file_path).as_path())?;
             }
         }
     }
+
+    Ok(())
+}
+
+fn copy_file(src_file: &Path, dest_file: &Path) -> Result<()> {
+    debug!("Copying {:?} to {:?}", src_file, dest_file);
+    fs::copy(src_file.as_path(), dest_file.as_path())
+        .map_err(|e| format!("Could not copy {:?} into {:?}: {}", src_file, dest_file, e))?;
 
     Ok(())
 }
