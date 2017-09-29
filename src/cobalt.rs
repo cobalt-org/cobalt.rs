@@ -15,6 +15,8 @@ use datetime;
 use document::Document;
 use error::*;
 use config::{Config, SortOrder};
+#[cfg(feature = "sass")]
+use config::SassOutputStyle;
 use files::FilesBuilder;
 use frontmatter;
 
@@ -268,10 +270,18 @@ pub fn build(config: &Config) -> Result<()> {
             #[cfg(feature = "sass")]
             {
                 let mut sass_opts = sass_rs::Options::default();
-                //  FIXME: make this a config option
-                sass_opts.include_paths =
-                    vec![source.join("_sass").into_os_string().into_string().unwrap()];
-                    
+                sass_opts.include_paths = vec![source
+                                                   .join(&config.sass.import_dir)
+                                                   .into_os_string()
+                                                   .into_string()
+                                                   .unwrap()];
+                sass_opts.output_style = match config.sass.style {
+                    SassOutputStyle::Nested => sass_rs::OutputStyle::Nested,
+                    SassOutputStyle::Expanded => sass_rs::OutputStyle::Expanded,
+                    SassOutputStyle::Compact => sass_rs::OutputStyle::Compact,
+                    SassOutputStyle::Compressed => sass_rs::OutputStyle::Compressed,
+                };
+
                 let src_file = source.join(file_path.as_path());
                 if file_path.extension() == Some(OsStr::new("scss")) {
                     let content = sass_rs::compile_file(src_file.as_path(), sass_opts.clone())?;
@@ -303,9 +313,8 @@ pub fn build(config: &Config) -> Result<()> {
 
 fn copy_file(src_file: &Path, dest_file: &Path) -> Result<()> {
     debug!("Copying {:?} to {:?}", src_file, dest_file);
-    fs::copy(src_file.as_path(), dest_file.as_path())
+    fs::copy(src_file, dest_file)
         .map_err(|e| format!("Could not copy {:?} into {:?}: {}", src_file, dest_file, e))?;
-
     Ok(())
 }
 
