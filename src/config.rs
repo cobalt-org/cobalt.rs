@@ -38,6 +38,33 @@ impl Default for SortOrder {
     }
 }
 
+#[derive(Debug, Eq, PartialEq, Hash, Copy, Clone)]
+#[derive(Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub enum SassOutputStyle {
+    Nested,
+    Expanded,
+    Compact,
+    Compressed,
+}
+
+#[derive(Debug, PartialEq)]
+#[derive(Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct SassOptions {
+    pub import_dir: String,
+    pub style: SassOutputStyle,
+}
+
+impl Default for SassOptions {
+    fn default() -> SassOptions {
+        SassOptions {
+            import_dir: "_sass".to_owned(),
+            style: SassOutputStyle::Nested,
+        }
+    }
+}
+
 #[derive(Debug, PartialEq)]
 #[derive(Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -75,6 +102,7 @@ pub struct Config {
     #[serde(skip)]
     pub dump: Vec<Dump>,
     pub syntax_highlight: SyntaxHighlight,
+    pub sass: SassOptions,
 }
 
 impl Default for Config {
@@ -98,6 +126,7 @@ impl Default for Config {
             excerpt_separator: "\n\n".to_owned(),
             dump: vec![],
             syntax_highlight: SyntaxHighlight::default(),
+            sass: SassOptions::default(),
         }
     }
 }

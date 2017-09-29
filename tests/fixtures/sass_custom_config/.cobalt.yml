@@ -1,0 +1,3 @@
+sass:
+  import_dir: _sass_includes
+  style: Compressed
