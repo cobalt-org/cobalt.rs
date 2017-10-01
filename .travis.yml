@@ -55,6 +55,7 @@ deploy:
   skip_cleanup: true
 
 after_success:
+  - cmake --version
   - cargo when --channel stable -e TARGET=x86_64-unknown-linux-gnu coverage
 
 addons:
@@ -66,8 +67,6 @@ addons:
       - libdw-dev
       - binutils-dev
       - cmake
-    sources:
-      - kalakris-cmake
 
 cache:
   apt: true
