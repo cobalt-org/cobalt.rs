@@ -34,11 +34,11 @@ lazy_static!{
 }
 
 pub fn has_syntax_theme(name: &str) -> error::Result<bool> {
-    return Ok(SETUP.theme_set.themes.contains_key(name));
+    Ok(SETUP.theme_set.themes.contains_key(name))
 }
 
 pub fn list_syntax_themes<'a>() -> Vec<&'a String> {
-    return SETUP.theme_set.themes.keys().collect::<Vec<_>>();
+    SETUP.theme_set.themes.keys().collect::<Vec<_>>()
 }
 
 pub fn list_syntaxes<'a>() -> Vec<String> {
@@ -57,7 +57,7 @@ pub fn list_syntaxes<'a>() -> Vec<String> {
     // sort alphabetically with insensitive ascii case
     syntaxes.sort_by_key(|a| (a as &str).to_ascii_lowercase());
 
-    return syntaxes;
+    syntaxes
 }
 
 struct CodeBlock {
