@@ -4,7 +4,7 @@ extern crate cobalt;
 extern crate tempdir;
 extern crate walkdir;
 
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::fs::{self, File};
 use std::io::Read;
 use tempdir::TempDir;
@@ -20,8 +20,56 @@ macro_rules! assert_contains {
     }
 }
 
+fn assert_dirs_eq(expected: &Path, actual: &Path) {
+    // Ensure everything was created.
+    let walker = WalkDir::new(&actual)
+        .into_iter()
+        .filter_map(|e| e.ok())
+        .filter(|e| e.file_type().is_file());
+    for entry in walker {
+        let relative = entry
+            .path()
+            .strip_prefix(&actual)
+            .expect("Comparison error");
+
+        let mut original = String::new();
+        File::open(entry.path())
+            .expect("Comparison error")
+            .read_to_string(&mut original)
+            .expect("Could not read to string");
+
+        let dest_file = Path::new(expected).join(&relative);
+        assert!(dest_file.exists(), "{:?} doesn't exist", dest_file);
+        let mut created = String::new();
+        File::open(dest_file.as_path())
+            .expect("Comparison error")
+            .read_to_string(&mut created)
+            .expect("Could not read to string");
+
+        assert_diff!(&original, &created, " ", 0);
+    }
+
+    // Ensure no unnecessary files were created
+    let walker = WalkDir::new(expected)
+        .into_iter()
+        .filter_map(|e| e.ok())
+        .filter(|e| e.file_type().is_file());
+    for entry in walker {
+        let extra_file = entry
+            .path()
+            .strip_prefix(expected)
+            .expect("Comparison error");
+        let src_file = Path::new(actual).join(&extra_file);
+
+        File::open(&src_file).expect(&format!("File {:?} does not exist in reference ({:?}).",
+                                              entry.path(),
+                                              src_file));
+    }
+}
+
 fn run_test(name: &str) -> Result<(), cobalt::Error> {
     let target = format!("tests/target/{}/", name);
+    let target: PathBuf = target.into();
     let mut config = Config::from_file(format!("tests/fixtures/{}/.cobalt.yml", name))
         .unwrap_or_default();
     let destdir = TempDir::new(name).expect("Tempdir not created");
@@ -39,56 +87,11 @@ fn run_test(name: &str) -> Result<(), cobalt::Error> {
     let result = cobalt::build(&config);
 
     if result.is_ok() {
-        let walker = WalkDir::new(&target)
-            .into_iter()
-            .filter_map(|e| e.ok())
-            .filter(|e| e.file_type().is_file());
-
-        // walk through fixture and created tmp directory and compare files
-        for entry in walker {
-            let relative = entry
-                .path()
-                .strip_prefix(&target)
-                .expect("Comparison error");
-
-            let mut original = String::new();
-            File::open(entry.path())
-                .expect("Comparison error")
-                .read_to_string(&mut original)
-                .expect("Could not read to string");
-
-            let dest_file = Path::new(config.dest.as_str()).join(&relative);
-            assert!(dest_file.exists(), "{:?} doesn't exist", dest_file);
-            let mut created = String::new();
-            File::open(dest_file.as_path())
-                .expect("Comparison error")
-                .read_to_string(&mut created)
-                .expect("Could not read to string");
-
-            assert_diff!(&original, &created, " ", 0);
-        }
-
-        // ensure no unnecessary files were created
-        let walker = WalkDir::new(&config.dest)
-            .into_iter()
-            .filter_map(|e| e.ok())
-            .filter(|e| e.file_type().is_file());
-
-        for entry in walker {
-            let extra_file = entry
-                .path()
-                .strip_prefix(&config.dest)
-                .expect("Comparison error");
-            let src_file = Path::new(&target).join(&extra_file);
-
-            File::open(&src_file).expect(&format!("File {:?} does not exist in reference ({:?}).",
-                                                  entry.path(),
-                                                  src_file));
-        }
+        assert_dirs_eq(Path::new(config.dest.as_str()), &target);
     }
 
     // clean up
-    try!(destdir.close());
+    destdir.close()?;
 
     result
 }
