@@ -4,8 +4,8 @@
 environment:
   global:
     RUST_VERSION: stable
-
     CRATE_NAME: cobalt
+    APPVEYOR_CACHE_SKIP_RESTORE: true
 
   matrix:
     # Stable channel
