@@ -23,8 +23,8 @@ matrix:
 install:
   - curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain $TRAVIS_RUST_VERSION
   - source ~/.cargo/env || true
-  - which cargo-coveralls || cargo install cargo-travis
-  - which cargo-when || cargo install cargo-when
+  - if ! which cargo-coveralls ; then cargo install cargo-travis ; fi
+  - if ! which cargo-when ; then cargo install cargo-when ; fi
   - travis_wait cargo when --channel stable install rustfmt --force --vers 0.8.3
   - travis_wait cargo when --channel nightly install clippy --force || true
 
@@ -34,8 +34,8 @@ script:
   - cargo check --verbose
   - cargo check --verbose --features "syntax-highlight"
   - cargo test  --verbose --features "syntax-highlight"
-  - ! which cargo-clippy || cargo when --channel nightly clippy -- --version
-  - ! which cargo-clippy || cargo when --channel nightly clippy --features "syntax-highlight"
+  - if which cargo-clippy ; then cargo when --channel nightly clippy -- --version ; fi
+  - if which cargo-clippy ; then cargo when --channel nightly clippy --features "syntax-highlight" ; fi
   - cargo when --channel stable fmt -- --version
   - cargo when --channel stable fmt -- --write-mode=diff
 
