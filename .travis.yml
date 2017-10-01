@@ -4,6 +4,7 @@ language: rust
 env:
   global:
     - CRATE_NAME=cobalt
+    - RUSTFMT=0.8.3
 
 matrix:
   include:
@@ -25,7 +26,7 @@ install:
   - source ~/.cargo/env || true
   - if ! which cargo-coveralls ; then cargo install cargo-travis ; fi
   - if ! which cargo-when ; then cargo install cargo-when ; fi
-  - travis_wait cargo when --channel stable install rustfmt --force --vers 0.8.3
+  - if [[ `rustfmt --version` != $RUSTFMT* ]] ; then travis_wait cargo when --channel stable install rustfmt --force --vers $RUSTFMT; fi
   - travis_wait cargo when --channel nightly install clippy --force || true
 
 script:
