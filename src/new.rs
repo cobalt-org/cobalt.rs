@@ -1,6 +1,10 @@
-#![allow(non_upper_case_globals)]
+use std::path::Path;
+use std::fs::{DirBuilder, OpenOptions};
+use std::io::Write;
+use error::Result;
+use config::Config;
 
-const cobalt_yml: &'static [u8] = b"name: cobalt blog
+const COBALT_YML: &'static [u8] = b"name: cobalt blog
 source: \".\"
 dest: \"build\"
 ignore:
@@ -8,14 +12,14 @@ ignore:
   - build/*
 ";
 
-const default_liquid: &'static [u8] = b"<!DOCTYPE html>
+const DEFAULT_LAYOUT: &'static [u8] = b"<!DOCTYPE html>
 <html>
     <head>
         <meta charset=\"utf-8\">
         {% if is_post %}
           <title>{{ title }}</title>
         {% else %}
-       	  <title>Cobalt.rs Blog</title>
+          <title>Cobalt.rs Blog</title>
         {% endif %}
     </head>
     <body>
@@ -30,7 +34,7 @@ const default_liquid: &'static [u8] = b"<!DOCTYPE html>
 </html>
 ";
 
-const post_liquid: &'static [u8] = b"<div>
+const POST_LAYOUT: &'static [u8] = b"<div>
   <h2>{{ title }}</h2>
   <p>
     {{content}}
@@ -38,7 +42,7 @@ const post_liquid: &'static [u8] = b"<div>
 </div>
 ";
 
-const post_1_md: &'static [u8] = b"extends: default.liquid
+const POST_MD: &'static [u8] = b"extends: default.liquid
 
 title: First Post
 date: 14 January 2016 21:00:30 -0500
@@ -49,7 +53,7 @@ date: 14 January 2016 21:00:30 -0500
 Welcome to the first post ever on cobalt.rs!
 ";
 
-const index_liquid: &'static [u8] = b"extends: default.liquid
+const INDEX_LIQUID: &'static [u8] = b"extends: default.liquid
 ---
 <div >
   <h2>Blog!</h2>
@@ -65,26 +69,20 @@ const index_liquid: &'static [u8] = b"extends: default.liquid
 </div>
 ";
 
-use std::path::Path;
-use std::fs::{DirBuilder, OpenOptions};
-use std::io::Write;
-use error::Result;
-use config::Config;
-
 pub fn create_new_project<P: AsRef<Path>>(dest: P) -> Result<()> {
     let dest = dest.as_ref();
 
-    try!(create_folder(&dest));
+    create_folder(&dest)?;
 
-    try!(create_file(&dest.join(".cobalt.yml"), cobalt_yml));
-    try!(create_file(&dest.join("index.liquid"), index_liquid));
+    create_file(&dest.join(".cobalt.yml"), COBALT_YML)?;
+    create_file(&dest.join("index.liquid"), INDEX_LIQUID)?;
 
-    try!(create_folder(&dest.join("_layouts")));
-    try!(create_file(&dest.join("_layouts/default.liquid"), default_liquid));
-    try!(create_file(&dest.join("_layouts/post.liquid"), post_liquid));
+    create_folder(&dest.join("_layouts"))?;
+    create_file(&dest.join("_layouts/default.liquid"), DEFAULT_LAYOUT)?;
+    create_file(&dest.join("_layouts/post.liquid"), POST_LAYOUT)?;
 
-    try!(create_folder(&dest.join("posts")));
-    try!(create_file(&dest.join("posts/post-1.md"), post_1_md));
+    create_folder(&dest.join("posts"))?;
+    create_file(&dest.join("posts/post-1.md"), POST_MD)?;
 
     Ok(())
 }
@@ -94,8 +92,8 @@ pub fn create_new_document(doc_type: &str, name: &str, config: &Config) -> Resul
     let full_path = &path.join(&config.posts).join(name);
 
     match doc_type {
-        "page" => create_file(name, index_liquid)?,
-        "post" => create_file(full_path, post_1_md)?,
+        "page" => create_file(name, INDEX_LIQUID)?,
+        "post" => create_file(full_path, POST_MD)?,
         _ => bail!("Unsupported document type {}", doc_type),
     }
 
@@ -105,7 +103,7 @@ pub fn create_new_document(doc_type: &str, name: &str, config: &Config) -> Resul
 fn create_folder<P: AsRef<Path>>(path: P) -> Result<()> {
     trace!("Creating folder {:?}", &path.as_ref());
 
-    try!(DirBuilder::new().recursive(true).create(path));
+    DirBuilder::new().recursive(true).create(path)?;
 
     Ok(())
 }
@@ -113,10 +111,10 @@ fn create_folder<P: AsRef<Path>>(path: P) -> Result<()> {
 fn create_file<P: AsRef<Path>>(name: P, content: &[u8]) -> Result<()> {
     trace!("Creating file {:?}", &name.as_ref());
 
-    let mut file = try!(OpenOptions::new()
-                            .write(true)
-                            .create_new(true)
-                            .open(name));
+    let mut file = OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .open(name)?;
 
     file.write_all(content)?;
 
