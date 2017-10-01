@@ -4,6 +4,7 @@ language: rust
 env:
   global:
     - CRATE_NAME=cobalt
+    - RUSTFMT=0.8.3
 
 matrix:
   include:
@@ -23,9 +24,9 @@ matrix:
 install:
   - curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain $TRAVIS_RUST_VERSION
   - source ~/.cargo/env || true
-  - which cargo-coveralls || cargo install cargo-travis
-  - which cargo-when || cargo install cargo-when
-  - travis_wait cargo when --channel stable install rustfmt --force --vers 0.8.3
+  - if ! which cargo-coveralls ; then cargo install cargo-travis ; fi
+  - if ! which cargo-when ; then cargo install cargo-when ; fi
+  - if [[ `rustfmt --version` != $RUSTFMT* ]] ; then travis_wait cargo when --channel stable install rustfmt --force --vers $RUSTFMT; fi
   - travis_wait cargo when --channel nightly install clippy --force || true
 
 script:
@@ -34,8 +35,8 @@ script:
   - cargo check --verbose
   - cargo check --verbose --features "syntax-highlight"
   - cargo test  --verbose --features "syntax-highlight"
-  - ! which cargo-clippy || cargo when --channel nightly clippy -- --version
-  - ! which cargo-clippy || cargo when --channel nightly clippy --features "syntax-highlight"
+  - if which cargo-clippy ; then cargo when --channel nightly clippy -- --version ; fi
+  - if which cargo-clippy ; then cargo when --channel nightly clippy --features "syntax-highlight" ; fi
   - cargo when --channel stable fmt -- --version
   - cargo when --channel stable fmt -- --write-mode=diff
 
@@ -54,6 +55,7 @@ deploy:
   skip_cleanup: true
 
 after_success:
+  - cmake --version
   - cargo when --channel stable -e TARGET=x86_64-unknown-linux-gnu coverage
 
 addons:
@@ -65,8 +67,6 @@ addons:
       - libdw-dev
       - binutils-dev
       - cmake
-    sources:
-      - kalakris-cmake
 
 cache:
   apt: true
