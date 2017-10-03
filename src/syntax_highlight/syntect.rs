@@ -55,7 +55,7 @@ pub fn list_syntaxes() -> Vec<String> {
         .collect::<Vec<_>>();
 
     // sort alphabetically with insensitive ascii case
-    syntaxes.sort_by_key(|a| (a as &str).to_ascii_lowercase());
+    syntaxes.sort_by_key(|a| a.to_ascii_lowercase());
 
     syntaxes
 }

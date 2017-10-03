@@ -30,11 +30,12 @@ fn html_escape(input: &str) -> String {
             skip -= 1;
             continue;
         }
-        match c as char {
+        let c: char = c;
+        match c {
             '<' | '>' | '\'' | '"' | '&' => {
                 result.push_str(&input[last..i]);
                 last = i + 1;
-                let escaped = match c as char {
+                let escaped = match c {
                     '<' => "&lt;",
                     '>' => "&gt;",
                     '\'' => "&#39;",

@@ -9,8 +9,6 @@ use std::io::Read;
 use regex::Regex;
 use rss;
 use jsonfeed;
-use jsonfeed::Item;
-use jsonfeed::Content;
 use serde_yaml;
 use itertools;
 
@@ -289,11 +287,13 @@ impl Document {
     pub fn to_jsonfeed(&self, root_url: &str) -> jsonfeed::Item {
         let link = root_url.to_owned() + &self.url_path;
 
-        Item {
+        jsonfeed::Item {
             id: link.clone(),
             url: Some(link),
             title: Some(self.front.title.clone()),
-            content: Content::Html(self.description_to_str().unwrap_or_else(|| "".into())),
+            content: jsonfeed::Content::Html(self.description_to_str().unwrap_or_else(|| {
+                                                                                          "".into()
+                                                                                      })),
             date_published: self.front.published_date.map(|date| date.to_rfc2822()),
             // TODO completely implement categories, see Issue 131
             tags: Some(self.front.categories.clone()),
