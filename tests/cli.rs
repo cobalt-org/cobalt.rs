@@ -150,12 +150,12 @@ pub fn clean() {
         .expect("Can't convert destdir to str")
         .to_owned();
 
-    assert_cli::Assert::command(&[&BIN, "build", "-d", &dest_param])
+    assert_cli::Assert::command(&[&BIN, "build", "--trace", "-d", &dest_param])
         .current_dir(CWD.join("tests/fixtures/example"))
         .unwrap();
     assert_eq!(destdir.path().is_dir(), true);
 
-    assert_cli::Assert::command(&[&BIN, "clean", "-d", &dest_param])
+    assert_cli::Assert::command(&[&BIN, "clean", "--trace", "-d", &dest_param])
         .current_dir(CWD.join("tests/fixtures/example"))
         .unwrap();
     assert_eq!(destdir.path().is_dir(), false);
@@ -171,4 +171,26 @@ pub fn clean_warning() {
         .contains("Destination directory is same as current directory. Cancelling the \
               operation")
         .unwrap();
+}
+
+#[test]
+pub fn init_project_can_build() {
+    let initdir = TempDir::new("init").expect("Tempdir not created");
+
+    let destdir = TempDir::new("dest").expect("Tempdir not created");
+    let dest_param = destdir
+        .path()
+        .to_str()
+        .expect("Can't convert destdir to str")
+        .to_owned();
+
+    assert_cli::Assert::command(&[&BIN, "init", "--trace"])
+        .current_dir(initdir.path())
+        .unwrap();
+    assert_cli::Assert::command(&[&BIN, "build", "--trace", "-d", &dest_param])
+        .current_dir(initdir.path())
+        .unwrap();
+
+    destdir.close().unwrap();
+    initdir.close().unwrap();
 }
