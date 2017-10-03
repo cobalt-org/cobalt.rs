@@ -1,14 +1,52 @@
-// Deny warnings, except in dev mode
-#![deny(warnings)]
-#![allow(unknown_lints)]
-#![allow(unused_doc_comment)] // error-chain 0.11 should fix this.
-#![cfg_attr(feature="dev", warn(warnings))]
+// Deny warnings, except in `dev` mode
 
-// stuff we want clippy to ignore
-#![cfg_attr(feature="cargo-clippy", allow(
-        cyclomatic_complexity,
-        too_many_arguments,
-        ))]
+// To update this list
+// 1. Run `rustc -W help`
+// 2. Grab all `default=warn` warnings
+// 3. Paste them here, deleting `warnings`, and any with `deprecated` in the name
+#![deny(const_err,
+        dead_code,
+        illegal_floating_point_literal_pattern,
+        improper_ctypes,
+        non_camel_case_types,
+        non_shorthand_field_patterns,
+        non_snake_case,
+        non_upper_case_globals,
+        no_mangle_generic_items,
+        overflowing_literals,
+        path_statements,
+        patterns_in_fns_without_body,
+        plugin_as_library,
+        private_in_public,
+        private_no_mangle_fns,
+        private_no_mangle_statics,
+        renamed_and_removed_lints,
+        stable_features,
+        unconditional_recursion,
+        unions_with_drop_fields,
+        unknown_lints,
+        unreachable_code,
+        unreachable_patterns,
+        unused_allocation,
+        unused_assignments,
+        unused_attributes,
+        unused_comparisons,
+        unused_features,
+        unused_imports,
+        unused_macros,
+        unused_must_use,
+        unused_mut,
+        unused_parens,
+        unused_unsafe,
+        unused_variables,
+        while_true)]
+// This list is select `allow` warnings
+#![deny(missing_debug_implementations,
+       trivial_casts,
+       trivial_numeric_casts,
+       unused_extern_crates,
+       unused_import_braces)]
+#![cfg_attr(feature="dev", warn(warnings))]
 
 extern crate cobalt;
 extern crate env_logger;
