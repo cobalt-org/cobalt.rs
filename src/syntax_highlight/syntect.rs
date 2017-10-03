@@ -41,7 +41,7 @@ pub fn list_syntax_themes<'a>() -> Vec<&'a String> {
     SETUP.theme_set.themes.keys().collect::<Vec<_>>()
 }
 
-pub fn list_syntaxes<'a>() -> Vec<String> {
+pub fn list_syntaxes() -> Vec<String> {
     fn definition_to_string(sd: &SyntaxDefinition) -> String {
         let extensions = sd.file_extensions.iter().join(&", ".to_owned());
         format!("{} [{}]", sd.name, extensions)
@@ -116,7 +116,7 @@ impl<'a> DecoratedParser<'a> {
         DecoratedParser {
             h: None,
             parser: parser,
-            theme: &theme,
+            theme: theme,
         }
     }
 }
@@ -144,7 +144,7 @@ impl<'a> Iterator for DecoratedParser<'a> {
                                 .next()
                                 .and_then(|lang| SETUP.syntax_set.find_syntax_by_token(lang))
                                 .unwrap_or_else(|| SETUP.syntax_set.find_syntax_plain_text());
-                        self.h = Some(HighlightLines::new(&cur_syntax, self.theme));
+                        self.h = Some(HighlightLines::new(cur_syntax, self.theme));
                         let snippet = start_coloured_html_snippet(self.theme);
                         return Some(Html(Owned(snippet)));
                     }
