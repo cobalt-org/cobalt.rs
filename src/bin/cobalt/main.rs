@@ -71,7 +71,7 @@ mod new;
 use std::fs;
 
 use clap::{Arg, App, SubCommand, AppSettings};
-use cobalt::{Config, Dump};
+use cobalt::{Config, Dump, jekyll};
 use cobalt::{list_syntaxes, list_syntax_themes};
 use env_logger::LogBuilder;
 use log::{LogRecord, LogLevelFilter};
@@ -227,7 +227,23 @@ fn run() -> Result<()> {
                                  .default_value("cobalt site import")
                                  .takes_value(true)))
         .subcommand(SubCommand::with_name("list-syntax-themes").about("list available themes"))
-        .subcommand(SubCommand::with_name("list-syntaxes").about("list supported syntaxes"));
+        .subcommand(SubCommand::with_name("list-syntaxes").about("list supported syntaxes"))
+        .subcommand(SubCommand::with_name("convert-jekyll")
+                        .about("convert jekyll website to cobalt")
+                        .arg(Arg::with_name("source")
+                                 .short("s")
+                                 .long("source")
+                                 .value_name("JEKYLL-FILE-OR-DIR")
+                                 .help("Jekyll posts' directory")
+                                 .required(true)
+                                 .takes_value(true))
+                        .arg(Arg::with_name("destination")
+                                 .short("d")
+                                 .long("destination")
+                                 .value_name("DIR")
+                                 .help("Output dir of converted posts")
+                                 .takes_value(true)
+                                 .default_value("./")));
 
     let global_matches = app_cli.get_matches();
 
@@ -344,6 +360,11 @@ fn run() -> Result<()> {
                     println!("{}", name);
                 }
                 Ok(())
+            }
+            "convert-jekyll" => {
+                let source = matches.value_of("source").unwrap().to_string();
+                let dest = matches.value_of("destination").unwrap().to_string();
+                jekyll::jk_document::convert_from_jk(Path::new(&source), Path::new(&dest))?;
             }
             _ => {
                 bail!(global_matches.usage());
