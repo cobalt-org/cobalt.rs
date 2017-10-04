@@ -2,13 +2,13 @@
 #![deny(warnings)]
 #![allow(unknown_lints)]
 #![allow(unused_doc_comment)] // error-chain 0.11 should fix this.
-#![cfg_attr(feature="dev", warn(warnings))]
+#![cfg_attr(feature = "dev", warn(warnings))]
 
 // Stuff we want clippy to ignore
-#![cfg_attr(feature="cargo-clippy", allow(
-        cyclomatic_complexity,
-        too_many_arguments,
-        ))]
+#![cfg_attr(feature = "cargo-clippy", allow(
+cyclomatic_complexity,
+too_many_arguments,
+))]
 
 extern crate chrono;
 extern crate ignore;
@@ -22,7 +22,7 @@ extern crate serde_yaml;
 
 extern crate itertools;
 
-#[cfg(all(feature="syntax-highlight", not(windows)))]
+#[cfg(all(feature = "syntax-highlight", not(windows)))]
 extern crate syntect;
 
 #[macro_use]
@@ -57,6 +57,7 @@ mod files;
 mod datetime;
 mod frontmatter;
 
+pub mod jekyll;
 mod legacy;
 mod syntax_highlight;
 
