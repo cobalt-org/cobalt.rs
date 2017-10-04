@@ -68,7 +68,7 @@ impl JkDocument {
         if front != None {
             Err(ErrorKind::MissingFrontStart.into())
         } else {
-            match split_document(&content)? {
+            match split_document(content)? {
                 (None, _) => Err(ErrorKind::MissingFrontmatter.into()),
                 (Some(front), content) => Ok(JkDocument {
                     front: Some(front.to_owned()),
@@ -118,7 +118,7 @@ pub fn convert_from_jk(source: &Path, dest: &Path) -> Result<()> {
     } else if source.is_dir() {
         for file in source.read_dir()? {
             if let Ok(file) = file {
-                JkDocument::convert(&file.path(), &dest)?
+                JkDocument::convert(&file.path(), dest)?
             }
         }
         Ok(())
@@ -131,7 +131,6 @@ pub fn convert_from_jk(source: &Path, dest: &Path) -> Result<()> {
 #[cfg(test)]
 mod test {
     use super::*;
-    use error::{ErrorKind, Result};
 
     // can't have custom: the order of fields is not stable
     fn get_correct_cb_front() -> &'static str {
