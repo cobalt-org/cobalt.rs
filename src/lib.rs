@@ -84,13 +84,13 @@ pub use config::Dump;
 pub use new::{create_new_project, create_new_document};
 
 pub mod error;
+pub mod files;
 
 mod cobalt;
 mod config;
 mod document;
 mod new;
 mod slug;
-mod files;
 mod datetime;
 mod frontmatter;
 
