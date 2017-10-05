@@ -42,17 +42,12 @@ pub fn build(config: &Config) -> Result<()> {
     let mut documents = vec![];
 
     let ignore_dest = {
-        let rel_dest = dest.strip_prefix(source);
-        if let Ok(rel_dest) = rel_dest {
-            let ignore_dest = rel_dest.join("**/*");
-            let ignore_dest = ignore_dest
-                .to_str()
-                .ok_or_else(|| format!("Cannot convert pathname {:?} to UTF-8", rel_dest))?
-                .to_owned();
-            Some(ignore_dest)
-        } else {
-            None
-        }
+        let ignore_dest = dest.join("**/*");
+        let ignore_dest = ignore_dest
+            .to_str()
+            .ok_or_else(|| format!("Cannot convert pathname {:?} to UTF-8", dest))?
+            .to_owned();
+        Some(ignore_dest)
     };
 
     let mut page_files = FilesBuilder::new(source)?;

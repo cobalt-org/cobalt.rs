@@ -41,8 +41,7 @@
         unused_variables,
         while_true)]
 // This list is select `allow` warnings
-#![deny(missing_debug_implementations,
-       trivial_casts,
+#![deny(trivial_casts,
        trivial_numeric_casts,
        unused_extern_crates,
        unused_import_braces)]
@@ -77,12 +76,13 @@ use cobalt::{create_new_project, create_new_document};
 use notify::{Watcher, RecursiveMode, raw_watcher};
 use std::sync::mpsc::channel;
 use std::thread;
-use std::path::PathBuf;
+use std::path;
 use std::io::prelude::*;
 use std::io::Result as IoResult;
 use std::fs::File;
 
 use cobalt::{list_syntaxes, list_syntax_themes};
+use cobalt::files;
 
 error_chain! {
 
@@ -391,9 +391,9 @@ fn run() -> Result<()> {
         }
 
         "clean" => {
-            let cwd = std::env::current_dir().unwrap_or_else(|_| PathBuf::new());
-            let destdir = PathBuf::from(&config.dest);
-            let destdir = std::fs::canonicalize(destdir).unwrap_or_else(|_| PathBuf::new());
+            let cwd = std::env::current_dir().unwrap_or_else(|_| path::PathBuf::new());
+            let destdir = path::PathBuf::from(&config.dest);
+            let destdir = std::fs::canonicalize(destdir).unwrap_or_else(|_| path::PathBuf::new());
             if cwd == destdir {
                 error!("Destination directory is same as current directory. \
                        Cancelling the operation");
@@ -410,7 +410,8 @@ fn run() -> Result<()> {
                 std::process::exit(1);
             }
             let port = matches.value_of("port").unwrap().to_string();
-            if serve(&config.dest, &port).is_err() {
+            let dest = path::Path::new(&config.dest);
+            if serve(&dest, &port).is_err() {
                 std::process::exit(1);
             }
         }
@@ -420,7 +421,16 @@ fn run() -> Result<()> {
                 std::process::exit(1);
             }
 
-            let dest = config.dest.clone();
+            let source = path::Path::new(&config.source);
+            let dest = path::Path::new(&config.dest).to_owned();
+            let ignore_dest = {
+                let ignore_dest = dest.join("**/*");
+                let ignore_dest = ignore_dest
+                    .to_str()
+                    .ok_or_else(|| format!("Cannot convert pathname {:?} to UTF-8", dest))?
+                    .to_owned();
+                Some(ignore_dest)
+            };
             let port = matches.value_of("port").unwrap().to_string();
             thread::spawn(move || if serve(&dest, &port).is_err() {
                               std::process::exit(1)
@@ -428,7 +438,6 @@ fn run() -> Result<()> {
 
             let (tx, rx) = channel();
             let w = raw_watcher(tx);
-
             match w {
                 Ok(mut watcher) => {
                     watcher.watch(&config.source, RecursiveMode::Recursive)?;
@@ -437,10 +446,33 @@ fn run() -> Result<()> {
                     loop {
                         match rx.recv() {
                             Ok(event) => {
-                                trace!("file changed {:?}", event);
-                                // TODO make this check for supported files again
-                                if build(&config).is_err() {
-                                    std::process::exit(1);
+                                let rebuild = if let Some(ref event_path) = event.path {
+
+                                    // Be as broad as possible in what can cause a rebuild to
+                                    // ensure we don't miss anything (normal file walks will miss
+                                    // `_layouts`, etc).
+                                    let mut page_files = files::FilesBuilder::new(source)?;
+                                    page_files.add_ignore("!.*")?.add_ignore("!_*")?;
+                                    if let Some(ref ignore_dest) = ignore_dest {
+                                        page_files.add_ignore(ignore_dest)?;
+                                    }
+                                    let page_files = page_files.build()?;
+
+                                    if page_files.includes_file(event_path) {
+                                        trace!("Page changed {:?}", event);
+                                        true
+                                    } else {
+                                        trace!("Ignored file changed {:?}", event);
+                                        false
+                                    }
+                                } else {
+                                    trace!("Assuming change {:?} is relevant", event);
+                                    true
+                                };
+                                if rebuild {
+                                    if build(&config).is_err() {
+                                        std::process::exit(1);
+                                    }
                                 }
                             }
 
@@ -500,7 +532,7 @@ fn build(config: &Config) -> Result<()> {
     Ok(())
 }
 
-fn static_file_handler(dest: &str, req: Request, mut res: Response) -> IoResult<()> {
+fn static_file_handler(dest: &path::Path, req: Request, mut res: Response) -> IoResult<()> {
     // grab the requested path
     let mut req_path = match req.uri {
         RequestUri::AbsolutePath(p) => p,
@@ -523,7 +555,7 @@ fn static_file_handler(dest: &str, req: Request, mut res: Response) -> IoResult<
     // find the path of the file in the local system
     // (this gets rid of the '/' in `p`, so the `join()` will not replace the
     // path)
-    let path = PathBuf::from(dest).join(&req_path[1..]);
+    let path = dest.to_path_buf().join(&req_path[1..]);
 
     let serve_path = if path.is_file() {
         // try to point the serve path to `path` if it corresponds to a file
@@ -557,7 +589,7 @@ fn static_file_handler(dest: &str, req: Request, mut res: Response) -> IoResult<
     Ok(())
 }
 
-fn serve(dest: &str, port: &str) -> Result<()> {
+fn serve(dest: &path::Path, port: &str) -> Result<()> {
     info!("Serving {:?} through static file server", dest);
 
     let ip = format!("127.0.0.1:{}", port);

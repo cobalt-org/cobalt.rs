@@ -41,8 +41,7 @@
         unused_variables,
         while_true)]
 // This list is select `allow` warnings
-#![deny(missing_debug_implementations,
-       trivial_casts,
+#![deny(trivial_casts,
        trivial_numeric_casts,
        unused_extern_crates,
        unused_import_braces)]
@@ -85,13 +84,13 @@ pub use config::Dump;
 pub use new::{create_new_project, create_new_document};
 
 pub mod error;
+pub mod files;
 
 mod cobalt;
 mod config;
 mod document;
 mod new;
 mod slug;
-mod files;
 mod datetime;
 mod frontmatter;
 

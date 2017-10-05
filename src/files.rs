@@ -67,6 +67,7 @@ impl<'a> Iterator for FilesIterator<'a> {
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct Files {
     root_dir: PathBuf,
     ignore: Gitignore,
@@ -80,7 +81,6 @@ impl Files {
         }
     }
 
-    #[cfg(test)]
     pub fn includes_file(&self, file: &Path) -> bool {
         let is_dir = false;
         self.includes_path(file, is_dir)
@@ -101,7 +101,6 @@ impl Files {
         self.includes_path_leaf(entry.path(), entry.file_type().is_dir())
     }
 
-    #[cfg(test)]
     fn includes_path(&self, path: &Path, is_dir: bool) -> bool {
         let parent = path.parent();
         if let Some(mut parent) = parent {
