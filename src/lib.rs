@@ -41,8 +41,7 @@
         unused_variables,
         while_true)]
 // This list is select `allow` warnings
-#![deny(missing_debug_implementations,
-       trivial_casts,
+#![deny(trivial_casts,
        trivial_numeric_casts,
        unused_extern_crates,
        unused_import_braces)]
