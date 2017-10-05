@@ -1,5 +1,27 @@
-## 0.7.2 (2017-07-04)
+<a name="0.7.3"></a>
+## 0.7.3 (2017-10-05)
 
+#### Breaking Changes
+
+* `page.path` now returns non-exploded path. ([7f571a8b](https://github.com/cobalt-org/cobalt.rs/commit/7f571a8bd5b75adcdfc5de103778a210bbc2f5e3))
+* `--dump=liquid` is now split into `--dump=DocObject` and `--dump=DocTermplate` ([3439265b](https://github.com/cobalt-org/cobalt.rs/commit/3439265b64de9c7d87fad5f3c54501e0b33966f0))
+
+#### Features
+
+* Support `:categories` in permalink ([a9b4474f](https://github.com/cobalt-org/cobalt.rs/commit/a9b4474fdfa23279f0081a8864d7b6601f4e2b2d))
+* Support nested frontmatter ([cafd42fa](https://github.com/cobalt-org/cobalt.rs/commit/cafd42fa3cdfb045dbc9eb2a5a8e35f2ff455e66))
+* **syntax-highlight:**  Succeed on windows ([f1129fa8](https://github.com/cobalt-org/cobalt.rs/commit/f1129fa8fcef2c27583ed0a5cfe97c2dcb8246e4))
+* **debug:**
+  *  Dump doc with all defaults/globals ([e4ff582f](https://github.com/cobalt-org/cobalt.rs/commit/e4ff582f9937bee8013336e8c00ec437c67e5124))
+  *  Link substitutions dump flag added ([3439265b](https://github.com/cobalt-org/cobalt.rs/commit/3439265b64de9c7d87fad5f3c54501e0b33966f0))
+
+#### Bug Fixes
+
+* **build:**  Do not attempt to build the output ([51f486a8](https://github.com/cobalt-org/cobalt.rs/commit/51f486a84d52530cb4af6b55e19f7c97674b35aa))
+* **watch:**  Ignore dest rather than rebuild ([fce89368](https://github.com/cobalt-org/cobalt.rs/commit/fce8936800eb651e4234293df805a675f2a6fd0b), closes [#170](https://github.com/cobalt-org/cobalt.rs/issues/170))
+
+
+## 0.7.2 (2017-07-04)
 
 #### Bug Fixes
 
