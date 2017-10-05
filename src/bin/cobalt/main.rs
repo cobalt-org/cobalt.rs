@@ -63,44 +63,20 @@ extern crate clap;
 #[macro_use]
 extern crate log;
 
-use clap::{Arg, App, SubCommand, AppSettings};
+mod build;
+mod error;
+mod serve;
+mod new;
+
 use std::fs;
+
+use clap::{Arg, App, SubCommand, AppSettings};
 use cobalt::{Config, Dump};
-use log::{LogRecord, LogLevelFilter};
-use env_logger::LogBuilder;
-use hyper::server::{Server, Request, Response};
-use hyper::uri::RequestUri;
-use ghp::import_dir;
-use cobalt::{create_new_project, create_new_document};
-
-use notify::{Watcher, RecursiveMode, raw_watcher};
-use std::sync::mpsc::channel;
-use std::thread;
-use std::path;
-use std::io::prelude::*;
-use std::io::Result as IoResult;
-use std::fs::File;
-
 use cobalt::{list_syntaxes, list_syntax_themes};
-use cobalt::files;
+use env_logger::LogBuilder;
+use log::{LogRecord, LogLevelFilter};
 
-error_chain! {
-
-    links {
-    }
-
-    foreign_links {
-        Cobalt(cobalt::Error);
-        Notify(notify::Error);
-        Clap(clap::Error);
-        Ghp(ghp::Error);
-        Io(std::io::Error);
-        Hyper(hyper::Error);
-    }
-
-    errors {
-    }
-}
+use error::*;
 
 quick_main!(run);
 
@@ -350,304 +326,27 @@ fn run() -> Result<()> {
     }
 
     match command {
-        "init" => {
-            let directory = matches.value_of("DIRECTORY").unwrap();
-
-            match create_new_project(&directory.to_string()) {
-                Ok(_) => info!("Created new project at {}", directory),
-                Err(e) => {
-                    error!("{}", e);
-                    error!("Could not create a new cobalt project");
-                    std::process::exit(1);
-                }
-            }
-        }
-
-        "new" => {
-            let filetype = matches.value_of("FILETYPE").unwrap();
-            let filename = matches.value_of("FILENAME").unwrap();
-
-            match create_new_document(filetype, filename, &config) {
-                Ok(_) => info!("Created new {} {}", filetype, filename),
-                Err(e) => {
-                    error!("{}", e);
-                    error!("Could not create {}", filetype);
-                    std::process::exit(1);
-                }
-            }
-        }
-
-        "build" => {
-            if build(&config).is_err() {
-                std::process::exit(1);
-            }
-            if matches.is_present("import") {
-                let branch = matches.value_of("branch").unwrap().to_string();
-                let message = matches.value_of("message").unwrap().to_string();
-                if import(&config, &branch, &message).is_err() {
-                    std::process::exit(1);
-                }
-            }
-        }
-
-        "clean" => {
-            let cwd = std::env::current_dir().unwrap_or_else(|_| path::PathBuf::new());
-            let destdir = path::PathBuf::from(&config.dest);
-            let destdir = std::fs::canonicalize(destdir).unwrap_or_else(|_| path::PathBuf::new());
-            if cwd == destdir {
-                error!("Destination directory is same as current directory. \
-                       Cancelling the operation");
-                std::process::exit(1);
-            }
-            match fs::remove_dir_all(&config.dest) {
-                Ok(..) => info!("directory \"{}\" removed", &config.dest),
-                Err(err) => error!("Error: {}", err),
-            }
-        }
-
-        "serve" => {
-            if build(&config).is_err() {
-                std::process::exit(1);
-            }
-            let port = matches.value_of("port").unwrap().to_string();
-            let dest = path::Path::new(&config.dest);
-            if serve(&dest, &port).is_err() {
-                std::process::exit(1);
-            }
-        }
-
-        "watch" => {
-            if build(&config).is_err() {
-                std::process::exit(1);
-            }
-
-            let source = path::Path::new(&config.source);
-            let dest = path::Path::new(&config.dest).to_owned();
-            let ignore_dest = {
-                let ignore_dest = dest.join("**/*");
-                let ignore_dest = ignore_dest
-                    .to_str()
-                    .ok_or_else(|| format!("Cannot convert pathname {:?} to UTF-8", dest))?
-                    .to_owned();
-                Some(ignore_dest)
-            };
-            let port = matches.value_of("port").unwrap().to_string();
-            thread::spawn(move || if serve(&dest, &port).is_err() {
-                              std::process::exit(1)
-                          });
-
-            let (tx, rx) = channel();
-            let w = raw_watcher(tx);
-            match w {
-                Ok(mut watcher) => {
-                    watcher.watch(&config.source, RecursiveMode::Recursive)?;
-                    info!("Watching {:?} for changes", &config.source);
-
-                    loop {
-                        match rx.recv() {
-                            Ok(event) => {
-                                let rebuild = if let Some(ref event_path) = event.path {
-
-                                    // Be as broad as possible in what can cause a rebuild to
-                                    // ensure we don't miss anything (normal file walks will miss
-                                    // `_layouts`, etc).
-                                    let mut page_files = files::FilesBuilder::new(source)?;
-                                    page_files.add_ignore("!.*")?.add_ignore("!_*")?;
-                                    if let Some(ref ignore_dest) = ignore_dest {
-                                        page_files.add_ignore(ignore_dest)?;
-                                    }
-                                    let page_files = page_files.build()?;
-
-                                    if page_files.includes_file(event_path) {
-                                        trace!("Page changed {:?}", event);
-                                        true
-                                    } else {
-                                        trace!("Ignored file changed {:?}", event);
-                                        false
-                                    }
-                                } else {
-                                    trace!("Assuming change {:?} is relevant", event);
-                                    true
-                                };
-                                if rebuild {
-                                    if build(&config).is_err() {
-                                        std::process::exit(1);
-                                    }
-                                }
-                            }
-
-                            Err(e) => {
-                                error!("[Notify Error]: {}", e);
-                                std::process::exit(1);
-                            }
-                        }
-                    }
-                }
-                Err(e) => {
-                    error!("[Notify Error]: {}", e);
-                    std::process::exit(1);
-                }
-            }
-        }
-
-        "import" => {
-            let branch = matches.value_of("branch").unwrap().to_string();
-            let message = matches.value_of("message").unwrap().to_string();
-            if import(&config, &branch, &message).is_err() {
-                std::process::exit(1);
-            }
-        }
-
+        "init" => new::init_command(config, matches)?,
+        "new" => new::new_command(config, matches)?,
+        "build" => build::build_command(config, matches)?,
+        "clean" => build::clean_command(config, matches)?,
+        "serve" => serve::serve_command(config, matches)?,
+        "watch" => serve::watch_command(config, matches)?,
+        "import" => build::import_command(config, matches)?,
         "list-syntax-themes" => {
             for name in list_syntax_themes() {
                 println!("{}", name);
             }
         }
-
         "list-syntaxes" => {
             for name in list_syntaxes() {
                 println!("{}", name);
             }
         }
-
         _ => {
             bail!(global_matches.usage());
         }
     };
-
-    Ok(())
-}
-
-fn build(config: &Config) -> Result<()> {
-    info!("Building from {} into {}", config.source, config.dest);
-    match cobalt::build(config) {
-        Ok(_) => info!("Build successful"),
-        Err(e) => {
-            error!("{}", e);
-            error!("Build not successful");
-            return Err(e.into());
-        }
-    };
-
-    Ok(())
-}
-
-fn static_file_handler(dest: &path::Path, req: Request, mut res: Response) -> IoResult<()> {
-    // grab the requested path
-    let mut req_path = match req.uri {
-        RequestUri::AbsolutePath(p) => p,
-        _ => {
-            // return a 400 and exit from this request
-            *res.status_mut() = hyper::status::StatusCode::BadRequest;
-            let body = b"<h1> <center> 400: Bad request </center> </h1>";
-            try!(res.send(body));
-            return Ok(());
-        }
-    };
-
-    // strip off any querystrings so path.is_file() matches
-    // and doesn't stick index.html on the end of the path
-    // (querystrings often used for cachebusting)
-    if let Some(position) = req_path.rfind('?') {
-        req_path.truncate(position);
-    }
-
-    // find the path of the file in the local system
-    // (this gets rid of the '/' in `p`, so the `join()` will not replace the
-    // path)
-    let path = dest.to_path_buf().join(&req_path[1..]);
-
-    let serve_path = if path.is_file() {
-        // try to point the serve path to `path` if it corresponds to a file
-        path
-    } else {
-        // try to point the serve path into a "index.html" file in the requested
-        // path
-        path.join("index.html")
-    };
-
-    // if the request points to a file and it exists, read and serve it
-    if serve_path.exists() {
-        let mut file = try!(File::open(serve_path));
-
-        // buffer to store the file
-        let mut buffer: Vec<u8> = vec![];
-
-        try!(file.read_to_end(&mut buffer));
-
-        try!(res.send(&buffer));
-    } else {
-        // return a 404 status
-        *res.status_mut() = hyper::status::StatusCode::NotFound;
-
-        // write a simple body for the 404 page
-        let body = b"<h1> <center> 404: Page not found </center> </h1>";
-
-        try!(res.send(body));
-    }
-
-    Ok(())
-}
-
-fn serve(dest: &path::Path, port: &str) -> Result<()> {
-    info!("Serving {:?} through static file server", dest);
-
-    let ip = format!("127.0.0.1:{}", port);
-    info!("Server Listening on {}", &ip);
-    info!("Ctrl-c to stop the server");
-
-    // attempts to create a server
-    let http_server = match Server::http(&*ip) {
-        Ok(server) => server,
-        Err(e) => {
-            error!("{}", e);
-            return Err(e.into());
-        }
-    };
-
-    // need a clone because of closure's lifetime
-    let dest_clone = dest.to_owned();
-
-    // bind the handle function and start serving
-    if let Err(e) = http_server.handle(move |req: Request, res: Response| if let Err(e) =
-        static_file_handler(&dest_clone, req, res) {
-                                           error!("{}", e);
-                                           std::process::exit(1);
-                                       }) {
-        error!("{}", e);
-        return Err(e.into());
-    };
-
-    Ok(())
-}
-
-fn import(config: &Config, branch: &str, message: &str) -> Result<()> {
-    info!("Importing {} to {}", config.dest, branch);
-
-    let meta = match fs::metadata(&config.dest) {
-        Ok(data) => data,
-
-        Err(e) => {
-            error!("{}", e);
-            error!("Import not successful");
-            return Err(e.into());
-        }
-    };
-
-    if meta.is_dir() {
-        match import_dir(&config.dest, branch, message) {
-            Ok(_) => info!("Import successful"),
-            Err(e) => {
-                error!("{}", e);
-                error!("Import not successful");
-                return Err(e.into());
-            }
-        }
-    } else {
-        error!("Build dir is not a directory: {}", config.dest);
-        error!("Import not successful");
-        bail!("Failed:");
-    }
 
     Ok(())
 }
