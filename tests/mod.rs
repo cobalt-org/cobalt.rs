@@ -1,15 +1,20 @@
 #[macro_use]
 extern crate difference;
+
 extern crate cobalt;
+extern crate error_chain;
 extern crate tempdir;
 extern crate walkdir;
 
-use std::path::{Path, PathBuf};
+use std::error::Error;
 use std::fs::{self, File};
 use std::io::Read;
+use std::path::{Path, PathBuf};
+
+use error_chain::ChainedError;
 use tempdir::TempDir;
 use walkdir::WalkDir;
-use std::error::Error;
+
 use cobalt::Config;
 
 macro_rules! assert_contains {
@@ -170,8 +175,8 @@ pub fn incomplete_rss() {
 pub fn liquid_error() {
     let err = run_test("liquid_error");
     assert!(err.is_err());
-    assert_eq!(err.unwrap_err().description(),
-               "{{{ is not a valid identifier");
+    assert_contains!(format!("{}", err.unwrap_err().display_chain()),
+                     "{{{ is not a valid identifier");
 }
 
 #[test]
@@ -183,7 +188,7 @@ pub fn liquid_raw() {
 pub fn no_extends_error() {
     let err = run_test("no_extends_error");
     assert!(err.is_err());
-    assert_contains!(err.unwrap_err().description(),
+    assert_contains!(format!("{}", err.unwrap_err().display_chain()),
                      "Layout default_nonexistent.liquid can not be read (defined in \
                    \"index.html\")");
 }

@@ -326,27 +326,30 @@ fn run() -> Result<()> {
     }
 
     match command {
-        "init" => new::init_command(config, matches)?,
-        "new" => new::new_command(config, matches)?,
-        "build" => build::build_command(config, matches)?,
-        "clean" => build::clean_command(config, matches)?,
-        "serve" => serve::serve_command(config, matches)?,
-        "watch" => serve::watch_command(config, matches)?,
-        "import" => build::import_command(config, matches)?,
-        "list-syntax-themes" => {
-            for name in list_syntax_themes() {
-                println!("{}", name);
+            "init" => new::init_command(config, matches),
+            "new" => new::new_command(config, matches),
+            "build" => build::build_command(config, matches),
+            "clean" => build::clean_command(config, matches),
+            "serve" => serve::serve_command(config, matches),
+            "watch" => serve::watch_command(config, matches),
+            "import" => build::import_command(config, matches),
+            "list-syntax-themes" => {
+                for name in list_syntax_themes() {
+                    println!("{}", name);
+                }
+                Ok(())
+            }
+            "list-syntaxes" => {
+                for name in list_syntaxes() {
+                    println!("{}", name);
+                }
+                Ok(())
+            }
+            _ => {
+                bail!(global_matches.usage());
             }
         }
-        "list-syntaxes" => {
-            for name in list_syntaxes() {
-                println!("{}", name);
-            }
-        }
-        _ => {
-            bail!(global_matches.usage());
-        }
-    };
+        .chain_err(|| format!("{} command failed", command))?;
 
     Ok(())
 }

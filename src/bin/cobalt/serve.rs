@@ -35,12 +35,14 @@ pub fn watch_command(config: cobalt::Config, matches: &clap::ArgMatches) -> Resu
                   });
 
     let (tx, rx) = channel();
-    let mut watcher = raw_watcher(tx)?;
-    watcher.watch(&config.source, RecursiveMode::Recursive)?;
+    let mut watcher = raw_watcher(tx).chain_err(|| "Notify error")?;
+    watcher
+        .watch(&config.source, RecursiveMode::Recursive)
+        .chain_err(|| "Notify error")?;
     info!("Watching {:?} for changes", &config.source);
 
     loop {
-        let event = rx.recv()?;
+        let event = rx.recv().chain_err(|| "Notify error")?;
         let rebuild = if let Some(ref event_path) = event.path {
             // Be as broad as possible in what can cause a rebuild to
             // ensure we don't miss anything (normal file walks will miss

@@ -1,7 +1,6 @@
 use std::env;
 use std::fs;
 use std::path;
-use std::process;
 
 use clap;
 use cobalt;
@@ -34,9 +33,8 @@ pub fn clean_command(config: cobalt::Config, _matches: &clap::ArgMatches) -> Res
     let destdir = path::PathBuf::from(&config.dest);
     let destdir = fs::canonicalize(destdir).unwrap_or_else(|_| path::PathBuf::new());
     if cwd == destdir {
-        error!("Destination directory is same as current directory. \
+        bail!("Destination directory is same as current directory. \
                        Cancelling the operation");
-        process::exit(1);
     }
 
     fs::remove_dir_all(&config.dest)?;

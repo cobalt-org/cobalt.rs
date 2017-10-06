@@ -10,7 +10,7 @@ use jsonfeed;
 
 use datetime;
 use document::Document;
-use error::{ErrorKind, Result};
+use error::*;
 use config::{Config, SortOrder};
 use files::FilesBuilder;
 use frontmatter;
@@ -178,22 +178,24 @@ pub fn build(config: &Config) -> Result<()> {
 
         let mut context = post.get_render_context(&simple_posts_data);
 
-        post.render_excerpt(&mut context, source, &config.syntax_highlight.theme)?;
+        post.render_excerpt(&mut context, source, &config.syntax_highlight.theme)
+            .chain_err(|| format!("Failed to render excerpt for {:?}", post.file_path))?;
         let post_html = post.render(&mut context,
                                     source,
                                     &layouts,
                                     &mut layouts_cache,
-                                    &config.syntax_highlight.theme)?;
+                                    &config.syntax_highlight.theme)
+            .chain_err(|| format!("Failed to render for {:?}", post.file_path))?;
         create_document_file(post_html, &post.file_path, dest)?;
     }
 
     // check if we should create an RSS file and create it!
     if let Some(ref path) = config.rss {
-        try!(create_rss(path, dest, config, &posts));
+        create_rss(path, dest, config, &posts)?;
     }
     // check if we should create an jsonfeed file and create it!
     if let Some(ref path) = config.jsonfeed {
-        try!(create_jsonfeed(path, dest, config, &posts));
+        create_jsonfeed(path, dest, config, &posts)?;
     }
 
     // during post rendering additional attributes such as content were
@@ -227,7 +229,8 @@ pub fn build(config: &Config) -> Result<()> {
                                   source,
                                   &layouts,
                                   &mut layouts_cache,
-                                  &config.syntax_highlight.theme)?;
+                                  &config.syntax_highlight.theme)
+            .chain_err(|| format!("Failed to render for {:?}", doc.file_path))?;
         create_document_file(doc_html, doc.file_path, dest)?;
     }
 
@@ -252,16 +255,16 @@ pub fn build(config: &Config) -> Result<()> {
                 let parent_dir = file_path.parent();
                 if let Some(parent_dir) = parent_dir {
                     let parent_dir = dest.join(parent_dir);
-                    fs::create_dir_all(parent_dir.as_path())?;
-                    debug!("Created new directory {:?}", parent_dir);
+                    debug!("Creating new directory {:?}", parent_dir);
+                    fs::create_dir_all(parent_dir)?;
                 }
             }
             let src_file = source.join(file_path.as_path());
             let dest_file = dest.join(file_path);
 
+            debug!("Copying {:?} to {:?}", src_file, dest_file);
             fs::copy(src_file.as_path(), dest_file.as_path())
                 .map_err(|e| format!("Could not copy {:?} into {:?}: {}", src_file, dest_file, e))?;
-            debug!("Copied {:?} to {:?}", src_file, dest_file);
         }
     }
 
@@ -320,8 +323,8 @@ fn create_jsonfeed(path: &str, dest: &Path, config: &Config, posts: &[Document])
 
             let jsonfeed_string = jsonfeed::to_string(&feed).unwrap();
             let jsonfeed_path = dest.join(path);
-            let mut jsonfeed_file = try!(File::create(&jsonfeed_path));
-            try!(jsonfeed_file.write_all(&jsonfeed_string.into_bytes()));
+            let mut jsonfeed_file = File::create(&jsonfeed_path)?;
+            jsonfeed_file.write_all(&jsonfeed_string.into_bytes())?;
 
             info!("Created jsonfeed file at {}", jsonfeed_path.display());
             Ok(())
