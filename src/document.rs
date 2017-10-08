@@ -23,11 +23,11 @@ use liquid;
 use legacy::wildwest;
 
 lazy_static! {
-    pub static ref FRONT_MATTER_DIVIDE: Regex = Regex::new(r"---\s*\r?\n").unwrap();
+    static ref FRONT_MATTER_DIVIDE: Regex = Regex::new(r"---\s*\r?\n").unwrap();
     static ref MARKDOWN_REF: Regex = Regex::new(r"(?m:^ {0,3}\[[^\]]+\]:.+$)").unwrap();
 }
 
-pub fn read_file<P: AsRef<Path>>(path: P) -> Result<String> {
+fn read_file<P: AsRef<Path>>(path: P) -> Result<String> {
     let mut file = File::open(path.as_ref())?;
     let mut text = String::new();
     file.read_to_string(&mut text)?;
@@ -42,7 +42,7 @@ fn read_document<PB: Into<PathBuf>, P: AsRef<Path>>(root: PB, relpath: P) -> Res
     Ok(text)
 }
 
-pub fn split_document(content: &str) -> Result<(Option<&str>, &str)> {
+fn split_document(content: &str) -> Result<(Option<&str>, &str)> {
     if FRONT_MATTER_DIVIDE.is_match(content) {
         let mut splits = FRONT_MATTER_DIVIDE.splitn(content, 2);
 
@@ -80,10 +80,9 @@ fn format_path_variable(source_file: &Path) -> String {
     path
 }
 
-fn permalink_attributes(
-    front: &frontmatter::Frontmatter,
-    dest_file: &Path,
-) -> HashMap<String, String> {
+fn permalink_attributes(front: &frontmatter::Frontmatter,
+                        dest_file: &Path)
+                        -> HashMap<String, String> {
     // TODO replace "date", "pretty", "ordinal" and "none"
     // for Jekyl compatibility
 
@@ -98,10 +97,8 @@ fn permalink_attributes(
 
     attributes.insert(":slug".to_owned(), front.slug.clone());
 
-    attributes.insert(
-        ":categories".to_owned(),
-        itertools::join(front.categories.iter(), "/"),
-    );
+    attributes.insert(":categories".to_owned(),
+                      itertools::join(front.categories.iter(), "/"));
 
     attributes.insert(":output_ext".to_owned(), ".html".to_owned());
 
@@ -172,11 +169,10 @@ fn format_url_as_file_str(permalink: &str) -> PathBuf {
     path_buf
 }
 
-fn document_attributes(
-    front: &frontmatter::Frontmatter,
-    source_file: &str,
-    url_path: &str,
-) -> liquid::Object {
+fn document_attributes(front: &frontmatter::Frontmatter,
+                       source_file: &str,
+                       url_path: &str)
+                       -> liquid::Object {
     let mut attributes = liquid::Object::new();
 
     attributes.insert("path".to_owned(), liquid::Value::str(url_path));
@@ -185,21 +181,15 @@ fn document_attributes(
     if let Some(ref description) = front.description {
         attributes.insert("description".to_owned(), liquid::Value::str(description));
     }
-    attributes.insert(
-        "categories".to_owned(),
-        liquid::Value::Array(
-            front
-                .categories
-                .iter()
-                .map(|c| liquid::Value::str(c))
-                .collect(),
-        ),
-    );
+    attributes.insert("categories".to_owned(),
+                      liquid::Value::Array(front
+                                               .categories
+                                               .iter()
+                                               .map(|c| liquid::Value::str(c))
+                                               .collect()));
     if let Some(ref published_date) = front.published_date {
-        attributes.insert(
-            "date".to_owned(),
-            liquid::Value::Str(published_date.format()),
-        );
+        attributes.insert("date".to_owned(),
+                          liquid::Value::Str(published_date.format()));
     }
     attributes.insert("draft".to_owned(), liquid::Value::Bool(front.is_draft));
     attributes.insert("is_post".to_owned(), liquid::Value::Bool(front.is_post));
@@ -221,13 +211,12 @@ pub struct Document {
 }
 
 impl Document {
-    pub fn new(
-        url_path: String,
-        file_path: PathBuf,
-        content: String,
-        attributes: liquid::Object,
-        front: frontmatter::Frontmatter,
-    ) -> Document {
+    pub fn new(url_path: String,
+               file_path: PathBuf,
+               content: String,
+               attributes: liquid::Object,
+               front: frontmatter::Frontmatter)
+               -> Document {
         Document {
             url_path: url_path,
             file_path: file_path,
@@ -237,12 +226,11 @@ impl Document {
         }
     }
 
-    pub fn parse(
-        root_path: &Path,
-        source_file: &Path,
-        dest_file: &Path,
-        default_front: frontmatter::FrontmatterBuilder,
-    ) -> Result<Document> {
+    pub fn parse(root_path: &Path,
+                 source_file: &Path,
+                 dest_file: &Path,
+                 default_front: frontmatter::FrontmatterBuilder)
+                 -> Result<Document> {
         trace!("Parsing {:?}", source_file);
         let content = read_document(root_path, source_file)?;
         let (front, content) = split_document(&content)?;
@@ -265,19 +253,15 @@ impl Document {
             (file_path, url_path)
         };
 
-        let doc_attributes = document_attributes(
-            &front,
-            source_file.to_str().unwrap_or(""),
-            url_path.as_ref(),
-        );
+        let doc_attributes = document_attributes(&front,
+                                                 source_file.to_str().unwrap_or(""),
+                                                 url_path.as_ref());
 
-        Ok(Document::new(
-            url_path,
-            file_path,
-            content.to_string(),
-            doc_attributes,
-            front,
-        ))
+        Ok(Document::new(url_path,
+                         file_path,
+                         content.to_string(),
+                         doc_attributes,
+                         front))
     }
 
 
@@ -340,20 +324,17 @@ impl Document {
     /// Takes `content` string and returns rendered HTML. This function doesn't
     /// take `"extends"` attribute into account. This function can be used for
     /// rendering content or excerpt.
-    fn render_html(
-        &self,
-        content: &str,
-        context: &mut Context,
-        source: &Path,
-        syntax_theme: &str,
-    ) -> Result<String> {
+    fn render_html(&self,
+                   content: &str,
+                   context: &mut Context,
+                   source: &Path,
+                   syntax_theme: &str)
+                   -> Result<String> {
         let mut options = LiquidOptions::default();
         options.template_repository = Box::new(LocalTemplateRepository::new(source.to_owned()));
         let highlight: Box<liquid::Block> = {
             let syntax_theme = syntax_theme.to_owned();
-            Box::new(move |_, args, tokens, _| {
-                initialize_codeblock(args, tokens, &syntax_theme)
-            })
+            Box::new(move |_, args, tokens, _| initialize_codeblock(args, tokens, &syntax_theme))
         };
         options.blocks.insert("highlight".to_string(), highlight);
         let template = try!(liquid::parse(content, options));
@@ -376,30 +357,29 @@ impl Document {
         let mut trail = String::new();
 
         if self.front.format == frontmatter::SourceFormat::Markdown &&
-            MARKDOWN_REF.is_match(&self.content)
-        {
+           MARKDOWN_REF.is_match(&self.content) {
             for mat in MARKDOWN_REF.find_iter(&self.content) {
                 trail.push_str(mat.as_str());
                 trail.push('\n');
             }
         }
         trail +
-            self.content.split(excerpt_separator).next().unwrap_or(
-                &self.content,
-            )
+        self.content
+            .split(excerpt_separator)
+            .next()
+            .unwrap_or(&self.content)
     }
 
     /// Renders excerpt and adds it to attributes of the document.
-    pub fn render_excerpt(
-        &mut self,
-        context: &mut Context,
-        source: &Path,
-        syntax_theme: &str,
-    ) -> Result<()> {
+    pub fn render_excerpt(&mut self,
+                          context: &mut Context,
+                          source: &Path,
+                          syntax_theme: &str)
+                          -> Result<()> {
         let excerpt_html = {
-            let excerpt_attr = self.attributes.get("excerpt").and_then(
-                |attr| attr.as_str(),
-            );
+            let excerpt_attr = self.attributes
+                .get("excerpt")
+                .and_then(|attr| attr.as_str());
 
             let excerpt_separator = &self.front.excerpt_separator;
 
@@ -408,19 +388,15 @@ impl Document {
             } else if excerpt_separator.is_empty() {
                 try!(self.render_html("", context, source, syntax_theme))
             } else {
-                try!(self.render_html(
-                    &self.extract_markdown_references(excerpt_separator),
-                    context,
-                    source,
-                    syntax_theme,
-                ))
+                try!(self.render_html(&self.extract_markdown_references(excerpt_separator),
+                                      context,
+                                      source,
+                                      syntax_theme))
             }
         };
 
-        self.attributes.insert(
-            "excerpt".to_owned(),
-            Value::Str(excerpt_html),
-        );
+        self.attributes
+            .insert("excerpt".to_owned(), Value::Str(excerpt_html));
         Ok(())
     }
 
@@ -433,44 +409,37 @@ impl Document {
     /// * layout may be inserted to layouts cache
     ///
     /// When we say "content" we mean only this document without extended layout.
-    pub fn render(
-        &mut self,
-        context: &mut Context,
-        source: &Path,
-        layouts_dir: &Path,
-        layouts_cache: &mut HashMap<String, String>,
-        syntax_theme: &str,
-    ) -> Result<String> {
-        let content_html = try!(self.render_html(
-            &self.content,
-            context,
-            source,
-            syntax_theme,
-        ));
-        self.attributes.insert(
-            "content".to_owned(),
-            Value::Str(content_html.clone()),
-        );
+    pub fn render(&mut self,
+                  context: &mut Context,
+                  source: &Path,
+                  layouts_dir: &Path,
+                  layouts_cache: &mut HashMap<String, String>,
+                  syntax_theme: &str)
+                  -> Result<String> {
+        let content_html = try!(self.render_html(&self.content, context, source, syntax_theme));
+        self.attributes
+            .insert("content".to_owned(), Value::Str(content_html.clone()));
         context.set_val("content", Value::Str(content_html.clone()));
 
         if let Some(ref layout) = self.front.layout {
             let layout_data_ref = match layouts_cache.entry(layout.to_owned()) {
                 Entry::Vacant(vacant) => {
                     let layout_data = try!(read_file(layouts_dir.join(layout)).map_err(|e| {
-                        format!(
+                                                                                           format!(
                             "Layout {} can not be read (defined in {:?}): {}",
                             layout,
                             self.file_path,
                             e
                         )
-                    }));
+                                                                                       }));
                     vacant.insert(layout_data)
                 }
                 Entry::Occupied(occupied) => occupied.into_mut(),
             };
 
             let mut options = LiquidOptions::default();
-            options.template_repository = Box::new(LocalTemplateRepository::new(source.to_owned()));
+            options.template_repository =
+                Box::new(LocalTemplateRepository::new(source.to_owned()));
             let template = try!(liquid::parse(layout_data_ref, options));
             Ok(try!(template.render(context)).unwrap_or_default())
         } else {
@@ -494,9 +463,10 @@ impl Document {
                 let frontmatter = serde_yaml::to_string(&self.front)?;
                 let content = self.content.clone();
                 let ext = match self.front.format {
-                    frontmatter::SourceFormat::Raw => "liquid",
-                    frontmatter::SourceFormat::Markdown => "md",
-                }.to_owned();
+                        frontmatter::SourceFormat::Raw => "liquid",
+                        frontmatter::SourceFormat::Markdown => "md",
+                    }
+                    .to_owned();
                 let content = itertools::join(&[frontmatter, "---".to_owned(), content], "\n");
                 Ok((content, ext))
             }

@@ -49,8 +49,8 @@
 
 extern crate cobalt;
 extern crate env_logger;
-extern crate notify;
 extern crate ghp;
+extern crate notify;
 
 extern crate hyper;
 
@@ -243,7 +243,7 @@ fn run() -> Result<()> {
                                  .value_name("DIR")
                                  .help("Output dir of converted posts")
                                  .takes_value(true)
-                                 .default_value("./")));
+                                 .default_value("./posts")));
 
     let global_matches = app_cli.get_matches();
 
