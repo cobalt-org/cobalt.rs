@@ -136,7 +136,7 @@ impl Config {
                             .into())
             }
             Err(err) => {
-                warn!("Syntax theme named '{}' ignored. Reason: {:?}",
+                warn!("Syntax theme named '{}' ignored. Reason: {}",
                       config.syntax_highlight.theme,
                       err);
                 Ok(())

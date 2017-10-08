@@ -353,7 +353,7 @@ impl Document {
     }
 
     /// Extracts references iff markdown content.
-    pub fn extract_markdown_references(&self, excerpt_separator: &str) -> String {
+    fn extract_markdown_references(&self, excerpt_separator: &str) -> String {
         let mut trail = String::new();
 
         if self.front.format == frontmatter::SourceFormat::Markdown &&

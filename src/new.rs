@@ -1,7 +1,7 @@
 use std::path::Path;
-use std::fs::{DirBuilder, OpenOptions};
+use std::fs;
 use std::io::Write;
-use error::Result;
+use error::*;
 use config::Config;
 
 const COBALT_YML: &'static [u8] = b"name: cobalt blog
@@ -70,18 +70,20 @@ const INDEX_LIQUID: &'static [u8] = b"extends: default.liquid
 ";
 
 pub fn create_new_project<P: AsRef<Path>>(dest: P) -> Result<()> {
-    let dest = dest.as_ref();
+    create_new_project_for_path(dest.as_ref())
+}
 
-    create_folder(&dest)?;
+pub fn create_new_project_for_path(dest: &Path) -> Result<()> {
+    fs::create_dir_all(dest)?;
 
     create_file(&dest.join(".cobalt.yml"), COBALT_YML)?;
     create_file(&dest.join("index.liquid"), INDEX_LIQUID)?;
 
-    create_folder(&dest.join("_layouts"))?;
+    fs::create_dir_all(&dest.join("_layouts"))?;
     create_file(&dest.join("_layouts/default.liquid"), DEFAULT_LAYOUT)?;
     create_file(&dest.join("_layouts/post.liquid"), POST_LAYOUT)?;
 
-    create_folder(&dest.join("posts"))?;
+    fs::create_dir_all(&dest.join("posts"))?;
     create_file(&dest.join("posts/post-1.md"), POST_MD)?;
 
     Ok(())
@@ -100,21 +102,18 @@ pub fn create_new_document(doc_type: &str, name: &str, config: &Config) -> Resul
     Ok(())
 }
 
-fn create_folder<P: AsRef<Path>>(path: P) -> Result<()> {
-    trace!("Creating folder {:?}", &path.as_ref());
-
-    DirBuilder::new().recursive(true).create(path)?;
-
-    Ok(())
+fn create_file<P: AsRef<Path>>(path: P, content: &[u8]) -> Result<()> {
+    create_file_for_path(path.as_ref(), content)
 }
 
-fn create_file<P: AsRef<Path>>(name: P, content: &[u8]) -> Result<()> {
-    trace!("Creating file {:?}", &name.as_ref());
+fn create_file_for_path(path: &Path, content: &[u8]) -> Result<()> {
+    trace!("Creating file {:?}", path);
 
-    let mut file = OpenOptions::new()
+    let mut file = fs::OpenOptions::new()
         .write(true)
         .create_new(true)
-        .open(name)?;
+        .open(path)
+        .chain_err(|| format!("Failed to create file {:?}", path))?;
 
     file.write_all(content)?;
 
