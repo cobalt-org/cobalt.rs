@@ -261,3 +261,13 @@ pub fn sass() {
 pub fn sass_custom_config() {
     run_test("sass_custom_config").expect("Build error");
 }
+
+#[test]
+pub fn data_files() {
+    run_test("data_files").expect("Build error");
+}
+
+#[test]
+pub fn data_files_custom_folder() {
+    run_test("custom_data_folder").expect("Build error");
+}
