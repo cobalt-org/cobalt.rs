@@ -9,7 +9,7 @@ use std::convert::From;
 error_chain! {
 
     links {
-        Another(super::error::Error, super::error::ErrorKind);
+       Another(super::error::Error, super::error::ErrorKind);
     }
 
     foreign_links {

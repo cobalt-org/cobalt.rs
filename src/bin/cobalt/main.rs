@@ -364,7 +364,9 @@ fn run() -> Result<()> {
             "convert-jekyll" => {
                 let source = matches.value_of("source").unwrap().to_string();
                 let dest = matches.value_of("destination").unwrap().to_string();
-                jekyll::jk_document::convert_from_jk(Path::new(&source), Path::new(&dest))?;
+                jekyll::jk_document::convert_from_jk(std::path::Path::new(&source),
+                                                     std::path::Path::new(&dest))
+                        .chain_err(|| "Jekyll conversion failed.")
             }
             _ => {
                 bail!(global_matches.usage());
