@@ -123,7 +123,7 @@ impl JkDocument {
         if !dest_dir.exists() {
             create_dir_all(&dest_dir)?;
         }
-        let dest_file = dest_dir.join(source_file.file_name().unwrap());
+        let dest_file = dest_dir.join(source_file.with_extension("md").file_name().unwrap());
         let mut dest = File::create(dest_file)?;
         let converted = format!("{}\n---\n{}", &front, &doc.content.unwrap());
         dest.write_all(converted.as_bytes())?;
