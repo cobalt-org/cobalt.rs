@@ -97,6 +97,7 @@ mod slug;
 mod datetime;
 mod frontmatter;
 
+pub mod jekyll;
 mod legacy;
 mod syntax_highlight;
 
