@@ -62,7 +62,7 @@ extern crate sass_rs;
 
 extern crate itertools;
 
-#[cfg(all(feature="syntax-highlight", not(windows)))]
+#[cfg(all(feature = "syntax-highlight", not(windows)))]
 extern crate syntect;
 
 #[macro_use]
@@ -97,6 +97,7 @@ mod slug;
 mod datetime;
 mod frontmatter;
 
+pub mod jekyll;
 mod legacy;
 mod syntax_highlight;
 
