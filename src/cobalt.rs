@@ -8,10 +8,15 @@ use rss;
 use jsonfeed::Feed;
 use jsonfeed;
 
+#[cfg(feature = "sass")]
+use sass_rs;
+
 use datetime;
 use document::Document;
 use error::*;
 use config::{Config, SortOrder};
+#[cfg(feature = "sass")]
+use config::SassOutputStyle;
 use files::FilesBuilder;
 use frontmatter;
 
@@ -235,8 +240,10 @@ pub fn build(config: &Config) -> Result<()> {
     }
 
     // copy all remaining files in the source to the destination
+    // compile SASS along the way
     {
         info!("Copying remaining assets");
+
         let mut asset_files = FilesBuilder::new(source)?;
         for line in &config.ignore {
             asset_files.add_ignore(line.as_str())?;
@@ -259,15 +266,55 @@ pub fn build(config: &Config) -> Result<()> {
                     fs::create_dir_all(parent_dir)?;
                 }
             }
-            let src_file = source.join(file_path.as_path());
-            let dest_file = dest.join(file_path);
 
-            debug!("Copying {:?} to {:?}", src_file, dest_file);
-            fs::copy(src_file.as_path(), dest_file.as_path())
-                .map_err(|e| format!("Could not copy {:?} into {:?}: {}", src_file, dest_file, e))?;
+            #[cfg(feature = "sass")]
+            {
+                let mut sass_opts = sass_rs::Options::default();
+                sass_opts.include_paths = vec![source
+                                                   .join(&config.sass.import_dir)
+                                                   .into_os_string()
+                                                   .into_string()
+                                                   .unwrap()];
+                sass_opts.output_style = match config.sass.style {
+                    SassOutputStyle::Nested => sass_rs::OutputStyle::Nested,
+                    SassOutputStyle::Expanded => sass_rs::OutputStyle::Expanded,
+                    SassOutputStyle::Compact => sass_rs::OutputStyle::Compact,
+                    SassOutputStyle::Compressed => sass_rs::OutputStyle::Compressed,
+                };
+
+                let src_file = source.join(file_path.as_path());
+                if file_path.extension() == Some(OsStr::new("scss")) {
+                    let content = sass_rs::compile_file(src_file.as_path(), sass_opts.clone())?;
+                    let mut dest_file = dest.join(file_path.clone());
+                    dest_file.set_extension("css");
+
+                    let mut file =
+                        File::create(&dest_file)
+                            .map_err(|e| format!("Could not create {:?}: {}", file_path, e))?;
+
+                    file.write_all(content.as_bytes())?;
+
+                } else {
+                    copy_file(src_file.as_path(), dest.join(file_path).as_path())?;
+                }
+            }
+
+            #[cfg(not(feature = "sass"))]
+            {
+
+                let src_file = source.join(file_path.as_path());
+                copy_file(src_file.as_path(), dest.join(file_path).as_path())?;
+            }
         }
     }
 
+    Ok(())
+}
+
+fn copy_file(src_file: &Path, dest_file: &Path) -> Result<()> {
+    debug!("Copying {:?} to {:?}", src_file, dest_file);
+    fs::copy(src_file, dest_file)
+        .map_err(|e| format!("Could not copy {:?} into {:?}: {}", src_file, dest_file, e))?;
     Ok(())
 }
 
