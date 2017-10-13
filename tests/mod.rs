@@ -249,3 +249,15 @@ pub fn empty_frontmatter() {
 pub fn querystrings() {
     run_test("querystrings").expect("Build error");
 }
+
+#[cfg(feature = "sass")]
+#[test]
+pub fn sass() {
+    run_test("sass").expect("Build error");
+}
+
+#[cfg(feature = "sass")]
+#[test]
+pub fn sass_custom_config() {
+    run_test("sass_custom_config").expect("Build error");
+}

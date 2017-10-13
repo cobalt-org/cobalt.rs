@@ -67,6 +67,33 @@ impl From<FrontmatterBuilder> for frontmatter::FrontmatterBuilder {
     }
 }
 
+#[derive(Debug, Eq, PartialEq, Hash, Copy, Clone)]
+#[derive(Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub enum SassOutputStyle {
+    Nested,
+    Expanded,
+    Compact,
+    Compressed,
+}
+
+#[derive(Debug, PartialEq)]
+#[derive(Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct SassOptions {
+    pub import_dir: String,
+    pub style: SassOutputStyle,
+}
+
+impl Default for SassOptions {
+    fn default() -> SassOptions {
+        SassOptions {
+            import_dir: "_sass".to_owned(),
+            style: SassOutputStyle::Nested,
+        }
+    }
+}
+
 #[derive(Debug, PartialEq)]
 #[derive(Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -101,6 +128,7 @@ pub struct GlobalConfig {
     pub ignore: Vec<String>,
     pub excerpt_separator: String,
     pub syntax_highlight: SyntaxHighlight,
+    pub sass: SassOptions,
 }
 
 impl Default for GlobalConfig {
@@ -123,6 +151,7 @@ impl Default for GlobalConfig {
             ignore: vec![],
             excerpt_separator: "\n\n".to_owned(),
             syntax_highlight: SyntaxHighlight::default(),
+            sass: SassOptions::default(),
         }
     }
 }
@@ -147,6 +176,7 @@ impl From<GlobalConfig> for config::Config {
             ignore,
             excerpt_separator,
             syntax_highlight,
+            sass,
         } = legacy;
 
         let post_order = match post_order.as_ref() {
@@ -155,6 +185,15 @@ impl From<GlobalConfig> for config::Config {
         };
 
         let syntax_highlight = config::SyntaxHighlight { theme: syntax_highlight.theme };
+        let sass = config::SassOptions {
+            import_dir: sass.import_dir,
+            style: match sass.style {
+                SassOutputStyle::Nested => config::SassOutputStyle::Nested,
+                SassOutputStyle::Expanded => config::SassOutputStyle::Expanded,
+                SassOutputStyle::Compact => config::SassOutputStyle::Compact,
+                SassOutputStyle::Compressed => config::SassOutputStyle::Compressed,
+            },
+        };
 
         config::Config {
             source: source,
@@ -175,6 +214,7 @@ impl From<GlobalConfig> for config::Config {
             excerpt_separator: excerpt_separator,
             dump: vec![],
             syntax_highlight: syntax_highlight,
+            sass: sass,
         }
     }
 }
