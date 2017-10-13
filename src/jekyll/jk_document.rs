@@ -78,25 +78,16 @@ impl From<JkFrontmatterBuilder> for frontmatter::FrontmatterBuilder {
 #[derive(Debug, Default, Clone, Eq, PartialEq, Serialize, Deserialize)]
 pub struct JkDocument {
     pub front: Option<String>,
-    pub content: Option<String>,
+    pub content: String,
 }
 
 impl JkDocument {
     pub fn parse_string(doc: String) -> Result<JkDocument> {
         let (front, content) = split_document(&doc)?;
-        if front != None {
-            Err(ErrorKind::MissingFrontStart.into())
-        } else {
-            match split_document(content)? {
-                (None, _) => Err(ErrorKind::MissingFrontmatter.into()),
-                (Some(front), content) => {
-                    Ok(JkDocument {
-                           front: Some(front.to_owned()),
-                           content: Some(content.to_owned()),
-                       })
-                }
-            }
-        }
+        Ok(JkDocument {
+               front: front.map(|s| s.to_owned()),
+               content: content.to_owned(),
+           })
     }
 
     pub fn parse(source_file: &Path) -> Result<JkDocument> {
@@ -104,12 +95,8 @@ impl JkDocument {
         JkDocument::parse_string(doc)
     }
 
-    pub fn convert_front(front: Option<String>) -> Result<String> {
-        let front_value: JkFrontmatterBuilder = front
-            .map(|s| serde_yaml::from_str(&s))
-            .map_or(Ok(None), |r| r.map(Some))?
-            .unwrap_or_else(JkFrontmatterBuilder::new);
-
+    pub fn convert_front(front: String) -> Result<String> {
+        let front_value: JkFrontmatterBuilder = serde_yaml::from_str(&front)?;
         let front_builder: FrontmatterBuilder = front_value.into();
         let front = front_builder.build()?;
         let mut converted = serde_yaml::to_string(&front)?;
@@ -119,13 +106,20 @@ impl JkDocument {
 
     pub fn convert(source_file: &Path, dest_dir: &Path) -> Result<()> {
         let doc = JkDocument::parse(source_file)?;
-        let front = JkDocument::convert_front(doc.front)?;
+        let front = match doc.front {
+            Some(front) => Some(JkDocument::convert_front(front)?),
+            None => None,
+        };
+
         if !dest_dir.exists() {
             create_dir_all(&dest_dir)?;
         }
         let dest_file = dest_dir.join(source_file.with_extension("md").file_name().unwrap());
         let mut dest = File::create(dest_file)?;
-        let converted = format!("{}\n---\n{}", &front, &doc.content.unwrap());
+        let converted = match front {
+            Some(front) => format!("{}\n---\n{}", &front, &doc.content),
+            None => doc.content,
+        };
         dest.write_all(converted.as_bytes())?;
         Ok(())
     }
@@ -141,8 +135,14 @@ pub fn convert_from_jk(source: &Path, dest: &Path) -> Result<()> {
             if let Ok(file) = file {
                 let file_path = file.path();
                 let ext = file_path.extension().unwrap_or(OsStr::new(""));
-                if ext == "md" || ext == "markdown" {
-                    JkDocument::convert(&file.path(), dest)?
+                if file_path.is_file() {
+                    if ext == "md" || ext == "markdown" {
+                        JkDocument::convert(&file.path(), dest)?
+                    } else {
+                        warn!("unsupported file extension")
+                    }
+                } else {
+                    warn!("sub directory parsing is not supported yet")
                 }
             }
         }
@@ -161,18 +161,25 @@ fn read_file<P: AsRef<Path>>(path: P) -> Result<String> {
 
 fn split_document(content: &str) -> Result<(Option<&str>, &str)> {
     if FRONT_MATTER_DIVIDE.is_match(content) {
-        let mut splits = FRONT_MATTER_DIVIDE.splitn(content, 2);
+        let mut splits = FRONT_MATTER_DIVIDE.splitn(content, 3);
+        let first = splits.next().unwrap_or("");
+        let second = splits.next().unwrap_or("");
+        let third = splits.next().unwrap_or("");
 
-        // above the split are the attributes
-        let front_split = splits.next().unwrap_or("");
-
-        // everything below the split becomes the new content
-        let content_split = splits.next().unwrap_or("");
-
-        if front_split.is_empty() {
-            Ok((None, content_split))
+        if third.is_empty() {
+            // only one "---"
+            if first.is_empty() {
+                Ok((None, second))
+            } else {
+                Ok((Some(first), second))
+            }
         } else {
-            Ok((Some(front_split), content_split))
+            // first should be empty
+            if second.is_empty() {
+                Ok((None, third))
+            } else {
+                Ok((Some(second), third))
+            }
         }
     } else {
         Ok((None, content))
@@ -223,33 +230,31 @@ tags:
         let res = JkDocument::parse_string(correct_doc);
         assert!(res.is_ok());
         let doc = res.unwrap();
-        assert_eq!(doc.content.unwrap(), CORRECT_CONTENT);
+        assert_eq!(doc.content, CORRECT_CONTENT);
         assert_eq!(doc.front.unwrap(), CORRECT_JK_FRONT);
     }
 
     #[test]
     fn parse_string_no_front() {
         let res = JkDocument::parse_string(CORRECT_CONTENT.to_owned());
-        assert!(res.is_err());
-        // ErrorKind can't implement PartialEq, hence comparing description instead
-        assert_eq!(res.unwrap_err().description(),
-                   "Malformed jekyll document, missing frontmatter");
+        assert!(res.is_ok());
+        let doc = res.unwrap();
+        assert_eq!(doc.content, CORRECT_CONTENT);
     }
 
     #[test]
     fn parse_string_no_front_starter() {
         let correct_doc = format!("{}---\n{}", CORRECT_JK_FRONT, CORRECT_CONTENT);
         let res = JkDocument::parse_string(correct_doc);
-
-        assert!(res.is_err());
-        // ErrorKind can't implement PartialEq, hence comparing description instead
-        assert_eq!(res.unwrap_err().description(),
-                   "Malformed jekyll document, missing frontmatter start");
+        assert!(res.is_ok());
+        let doc = res.unwrap();
+        assert_eq!(doc.content, CORRECT_CONTENT);
+        assert_eq!(doc.front.unwrap(), CORRECT_JK_FRONT);
     }
 
     #[test]
     fn convert_front_ok() {
-        let res = JkDocument::convert_front(Some(CORRECT_JK_FRONT.to_owned()));
+        let res = JkDocument::convert_front(CORRECT_JK_FRONT.to_owned());
         match res {
             Err(e) => println!("error convert: {:#?}", e),
             Ok(mut converted) => {

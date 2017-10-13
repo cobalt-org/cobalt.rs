@@ -18,16 +18,6 @@ error_chain! {
     }
 
     errors {
-        MissingFrontStart {
-            description("Malformed jekyll document, missing frontmatter start")
-            display("Malformed jekyll document, missing frontmatter start")
-        }
-
-        MissingFrontmatter {
-            description("Malformed jekyll document, missing frontmatter")
-            display("Malformed jekyll document, missing frontmatter")
-        }
-
         CantOutputInFile {
             description("Destination must be a directory")
             display("Destination must be a directory")
