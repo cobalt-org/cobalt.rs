@@ -145,14 +145,24 @@ More examples:
 date: 01 Jan 2016 21:00:00 +0100
 path: /:year/:month/:day/thing.html
 ```
--> `/2016/01/01/thing.html`
+→ `/2016/01/01/thing.html`
 
 ```yaml
 date: 01 Jan 2016 21:00:00 +0100
 author: johann
 path: /:author/:year/:month/:day/title
 ```
--> `/johann/2016/01/01/title/index.html`
+→ `/johann/2016/01/01/title/index.html`
+
+You can use `:slug` to include a [slugified](https://en.wikipedia.org/wiki/Semantic_URL#Slug) version of the title in the path.
+E.g. using `post_path` in `.cobalt.yml`:
+
+```yaml
+post_path: /post/:slug
+```
+→ `/post/dashed-version-of-title/index.html`  
+→ `/post/another-post-title/index.html`
+
 
 ### Attributes
 
