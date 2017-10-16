@@ -7,3 +7,6 @@
 .*.swp
 /.vscode
 
+# IntelliJ files
+/.idea
+*.iml
