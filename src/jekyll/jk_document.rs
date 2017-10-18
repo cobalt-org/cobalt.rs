@@ -167,20 +167,13 @@ fn split_document(content: &str) -> Result<(Option<&str>, &str)> {
         let second = splits.next().unwrap_or("");
         let third = splits.next().unwrap_or("");
 
-        if third.is_empty() {
-            // only one "---"
-            if first.is_empty() {
-                Ok((None, second))
-            } else {
-                Ok((Some(first), second))
-            }
+        if !first.is_empty() {
+            bail!("Invalid leading text in frontmatter: {:?}", first);
+        }
+        if second.is_empty() {
+            Ok((None, third))
         } else {
-            // first should be empty
-            if second.is_empty() {
-                Ok((None, third))
-            } else {
-                Ok((Some(second), third))
-            }
+            Ok((Some(second), third))
         }
     } else {
         Ok((None, content))
@@ -229,7 +222,6 @@ mod test {
     }
 
     #[test]
-    #[ignore] // TODO(epage): This should pass
     fn split_document_empty_content() {
         let fixture = "---\ntitle: test_post\n---\n";
 
