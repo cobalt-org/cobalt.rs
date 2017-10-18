@@ -1,0 +1,9 @@
+---
+
+<h1>Highest Grossing Movies</h1>
+
+<ul>
+{% for movie in site.data.movies %}
+  <li>{{movie.name}} ({{movie.year}}): {{movie.grossed}}</li>
+{% endfor %}
+</ul>

@@ -6,6 +6,8 @@ use walkdir;
 use liquid;
 use ignore;
 use serde_yaml;
+use serde_json;
+use toml;
 
 error_chain! {
 
@@ -17,6 +19,8 @@ error_chain! {
         Liquid(liquid::Error);
         WalkDir(walkdir::Error);
         SerdeYaml(serde_yaml::Error);
+        SerdeJson(serde_json::Error);
+        Toml(toml::de::Error);
         Ignore(ignore::Error);
     }
 

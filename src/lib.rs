@@ -56,6 +56,8 @@ extern crate rss;
 extern crate jsonfeed;
 extern crate walkdir;
 extern crate serde_yaml;
+extern crate serde_json;
+extern crate toml;
 
 #[cfg(feature = "sass")]
 extern crate sass_rs;
