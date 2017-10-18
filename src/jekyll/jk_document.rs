@@ -10,6 +10,7 @@ use serde_yaml;
 
 use frontmatter;
 use datetime;
+use legacy::wildwest;
 use jekyll::jk_errors::{ErrorKind, Result};
 
 lazy_static! {
@@ -25,11 +26,11 @@ impl JkFrontmatterBuilder {
     }
 }
 
-impl From<JkFrontmatterBuilder> for frontmatter::FrontmatterBuilder {
+impl From<JkFrontmatterBuilder> for wildwest::FrontmatterBuilder {
     fn from(jk_front: JkFrontmatterBuilder) -> Self {
         // Convert jekyll frontmatter into frontmatter (with `custom`)
         let mut custom_attributes = jk_front.0;
-        frontmatter::FrontmatterBuilder::new()
+        let front = frontmatter::FrontmatterBuilder::new()
             .merge_slug(custom_attributes
                             .remove("slug")
                             .and_then(|v| v.as_str().map(|s| s.to_owned())))
@@ -63,13 +64,14 @@ impl From<JkFrontmatterBuilder> for frontmatter::FrontmatterBuilder {
                                       .and_then(|d| {
                                                     d.as_str().and_then(datetime::DateTime::parse)
                                                 }))
-            .merge_custom(custom_attributes)
+            .merge_custom(custom_attributes);
+        front.into()
     }
 }
 
 #[derive(Debug, Default, Clone, Eq, PartialEq, Serialize, Deserialize)]
 pub struct JkDocument {
-    front: frontmatter::FrontmatterBuilder,
+    front: wildwest::FrontmatterBuilder,
     content: String,
 }
 
@@ -80,7 +82,7 @@ impl JkDocument {
             front
                 .map(|f| serde_yaml::from_str(f))
                 .unwrap_or_else(|| Ok(JkFrontmatterBuilder::default()))?;
-        let front: frontmatter::FrontmatterBuilder = front.into();
+        let front: wildwest::FrontmatterBuilder = front.into();
 
         Ok(JkDocument {
                front: front,
@@ -105,7 +107,7 @@ impl JkDocument {
     }
 }
 
-fn dump_front(front: frontmatter::FrontmatterBuilder) -> Result<String> {
+fn dump_front(front: wildwest::FrontmatterBuilder) -> Result<String> {
     let mut converted = serde_yaml::to_string(&front)?;
     converted.drain(..4);
     Ok(converted)
@@ -189,7 +191,6 @@ fn split_document(content: &str) -> Result<(Option<&str>, &str)> {
 #[cfg(test)]
 mod test {
     use super::*;
-    use std::collections::HashMap;
 
     #[test]
     fn split_document_empty_document() {
@@ -249,24 +250,10 @@ mod test {
     #[test]
     fn frontmatter_empty() {
         let front = JkFrontmatterBuilder::default();
-        let _front: frontmatter::FrontmatterBuilder = front.into();
+        let _front: wildwest::FrontmatterBuilder = front.into();
 
         // TODO(epage): Confirm jekyll defaults overrode cobalt defaults
     }
-
-    // can't have custom: the order of fields is not stable
-    // can't use r# strings because of https://github.com/rust-lang-nursery/rustfmt/issues/878
-    static EXPECTED_FULL: &str = "path: /2017/05/03/test_post/\n\
-                                     slug: ~\n\
-                                     title: test_post\n\
-                                     description: ~\n\
-                                     categories: \n  - cat1\n  - cat2\n\
-                                     excerpt_separator: ~\n\
-                                     published_date: ~\n\
-                                     format: ~\n\
-                                     layout: post\n\
-                                     is_draft: ~\n\
-                                     custom: {}";
 
     static FIXTURE_FULL: &str = r#"title: test_post
 date: 2017-05-03T20:55:07+00:00
@@ -280,9 +267,20 @@ categories:
     #[test]
     fn frontmatter_full() {
         let front: JkFrontmatterBuilder = serde_yaml::from_str(FIXTURE_FULL).unwrap();
-        let front: frontmatter::FrontmatterBuilder = front.into();
-        let actual = dump_front(front).unwrap();
-        assert_eq!(actual, EXPECTED_FULL);
+        let front: wildwest::FrontmatterBuilder = front.into();
+        let front = dump_front(front).unwrap();
+        let front: liquid::Object = serde_yaml::from_str(&front).unwrap();
+
+        let expected: liquid::Object =
+            [("path".to_owned(), liquid::Value::str("/2017/05/03/test_post/")),
+             ("title".to_owned(), liquid::Value::str("test_post")),
+             ("extends".to_owned(), liquid::Value::str("post")),
+             ("categories".to_owned(),
+              liquid::Value::Array(vec![liquid::Value::str("cat1"), liquid::Value::str("cat2")]))]
+                    .iter()
+                    .cloned()
+                    .collect();
+        assert_eq!(front, expected);
     }
 
     static FIXTURE_CUSTOM: &str = r#"id: 33
@@ -298,30 +296,36 @@ tags:
     #[test]
     fn frontmatter_custom() {
         let front: JkFrontmatterBuilder = serde_yaml::from_str(FIXTURE_CUSTOM).unwrap();
-        let front: frontmatter::FrontmatterBuilder = front.into();
+        let front: wildwest::FrontmatterBuilder = front.into();
+        let front = dump_front(front).unwrap();
+        let front: liquid::Object = serde_yaml::from_str(&front).unwrap();
 
-        let expected: HashMap<String, liquid::Value> =
-            [("guid".to_owned(), liquid::Value::str("http://url.com/?p=33")),
-             ("id".to_owned(), liquid::Value::Num(33.0f32)),
-             ("author".to_owned(), liquid::Value::str("TheAuthor")),
-             ("tags".to_owned(),
-              liquid::Value::Array(vec![liquid::Value::str("tag1"),
-                                        liquid::Value::str("tag2"),
-                                        liquid::Value::str("tag3")]))]
-                    .iter()
-                    .cloned()
-                    .collect();
-        assert_eq!(front.custom, expected);
+        let expected: liquid::Object = [("id".to_owned(), liquid::Value::Num(33.0f32)),
+                                        ("title".to_owned(), liquid::Value::str("test_post")),
+                                        ("author".to_owned(), liquid::Value::str("TheAuthor")),
+                                        ("guid".to_owned(),
+                                         liquid::Value::str("http://url.com/?p=33")),
+                                        ("tags".to_owned(),
+                                         liquid::Value::Array(vec![liquid::Value::str("tag1"),
+                                                                   liquid::Value::str("tag2"),
+                                                                   liquid::Value::str("tag3")]))]
+                .iter()
+                .cloned()
+                .collect();
+        assert_eq!(front, expected);
     }
+
+    static FIXTURE_MINIMAL: &str = r#"title: test_post"#;
+    static EXPECTED_MINIMAL: &str = r#"title: test_post"#;
 
     #[test]
     fn parse_string_ok() {
-        let fixture = format!("---\n{}---\nthe content\n", FIXTURE_FULL);
+        let fixture = format!("---\n{}---\nthe content\n", FIXTURE_MINIMAL);
 
         let doc = JkDocument::parse_string(fixture).unwrap();
         let actual = doc.dump().unwrap();
 
-        let expected = format!("{}\n---\nthe content\n", EXPECTED_FULL);
+        let expected = format!("{}\n---\nthe content\n", EXPECTED_MINIMAL);
         assert_eq!(actual, expected);
     }
 }
