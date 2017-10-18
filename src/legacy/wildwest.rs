@@ -67,6 +67,64 @@ impl From<FrontmatterBuilder> for frontmatter::FrontmatterBuilder {
     }
 }
 
+impl From<frontmatter::FrontmatterBuilder> for FrontmatterBuilder {
+    fn from(internal: frontmatter::FrontmatterBuilder) -> Self {
+        let mut legacy = liquid::Object::new();
+
+        let frontmatter::FrontmatterBuilder {
+            path,
+            slug,
+            title,
+            description,
+            categories,
+            excerpt_separator,
+            published_date,
+            format: _format,
+            layout,
+            is_draft,
+            is_post: _is_post,
+            custom,
+        } = internal;
+        if let Some(path) = path {
+            legacy.insert("path".to_owned(), liquid::Value::Str(path));
+        }
+        if let Some(slug) = slug {
+            legacy.insert("slug".to_owned(), liquid::Value::Str(slug));
+        }
+        if let Some(title) = title {
+            legacy.insert("title".to_owned(), liquid::Value::Str(title));
+        }
+        if let Some(description) = description {
+            legacy.insert("description".to_owned(), liquid::Value::Str(description));
+        }
+        if let Some(categories) = categories {
+            legacy.insert("categories".to_owned(),
+                          liquid::Value::Array(categories
+                                                   .into_iter()
+                                                   .map(|v| liquid::Value::Str(v))
+                                                   .collect()));
+        }
+        if let Some(excerpt_separator) = excerpt_separator {
+            legacy.insert("excerpt_separator".to_owned(),
+                          liquid::Value::Str(excerpt_separator));
+        }
+        if let Some(date) = published_date {
+            legacy.insert("date".to_owned(), liquid::Value::Str(date.format()));
+        }
+        if let Some(extends) = layout {
+            legacy.insert("extends".to_owned(), liquid::Value::Str(extends));
+        }
+        if let Some(draft) = is_draft {
+            legacy.insert("draft".to_owned(), liquid::Value::Bool(draft));
+        }
+        for (key, value) in custom.into_iter() {
+            legacy.insert(key, value);
+        }
+
+        FrontmatterBuilder(legacy)
+    }
+}
+
 #[derive(Debug, Eq, PartialEq, Hash, Copy, Clone)]
 #[derive(Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]

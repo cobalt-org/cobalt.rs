@@ -1,19 +1,20 @@
-use liquid;
-
-use super::super::frontmatter;
-use super::super::datetime;
-use std::fs::{create_dir_all, File};
+use std::ffi;
+use std::fs;
 use std::io::{Read, Write};
-use std::path::Path;
-use frontmatter::FrontmatterBuilder;
-use super::jk_errors::{ErrorKind, Result};
+use std::path;
+
+use itertools;
+use liquid;
+use regex;
 use serde_yaml;
-use regex::Regex;
-use slug::slugify;
-use std::ffi::OsStr;
+
+use frontmatter;
+use datetime;
+use legacy::wildwest;
+use jekyll::jk_errors::{ErrorKind, Result};
 
 lazy_static! {
-    static ref FRONT_MATTER_DIVIDE: Regex = Regex::new(r"---\s*\r?\n").unwrap();
+    static ref FRONT_MATTER_DIVIDE: regex::Regex = regex::Regex::new(r"---\s*\r?\n").unwrap();
 }
 
 #[derive(Debug, Eq, PartialEq, Default, Clone, Serialize, Deserialize)]
@@ -25,22 +26,14 @@ impl JkFrontmatterBuilder {
     }
 }
 
-impl From<JkFrontmatterBuilder> for frontmatter::FrontmatterBuilder {
+impl From<JkFrontmatterBuilder> for wildwest::FrontmatterBuilder {
     fn from(jk_front: JkFrontmatterBuilder) -> Self {
         // Convert jekyll frontmatter into frontmatter (with `custom`)
         let mut custom_attributes = jk_front.0;
-        frontmatter::FrontmatterBuilder::new()
+        let front = frontmatter::FrontmatterBuilder::new()
             .merge_slug(custom_attributes
                             .remove("slug")
-                            .and_then(|v| v.as_str().map(|s| s.to_owned()))
-                            .or_else(|| {
-                                         Some(slugify(custom_attributes
-                                 .get("title")
-                                 .unwrap_or(&liquid::Value::str("No Title"))
-                                 .as_str()
-                                 .unwrap()))
-                                     })
-                            .map(|s| s.to_owned()))
+                            .and_then(|v| v.as_str().map(|s| s.to_owned())))
             .merge_title(custom_attributes
                              .remove("title")
                              .and_then(|v| v.as_str().map(|s| s.to_owned())))
@@ -71,73 +64,81 @@ impl From<JkFrontmatterBuilder> for frontmatter::FrontmatterBuilder {
                                       .and_then(|d| {
                                                     d.as_str().and_then(datetime::DateTime::parse)
                                                 }))
-            .merge_custom(custom_attributes)
+            .merge_custom(custom_attributes);
+        front.into()
     }
 }
 
 #[derive(Debug, Default, Clone, Eq, PartialEq, Serialize, Deserialize)]
 pub struct JkDocument {
-    pub front: Option<String>,
-    pub content: String,
+    front: wildwest::FrontmatterBuilder,
+    content: String,
 }
 
 impl JkDocument {
     pub fn parse_string(doc: String) -> Result<JkDocument> {
         let (front, content) = split_document(&doc)?;
+        let front: JkFrontmatterBuilder =
+            front
+                .map(|f| serde_yaml::from_str(f))
+                .unwrap_or_else(|| Ok(JkFrontmatterBuilder::default()))?;
+        let front: wildwest::FrontmatterBuilder = front.into();
+
         Ok(JkDocument {
-               front: front.map(|s| s.to_owned()),
+               front: front,
                content: content.to_owned(),
            })
     }
 
-    pub fn parse(source_file: &Path) -> Result<JkDocument> {
+    pub fn parse(source_file: &path::Path) -> Result<JkDocument> {
         let doc: String = read_file(source_file)?;
         JkDocument::parse_string(doc)
     }
 
-    pub fn convert_front(front: String) -> Result<String> {
-        let front_value: JkFrontmatterBuilder = serde_yaml::from_str(&front)?;
-        let front_builder: FrontmatterBuilder = front_value.into();
-        let front = front_builder.build()?;
-        let mut converted = serde_yaml::to_string(&front)?;
-        converted.drain(..4);
+
+    pub fn dump(self) -> Result<String> {
+        let front = self.front;
+        let front = dump_front(front)?;
+
+        let content = self.content;
+
+        let converted = itertools::join(&[front, "---".to_owned(), content], "\n");
         Ok(converted)
-    }
-
-    pub fn convert(source_file: &Path, dest_dir: &Path) -> Result<()> {
-        let doc = JkDocument::parse(source_file)?;
-        let front = match doc.front {
-            Some(front) => Some(JkDocument::convert_front(front)?),
-            None => None,
-        };
-
-        if !dest_dir.exists() {
-            create_dir_all(&dest_dir)?;
-        }
-        let dest_file = dest_dir.join(source_file.with_extension("md").file_name().unwrap());
-        let mut dest = File::create(dest_file)?;
-        let converted = match front {
-            Some(front) => format!("{}\n---\n{}", &front, &doc.content),
-            None => doc.content,
-        };
-        dest.write_all(converted.as_bytes())?;
-        Ok(())
     }
 }
 
-pub fn convert_from_jk(source: &Path, dest: &Path) -> Result<()> {
+fn dump_front(front: wildwest::FrontmatterBuilder) -> Result<String> {
+    let mut converted = serde_yaml::to_string(&front)?;
+    converted.drain(..4);
+    Ok(converted)
+}
+
+fn convert_document(source_file: &path::Path, dest_dir: &path::Path) -> Result<()> {
+    let doc = JkDocument::parse(source_file)?;
+    let converted = doc.dump()?;
+    let dest_file = dest_dir.join(source_file.with_extension("md").file_name().unwrap());
+
+    if !dest_dir.exists() {
+        fs::create_dir_all(&dest_dir)?;
+    }
+    let mut dest = fs::File::create(dest_file)?;
+    dest.write_all(converted.as_bytes())?;
+    Ok(())
+}
+
+pub fn convert_from_jk(source: &path::Path, dest: &path::Path) -> Result<()> {
     if dest.is_file() {
         Err(ErrorKind::CantOutputInFile.into())
     } else if source.is_file() {
-        JkDocument::convert(source, dest)
+        convert_document(source, dest)
     } else if source.is_dir() {
         for file in source.read_dir()? {
             if let Ok(file) = file {
                 let file_path = file.path();
-                let ext = file_path.extension().unwrap_or(OsStr::new(""));
+                let ext = file_path.extension().unwrap_or(ffi::OsStr::new(""));
                 if file_path.is_file() {
                     if ext == "md" || ext == "markdown" {
-                        JkDocument::convert(&file.path(), dest)?
+                        convert_document(&file.path(), dest)?
                     } else {
                         warn!("unsupported file extension")
                     }
@@ -152,8 +153,8 @@ pub fn convert_from_jk(source: &Path, dest: &Path) -> Result<()> {
     }
 }
 
-fn read_file<P: AsRef<Path>>(path: P) -> Result<String> {
-    let mut file = File::open(path.as_ref())?;
+fn read_file<P: AsRef<path::Path>>(path: P) -> Result<String> {
+    let mut file = fs::File::open(path.as_ref())?;
     let mut text = String::new();
     file.read_to_string(&mut text)?;
     Ok(text)
@@ -166,20 +167,13 @@ fn split_document(content: &str) -> Result<(Option<&str>, &str)> {
         let second = splits.next().unwrap_or("");
         let third = splits.next().unwrap_or("");
 
-        if third.is_empty() {
-            // only one "---"
-            if first.is_empty() {
-                Ok((None, second))
-            } else {
-                Ok((Some(first), second))
-            }
+        if !first.is_empty() {
+            bail!("Invalid leading text in frontmatter: {:?}", first);
+        }
+        if second.is_empty() {
+            Ok((None, third))
         } else {
-            // first should be empty
-            if second.is_empty() {
-                Ok((None, third))
-            } else {
-                Ok((Some(second), third))
-            }
+            Ok((Some(second), third))
         }
     } else {
         Ok((None, content))
@@ -190,101 +184,140 @@ fn split_document(content: &str) -> Result<(Option<&str>, &str)> {
 #[cfg(test)]
 mod test {
     use super::*;
-    use std::collections::HashMap;
 
-    // can't have custom: the order of fields is not stable
-    // can't use r# strings because of https://github.com/rust-lang-nursery/rustfmt/issues/878
-    static CORRECT_CB_FRONT: &str = "path: /2017/05/03/test_post/\n\
-                                     slug: \"test-post\"\n\
-                                     title: test_post\n\
-                                     description: ~\n\
-                                     categories: \n  - cat1\n  - cat2\n\
-                                     excerpt_separator: \"\\n\\n\"\n\
-                                     published_date: ~\n\
-                                     format: Raw\n\
-                                     layout: post\n\
-                                     is_draft: false\n";
+    #[test]
+    fn split_document_empty_document() {
+        let fixture = "";
 
-    static CORRECT_JK_FRONT: &str = r#"id: 33
-title: test_post
+        let (front, content) = split_document(fixture).unwrap();
+        assert!(front.is_none());
+        assert_eq!(content, "");
+    }
+
+    #[test]
+    fn split_document_empty_sections() {
+        let fixture = "---\n---\n";
+
+        let (front, content) = split_document(fixture).unwrap();
+        assert!(front.is_none());
+        assert_eq!(content, "");
+    }
+
+    #[test]
+    fn split_document_content_only() {
+        let fixture = "Content\n";
+
+        let (front, content) = split_document(fixture).unwrap();
+        assert!(front.is_none());
+        assert_eq!(content, "Content\n");
+    }
+
+    #[test]
+    fn split_document_empty_front() {
+        let fixture = "---\n---\nContent\n";
+
+        let (front, content) = split_document(fixture).unwrap();
+        assert!(front.is_none());
+        assert_eq!(content, "Content\n");
+    }
+
+    #[test]
+    fn split_document_empty_content() {
+        let fixture = "---\ntitle: test_post\n---\n";
+
+        let (front, content) = split_document(fixture).unwrap();
+        assert_eq!(front.unwrap(), "title: test_post\n");
+        assert_eq!(content, "");
+    }
+
+    #[test]
+    fn split_document_all_sections() {
+        let fixture = "---\ntitle: test_post\n---\nContent\n";
+
+        let (front, content) = split_document(fixture).unwrap();
+        assert_eq!(front.unwrap(), "title: test_post\n");
+        assert_eq!(content, "Content\n");
+    }
+
+    #[test]
+    fn frontmatter_empty() {
+        let front = JkFrontmatterBuilder::default();
+        let _front: wildwest::FrontmatterBuilder = front.into();
+
+        // TODO(epage): Confirm jekyll defaults overrode cobalt defaults
+    }
+
+    static FIXTURE_FULL: &str = r#"title: test_post
 date: 2017-05-03T20:55:07+00:00
-author: TheAuthor
 layout: post
-guid: http://url.com/?p=33
 permalink: /2017/05/03/test_post/
 categories:
   - cat1
   - cat2
+"#;
+
+    #[test]
+    fn frontmatter_full() {
+        let front: JkFrontmatterBuilder = serde_yaml::from_str(FIXTURE_FULL).unwrap();
+        let front: wildwest::FrontmatterBuilder = front.into();
+        let front = dump_front(front).unwrap();
+        let front: liquid::Object = serde_yaml::from_str(&front).unwrap();
+
+        let expected: liquid::Object =
+            [("path".to_owned(), liquid::Value::str("/2017/05/03/test_post/")),
+             ("title".to_owned(), liquid::Value::str("test_post")),
+             ("extends".to_owned(), liquid::Value::str("post")),
+             ("categories".to_owned(),
+              liquid::Value::Array(vec![liquid::Value::str("cat1"), liquid::Value::str("cat2")]))]
+                    .iter()
+                    .cloned()
+                    .collect();
+        assert_eq!(front, expected);
+    }
+
+    static FIXTURE_CUSTOM: &str = r#"id: 33
+title: test_post
+author: TheAuthor
+guid: http://url.com/?p=33
 tags:
   - tag1
   - tag2
   - tag3
 "#;
 
-    static CORRECT_CONTENT: &str = "the content\n";
+    #[test]
+    fn frontmatter_custom() {
+        let front: JkFrontmatterBuilder = serde_yaml::from_str(FIXTURE_CUSTOM).unwrap();
+        let front: wildwest::FrontmatterBuilder = front.into();
+        let front = dump_front(front).unwrap();
+        let front: liquid::Object = serde_yaml::from_str(&front).unwrap();
+
+        let expected: liquid::Object = [("id".to_owned(), liquid::Value::Num(33.0f32)),
+                                        ("title".to_owned(), liquid::Value::str("test_post")),
+                                        ("author".to_owned(), liquid::Value::str("TheAuthor")),
+                                        ("guid".to_owned(),
+                                         liquid::Value::str("http://url.com/?p=33")),
+                                        ("tags".to_owned(),
+                                         liquid::Value::Array(vec![liquid::Value::str("tag1"),
+                                                                   liquid::Value::str("tag2"),
+                                                                   liquid::Value::str("tag3")]))]
+                .iter()
+                .cloned()
+                .collect();
+        assert_eq!(front, expected);
+    }
+
+    static FIXTURE_MINIMAL: &str = r#"title: test_post"#;
+    static EXPECTED_MINIMAL: &str = r#"title: test_post"#;
 
     #[test]
     fn parse_string_ok() {
-        let correct_doc = format!("---\n{}---\n{}", CORRECT_JK_FRONT, CORRECT_CONTENT);
+        let fixture = format!("---\n{}---\nthe content\n", FIXTURE_MINIMAL);
 
-        let res = JkDocument::parse_string(correct_doc);
-        assert!(res.is_ok());
-        let doc = res.unwrap();
-        assert_eq!(doc.content, CORRECT_CONTENT);
-        assert_eq!(doc.front.unwrap(), CORRECT_JK_FRONT);
-    }
+        let doc = JkDocument::parse_string(fixture).unwrap();
+        let actual = doc.dump().unwrap();
 
-    #[test]
-    fn parse_string_no_front() {
-        let res = JkDocument::parse_string(CORRECT_CONTENT.to_owned());
-        assert!(res.is_ok());
-        let doc = res.unwrap();
-        assert_eq!(doc.content, CORRECT_CONTENT);
-    }
-
-    #[test]
-    fn parse_string_no_front_starter() {
-        let correct_doc = format!("{}---\n{}", CORRECT_JK_FRONT, CORRECT_CONTENT);
-        let res = JkDocument::parse_string(correct_doc);
-        assert!(res.is_ok());
-        let doc = res.unwrap();
-        assert_eq!(doc.content, CORRECT_CONTENT);
-        assert_eq!(doc.front.unwrap(), CORRECT_JK_FRONT);
-    }
-
-    #[test]
-    fn convert_front_ok() {
-        let res = JkDocument::convert_front(CORRECT_JK_FRONT.to_owned());
-        match res {
-            Err(e) => println!("error convert: {:#?}", e),
-            Ok(mut converted) => {
-                // need to remove the custom part, the fields order is not stable
-                let custom_offset = converted.find("custom").unwrap_or(converted.len());
-                let all_but_custom: String = converted.drain(..custom_offset).collect();
-                assert_eq!(all_but_custom, CORRECT_CB_FRONT);
-                let customs_builder: FrontmatterBuilder =
-                    serde_yaml::from_str(&converted).expect("serde yaml failed");
-
-                let customs: frontmatter::Frontmatter = customs_builder
-                    .merge_slug("dummy".to_owned())
-                    .merge_title("dummy".to_owned())
-                    .build()
-                    .ok()
-                    .expect("build failed");
-
-                let expected: HashMap<String, liquid::Value> =
-                    [("guid".to_owned(), liquid::Value::str("http://url.com/?p=33")),
-                     ("id".to_owned(), liquid::Value::Num(33.0f32)),
-                     ("author".to_owned(), liquid::Value::str("TheAuthor")),
-                     ("tags".to_owned(),
-                      liquid::Value::Array(vec![liquid::Value::str("tag1"),
-                                                liquid::Value::str("tag2"),
-                                                liquid::Value::str("tag3")]))]
-                            .iter()
-                            .cloned()
-                            .collect();
-                assert_eq!(expected, customs.custom);
-            }
-        }
+        let expected = format!("{}\n---\nthe content\n", EXPECTED_MINIMAL);
+        assert_eq!(actual, expected);
     }
 }
