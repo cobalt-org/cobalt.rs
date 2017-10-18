@@ -45,6 +45,9 @@
        trivial_numeric_casts,
        unused_extern_crates,
        unused_import_braces)]
+#![cfg_attr(feature="cargo-clippy", allow(
+        cyclomatic_complexity,
+        needless_pass_by_value))]
 #![cfg_attr(feature="dev", warn(warnings))]
 
 extern crate chrono;
@@ -64,7 +67,7 @@ extern crate sass_rs;
 
 extern crate itertools;
 
-#[cfg(all(feature="syntax-highlight", not(windows)))]
+#[cfg(all(feature = "syntax-highlight", not(windows)))]
 extern crate syntect;
 
 #[macro_use]

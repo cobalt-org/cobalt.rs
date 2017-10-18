@@ -101,7 +101,7 @@ impl From<frontmatter::FrontmatterBuilder> for FrontmatterBuilder {
             legacy.insert("categories".to_owned(),
                           liquid::Value::Array(categories
                                                    .into_iter()
-                                                   .map(|v| liquid::Value::Str(v))
+                                                   .map(liquid::Value::Str)
                                                    .collect()));
         }
         if let Some(excerpt_separator) = excerpt_separator {
@@ -117,7 +117,7 @@ impl From<frontmatter::FrontmatterBuilder> for FrontmatterBuilder {
         if let Some(draft) = is_draft {
             legacy.insert("draft".to_owned(), liquid::Value::Bool(draft));
         }
-        for (key, value) in custom.into_iter() {
+        for (key, value) in custom {
             legacy.insert(key, value);
         }
 

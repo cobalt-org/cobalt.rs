@@ -75,7 +75,7 @@ pub fn serve_command(config: cobalt::Config, matches: &clap::ArgMatches) -> Resu
     build::build(&config)?;
     let port = matches.value_of("port").unwrap().to_string();
     let dest = path::Path::new(&config.dest);
-    serve(&dest, &port)?;
+    serve(dest, &port)?;
 
     Ok(())
 }

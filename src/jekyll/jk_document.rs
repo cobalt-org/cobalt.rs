@@ -135,7 +135,9 @@ pub fn convert_from_jk(source: &path::Path, dest: &path::Path) -> Result<()> {
         for file in source.read_dir()? {
             if let Ok(file) = file {
                 let file_path = file.path();
-                let ext = file_path.extension().unwrap_or(ffi::OsStr::new(""));
+                let ext = file_path
+                    .extension()
+                    .unwrap_or_else(|| ffi::OsStr::new(""));
                 if file_path.is_file() {
                     if ext == "md" || ext == "markdown" {
                         convert_document(&file.path(), dest)?

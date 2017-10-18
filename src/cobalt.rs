@@ -177,7 +177,7 @@ pub fn build(config: &Config) -> Result<()> {
 
     for df in data_files.files() {
 
-        let ext = df.extension().unwrap_or(OsStr::new(""));
+        let ext = df.extension().unwrap_or_else(|| OsStr::new(""));
         let file_stem = df.file_stem()
             .expect("Files will always return with a stem");
 
