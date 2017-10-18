@@ -33,11 +33,8 @@ script:
   - rustc -Vv
   - cargo -V
   - cargo check --verbose
-  - cargo check --verbose --features "syntax-highlight"
-  - cargo check --verbose --features "sass"
   - cargo check --verbose --features "syntax-highlight,sass"
-  - cargo test  --verbose --features "syntax-highlight"
-  - cargo test  --verbose --features "sass"
+  - cargo test  --verbose
   - cargo test  --verbose --features "syntax-highlight,sass"
   - if which cargo-clippy ; then cargo when --channel nightly clippy -- --version ; fi
   - if which cargo-clippy ; then cargo when --channel nightly clippy --features "syntax-highlight,sass" ; fi
