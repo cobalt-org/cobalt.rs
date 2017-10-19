@@ -4,7 +4,8 @@ language: rust
 env:
   global:
     - CRATE_NAME=cobalt
-    - RUSTFMT=0.8.3
+    - COVERALLS=0.0.5
+    - WHEN=0.1.0
 
 matrix:
   include:
@@ -21,28 +22,34 @@ matrix:
     - env: TARGET=x86_64-unknown-linux-gnu
       rust: nightly
 
+    - rust: nightly-2017-10-09
+      env: CLIPPY_VERS="0.0.165"
+      install:
+        - if [[ `cargo +nightly-2017-10-09 clippy -- --version` != $CLIPPY_VERS* ]] ; then travis_wait cargo +nightly-2017-10-09 install clippy --vers "$CLIPPY_VERS" --force; fi
+        - export PATH=$HOME/.cargo/bin:$PATH
+      script:
+        - cargo +nightly-2017-10-09 clippy --features "syntax-highlight,sass" -- -D warnings
+    - rust: stable
+      env: RUSTFMT=0.8.3
+      install:
+        - if [[ `rustfmt --version` != $RUSTFMT* ]] ; then travis_wait cargo install rustfmt --force --vers $RUSTFMT; fi
+        - export PATH=$HOME/.cargo/bin:$PATH
+      script:
+        - cargo fmt -- --write-mode=diff
+
 install:
   - curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain $TRAVIS_RUST_VERSION
   - source ~/.cargo/env || true
-  - if ! which cargo-coveralls ; then cargo install cargo-travis ; fi
-  - if ! which cargo-when ; then cargo install cargo-when ; fi
-  - if [[ `rustfmt --version` != $RUSTFMT* ]] ; then travis_wait cargo when --channel stable install rustfmt --force --vers $RUSTFMT; fi
-  - travis_wait cargo when --channel nightly install clippy --force || true
+  - which cargo-coveralls || travis_wait cargo install cargo-travis --force --vers $COVERALLS
+  - if [[ `cargo-when --version` != *$WHEN ]] ; then travis_wait cargo install cargo-when --force --vers $WHEN; fi
 
 script:
   - rustc -Vv
   - cargo -V
   - cargo check --verbose
-  - cargo check --verbose --features "syntax-highlight"
-  - cargo check --verbose --features "sass"
   - cargo check --verbose --features "syntax-highlight,sass"
-  - cargo test  --verbose --features "syntax-highlight"
-  - cargo test  --verbose --features "sass"
+  - cargo test  --verbose
   - cargo test  --verbose --features "syntax-highlight,sass"
-  - if which cargo-clippy ; then cargo when --channel nightly clippy -- --version ; fi
-  - if which cargo-clippy ; then cargo when --channel nightly clippy --features "syntax-highlight,sass" ; fi
-  - cargo when --channel stable fmt -- --version
-  - cargo when --channel stable fmt -- --write-mode=diff
 
 before_deploy:
   - sh ci/before_deploy.sh
