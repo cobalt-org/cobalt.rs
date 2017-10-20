@@ -33,25 +33,17 @@ impl From<FrontmatterBuilder> for frontmatter::FrontmatterBuilder {
             .merge_description(custom_attributes
                                    .remove("description")
                                    .and_then(|v| v.as_str().map(|s| s.to_owned())))
-            .merge_categories(custom_attributes
-                                  .remove("categories")
-                                  .and_then(|v| {
-                                                v.as_array()
-                                                    .map(|v| {
-                                                             v.iter()
-                                                                 .map(|v| v.to_string())
-                                                                 .collect()
-                                                         })
-                                            }))
+            .merge_categories(custom_attributes.remove("categories").and_then(|v| {
+                v.as_array()
+                    .map(|v| v.iter().map(|v| v.to_string()).collect())
+            }))
             .merge_slug(custom_attributes
                             .remove("slug")
                             .and_then(|v| v.as_str().map(|s| s.to_owned())))
             .merge_permalink(custom_attributes
                                  .remove("path")
                                  .and_then(|v| v.as_str().map(|s| s.to_owned())))
-            .merge_draft(custom_attributes
-                             .remove("draft")
-                             .and_then(|v| v.as_bool()))
+            .merge_draft(custom_attributes.remove("draft").and_then(|v| v.as_bool()))
             .merge_excerpt_separator(custom_attributes
                                          .remove("excerpt_separator")
                                          .and_then(|v| v.as_str().map(|s| s.to_owned())))
@@ -60,9 +52,7 @@ impl From<FrontmatterBuilder> for frontmatter::FrontmatterBuilder {
                               .and_then(|v| v.as_str().map(|s| s.to_owned())))
             .merge_published_date(custom_attributes
                                       .remove("date")
-                                      .and_then(|d| {
-                                                    d.as_str().and_then(datetime::DateTime::parse)
-                                                }))
+                                      .and_then(|d| d.as_str().and_then(datetime::DateTime::parse)))
             .merge_custom(custom_attributes)
     }
 }

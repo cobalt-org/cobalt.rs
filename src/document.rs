@@ -291,9 +291,8 @@ impl Document {
             id: link.clone(),
             url: Some(link),
             title: Some(self.front.title.clone()),
-            content: jsonfeed::Content::Html(self.description_to_str().unwrap_or_else(|| {
-                                                                                          "".into()
-                                                                                      })),
+            content: jsonfeed::Content::Html(self.description_to_str()
+                                                 .unwrap_or_else(|| "".into())),
             date_published: self.front.published_date.map(|date| date.to_rfc2822()),
             // TODO completely implement categories, see Issue 131
             tags: Some(self.front.categories.clone()),
@@ -436,8 +435,7 @@ impl Document {
             };
 
             let mut options = LiquidOptions::default();
-            options.template_repository =
-                Box::new(LocalTemplateRepository::new(source.to_owned()));
+            options.template_repository = Box::new(LocalTemplateRepository::new(source.to_owned()));
             let template = try!(liquid::parse(layout_data_ref, options));
             Ok(try!(template.render(context)).unwrap_or_default())
         } else {
@@ -461,10 +459,9 @@ impl Document {
                 let frontmatter = serde_yaml::to_string(&self.front)?;
                 let content = self.content.clone();
                 let ext = match self.front.format {
-                        frontmatter::SourceFormat::Raw => "liquid",
-                        frontmatter::SourceFormat::Markdown => "md",
-                    }
-                    .to_owned();
+                    frontmatter::SourceFormat::Raw => "liquid",
+                    frontmatter::SourceFormat::Markdown => "md",
+                }.to_owned();
                 let content = itertools::join(&[frontmatter, "---".to_owned(), content], "\n");
                 Ok((content, ext))
             }

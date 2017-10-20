@@ -59,7 +59,7 @@ fn deep_insert(data_map: &mut HashMap<String, Value>,
         _ => {
             Err(format!("The data from {:?} can't be loaded: the key already exists",
                         file_path)
-                        .into())
+                    .into())
         }
     }
 }
@@ -71,11 +71,8 @@ pub fn build(config: &Config) -> Result<()> {
     let source = Path::new(&config.source);
     let dest = Path::new(&config.dest);
 
-    let template_extensions: Vec<&OsStr> = config
-        .template_extensions
-        .iter()
-        .map(OsStr::new)
-        .collect();
+    let template_extensions: Vec<&OsStr> =
+        config.template_extensions.iter().map(OsStr::new).collect();
 
     let layouts = source.join(&config.layouts);
     let mut layouts_cache = HashMap::new();
@@ -112,12 +109,9 @@ pub fn build(config: &Config) -> Result<()> {
         page_files.add_ignore(ignore_dest)?;
     }
     let page_files = page_files.build()?;
-    for file_path in page_files
-            .files()
-            .filter(|p| {
-                        template_extensions
-                            .contains(&p.extension().unwrap_or_else(|| OsStr::new("")))
-                    }) {
+    for file_path in page_files.files().filter(|p| {
+        template_extensions.contains(&p.extension().unwrap_or_else(|| OsStr::new("")))
+    }) {
         // if the document is in the posts folder it's considered a post
         let src_path = source.join(file_path.as_path());
         let is_post = src_path.starts_with(posts_path.as_path());
@@ -143,12 +137,9 @@ pub fn build(config: &Config) -> Result<()> {
             draft_files.add_ignore(line.as_str())?;
         }
         let draft_files = draft_files.build()?;
-        for file_path in draft_files
-                .files()
-                .filter(|p| {
-                            template_extensions
-                                .contains(&p.extension().unwrap_or_else(|| OsStr::new("")))
-                        }) {
+        for file_path in draft_files.files().filter(|p| {
+            template_extensions.contains(&p.extension().unwrap_or_else(|| OsStr::new("")))
+        }) {
             let new_path = posts_path.join(&file_path);
             let new_path = new_path
                 .strip_prefix(source)
@@ -340,12 +331,9 @@ pub fn build(config: &Config) -> Result<()> {
             asset_files.add_ignore(ignore_dest)?;
         }
         let asset_files = asset_files.build()?;
-        for file_path in asset_files
-                .files()
-                .filter(|p| {
-                            !template_extensions
-                                 .contains(&p.extension().unwrap_or_else(|| OsStr::new("")))
-                        }) {
+        for file_path in asset_files.files().filter(|p| {
+            !template_extensions.contains(&p.extension().unwrap_or_else(|| OsStr::new("")))
+        }) {
             if file_path.extension() == Some(OsStr::new("scss")) {
                 compile_sass(config, source, dest, file_path)?;
             } else {

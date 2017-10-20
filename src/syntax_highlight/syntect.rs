@@ -69,10 +69,9 @@ struct CodeBlock {
 impl liquid::Renderable for CodeBlock {
     fn render(&self, _: &mut liquid::Context) -> Result<Option<String>, liquid::Error> {
         let syntax = match self.lang {
-                Some(ref lang) => SETUP.syntax_set.find_syntax_by_token(lang),
-                _ => None,
-            }
-            .unwrap_or_else(|| SETUP.syntax_set.find_syntax_plain_text());
+            Some(ref lang) => SETUP.syntax_set.find_syntax_by_token(lang),
+            _ => None,
+        }.unwrap_or_else(|| SETUP.syntax_set.find_syntax_plain_text());
 
         Ok(Some(highlighted_snippet_for_string(&self.code, syntax, &self.theme)))
     }
@@ -82,16 +81,13 @@ pub fn initialize_codeblock(arguments: &[Token],
                             tokens: &[Element],
                             theme_name: &str)
                             -> Result<Box<liquid::Renderable>, liquid::Error> {
-    let content = tokens
-        .iter()
-        .fold("".to_owned(), |a, b| {
-            match *b {
-                    Expression(_, ref text) |
-                    Tag(_, ref text) |
-                    Raw(ref text) => text,
-                }
-                .to_owned() + &a
-        });
+    let content = tokens.iter().fold("".to_owned(), |a, b| {
+        match *b {
+            Expression(_, ref text) |
+            Tag(_, ref text) |
+            Raw(ref text) => text,
+        }.to_owned() + &a
+    });
 
     let lang = match arguments.iter().next() {
         Some(&Identifier(ref x)) => Some(x.clone()),
@@ -240,26 +236,28 @@ mod test {
         // Syntect isn't thread safe, for now run everything in the same test.
         {
             let mut options: LiquidOptions = Default::default();
-            options
-                .blocks
-                .insert("codeblock".to_string(),
-                        Box::new(|_, args, tokens, _| {
-                                     initialize_codeblock(args, tokens, "base16-ocean.dark")
-                                 }));
+            options.blocks.insert("codeblock".to_string(),
+                                  Box::new(|_, args, tokens, _| {
+                                               initialize_codeblock(args,
+                                                                    tokens,
+                                                                    "base16-ocean.dark")
+                                           }));
             let template = liquid::parse(&format!("{{% codeblock rust %}}{}{{% endcodeblock %}}",
                                                   CODE_BLOCK),
                                          options)
-                    .unwrap();
+                .unwrap();
             let mut data = Context::new();
             let output = template.render(&mut data);
             assert_eq!(output.unwrap(), Some(CODEBLOCK_RENDERED.to_string()));
         }
 
         {
-            let html = format!("```rust
+            let html = format!(
+                "```rust
 {}
 ```",
-                               CODE_BLOCK);
+                CODE_BLOCK
+            );
 
             let mut buf = String::new();
             let parser = cmark::Parser::new(&html);
