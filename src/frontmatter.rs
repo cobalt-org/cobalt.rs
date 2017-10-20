@@ -263,10 +263,7 @@ impl FrontmatterBuilder {
         let mut fm = self;
 
         if fm.format.is_none() {
-            let ext = relpath
-                .extension()
-                .and_then(|os| os.to_str())
-                .unwrap_or("");
+            let ext = relpath.extension().and_then(|os| os.to_str()).unwrap_or("");
             let format = match ext {
                 "md" => SourceFormat::Markdown,
                 _ => SourceFormat::Raw,

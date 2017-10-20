@@ -160,9 +160,9 @@ fn serve(dest: &path::Path, port: &str) -> Result<()> {
     // bind the handle function and start serving
     if let Err(e) = http_server.handle(move |req: Request, res: Response| if let Err(e) =
         static_file_handler(&dest_clone, req, res) {
-                                           error!("{}", e);
-                                           process::exit(1);
-                                       }) {
+        error!("{}", e);
+        process::exit(1);
+    }) {
         error!("{}", e);
         return Err(e.into());
     };

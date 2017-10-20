@@ -1,9 +1,9 @@
-#[cfg(all(feature="syntax-highlight", not(windows)))]
+#[cfg(feature = "syntax-highlight")]
 mod syntect;
-#[cfg(all(feature="syntax-highlight", not(windows)))]
+#[cfg(feature = "syntax-highlight")]
 pub use self::syntect::*;
 
-#[cfg(any(not(feature="syntax-highlight"), windows))]
+#[cfg(not(feature = "syntax-highlight"))]
 mod null;
-#[cfg(any(not(feature="syntax-highlight"), windows))]
+#[cfg(not(feature = "syntax-highlight"))]
 pub use self::null::*;

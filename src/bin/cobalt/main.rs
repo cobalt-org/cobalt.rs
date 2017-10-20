@@ -168,9 +168,7 @@ fn run() -> Result<()> {
                                  .takes_value(true))
                         .arg(Arg::with_name("FILENAME")
                                  .help("File to create")
-                                 .default_value_if("FILETYPE",
-                                                   Some("page"),
-                                                   "new_page.md")
+                                 .default_value_if("FILETYPE", Some("page"), "new_page.md")
                                  .default_value("new_post.md")
                                  .takes_value(true)))
         .subcommand(SubCommand::with_name("build")
@@ -343,37 +341,36 @@ fn run() -> Result<()> {
     }
 
     match command {
-            "init" => new::init_command(config, matches),
-            "new" => new::new_command(config, matches),
-            "build" => build::build_command(config, matches),
-            "clean" => build::clean_command(config, matches),
-            "serve" => serve::serve_command(config, matches),
-            "watch" => serve::watch_command(config, matches),
-            "import" => build::import_command(config, matches),
-            "list-syntax-themes" => {
-                for name in list_syntax_themes() {
-                    println!("{}", name);
-                }
-                Ok(())
+        "init" => new::init_command(config, matches),
+        "new" => new::new_command(config, matches),
+        "build" => build::build_command(config, matches),
+        "clean" => build::clean_command(config, matches),
+        "serve" => serve::serve_command(config, matches),
+        "watch" => serve::watch_command(config, matches),
+        "import" => build::import_command(config, matches),
+        "list-syntax-themes" => {
+            for name in list_syntax_themes() {
+                println!("{}", name);
             }
-            "list-syntaxes" => {
-                for name in list_syntaxes() {
-                    println!("{}", name);
-                }
-                Ok(())
-            }
-            "convert-jekyll" => {
-                let source = matches.value_of("source").unwrap().to_string();
-                let dest = matches.value_of("destination").unwrap().to_string();
-                jekyll::jk_document::convert_from_jk(std::path::Path::new(&source),
-                                                     std::path::Path::new(&dest))
-                        .chain_err(|| "Jekyll conversion failed.")
-            }
-            _ => {
-                bail!(global_matches.usage());
-            }
+            Ok(())
         }
-        .chain_err(|| format!("{} command failed", command))?;
+        "list-syntaxes" => {
+            for name in list_syntaxes() {
+                println!("{}", name);
+            }
+            Ok(())
+        }
+        "convert-jekyll" => {
+            let source = matches.value_of("source").unwrap().to_string();
+            let dest = matches.value_of("destination").unwrap().to_string();
+            jekyll::jk_document::convert_from_jk(std::path::Path::new(&source),
+                                                 std::path::Path::new(&dest))
+                .chain_err(|| "Jekyll conversion failed.")
+        }
+        _ => {
+            bail!(global_matches.usage());
+        }
+    }.chain_err(|| format!("{} command failed", command))?;
 
     Ok(())
 }

@@ -76,16 +76,13 @@ pub fn initialize_codeblock(arguments: &[Token],
                             _theme_name: &str)
                             -> Result<Box<liquid::Renderable>, liquid::Error> {
 
-    let content = tokens
-        .iter()
-        .fold("".to_owned(), |a, b| {
-            match *b {
-                    Expression(_, ref text) |
-                    Tag(_, ref text) |
-                    Raw(ref text) => text,
-                }
-                .to_owned() + &a
-        });
+    let content = tokens.iter().fold("".to_owned(), |a, b| {
+        match *b {
+            Expression(_, ref text) |
+            Tag(_, ref text) |
+            Raw(ref text) => text,
+        }.to_owned() + &a
+    });
 
     let lang = match arguments.iter().next() {
         Some(&Identifier(ref x)) => Some(x.clone()),
@@ -132,16 +129,14 @@ mod test {
     #[test]
     fn codeblock_renders_rust() {
         let mut options: LiquidOptions = Default::default();
-        options
-            .blocks
-            .insert("codeblock".to_string(),
-                    Box::new(|_, args, tokens, _| {
-                                 initialize_codeblock(args, tokens, "base16-ocean.dark")
-                             }));
+        options.blocks.insert("codeblock".to_string(),
+                              Box::new(|_, args, tokens, _| {
+                                           initialize_codeblock(args, tokens, "base16-ocean.dark")
+                                       }));
         let template = liquid::parse(&format!("{{% codeblock rust %}}{}{{% endcodeblock %}}",
                                               CODE_BLOCK),
                                      options)
-                .unwrap();
+            .unwrap();
         let mut data = Context::new();
         let output = template.render(&mut data);
         assert_eq!(output.unwrap(), Some(CODEBLOCK_RENDERED.to_string()));
@@ -158,10 +153,12 @@ mod test {
 
     #[test]
     fn decorate_markdown_renders_rust() {
-        let html = format!("```rust
+        let html = format!(
+            "```rust
 {}
 ```",
-                           CODE_BLOCK);
+            CODE_BLOCK
+        );
 
         let mut buf = String::new();
         let parser = cmark::Parser::new(&html);

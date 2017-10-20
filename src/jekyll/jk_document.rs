@@ -40,16 +40,10 @@ impl From<JkFrontmatterBuilder> for wildwest::FrontmatterBuilder {
             .merge_description(custom_attributes
                                    .remove("excerpt")
                                    .and_then(|v| v.as_str().map(|s| s.to_owned())))
-            .merge_categories(custom_attributes
-                                  .remove("categories")
-                                  .and_then(|v| {
-                                                v.as_array()
-                                                    .map(|v| {
-                                                             v.iter()
-                                                                 .map(|v| v.to_string())
-                                                                 .collect()
-                                                         })
-                                            }))
+            .merge_categories(custom_attributes.remove("categories").and_then(|v| {
+                v.as_array()
+                    .map(|v| v.iter().map(|v| v.to_string()).collect())
+            }))
             .merge_permalink(custom_attributes
                                  .remove("permalink")
                                  .and_then(|v| v.as_str().map(|s| s.to_owned())))
@@ -61,9 +55,7 @@ impl From<JkFrontmatterBuilder> for wildwest::FrontmatterBuilder {
                               .and_then(|v| v.as_str().map(|s| s.to_owned())))
             .merge_published_date(custom_attributes
                                       .remove("date")
-                                      .and_then(|d| {
-                                                    d.as_str().and_then(datetime::DateTime::parse)
-                                                }))
+                                      .and_then(|d| d.as_str().and_then(datetime::DateTime::parse)))
             .merge_custom(custom_attributes);
         front.into()
     }
@@ -135,9 +127,7 @@ pub fn convert_from_jk(source: &path::Path, dest: &path::Path) -> Result<()> {
         for file in source.read_dir()? {
             if let Ok(file) = file {
                 let file_path = file.path();
-                let ext = file_path
-                    .extension()
-                    .unwrap_or_else(|| ffi::OsStr::new(""));
+                let ext = file_path.extension().unwrap_or_else(|| ffi::OsStr::new(""));
                 if file_path.is_file() {
                     if ext == "md" || ext == "markdown" {
                         convert_document(&file.path(), dest)?
@@ -271,9 +261,9 @@ categories:
              ("extends".to_owned(), liquid::Value::str("post")),
              ("categories".to_owned(),
               liquid::Value::Array(vec![liquid::Value::str("cat1"), liquid::Value::str("cat2")]))]
-                    .iter()
-                    .cloned()
-                    .collect();
+                .iter()
+                .cloned()
+                .collect();
         assert_eq!(front, expected);
     }
 
@@ -303,9 +293,9 @@ tags:
                                          liquid::Value::Array(vec![liquid::Value::str("tag1"),
                                                                    liquid::Value::str("tag2"),
                                                                    liquid::Value::str("tag3")]))]
-                .iter()
-                .cloned()
-                .collect();
+            .iter()
+            .cloned()
+            .collect();
         assert_eq!(front, expected);
     }
 

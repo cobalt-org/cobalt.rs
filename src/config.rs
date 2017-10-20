@@ -164,7 +164,7 @@ impl Config {
             Ok(false) => {
                 Err(format!("Syntax theme '{}' is unsupported",
                             config.syntax_highlight.theme)
-                            .into())
+                        .into())
             }
             Err(err) => {
                 warn!("Syntax theme named '{}' ignored. Reason: {}",

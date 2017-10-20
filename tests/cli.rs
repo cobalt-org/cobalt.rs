@@ -168,8 +168,10 @@ pub fn clean_warning() {
         .current_dir(CWD.join("tests/fixtures/example"))
         .fails_with(1)
         .stderr()
-        .contains("Destination directory is same as current directory. Cancelling the \
-              operation")
+        .contains(
+            "Destination directory is same as current directory. Cancelling the \
+              operation",
+        )
         .unwrap();
 }
 
