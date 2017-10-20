@@ -2,7 +2,7 @@ use std::fs::{self, File};
 use std::collections::HashMap;
 use std::io::Write;
 use std::io::Read;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::ffi::OsStr;
 use liquid::Value;
 use rss;
@@ -263,7 +263,7 @@ pub fn build(config: &Config) -> Result<()> {
             let file_name = format!("_{}.{}.{}", file_name, dump, ext);
             file_path.set_file_name(file_name);
             trace!("Generating {:?}", file_path);
-            create_document_file(content, &file_path, dest)?;
+            create_document_file(content, dest.join(file_path))?;
         }
 
         let mut context = post.get_render_context(&simple_posts_data);
@@ -277,7 +277,7 @@ pub fn build(config: &Config) -> Result<()> {
                                     &mut layouts_cache,
                                     &config.syntax_highlight.theme)
             .chain_err(|| format!("Failed to render for {:?}", post.file_path))?;
-        create_document_file(post_html, &post.file_path, dest)?;
+        create_document_file(post_html, dest.join(&post.file_path))?;
     }
 
     // check if we should create an RSS file and create it!
@@ -312,7 +312,7 @@ pub fn build(config: &Config) -> Result<()> {
             let file_name = format!("_{}.{}.{}", file_name, dump, ext);
             file_path.set_file_name(file_name);
             trace!("Generating {:?}", file_path);
-            create_document_file(content, &file_path, dest)?;
+            create_document_file(content, dest.join(file_path))?;
         }
 
         let mut context = doc.get_render_context(&posts_data);
@@ -324,7 +324,7 @@ pub fn build(config: &Config) -> Result<()> {
                                   &mut layouts_cache,
                                   &config.syntax_highlight.theme)
             .chain_err(|| format!("Failed to render for {:?}", doc.file_path))?;
-        create_document_file(doc_html, doc.file_path, dest)?;
+        create_document_file(doc_html, dest.join(doc.file_path))?;
     }
 
     // copy all remaining files in the source to the destination
@@ -346,63 +346,15 @@ pub fn build(config: &Config) -> Result<()> {
                             !template_extensions
                                  .contains(&p.extension().unwrap_or_else(|| OsStr::new("")))
                         }) {
-            {
-                let parent_dir = file_path.parent();
-                if let Some(parent_dir) = parent_dir {
-                    let parent_dir = dest.join(parent_dir);
-                    debug!("Creating new directory {:?}", parent_dir);
-                    fs::create_dir_all(parent_dir)?;
-                }
-            }
-
-            #[cfg(feature = "sass")]
-            {
-                let mut sass_opts = sass_rs::Options::default();
-                sass_opts.include_paths = vec![source
-                                                   .join(&config.sass.import_dir)
-                                                   .into_os_string()
-                                                   .into_string()
-                                                   .unwrap()];
-                sass_opts.output_style = match config.sass.style {
-                    SassOutputStyle::Nested => sass_rs::OutputStyle::Nested,
-                    SassOutputStyle::Expanded => sass_rs::OutputStyle::Expanded,
-                    SassOutputStyle::Compact => sass_rs::OutputStyle::Compact,
-                    SassOutputStyle::Compressed => sass_rs::OutputStyle::Compressed,
-                };
-
-                let src_file = source.join(file_path.as_path());
-                if file_path.extension() == Some(OsStr::new("scss")) {
-                    let content = sass_rs::compile_file(src_file.as_path(), sass_opts.clone())?;
-                    let mut dest_file = dest.join(file_path.clone());
-                    dest_file.set_extension("css");
-
-                    let mut file =
-                        File::create(&dest_file)
-                            .map_err(|e| format!("Could not create {:?}: {}", file_path, e))?;
-
-                    file.write_all(content.as_bytes())?;
-
-                } else {
-                    copy_file(src_file.as_path(), dest.join(file_path).as_path())?;
-                }
-            }
-
-            #[cfg(not(feature = "sass"))]
-            {
-
-                let src_file = source.join(file_path.as_path());
+            if file_path.extension() == Some(OsStr::new("scss")) {
+                compile_sass(config, source, dest, file_path)?;
+            } else {
+                let src_file = source.join(&file_path);
                 copy_file(src_file.as_path(), dest.join(file_path).as_path())?;
             }
         }
     }
 
-    Ok(())
-}
-
-fn copy_file(src_file: &Path, dest_file: &Path) -> Result<()> {
-    debug!("Copying {:?} to {:?}", src_file, dest_file);
-    fs::copy(src_file, dest_file)
-        .map_err(|e| format!("Could not copy {:?} into {:?}: {}", src_file, dest_file, e))?;
     Ok(())
 }
 
@@ -468,28 +420,75 @@ fn create_jsonfeed(path: &str, dest: &Path, config: &Config, posts: &[Document])
     }
 }
 
-fn create_document_file<S: AsRef<str>, T: AsRef<Path>, R: Into<PathBuf>>(content: S,
-                                                                         relpath: T,
-                                                                         dest: R)
-                                                                         -> Result<()> {
-    create_document_file_internal(content.as_ref(), relpath.as_ref(), dest.into())
+fn compile_sass<S: AsRef<Path>, D: AsRef<Path>, F: AsRef<Path>>(config: &Config,
+                                                                source: S,
+                                                                dest: D,
+                                                                file_path: F)
+                                                                -> Result<()> {
+    compile_sass_internal(config, source.as_ref(), dest.as_ref(), file_path.as_ref())
 }
 
-fn create_document_file_internal(content: &str, relpath: &Path, dest: PathBuf) -> Result<()> {
-    // construct target path
-    let mut file_path = dest;
-    file_path.push(relpath);
+#[cfg(feature = "sass")]
+fn compile_sass_internal(config: &Config,
+                         source: &Path,
+                         dest: &Path,
+                         file_path: &Path)
+                         -> Result<()> {
+    let mut sass_opts = sass_rs::Options::default();
+    sass_opts.include_paths = vec![source
+                                       .join(&config.sass.import_dir)
+                                       .into_os_string()
+                                       .into_string()
+                                       .unwrap()];
+    sass_opts.output_style = match config.sass.style {
+        SassOutputStyle::Nested => sass_rs::OutputStyle::Nested,
+        SassOutputStyle::Expanded => sass_rs::OutputStyle::Expanded,
+        SassOutputStyle::Compact => sass_rs::OutputStyle::Compact,
+        SassOutputStyle::Compressed => sass_rs::OutputStyle::Compressed,
+    };
 
+    let src_file = source.join(file_path);
+    let content = sass_rs::compile_file(src_file.as_path(), sass_opts.clone())?;
+    let mut dest_file = dest.join(file_path);
+    dest_file.set_extension("css");
+
+    create_document_file(content, dest_file)
+}
+
+#[cfg(not(feature = "sass"))]
+fn compile_sass_internal(_config: &Config, source: &Path, dest: &Path, file_path: &Path) -> Result<()> {
+    let src_file = source.join(file_path);
+    copy_file(src_file.as_path(), dest.join(file_path).as_path())
+}
+
+fn copy_file(src_file: &Path, dest_file: &Path) -> Result<()> {
     // create target directories if any exist
-    if let Some(parent) = file_path.parent() {
+    if let Some(parent) = dest_file.parent() {
         fs::create_dir_all(parent)
             .map_err(|e| format!("Could not create {:?}: {}", parent, e))?;
     }
 
-    let mut file = File::create(&file_path)
-        .map_err(|e| format!("Could not create {:?}: {}", file_path, e))?;
+    debug!("Copying {:?} to {:?}", src_file, dest_file);
+    fs::copy(src_file, dest_file)
+        .map_err(|e| format!("Could not copy {:?} into {:?}: {}", src_file, dest_file, e))?;
+    Ok(())
+}
+
+fn create_document_file<S: AsRef<str>, P: AsRef<Path>>(content: S, dest_file: P) -> Result<()> {
+    create_document_file_internal(content.as_ref(), dest_file.as_ref())
+}
+
+fn create_document_file_internal(content: &str, dest_file: &Path) -> Result<()> {
+    // create target directories if any exist
+    if let Some(parent) = dest_file.parent() {
+        fs::create_dir_all(parent)
+            .map_err(|e| format!("Could not create {:?}: {}", parent, e))?;
+    }
+
+    let mut file = File::create(dest_file)
+        .map_err(|e| format!("Could not create {:?}: {}", dest_file, e))?;
 
     file.write_all(content.as_bytes())?;
-    info!("Created {}", file_path.display());
+    info!("Created {}", dest_file.display());
     Ok(())
 }
