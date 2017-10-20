@@ -360,64 +360,75 @@ pub fn build(config: &Config) -> Result<()> {
 
 // creates a new RSS file with the contents of the site blog
 fn create_rss(path: &str, dest: &Path, config: &Config, posts: &[Document]) -> Result<()> {
-    match (&config.name, &config.description, &config.link) {
-        // these three fields are mandatory in the RSS standard
-        (&Some(ref name), &Some(ref description), &Some(ref link)) => {
-            trace!("Generating RSS data");
+    let name = config
+        .name
+        .as_ref()
+        .ok_or(ErrorKind::ConfigFileMissingFields)?;
+    let description = config
+        .description
+        .as_ref()
+        .ok_or(ErrorKind::ConfigFileMissingFields)?;
+    let link = config
+        .link
+        .as_ref()
+        .ok_or(ErrorKind::ConfigFileMissingFields)?;
 
-            let items: Result<Vec<rss::Item>> = posts.iter().map(|doc| doc.to_rss(link)).collect();
-            let items = items?;
+    let items: Result<Vec<rss::Item>> = posts.iter().map(|doc| doc.to_rss(link)).collect();
+    let items = items?;
 
-            let channel = rss::ChannelBuilder::default()
-                .title(name.to_owned())
-                .link(link.to_owned())
-                .description(description.to_owned())
-                .items(items)
-                .build()?;
+    let channel = rss::ChannelBuilder::default()
+        .title(name.to_owned())
+        .link(link.to_owned())
+        .description(description.to_owned())
+        .items(items)
+        .build()?;
 
-            let rss_string = channel.to_string();
-            trace!("RSS data: {}", rss_string);
+    let rss_string = channel.to_string();
+    trace!("RSS data: {}", rss_string);
 
-            let rss_path = dest.join(path);
+    let rss_path = dest.join(path);
 
-            let mut rss_file = File::create(&rss_path)?;
-            rss_file
-                .write_all(br#"<?xml version="1.0" encoding="UTF-8"?>"#)?;
-            rss_file.write_all(&rss_string.into_bytes())?;
-            rss_file.write_all(b"\n")?;
+    let mut rss_file = File::create(&rss_path)?;
+    rss_file
+        .write_all(br#"<?xml version="1.0" encoding="UTF-8"?>"#)?;
+    rss_file.write_all(&rss_string.into_bytes())?;
+    rss_file.write_all(b"\n")?;
 
-            info!("Created RSS file at {}", rss_path.display());
-            Ok(())
-        }
-        _ => Err(ErrorKind::ConfigFileMissingFields.into()),
-    }
+    info!("Created RSS file at {}", rss_path.display());
+    Ok(())
 }
 // creates a new jsonfeed file with the contents of the site blog
 fn create_jsonfeed(path: &str, dest: &Path, config: &Config, posts: &[Document]) -> Result<()> {
-    match (&config.name, &config.description, &config.link) {
-        (&Some(ref name), &Some(ref desc), &Some(ref link)) => {
-            trace!("Generating jsonfeed data");
+    let name = config
+        .name
+        .as_ref()
+        .ok_or(ErrorKind::ConfigFileMissingFields)?;
+    let description = config
+        .description
+        .as_ref()
+        .ok_or(ErrorKind::ConfigFileMissingFields)?;
+    let link = config
+        .link
+        .as_ref()
+        .ok_or(ErrorKind::ConfigFileMissingFields)?;
 
-            let jsonitems = posts.iter().map(|doc| doc.to_jsonfeed(link)).collect();
+    let jsonitems = posts.iter().map(|doc| doc.to_jsonfeed(link)).collect();
 
-            let feed = Feed {
-                title: name.to_string(),
-                items: jsonitems,
-                home_page_url: Some(link.to_string()),
-                description: Some(desc.to_string()),
-                ..Default::default()
-            };
+    let feed = Feed {
+        title: name.to_string(),
+        items: jsonitems,
+        home_page_url: Some(link.to_string()),
+        description: Some(description.to_string()),
+        ..Default::default()
+    };
 
-            let jsonfeed_string = jsonfeed::to_string(&feed).unwrap();
-            let jsonfeed_path = dest.join(path);
-            let mut jsonfeed_file = File::create(&jsonfeed_path)?;
-            jsonfeed_file.write_all(&jsonfeed_string.into_bytes())?;
+    let jsonfeed_string = jsonfeed::to_string(&feed).unwrap();
+    let jsonfeed_path = dest.join(path);
+    let mut jsonfeed_file = File::create(&jsonfeed_path)?;
+    jsonfeed_file.write_all(&jsonfeed_string.into_bytes())?;
 
-            info!("Created jsonfeed file at {}", jsonfeed_path.display());
-            Ok(())
-        }
-        _ => Err(ErrorKind::ConfigFileMissingFields.into()),
-    }
+    info!("Created jsonfeed file at {}", jsonfeed_path.display());
+    Ok(())
 }
 
 fn compile_sass<S: AsRef<Path>, D: AsRef<Path>, F: AsRef<Path>>(config: &Config,
@@ -456,7 +467,11 @@ fn compile_sass_internal(config: &Config,
 }
 
 #[cfg(not(feature = "sass"))]
-fn compile_sass_internal(_config: &Config, source: &Path, dest: &Path, file_path: &Path) -> Result<()> {
+fn compile_sass_internal(_config: &Config,
+                         source: &Path,
+                         dest: &Path,
+                         file_path: &Path)
+                         -> Result<()> {
     let src_file = source.join(file_path);
     copy_file(src_file.as_path(), dest.join(file_path).as_path())
 }
