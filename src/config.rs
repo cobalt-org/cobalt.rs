@@ -48,18 +48,21 @@ pub enum SassOutputStyle {
     Compressed,
 }
 
+const SASS_IMPORT_DIR: &'static str = "_sass";
+
 #[derive(Debug, PartialEq)]
 #[derive(Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct SassOptions {
-    pub import_dir: String,
+    #[serde(skip)]
+    pub import_dir: &'static str,
     pub style: SassOutputStyle,
 }
 
 impl Default for SassOptions {
     fn default() -> SassOptions {
         SassOptions {
-            import_dir: "_sass".to_owned(),
+            import_dir: SASS_IMPORT_DIR,
             style: SassOutputStyle::Nested,
         }
     }
@@ -78,6 +81,8 @@ impl Default for SyntaxHighlight {
     }
 }
 
+const DATA_DIR: &'static str = "_data";
+
 #[derive(Debug, PartialEq)]
 #[derive(Serialize, Deserialize)]
 #[serde(deny_unknown_fields, default)]
@@ -86,7 +91,7 @@ pub struct Config {
     pub dest: String,
     pub layouts: String,
     pub drafts: String,
-    pub data: String,
+    pub data: &'static str,
     pub include_drafts: bool,
     pub posts: String,
     pub post_path: Option<String>,
@@ -113,7 +118,7 @@ impl Default for Config {
             dest: "./".to_owned(),
             layouts: "_layouts".to_owned(),
             drafts: "_drafts".to_owned(),
-            data: "_data".to_owned(),
+            data: DATA_DIR,
             include_drafts: false,
             posts: "posts".to_owned(),
             post_path: None,
