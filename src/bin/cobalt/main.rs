@@ -71,7 +71,7 @@ mod error;
 mod serve;
 mod new;
 
-use std::fs;
+use std::env;
 
 use clap::{Arg, App, SubCommand, AppSettings};
 use cobalt::{Config, Dump, jekyll};
@@ -282,25 +282,15 @@ fn run() -> Result<()> {
 
     let config_path = matches
         .value_of("config")
-        .or_else(|| global_matches.value_of("config"))
-        .unwrap_or(".cobalt.yml")
-        .to_string();
+        .or_else(|| global_matches.value_of("config"));
 
     // Fetch config information if available
-    let mut config: Config = if fs::metadata(&config_path).is_ok() {
-        info!("Using config file {}", &config_path);
-
-        match Config::from_file(&config_path) {
-            Ok(config) => config,
-            Err(e) => {
-                error!("Error reading config file:");
-                error!("{}", e);
-                std::process::exit(1);
-            }
-        }
+    let mut config: Config = if let Some(config_path) = config_path {
+        Config::from_file(config_path)
+            .chain_err(|| format!("Error reading config file {:?}", config_path))?
     } else {
-        warn!("No .cobalt.yml file found in current directory, using default config.");
-        Default::default()
+        let cwd = env::current_dir().expect("How does this fail?");
+        Config::from_cwd(cwd)?
     };
 
     config.source = matches

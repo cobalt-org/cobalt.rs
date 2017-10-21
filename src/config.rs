@@ -1,8 +1,8 @@
 use std::default::Default;
-use std::path::Path;
+use std::path;
 use std::fs::File;
 use std::io::Read;
-use error::Result;
+use error::*;
 use serde_yaml;
 
 use legacy::wildwest;
@@ -87,6 +87,8 @@ const DATA_DIR: &'static str = "_data";
 #[derive(Serialize, Deserialize)]
 #[serde(deny_unknown_fields, default)]
 pub struct Config {
+    #[serde(skip)]
+    pub root: path::PathBuf,
     pub source: String,
     pub dest: String,
     pub layouts: String,
@@ -115,6 +117,7 @@ pub struct Config {
 impl Default for Config {
     fn default() -> Config {
         Config {
+            root: path::PathBuf::new(),
             source: "./".to_owned(),
             dest: "./".to_owned(),
             layouts: "_layouts".to_owned(),
@@ -140,10 +143,14 @@ impl Default for Config {
 }
 
 impl Config {
-    pub fn from_file<P: AsRef<Path>>(path: P) -> Result<Config> {
+    pub fn from_file<P: Into<path::PathBuf>>(path: P) -> Result<Config> {
+        Self::from_file_internal(path.into())
+    }
+
+    fn from_file_internal(path: path::PathBuf) -> Result<Config> {
         let content = {
             let mut buffer = String::new();
-            let mut f = File::open(path)?;
+            let mut f = File::open(&path)?;
             f.read_to_string(&mut buffer)?;
             buffer
         };
@@ -154,6 +161,10 @@ impl Config {
 
         let config: wildwest::GlobalConfig = serde_yaml::from_str(&content)?;
         let mut config: Config = config.into();
+
+        let mut root = path;
+        root.pop();
+        config.root = root;
 
         config.link = if let Some(ref link) = config.link {
             let mut link = link.to_owned();
@@ -183,6 +194,65 @@ impl Config {
 
         Ok(config)
     }
+
+    pub fn from_cwd<P: Into<path::PathBuf>>(cwd: P) -> Result<Config> {
+        Self::from_cwd_internal(cwd.into())
+    }
+
+    fn from_cwd_internal(cwd: path::PathBuf) -> Result<Config> {
+        let file_path = find_project_file(&cwd, ".cobalt.yml");
+        let mut config = file_path
+            .map(|p| {
+                     info!("Using config file {:?}", &p);
+                     Self::from_file(&p).chain_err(|| format!("Error reading config file {:?}", p))
+                 })
+            .unwrap_or_else(|| {
+                warn!("No .cobalt.yml file found in current directory, using default config.");
+                Ok(Config::default())
+            })?;
+        config.root = cwd;
+        Ok(config)
+    }
+}
+
+fn find_project_file<P: Into<path::PathBuf>>(dir: P, name: &str) -> Option<path::PathBuf> {
+    find_project_file_internal(dir.into(), name)
+}
+
+fn find_project_file_internal(dir: path::PathBuf, name: &str) -> Option<path::PathBuf> {
+    let mut file_path = dir;
+    file_path.push(name);
+    while !file_path.exists() {
+        file_path.pop(); // filename
+        let hit_bottom = !file_path.pop();
+        if hit_bottom {
+            return None;
+        }
+        file_path.push(name);
+    }
+    Some(file_path)
+}
+
+#[test]
+fn find_project_file_same_dir() {
+    let actual = find_project_file("tests/fixtures/config", ".cobalt.yml").unwrap();
+    let expected = path::Path::new("tests/fixtures/config/.cobalt.yml");
+    assert_eq!(actual, expected);
+}
+
+#[test]
+fn find_project_file_parent_dir() {
+    let actual = find_project_file("tests/fixtures/config/child", ".cobalt.yml").unwrap();
+    let expected = path::Path::new("tests/fixtures/config/.cobalt.yml");
+    assert_eq!(actual, expected);
+}
+
+#[test]
+fn find_project_file_doesnt_exist() {
+    let expected = path::Path::new("<NOT FOUND>");
+    let actual = find_project_file("tests/fixtures/", ".cobalt.yml")
+        .unwrap_or_else(|| expected.into());
+    assert_eq!(actual, expected);
 }
 
 #[test]
@@ -190,6 +260,7 @@ fn test_from_file_ok() {
     let result = Config::from_file("tests/fixtures/config/.cobalt.yml").unwrap();
     assert_eq!(result,
                Config {
+                   root: path::Path::new("tests/fixtures/config").to_path_buf(),
                    dest: "./dest".to_owned(),
                    layouts: "_my_layouts".to_owned(),
                    posts: "_my_posts".to_owned(),
@@ -202,6 +273,7 @@ fn test_from_file_rss() {
     let result = Config::from_file("tests/fixtures/config/rss.yml").unwrap();
     assert_eq!(result,
                Config {
+                   root: path::Path::new("tests/fixtures/config").to_path_buf(),
                    rss: Some("rss.xml".to_owned()),
                    name: Some("My blog!".to_owned()),
                    description: Some("Blog description".to_owned()),
@@ -226,4 +298,27 @@ fn test_from_file_invalid_syntax() {
 fn test_from_file_not_found() {
     let result = Config::from_file("tests/fixtures/config/config_does_not_exist.yml");
     assert!(result.is_err());
+}
+
+#[test]
+fn test_from_cwd_ok() {
+    let result = Config::from_cwd("tests/fixtures/config").unwrap();
+    assert_eq!(result,
+               Config {
+                   root: path::Path::new("tests/fixtures/config").to_path_buf(),
+                   dest: "./dest".to_owned(),
+                   layouts: "_my_layouts".to_owned(),
+                   posts: "_my_posts".to_owned(),
+                   ..Default::default()
+               });
+}
+
+#[test]
+fn test_from_cwd_not_found() {
+    let result = Config::from_cwd("tests/fixtures").unwrap();
+    assert_eq!(result,
+               Config {
+                   root: path::Path::new("tests/fixtures").to_path_buf(),
+                   ..Default::default()
+               });
 }
