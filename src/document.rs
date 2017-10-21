@@ -343,7 +343,8 @@ impl Document {
             frontmatter::SourceFormat::Raw => html,
             frontmatter::SourceFormat::Markdown => {
                 let mut buf = String::new();
-                let parser = cmark::Parser::new(&html);
+                let options = cmark::OPTION_ENABLE_FOOTNOTES | cmark::OPTION_ENABLE_TABLES;
+                let parser = cmark::Parser::new_ext(&html, options);
                 cmark::html::push_html(&mut buf, decorate_markdown(parser, syntax_theme));
                 buf
             }

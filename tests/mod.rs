@@ -252,6 +252,11 @@ pub fn querystrings() {
     run_test("querystrings").expect("Build error");
 }
 
+#[test]
+pub fn markdown_table() {
+    run_test("markdown_table").expect("Build error");
+}
+
 #[cfg(feature = "sass")]
 #[test]
 pub fn sass() {
