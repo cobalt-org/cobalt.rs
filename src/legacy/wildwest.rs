@@ -129,16 +129,12 @@ pub enum SassOutputStyle {
 #[derive(Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct SassOptions {
-    pub import_dir: String,
     pub style: SassOutputStyle,
 }
 
 impl Default for SassOptions {
     fn default() -> SassOptions {
-        SassOptions {
-            import_dir: "_sass".to_owned(),
-            style: SassOutputStyle::Nested,
-        }
+        SassOptions { style: SassOutputStyle::Nested }
     }
 }
 
@@ -163,7 +159,6 @@ pub struct GlobalConfig {
     pub dest: String,
     pub layouts: String,
     pub drafts: String,
-    pub data: String,
     pub include_drafts: bool,
     pub posts: String,
     pub post_path: Option<String>,
@@ -187,7 +182,6 @@ impl Default for GlobalConfig {
             dest: "./".to_owned(),
             layouts: "_layouts".to_owned(),
             drafts: "_drafts".to_owned(),
-            data: "_data".to_owned(),
             include_drafts: false,
             posts: "posts".to_owned(),
             post_path: None,
@@ -213,7 +207,6 @@ impl From<GlobalConfig> for config::Config {
             dest,
             layouts,
             drafts,
-            data,
             include_drafts,
             posts,
             post_path,
@@ -237,13 +230,13 @@ impl From<GlobalConfig> for config::Config {
 
         let syntax_highlight = config::SyntaxHighlight { theme: syntax_highlight.theme };
         let sass = config::SassOptions {
-            import_dir: sass.import_dir,
             style: match sass.style {
                 SassOutputStyle::Nested => config::SassOutputStyle::Nested,
                 SassOutputStyle::Expanded => config::SassOutputStyle::Expanded,
                 SassOutputStyle::Compact => config::SassOutputStyle::Compact,
                 SassOutputStyle::Compressed => config::SassOutputStyle::Compressed,
             },
+            ..Default::default()
         };
 
         config::Config {
@@ -251,7 +244,6 @@ impl From<GlobalConfig> for config::Config {
             dest: dest,
             layouts: layouts,
             drafts: drafts,
-            data: data,
             include_drafts: include_drafts,
             posts: posts,
             post_path: post_path,
@@ -267,6 +259,7 @@ impl From<GlobalConfig> for config::Config {
             dump: vec![],
             syntax_highlight: syntax_highlight,
             sass: sass,
+            ..Default::default()
         }
     }
 }
