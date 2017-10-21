@@ -1,3 +1,17 @@
+<a name="0.7.4"></a>
+## 0.7.4 (2017-10-21)
+
+
+#### Bug Fixes
+
+* **md:**  Add table/ref support ([1aa53d24](https://github.com/cobalt-org/cobalt.rs/commit/1aa53d2459b51db73d108f0ff532641ccf8a0287), closes [#303](https://github.com/cobalt-org/cobalt.rs/issues/303))
+
+#### Features
+
+*   Improve error reporting to user ([1e07708b](https://github.com/cobalt-org/cobalt.rs/commit/1e07708badd73523892e4ab7a7c17c40d090bae2))
+* **data-files:**  Add data file support ([bb2d7c0f](https://github.com/cobalt-org/cobalt.rs/commit/bb2d7c0f3b841a6432bb68f5ccff83d8fe40050e), closes [#256](https://github.com/cobalt-org/cobalt.rs/issues/256))
+* **scss:**  Implement compiling of SCSS files ([76b8d8ae](https://github.com/cobalt-org/cobalt.rs/commit/76b8d8ae665d597151a5386d07bebcb2418a74e6))
+
 <a name="0.7.3"></a>
 ## 0.7.3 (2017-10-05)
 
