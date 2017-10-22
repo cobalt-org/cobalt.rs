@@ -91,6 +91,7 @@ pub struct Config {
     pub dest: String,
     pub layouts: String,
     pub drafts: String,
+    #[serde(skip)]
     pub data: &'static str,
     pub include_drafts: bool,
     pub posts: String,
