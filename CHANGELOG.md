@@ -1,3 +1,14 @@
+<a name="0.7.5"></a>
+## 0.7.5 (2017-10-22)
+
+
+#### Bug Fixes
+
+* **jekyll:**  Remove crash ([7d07b2cc](https://github.com/cobalt-org/cobalt.rs/commit/7d07b2ccb3c91fd41630adf5c9f664c1bc59262e))
+*   Don't dump a flag that isn't meant to be ([c3873e29](https://github.com/cobalt-org/cobalt.rs/commit/c3873e295342086f60b513fa893a5556f4f7987b))
+
+
+
 <a name="0.7.4"></a>
 ## 0.7.4 (2017-10-21)
 
