@@ -97,32 +97,11 @@ fn run() -> Result<()> {
                  .help("Config file to use [default: .cobalt.yml]")
                  .global(true)
                  .takes_value(true))
-        .arg(Arg::with_name("source")
-                 .short("s")
-                 .long("source")
-                 .value_name("DIR")
-                 .help("Source folder [default: ./]")
-                 .global(true)
-                 .takes_value(true))
         .arg(Arg::with_name("destination")
                  .short("d")
                  .long("destination")
                  .value_name("DIR")
                  .help("Destination folder [default: ./]")
-                 .global(true)
-                 .takes_value(true))
-        .arg(Arg::with_name("layouts")
-                 .short("l")
-                 .long("layouts")
-                 .value_name("DIR")
-                 .help("Layout templates folder [default: ./_layouts]")
-                 .global(true)
-                 .takes_value(true))
-        .arg(Arg::with_name("posts")
-                 .short("p")
-                 .long("posts")
-                 .value_name("DIR")
-                 .help("Posts folder [default: ./posts]")
                  .global(true)
                  .takes_value(true))
         .arg(Arg::with_name("drafts")
@@ -293,29 +272,11 @@ fn run() -> Result<()> {
         Config::from_cwd(cwd)?
     };
 
-    config.source = matches
-        .value_of("source")
-        .or_else(|| global_matches.value_of("source"))
-        .map(str::to_string)
-        .unwrap_or(config.source);
-
     config.dest = matches
         .value_of("destination")
         .or_else(|| global_matches.value_of("destination"))
         .map(str::to_string)
         .unwrap_or(config.dest);
-
-    config.layouts = matches
-        .value_of("layouts")
-        .or_else(|| global_matches.value_of("layouts"))
-        .map(str::to_string)
-        .unwrap_or(config.layouts);
-
-    config.posts = matches
-        .value_of("posts")
-        .or_else(|| global_matches.value_of("posts"))
-        .map(str::to_string)
-        .unwrap_or(config.posts);
 
     config.include_drafts = matches.is_present("drafts");
 
