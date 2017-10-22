@@ -15,7 +15,7 @@ use error_chain::ChainedError;
 use tempdir::TempDir;
 use walkdir::WalkDir;
 
-use cobalt::Config;
+use cobalt::ConfigBuilder;
 
 macro_rules! assert_contains {
     ($haystack: expr, $needle: expr) => {
@@ -75,8 +75,9 @@ fn assert_dirs_eq(expected: &Path, actual: &Path) {
 fn run_test(name: &str) -> Result<(), cobalt::Error> {
     let target = format!("tests/target/{}/", name);
     let target: PathBuf = target.into();
-    let mut config = Config::from_file(format!("tests/fixtures/{}/.cobalt.yml", name))
-        .unwrap_or_default();
+    let mut config = ConfigBuilder::from_file(format!("tests/fixtures/{}/.cobalt.yml", name))
+        .unwrap_or_default()
+        .build()?;
     let destdir = TempDir::new(name).expect("Tempdir not created");
 
     config.source = format!("tests/fixtures/{}/", name);

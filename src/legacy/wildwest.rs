@@ -198,7 +198,7 @@ impl Default for GlobalConfig {
     }
 }
 
-impl From<GlobalConfig> for config::Config {
+impl From<GlobalConfig> for config::ConfigBuilder {
     fn from(legacy: GlobalConfig) -> Self {
         let GlobalConfig {
             source,
@@ -236,7 +236,7 @@ impl From<GlobalConfig> for config::Config {
             ..Default::default()
         };
 
-        config::Config {
+        config::ConfigBuilder {
             source: source,
             dest: dest,
             drafts: drafts,

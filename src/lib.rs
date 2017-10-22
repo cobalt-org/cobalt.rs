@@ -88,6 +88,7 @@ extern crate serde;
 pub use cobalt::build;
 pub use error::Error;
 pub use config::Config;
+pub use config::ConfigBuilder;
 pub use config::Dump;
 pub use new::{create_new_project, create_new_document};
 

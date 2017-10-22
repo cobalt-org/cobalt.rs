@@ -9,6 +9,7 @@ use legacy::wildwest;
 use syntax_highlight::has_syntax_theme;
 
 arg_enum! {
+    #[derive(Serialize, Deserialize)]
     #[derive(Debug, PartialEq, Copy, Clone)]
     pub enum Dump {
         DocObject,
@@ -87,7 +88,7 @@ const LAYOUTS_DIR: &'static str = "_layouts";
 #[derive(Debug, PartialEq)]
 #[derive(Serialize, Deserialize)]
 #[serde(deny_unknown_fields, default)]
-pub struct Config {
+pub struct ConfigBuilder {
     #[serde(skip)]
     pub root: path::PathBuf,
     pub source: String,
@@ -116,9 +117,9 @@ pub struct Config {
     pub sass: SassOptions,
 }
 
-impl Default for Config {
-    fn default() -> Config {
-        Config {
+impl Default for ConfigBuilder {
+    fn default() -> ConfigBuilder {
+        ConfigBuilder {
             root: path::PathBuf::new(),
             source: "./".to_owned(),
             dest: "./".to_owned(),
@@ -144,12 +145,12 @@ impl Default for Config {
     }
 }
 
-impl Config {
-    pub fn from_file<P: Into<path::PathBuf>>(path: P) -> Result<Config> {
+impl ConfigBuilder {
+    pub fn from_file<P: Into<path::PathBuf>>(path: P) -> Result<ConfigBuilder> {
         Self::from_file_internal(path.into())
     }
 
-    fn from_file_internal(path: path::PathBuf) -> Result<Config> {
+    fn from_file_internal(path: path::PathBuf) -> Result<ConfigBuilder> {
         let content = {
             let mut buffer = String::new();
             let mut f = File::open(&path)?;
@@ -158,50 +159,24 @@ impl Config {
         };
 
         if content.trim().is_empty() {
-            return Ok(Config::default());
+            return Ok(ConfigBuilder::default());
         }
 
         let config: wildwest::GlobalConfig = serde_yaml::from_str(&content)?;
-        let mut config: Config = config.into();
+        let mut config: ConfigBuilder = config.into();
 
         let mut root = path;
-        root.pop();
+        root.pop(); // Remove filename
         config.root = root;
-
-        config.link = if let Some(ref link) = config.link {
-            let mut link = link.to_owned();
-            if !link.ends_with('/') {
-                link += "/";
-            }
-            Some(link)
-        } else {
-            None
-        };
-
-        let result: Result<()> = match has_syntax_theme(&config.syntax_highlight.theme) {
-            Ok(true) => Ok(()),
-            Ok(false) => {
-                Err(format!("Syntax theme '{}' is unsupported",
-                            config.syntax_highlight.theme)
-                        .into())
-            }
-            Err(err) => {
-                warn!("Syntax theme named '{}' ignored. Reason: {}",
-                      config.syntax_highlight.theme,
-                      err);
-                Ok(())
-            }
-        };
-        result?;
 
         Ok(config)
     }
 
-    pub fn from_cwd<P: Into<path::PathBuf>>(cwd: P) -> Result<Config> {
+    pub fn from_cwd<P: Into<path::PathBuf>>(cwd: P) -> Result<ConfigBuilder> {
         Self::from_cwd_internal(cwd.into())
     }
 
-    fn from_cwd_internal(cwd: path::PathBuf) -> Result<Config> {
+    fn from_cwd_internal(cwd: path::PathBuf) -> Result<ConfigBuilder> {
         let file_path = find_project_file(&cwd, ".cobalt.yml");
         let mut config = file_path
             .map(|p| {
@@ -210,13 +185,120 @@ impl Config {
                  })
             .unwrap_or_else(|| {
                 warn!("No .cobalt.yml file found in current directory, using default config.");
-                Ok(Config::default())
+                Ok(ConfigBuilder::default())
             })?;
         config.root = cwd;
         Ok(config)
     }
+
+    pub fn build(self) -> Result<Config> {
+        let ConfigBuilder {
+            root,
+            source,
+            dest,
+            layouts,
+            drafts,
+            data,
+            include_drafts,
+            posts,
+            post_path,
+            post_order,
+            template_extensions,
+            rss,
+            jsonfeed,
+            name,
+            description,
+            link,
+            ignore,
+            excerpt_separator,
+            dump,
+            syntax_highlight,
+            sass,
+        } = self;
+
+        let link = link.map(|mut l| {
+                                if l.ends_with('/') {
+                                    l.pop();
+                                }
+                                l
+                            });
+
+        let result: Result<()> = match has_syntax_theme(&syntax_highlight.theme) {
+            Ok(true) => Ok(()),
+            Ok(false) => {
+                Err(format!("Syntax theme '{}' is unsupported", syntax_highlight.theme).into())
+            }
+            Err(err) => {
+                warn!("Syntax theme named '{}' ignored. Reason: {}",
+                      syntax_highlight.theme,
+                      err);
+                Ok(())
+            }
+        };
+        result?;
+
+        let config = Config {
+            root,
+            source,
+            dest,
+            layouts,
+            drafts,
+            data,
+            include_drafts,
+            posts,
+            post_path,
+            post_order,
+            template_extensions,
+            rss,
+            jsonfeed,
+            name,
+            description,
+            link,
+            ignore,
+            excerpt_separator,
+            dump,
+            syntax_highlight,
+            sass,
+        };
+
+        Ok(config)
+    }
 }
 
+#[derive(Debug, PartialEq)]
+#[derive(Serialize, Deserialize)]
+#[serde(deny_unknown_fields, default)]
+pub struct Config {
+    pub root: path::PathBuf,
+    pub source: String,
+    pub dest: String,
+    pub layouts: &'static str,
+    pub drafts: String,
+    pub data: &'static str,
+    pub include_drafts: bool,
+    pub posts: String,
+    pub post_path: Option<String>,
+    pub post_order: SortOrder,
+    pub template_extensions: Vec<String>,
+    pub rss: Option<String>,
+    pub jsonfeed: Option<String>,
+    pub name: Option<String>,
+    pub description: Option<String>,
+    pub link: Option<String>,
+    pub ignore: Vec<String>,
+    pub excerpt_separator: String,
+    pub dump: Vec<Dump>,
+    pub syntax_highlight: SyntaxHighlight,
+    pub sass: SassOptions,
+}
+
+impl Default for Config {
+    fn default() -> Config {
+        ConfigBuilder::default()
+            .build()
+            .expect("default config should not fail")
+    }
+}
 fn find_project_file<P: Into<path::PathBuf>>(dir: P, name: &str) -> Option<path::PathBuf> {
     find_project_file_internal(dir.into(), name)
 }
@@ -259,9 +341,9 @@ fn find_project_file_doesnt_exist() {
 
 #[test]
 fn test_from_file_ok() {
-    let result = Config::from_file("tests/fixtures/config/.cobalt.yml").unwrap();
+    let result = ConfigBuilder::from_file("tests/fixtures/config/.cobalt.yml").unwrap();
     assert_eq!(result,
-               Config {
+               ConfigBuilder {
                    root: path::Path::new("tests/fixtures/config").to_path_buf(),
                    dest: "./dest".to_owned(),
                    posts: "_my_posts".to_owned(),
@@ -271,41 +353,41 @@ fn test_from_file_ok() {
 
 #[test]
 fn test_from_file_rss() {
-    let result = Config::from_file("tests/fixtures/config/rss.yml").unwrap();
+    let result = ConfigBuilder::from_file("tests/fixtures/config/rss.yml").unwrap();
     assert_eq!(result,
-               Config {
+               ConfigBuilder {
                    root: path::Path::new("tests/fixtures/config").to_path_buf(),
                    rss: Some("rss.xml".to_owned()),
                    name: Some("My blog!".to_owned()),
                    description: Some("Blog description".to_owned()),
-                   link: Some("http://example.com/".to_owned()),
+                   link: Some("http://example.com".to_owned()),
                    ..Default::default()
                });
 }
 
 #[test]
 fn test_from_file_empty() {
-    let result = Config::from_file("tests/fixtures/config/empty.yml").unwrap();
-    assert_eq!((result), Config { ..Default::default() });
+    let result = ConfigBuilder::from_file("tests/fixtures/config/empty.yml").unwrap();
+    assert_eq!((result), ConfigBuilder { ..Default::default() });
 }
 
 #[test]
 fn test_from_file_invalid_syntax() {
-    let result = Config::from_file("tests/fixtures/config/invalid_syntax.yml");
+    let result = ConfigBuilder::from_file("tests/fixtures/config/invalid_syntax.yml");
     assert!(result.is_err());
 }
 
 #[test]
 fn test_from_file_not_found() {
-    let result = Config::from_file("tests/fixtures/config/config_does_not_exist.yml");
+    let result = ConfigBuilder::from_file("tests/fixtures/config/config_does_not_exist.yml");
     assert!(result.is_err());
 }
 
 #[test]
 fn test_from_cwd_ok() {
-    let result = Config::from_cwd("tests/fixtures/config").unwrap();
+    let result = ConfigBuilder::from_cwd("tests/fixtures/config").unwrap();
     assert_eq!(result,
-               Config {
+               ConfigBuilder {
                    root: path::Path::new("tests/fixtures/config").to_path_buf(),
                    dest: "./dest".to_owned(),
                    posts: "_my_posts".to_owned(),
@@ -315,9 +397,9 @@ fn test_from_cwd_ok() {
 
 #[test]
 fn test_from_cwd_not_found() {
-    let result = Config::from_cwd("tests/fixtures").unwrap();
+    let result = ConfigBuilder::from_cwd("tests/fixtures").unwrap();
     assert_eq!(result,
-               Config {
+               ConfigBuilder {
                    root: path::Path::new("tests/fixtures").to_path_buf(),
                    ..Default::default()
                });
