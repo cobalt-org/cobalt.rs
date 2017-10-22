@@ -157,7 +157,6 @@ impl Default for SyntaxHighlight {
 pub struct GlobalConfig {
     pub source: String,
     pub dest: String,
-    pub layouts: String,
     pub drafts: String,
     pub include_drafts: bool,
     pub posts: String,
@@ -180,7 +179,6 @@ impl Default for GlobalConfig {
         GlobalConfig {
             source: "./".to_owned(),
             dest: "./".to_owned(),
-            layouts: "_layouts".to_owned(),
             drafts: "_drafts".to_owned(),
             include_drafts: false,
             posts: "posts".to_owned(),
@@ -205,7 +203,6 @@ impl From<GlobalConfig> for config::Config {
         let GlobalConfig {
             source,
             dest,
-            layouts,
             drafts,
             include_drafts,
             posts,
@@ -242,7 +239,6 @@ impl From<GlobalConfig> for config::Config {
         config::Config {
             source: source,
             dest: dest,
-            layouts: layouts,
             drafts: drafts,
             include_drafts: include_drafts,
             posts: posts,

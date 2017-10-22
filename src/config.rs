@@ -82,6 +82,7 @@ impl Default for SyntaxHighlight {
 }
 
 const DATA_DIR: &'static str = "_data";
+const LAYOUTS_DIR: &'static str = "_layouts";
 
 #[derive(Debug, PartialEq)]
 #[derive(Serialize, Deserialize)]
@@ -91,7 +92,8 @@ pub struct Config {
     pub root: path::PathBuf,
     pub source: String,
     pub dest: String,
-    pub layouts: String,
+    #[serde(skip)]
+    pub layouts: &'static str,
     pub drafts: String,
     #[serde(skip)]
     pub data: &'static str,
@@ -120,7 +122,7 @@ impl Default for Config {
             root: path::PathBuf::new(),
             source: "./".to_owned(),
             dest: "./".to_owned(),
-            layouts: "_layouts".to_owned(),
+            layouts: LAYOUTS_DIR,
             drafts: "_drafts".to_owned(),
             data: DATA_DIR,
             include_drafts: false,
@@ -262,7 +264,6 @@ fn test_from_file_ok() {
                Config {
                    root: path::Path::new("tests/fixtures/config").to_path_buf(),
                    dest: "./dest".to_owned(),
-                   layouts: "_my_layouts".to_owned(),
                    posts: "_my_posts".to_owned(),
                    ..Default::default()
                });
@@ -307,7 +308,6 @@ fn test_from_cwd_ok() {
                Config {
                    root: path::Path::new("tests/fixtures/config").to_path_buf(),
                    dest: "./dest".to_owned(),
-                   layouts: "_my_layouts".to_owned(),
                    posts: "_my_posts".to_owned(),
                    ..Default::default()
                });
