@@ -238,9 +238,8 @@ impl ConfigBuilder {
         result?;
 
         let config = Config {
-            root,
-            source,
-            dest,
+            source: root.join(source),
+            dest: root.join(dest),
             layouts,
             drafts,
             data,
@@ -269,9 +268,8 @@ impl ConfigBuilder {
 #[derive(Serialize, Deserialize)]
 #[serde(deny_unknown_fields, default)]
 pub struct Config {
-    pub root: path::PathBuf,
-    pub source: String,
-    pub dest: String,
+    pub source: path::PathBuf,
+    pub dest: path::PathBuf,
     pub layouts: &'static str,
     pub drafts: String,
     pub data: &'static str,

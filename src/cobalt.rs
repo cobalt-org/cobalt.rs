@@ -68,8 +68,8 @@ fn deep_insert(data_map: &mut HashMap<String, Value>,
 pub fn build(config: &Config) -> Result<()> {
     trace!("Build configuration: {:?}", config);
 
-    let source = Path::new(&config.source);
-    let dest = Path::new(&config.dest);
+    let source = config.source.as_path();
+    let dest = config.dest.as_path();
 
     let template_extensions: Vec<&OsStr> =
         config.template_extensions.iter().map(OsStr::new).collect();

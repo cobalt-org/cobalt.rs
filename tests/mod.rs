@@ -76,17 +76,17 @@ fn assert_dirs_eq(expected: &Path, actual: &Path) {
 fn run_test(name: &str) -> Result<(), cobalt::Error> {
     let target = format!("tests/target/{}/", name);
     let target: PathBuf = target.into();
-    let mut config = ConfigBuilder::from_file(format!("tests/fixtures/{}/.cobalt.yml", name))
-        .unwrap_or_default()
-        .build()?;
+    let mut config = ConfigBuilder::from_cwd(format!("tests/fixtures/{}", name))?;
     let destdir = TempDir::new(name).expect("Tempdir not created");
 
-    config.source = format!("tests/fixtures/{}/", name);
+    config.source = "./".to_owned();
     config.dest = destdir
         .path()
         .to_str()
         .expect("Can't convert destdir to str")
         .to_owned();
+
+    let config = config.build()?;
 
     // try to create the target directory, ignore errors
     fs::create_dir_all(&config.dest).is_ok();
@@ -94,7 +94,7 @@ fn run_test(name: &str) -> Result<(), cobalt::Error> {
     let result = cobalt::build(&config);
 
     if result.is_ok() {
-        assert_dirs_eq(Path::new(config.dest.as_str()), &target);
+        assert_dirs_eq(&config.dest, &target);
     }
 
     // clean up

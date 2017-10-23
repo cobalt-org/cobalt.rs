@@ -74,7 +74,7 @@ mod new;
 use std::env;
 
 use clap::{Arg, App, SubCommand, AppSettings};
-use cobalt::{Config, ConfigBuilder, Dump, jekyll};
+use cobalt::{ConfigBuilder, Dump, jekyll};
 use cobalt::{list_syntaxes, list_syntax_themes};
 use env_logger::LogBuilder;
 use log::{LogRecord, LogLevelFilter};
@@ -264,13 +264,12 @@ fn run() -> Result<()> {
         .or_else(|| global_matches.value_of("config"));
 
     // Fetch config information if available
-    let mut config: Config = if let Some(config_path) = config_path {
+    let mut config = if let Some(config_path) = config_path {
         ConfigBuilder::from_file(config_path)
             .chain_err(|| format!("Error reading config file {:?}", config_path))?
-            .build()?
     } else {
         let cwd = env::current_dir().expect("How does this fail?");
-        ConfigBuilder::from_cwd(cwd)?.build()?
+        ConfigBuilder::from_cwd(cwd)?
     };
 
     config.dest = matches
@@ -291,6 +290,8 @@ fn run() -> Result<()> {
         config.dump.append(&mut dump);
         info!("Setting: {:?}", config.dump);
     }
+
+    let config = config.build()?;
 
     match command {
         "init" => new::init_command(config, matches),
