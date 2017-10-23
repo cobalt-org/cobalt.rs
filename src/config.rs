@@ -94,6 +94,8 @@ pub struct ConfigBuilder {
     pub source: String,
     pub dest: String,
     #[serde(skip)]
+    pub abs_dest: Option<String>,
+    #[serde(skip)]
     pub layouts: &'static str,
     pub drafts: String,
     #[serde(skip)]
@@ -123,6 +125,7 @@ impl Default for ConfigBuilder {
             root: path::PathBuf::new(),
             source: "./".to_owned(),
             dest: "./".to_owned(),
+            abs_dest: None,
             layouts: LAYOUTS_DIR,
             drafts: "_drafts".to_owned(),
             data: DATA_DIR,
@@ -196,6 +199,7 @@ impl ConfigBuilder {
             root,
             source,
             dest,
+            abs_dest,
             layouts,
             drafts,
             data,
@@ -239,7 +243,9 @@ impl ConfigBuilder {
 
         let config = Config {
             source: root.join(source),
-            dest: root.join(dest),
+            dest: abs_dest
+                .map(|s| s.into())
+                .unwrap_or_else(|| root.join(dest)),
             layouts,
             drafts,
             data,
@@ -399,6 +405,33 @@ fn test_from_cwd_not_found() {
     assert_eq!(result,
                ConfigBuilder {
                    root: path::Path::new("tests/fixtures").to_path_buf(),
+                   ..Default::default()
+               });
+}
+
+#[test]
+fn test_build_dest() {
+    let result = ConfigBuilder::from_file("tests/fixtures/config/.cobalt.yml").unwrap();
+    let result = result.build().unwrap();
+    assert_eq!(result,
+               Config {
+                   source: path::Path::new("tests/fixtures/config").to_path_buf(),
+                   dest: path::Path::new("tests/fixtures/config/./dest").to_path_buf(),
+                   posts: "_my_posts".to_owned(),
+                   ..Default::default()
+               });
+}
+
+#[test]
+fn test_build_abs_dest() {
+    let mut result = ConfigBuilder::from_file("tests/fixtures/config/.cobalt.yml").unwrap();
+    result.abs_dest = Some("hello/world".to_owned());
+    let result = result.build().unwrap();
+    assert_eq!(result,
+               Config {
+                   source: path::Path::new("tests/fixtures/config").to_path_buf(),
+                   dest: path::Path::new("hello/world").to_path_buf(),
+                   posts: "_my_posts".to_owned(),
                    ..Default::default()
                });
 }

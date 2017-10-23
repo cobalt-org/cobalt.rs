@@ -272,11 +272,10 @@ fn run() -> Result<()> {
         ConfigBuilder::from_cwd(cwd)?
     };
 
-    config.dest = matches
+    config.abs_dest = matches
         .value_of("destination")
         .or_else(|| global_matches.value_of("destination"))
-        .map(str::to_string)
-        .unwrap_or(config.dest);
+        .map(str::to_string);
 
     config.include_drafts = matches.is_present("drafts");
 
