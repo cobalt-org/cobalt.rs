@@ -20,7 +20,8 @@ use cobalt::ConfigBuilder;
 macro_rules! assert_contains {
     ($haystack: expr, $needle: expr) => {
         let text = $haystack.to_owned();
-        println!("{}", text);
+        println!("text='''{}'''", text);
+        println!("needle='''{}'''", $needle);
         assert!(text.contains($needle))
     }
 }
@@ -230,7 +231,8 @@ pub fn ignore_files() {
 pub fn yaml_error() {
     let err = run_test("yaml_error");
     assert!(err.is_err());
-    assert_eq!(err.unwrap_err().description(), "scan error");
+    let error_message = format!("{}", err.unwrap_err().display_chain());
+    assert_contains!(error_message, "unexpected character");
 }
 
 #[test]

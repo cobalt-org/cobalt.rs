@@ -124,7 +124,8 @@ pub fn build(config: &Config) -> Result<()> {
             default_front = default_front.set_permalink(config.post_path.clone());
         }
 
-        let doc = Document::parse(source, &file_path, &file_path, default_front)?;
+        let doc = Document::parse(source, &file_path, &file_path, default_front)
+            .chain_err(|| format!("Failed to parse {:?}", src_path))?;
         if !doc.front.is_draft || config.include_drafts {
             documents.push(doc);
         }
@@ -155,7 +156,11 @@ pub fn build(config: &Config) -> Result<()> {
                 default_front = default_front.set_permalink(config.post_path.clone());
             }
 
-            let doc = Document::parse(&drafts_root, &file_path, new_path, default_front)?;
+            let doc = Document::parse(&drafts_root, &file_path, new_path, default_front)
+                .chain_err(|| {
+                               let src_path = drafts_root.join(file_path);
+                               format!("Failed to parse {:?}", src_path)
+                           })?;
             documents.push(doc);
         }
     }
