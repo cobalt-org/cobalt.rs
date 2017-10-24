@@ -3,6 +3,15 @@ use cobalt;
 
 use error::*;
 
+pub fn init_command_args() -> clap::App<'static, 'static> {
+    clap::SubCommand::with_name("init")
+        .about("create a new cobalt project")
+        .arg(clap::Arg::with_name("DIRECTORY")
+                 .help("Target directory")
+                 .default_value("./")
+                 .index(1))
+}
+
 pub fn init_command(_config: cobalt::Config, matches: &clap::ArgMatches) -> Result<()> {
     let directory = matches.value_of("DIRECTORY").unwrap();
 
@@ -11,6 +20,20 @@ pub fn init_command(_config: cobalt::Config, matches: &clap::ArgMatches) -> Resu
     info!("Created new project at {}", directory);
 
     Ok(())
+}
+
+pub fn new_command_args() -> clap::App<'static, 'static> {
+    clap::SubCommand::with_name("new")
+        .about("Create a new post or page")
+        .arg(clap::Arg::with_name("FILETYPE")
+                 .help("Type of file to create eg post or page")
+                 .default_value("post")
+                 .takes_value(true))
+        .arg(clap::Arg::with_name("FILENAME")
+                 .help("File to create")
+                 .default_value_if("FILETYPE", Some("page"), "new_page.md")
+                 .default_value("new_post.md")
+                 .takes_value(true))
 }
 
 pub fn new_command(config: cobalt::Config, matches: &clap::ArgMatches) -> Result<()> {

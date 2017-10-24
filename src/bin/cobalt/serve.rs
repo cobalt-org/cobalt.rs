@@ -16,6 +16,18 @@ use notify::{Watcher, RecursiveMode, raw_watcher};
 use build;
 use error::*;
 
+pub fn watch_command_args() -> clap::App<'static, 'static> {
+    clap::SubCommand::with_name("watch")
+        .about("build, serve, and watch the project at the source dir")
+        .arg(clap::Arg::with_name("port")
+                 .short("P")
+                 .long("port")
+                 .value_name("INT")
+                 .help("Port to serve from")
+                 .default_value("3000")
+                 .takes_value(true))
+}
+
 pub fn watch_command(config: cobalt::Config, matches: &clap::ArgMatches) -> Result<()> {
     build::build(&config)?;
 
@@ -69,6 +81,18 @@ pub fn watch_command(config: cobalt::Config, matches: &clap::ArgMatches) -> Resu
             build::build(&config)?;
         }
     }
+}
+
+pub fn serve_command_args() -> clap::App<'static, 'static> {
+    clap::SubCommand::with_name("serve")
+        .about("build and serve the cobalt project at the source dir")
+        .arg(clap::Arg::with_name("port")
+                 .short("P")
+                 .long("port")
+                 .value_name("INT")
+                 .help("Port to serve from")
+                 .default_value("3000")
+                 .takes_value(true))
 }
 
 pub fn serve_command(config: cobalt::Config, matches: &clap::ArgMatches) -> Result<()> {

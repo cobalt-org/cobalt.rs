@@ -8,6 +8,30 @@ use ghp;
 
 use error::*;
 
+pub fn build_command_args() -> clap::App<'static, 'static> {
+    clap::SubCommand::with_name("build")
+        .about("build the cobalt project at the source dir")
+        .arg(clap::Arg::with_name("import")
+                 .short("i")
+                 .long("import")
+                 .help("Import after build to gh-pages branch")
+                 .takes_value(false))
+        .arg(clap::Arg::with_name("branch")
+                 .short("b")
+                 .long("branch")
+                 .value_name("BRANCH")
+                 .help("Branch that will be used to import the site to")
+                 .default_value("gh-pages")
+                 .takes_value(true))
+        .arg(clap::Arg::with_name("message")
+                 .short("m")
+                 .long("message")
+                 .value_name("COMMIT-MESSAGE")
+                 .help("Commit message that will be used on import")
+                 .default_value("cobalt site import")
+                 .takes_value(true))
+}
+
 pub fn build_command(config: cobalt::Config, matches: &clap::ArgMatches) -> Result<()> {
     build(&config)?;
     info!("Build successful");
@@ -28,6 +52,10 @@ pub fn build(config: &cobalt::Config) -> Result<()> {
     Ok(())
 }
 
+pub fn clean_command_args() -> clap::App<'static, 'static> {
+    clap::SubCommand::with_name("clean").about("cleans directory set as destination")
+}
+
 pub fn clean_command(config: cobalt::Config, _matches: &clap::ArgMatches) -> Result<()> {
     let cwd = env::current_dir().unwrap_or_else(|_| path::PathBuf::new());
     let destdir = config
@@ -44,6 +72,25 @@ pub fn clean_command(config: cobalt::Config, _matches: &clap::ArgMatches) -> Res
     info!("directory \"{:?}\" removed", &config.dest);
 
     Ok(())
+}
+
+pub fn import_command_args() -> clap::App<'static, 'static> {
+    clap::SubCommand::with_name("import")
+        .about("moves the contents of the dest folder to the gh-pages branch")
+        .arg(clap::Arg::with_name("branch")
+                 .short("b")
+                 .long("branch")
+                 .value_name("BRANCH")
+                 .help("Branch that will be used to import the site to")
+                 .default_value("gh-pages")
+                 .takes_value(true))
+        .arg(clap::Arg::with_name("message")
+                 .short("m")
+                 .long("message")
+                 .value_name("COMMIT-MESSAGE")
+                 .help("Commit message that will be used on import")
+                 .default_value("cobalt site import")
+                 .takes_value(true))
 }
 
 pub fn import_command(config: cobalt::Config, matches: &clap::ArgMatches) -> Result<()> {
