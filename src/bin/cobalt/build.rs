@@ -51,7 +51,9 @@ pub fn build_command(matches: &clap::ArgMatches) -> Result<()> {
 }
 
 pub fn build(config: &cobalt::Config) -> Result<()> {
-    info!("Building from {:?} into {:?}", config.source, config.destination);
+    info!("Building from {:?} into {:?}",
+          config.source,
+          config.destination);
     cobalt::build(config)?;
 
     Ok(())

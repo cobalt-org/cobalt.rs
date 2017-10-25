@@ -225,6 +225,30 @@ impl From<GlobalConfig> for config::ConfigBuilder {
             _ => config::SortOrder::Desc,
         };
 
+        let default = frontmatter::FrontmatterBuilder::new()
+            .set_excerpt_separator(excerpt_separator)
+            .set_draft(false)
+            .set_post(false);
+        let posts = config::PostBuilder {
+            name: None,
+            description: None,
+            dir: posts,
+            drafts_dir: Some(drafts),
+            order: post_order,
+            rss: rss,
+            jsonfeed: jsonfeed,
+            default: frontmatter::FrontmatterBuilder::new()
+                .set_permalink(post_path)
+                .set_post(true),
+        };
+
+        let site = config::SiteBuilder {
+            name: name,
+            description: description,
+            base_url: link,
+            ..Default::default()
+        };
+
         let syntax_highlight = config::SyntaxHighlight { theme: syntax_highlight.theme };
         let sass = config::SassOptions {
             style: match sass.style {
@@ -236,30 +260,19 @@ impl From<GlobalConfig> for config::ConfigBuilder {
             ..Default::default()
         };
 
-        let site = config::SiteBuilder {
-            name: name,
-            description: description,
-            base_url: link,
-            ..Default::default()
-        };
-
         config::ConfigBuilder {
             source: source,
             destination: dest,
-            drafts: drafts,
             include_drafts: include_drafts,
-            posts: posts,
-            post_path: post_path,
-            post_order: post_order,
-            template_extensions: template_extensions,
-            rss: rss,
-            jsonfeed: jsonfeed,
+            default,
+            pages: config::PageBuilder::default(),
+            posts,
             site: site,
+            template_extensions: template_extensions,
             ignore: ignore,
-            excerpt_separator: excerpt_separator,
-            dump: vec![],
             syntax_highlight: syntax_highlight,
             sass: sass,
+            dump: vec![],
             ..Default::default()
         }
     }

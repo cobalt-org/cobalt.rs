@@ -22,7 +22,6 @@ use config::{Config, SortOrder};
 #[cfg(feature = "sass")]
 use config::SassOutputStyle;
 use files::FilesBuilder;
-use frontmatter;
 
 fn deep_insert(data_map: &mut HashMap<String, Value>,
                file_path: &Path,
@@ -76,14 +75,11 @@ pub fn build(config: &Config) -> Result<()> {
 
     let layouts = source.join(&config.layouts_dir);
     let mut layouts_cache = HashMap::new();
-    let posts_path = source.join(&config.posts);
+    let posts_path = source.join(&config.posts.dir);
 
     debug!("Layouts directory: {:?}", layouts);
     debug!("Posts directory: {:?}", posts_path);
     debug!("Draft mode enabled: {}", config.include_drafts);
-    if config.include_drafts {
-        debug!("Draft directory: {:?}", config.drafts);
-    }
 
     let mut documents = vec![];
 
@@ -98,10 +94,10 @@ pub fn build(config: &Config) -> Result<()> {
 
     let mut page_files = FilesBuilder::new(source)?;
     page_files
-        .add_ignore(&format!("!{}", config.posts))?
-        .add_ignore(&format!("!{}/**", config.posts))?
-        .add_ignore(&format!("{}/**/_*", config.posts))?
-        .add_ignore(&format!("{}/**/_*/**", config.posts))?;
+        .add_ignore(&format!("!{}", config.posts.dir))?
+        .add_ignore(&format!("!{}/**", config.posts.dir))?
+        .add_ignore(&format!("{}/**/_*", config.posts.dir))?
+        .add_ignore(&format!("{}/**/_*/**", config.posts.dir))?;
     for line in &config.ignore {
         page_files.add_ignore(line.as_str())?;
     }
@@ -116,13 +112,11 @@ pub fn build(config: &Config) -> Result<()> {
         let src_path = source.join(file_path.as_path());
         let is_post = src_path.starts_with(posts_path.as_path());
 
-        let mut default_front = frontmatter::FrontmatterBuilder::new()
-            .set_post(is_post)
-            .set_draft(false)
-            .set_excerpt_separator(config.excerpt_separator.clone());
-        if is_post {
-            default_front = default_front.set_permalink(config.post_path.clone());
-        }
+        let default_front = if is_post {
+            config.posts.default.clone()
+        } else {
+            config.pages.default.clone()
+        };
 
         let doc = Document::parse(source, &file_path, &file_path, default_front)
             .chain_err(|| format!("Failed to parse {:?}", src_path))?;
@@ -132,36 +126,31 @@ pub fn build(config: &Config) -> Result<()> {
     }
 
     if config.include_drafts {
-        let drafts_root = source.join(&config.drafts);
-        let mut draft_files = FilesBuilder::new(drafts_root.as_path())?;
-        for line in &config.ignore {
-            draft_files.add_ignore(line.as_str())?;
-        }
-        let draft_files = draft_files.build()?;
-        for file_path in draft_files.files().filter(|p| {
-            template_extensions.contains(&p.extension().unwrap_or_else(|| OsStr::new("")))
-        }) {
-            let new_path = posts_path.join(&file_path);
-            let new_path = new_path
-                .strip_prefix(source)
-                .expect("Entry not in source folder");
-
-            let is_post = true;
-
-            let mut default_front = frontmatter::FrontmatterBuilder::new()
-                .set_post(is_post)
-                .set_draft(true)
-                .set_excerpt_separator(config.excerpt_separator.clone());
-            if is_post {
-                default_front = default_front.set_permalink(config.post_path.clone());
+        if let Some(ref drafts_dir) = config.posts.drafts_dir {
+            debug!("Draft directory: {:?}", drafts_dir);
+            let drafts_root = source.join(&drafts_dir);
+            let mut draft_files = FilesBuilder::new(drafts_root.as_path())?;
+            for line in &config.ignore {
+                draft_files.add_ignore(line.as_str())?;
             }
+            let draft_files = draft_files.build()?;
+            for file_path in draft_files.files().filter(|p| {
+                template_extensions.contains(&p.extension().unwrap_or_else(|| OsStr::new("")))
+            }) {
+                let new_path = posts_path.join(&file_path);
+                let new_path = new_path
+                    .strip_prefix(source)
+                    .expect("Entry not in source folder");
 
-            let doc = Document::parse(&drafts_root, &file_path, new_path, default_front)
-                .chain_err(|| {
-                               let src_path = drafts_root.join(file_path);
-                               format!("Failed to parse {:?}", src_path)
-                           })?;
-            documents.push(doc);
+                let default_front = config.posts.default.clone().set_draft(true);
+
+                let doc = Document::parse(&drafts_root, &file_path, new_path, default_front)
+                    .chain_err(|| {
+                                   let src_path = drafts_root.join(file_path);
+                                   format!("Failed to parse {:?}", src_path)
+                               })?;
+                documents.push(doc);
+            }
         }
     }
 
@@ -221,7 +210,7 @@ pub fn build(config: &Config) -> Result<()> {
                           .cmp(&a.front.published_date.unwrap_or(default_date))
                   });
 
-    match config.post_order {
+    match config.posts.order {
         SortOrder::Asc => posts.reverse(),
         SortOrder::Desc => (),
     }
@@ -277,11 +266,11 @@ pub fn build(config: &Config) -> Result<()> {
     }
 
     // check if we should create an RSS file and create it!
-    if let Some(ref path) = config.rss {
+    if let Some(ref path) = config.posts.rss {
         create_rss(path, dest, config, &posts)?;
     }
     // check if we should create an jsonfeed file and create it!
-    if let Some(ref path) = config.jsonfeed {
+    if let Some(ref path) = config.posts.jsonfeed {
         create_jsonfeed(path, dest, config, &posts)?;
     }
 
@@ -354,14 +343,16 @@ pub fn build(config: &Config) -> Result<()> {
 // creates a new RSS file with the contents of the site blog
 fn create_rss(path: &str, dest: &Path, config: &Config, posts: &[Document]) -> Result<()> {
     let name = config
-        .site
+        .posts
         .name
         .as_ref()
+        .or(config.site.name.as_ref())
         .ok_or(ErrorKind::ConfigFileMissingFields)?;
     let description = config
-        .site
+        .posts
         .description
         .as_ref()
+        .or(config.site.description.as_ref())
         .ok_or(ErrorKind::ConfigFileMissingFields)?;
     let link = config
         .site

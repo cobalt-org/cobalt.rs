@@ -5,6 +5,7 @@ use std::io::Read;
 use error::*;
 use serde_yaml;
 
+use frontmatter;
 use legacy::wildwest;
 use syntax_highlight::has_syntax_theme;
 
@@ -97,7 +98,7 @@ pub struct SiteBuilder {
 
 impl Default for SiteBuilder {
     fn default() -> SiteBuilder {
-            SiteBuilder {
+        SiteBuilder {
             name: None,
             description: None,
             base_url: None,
@@ -115,17 +116,53 @@ impl SiteBuilder {
             data_dir,
         } = self;
         let base_url = base_url.map(|mut l| {
-                                if l.ends_with('/') {
-                                    l.pop();
-                                }
-                                l
-                            });
+                                        if l.ends_with('/') {
+                                            l.pop();
+                                        }
+                                        l
+                                    });
         Ok(SiteBuilder {
-            name,
-            description,
-            base_url,
-            data_dir,
-        })
+               name,
+               description,
+               base_url,
+               data_dir,
+           })
+    }
+}
+
+#[derive(Debug, PartialEq, Default)]
+#[derive(Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct PageBuilder {
+    pub default: frontmatter::FrontmatterBuilder,
+}
+
+#[derive(Debug, PartialEq)]
+#[derive(Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct PostBuilder {
+    pub name: Option<String>,
+    pub description: Option<String>,
+    pub dir: String,
+    pub drafts_dir: Option<String>,
+    pub order: SortOrder,
+    pub rss: Option<String>,
+    pub jsonfeed: Option<String>,
+    pub default: frontmatter::FrontmatterBuilder,
+}
+
+impl Default for PostBuilder {
+    fn default() -> PostBuilder {
+        Self {
+            name: None,
+            description: None,
+            dir: "posts".to_owned(),
+            drafts_dir: None,
+            order: SortOrder::default(),
+            rss: None,
+            jsonfeed: None,
+            default: frontmatter::FrontmatterBuilder::new().set_post(true),
+        }
     }
 }
 
@@ -143,16 +180,12 @@ pub struct ConfigBuilder {
     pub abs_dest: Option<String>,
     #[serde(skip)]
     pub include_drafts: bool,
-    pub posts: String,
-    pub drafts: String,
-    pub post_path: Option<String>,
-    pub post_order: SortOrder,
-    pub rss: Option<String>,
-    pub jsonfeed: Option<String>,
+    pub default: frontmatter::FrontmatterBuilder,
+    pub pages: PageBuilder,
+    pub posts: PostBuilder,
     pub site: SiteBuilder,
     pub template_extensions: Vec<String>,
     pub ignore: Vec<String>,
-    pub excerpt_separator: String,
     pub syntax_highlight: SyntaxHighlight,
     pub layouts_dir: &'static str,
     pub sass: SassOptions,
@@ -169,16 +202,15 @@ impl Default for ConfigBuilder {
             destination: "./".to_owned(),
             abs_dest: None,
             include_drafts: false,
-            posts: "posts".to_owned(),
-            drafts: "_drafts".to_owned(),
-            post_path: None,
-            post_order: SortOrder::default(),
-            rss: None,
-            jsonfeed: None,
+            default: frontmatter::FrontmatterBuilder::new()
+                .set_excerpt_separator("\n\n".to_owned())
+                .set_draft(false)
+                .set_post(false),
+            pages: PageBuilder::default(),
+            posts: PostBuilder::default(),
             site: SiteBuilder::default(),
             template_extensions: vec!["md".to_owned(), "liquid".to_owned()],
             ignore: vec![],
-            excerpt_separator: "\n\n".to_owned(),
             syntax_highlight: SyntaxHighlight::default(),
             layouts_dir: LAYOUTS_DIR,
             sass: SassOptions::default(),
@@ -240,16 +272,12 @@ impl ConfigBuilder {
             destination,
             abs_dest,
             include_drafts,
+            default,
+            pages,
             posts,
-            drafts,
-            post_path,
-            post_order,
-            rss,
-            jsonfeed,
             site,
             template_extensions,
             ignore,
-            excerpt_separator,
             syntax_highlight,
             layouts_dir,
             sass,
@@ -270,22 +298,22 @@ impl ConfigBuilder {
         };
         result?;
 
+        let mut pages = pages;
+        pages.default = pages.default.merge(default.clone());
+        let mut posts = posts;
+        posts.default = posts.default.merge(default);
+
         let config = Config {
             source: root.join(source),
             destination: abs_dest
                 .map(|s| s.into())
                 .unwrap_or_else(|| root.join(destination)),
             include_drafts,
+            pages,
             posts,
-            drafts,
-            post_path,
-            post_order,
-            rss,
-            jsonfeed,
             site: site.build()?,
             ignore,
             template_extensions,
-            excerpt_separator,
             syntax_highlight,
             layouts_dir,
             sass,
@@ -303,16 +331,11 @@ pub struct Config {
     pub source: path::PathBuf,
     pub destination: path::PathBuf,
     pub include_drafts: bool,
-    pub posts: String,
-    pub drafts: String,
-    pub post_path: Option<String>,
-    pub post_order: SortOrder,
-    pub rss: Option<String>,
-    pub jsonfeed: Option<String>,
+    pub pages: PageBuilder,
+    pub posts: PostBuilder,
     pub site: SiteBuilder,
     pub template_extensions: Vec<String>,
     pub ignore: Vec<String>,
-    pub excerpt_separator: String,
     pub syntax_highlight: SyntaxHighlight,
     pub layouts_dir: &'static str,
     pub sass: SassOptions,
@@ -373,7 +396,11 @@ fn test_from_file_ok() {
                ConfigBuilder {
                    root: path::Path::new("tests/fixtures/config").to_path_buf(),
                    destination: "./dest".to_owned(),
-                   posts: "_my_posts".to_owned(),
+                   posts: PostBuilder {
+                       dir: "_my_posts".to_owned(),
+                       drafts_dir: Some("_drafts".to_owned()),
+                       ..Default::default()
+                   },
                    ..Default::default()
                });
 }
@@ -384,7 +411,11 @@ fn test_from_file_rss() {
     assert_eq!(result,
                ConfigBuilder {
                    root: path::Path::new("tests/fixtures/config").to_path_buf(),
-                   rss: Some("rss.xml".to_owned()),
+                   posts: PostBuilder {
+                       drafts_dir: Some("_drafts".to_owned()),
+                       rss: Some("rss.xml".to_owned()),
+                       ..Default::default()
+                   },
                    site: SiteBuilder {
                        name: Some("My blog!".to_owned()),
                        description: Some("Blog description".to_owned()),
@@ -420,7 +451,11 @@ fn test_from_cwd_ok() {
                ConfigBuilder {
                    root: path::Path::new("tests/fixtures/config").to_path_buf(),
                    destination: "./dest".to_owned(),
-                   posts: "_my_posts".to_owned(),
+                   posts: PostBuilder {
+                       dir: "_my_posts".to_owned(),
+                       drafts_dir: Some("_drafts".to_owned()),
+                       ..Default::default()
+                   },
                    ..Default::default()
                });
 }
@@ -443,7 +478,15 @@ fn test_build_dest() {
                Config {
                    source: path::Path::new("tests/fixtures/config").to_path_buf(),
                    destination: path::Path::new("tests/fixtures/config/./dest").to_path_buf(),
-                   posts: "_my_posts".to_owned(),
+                   posts: PostBuilder {
+                       dir: "_my_posts".to_owned(),
+                       drafts_dir: Some("_drafts".to_owned()),
+                       default: frontmatter::FrontmatterBuilder::new()
+                           .set_excerpt_separator("\n\n".to_owned())
+                           .set_draft(false)
+                           .set_post(true),
+                       ..Default::default()
+                   },
                    ..Default::default()
                });
 }
@@ -457,7 +500,15 @@ fn test_build_abs_dest() {
                Config {
                    source: path::Path::new("tests/fixtures/config").to_path_buf(),
                    destination: path::Path::new("hello/world").to_path_buf(),
-                   posts: "_my_posts".to_owned(),
+                   posts: PostBuilder {
+                       dir: "_my_posts".to_owned(),
+                       drafts_dir: Some("_drafts".to_owned()),
+                       default: frontmatter::FrontmatterBuilder::new()
+                           .set_excerpt_separator("\n\n".to_owned())
+                           .set_draft(false)
+                           .set_post(true),
+                       ..Default::default()
+                   },
                    ..Default::default()
                });
 }
