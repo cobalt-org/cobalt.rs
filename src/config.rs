@@ -83,6 +83,52 @@ impl Default for SyntaxHighlight {
 }
 
 const DATA_DIR: &'static str = "_data";
+
+#[derive(Debug, PartialEq)]
+#[derive(Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct SiteBuilder {
+    pub name: Option<String>,
+    pub description: Option<String>,
+    pub base_url: Option<String>,
+    #[serde(skip)]
+    pub data_dir: &'static str,
+}
+
+impl Default for SiteBuilder {
+    fn default() -> SiteBuilder {
+            SiteBuilder {
+            name: None,
+            description: None,
+            base_url: None,
+            data_dir: DATA_DIR,
+        }
+    }
+}
+
+impl SiteBuilder {
+    pub fn build(self) -> Result<SiteBuilder> {
+        let SiteBuilder {
+            name,
+            description,
+            base_url,
+            data_dir,
+        } = self;
+        let base_url = base_url.map(|mut l| {
+                                if l.ends_with('/') {
+                                    l.pop();
+                                }
+                                l
+                            });
+        Ok(SiteBuilder {
+            name,
+            description,
+            base_url,
+            data_dir,
+        })
+    }
+}
+
 const LAYOUTS_DIR: &'static str = "_layouts";
 
 #[derive(Debug, PartialEq)]
@@ -98,8 +144,6 @@ pub struct ConfigBuilder {
     #[serde(skip)]
     pub layouts: &'static str,
     pub drafts: String,
-    #[serde(skip)]
-    pub data: &'static str,
     pub include_drafts: bool,
     pub posts: String,
     pub post_path: Option<String>,
@@ -107,9 +151,7 @@ pub struct ConfigBuilder {
     pub template_extensions: Vec<String>,
     pub rss: Option<String>,
     pub jsonfeed: Option<String>,
-    pub name: Option<String>,
-    pub description: Option<String>,
-    pub link: Option<String>,
+    pub site: SiteBuilder,
     pub ignore: Vec<String>,
     pub excerpt_separator: String,
     // This is a debug-only field and should be transient rather than persistently set.
@@ -128,7 +170,6 @@ impl Default for ConfigBuilder {
             abs_dest: None,
             layouts: LAYOUTS_DIR,
             drafts: "_drafts".to_owned(),
-            data: DATA_DIR,
             include_drafts: false,
             posts: "posts".to_owned(),
             post_path: None,
@@ -136,9 +177,7 @@ impl Default for ConfigBuilder {
             template_extensions: vec!["md".to_owned(), "liquid".to_owned()],
             rss: None,
             jsonfeed: None,
-            name: None,
-            description: None,
-            link: None,
+            site: SiteBuilder::default(),
             ignore: vec![],
             excerpt_separator: "\n\n".to_owned(),
             dump: vec![],
@@ -202,7 +241,6 @@ impl ConfigBuilder {
             abs_dest,
             layouts,
             drafts,
-            data,
             include_drafts,
             posts,
             post_path,
@@ -210,22 +248,13 @@ impl ConfigBuilder {
             template_extensions,
             rss,
             jsonfeed,
-            name,
-            description,
-            link,
+            site,
             ignore,
             excerpt_separator,
             dump,
             syntax_highlight,
             sass,
         } = self;
-
-        let link = link.map(|mut l| {
-                                if l.ends_with('/') {
-                                    l.pop();
-                                }
-                                l
-                            });
 
         let result: Result<()> = match has_syntax_theme(&syntax_highlight.theme) {
             Ok(true) => Ok(()),
@@ -248,7 +277,6 @@ impl ConfigBuilder {
                 .unwrap_or_else(|| root.join(destination)),
             layouts,
             drafts,
-            data,
             include_drafts,
             posts,
             post_path,
@@ -256,9 +284,7 @@ impl ConfigBuilder {
             template_extensions,
             rss,
             jsonfeed,
-            name,
-            description,
-            link,
+            site: site.build()?,
             ignore,
             excerpt_separator,
             dump,
@@ -278,7 +304,6 @@ pub struct Config {
     pub destination: path::PathBuf,
     pub layouts: &'static str,
     pub drafts: String,
-    pub data: &'static str,
     pub include_drafts: bool,
     pub posts: String,
     pub post_path: Option<String>,
@@ -286,9 +311,7 @@ pub struct Config {
     pub template_extensions: Vec<String>,
     pub rss: Option<String>,
     pub jsonfeed: Option<String>,
-    pub name: Option<String>,
-    pub description: Option<String>,
-    pub link: Option<String>,
+    pub site: SiteBuilder,
     pub ignore: Vec<String>,
     pub excerpt_separator: String,
     pub dump: Vec<Dump>,
@@ -362,9 +385,12 @@ fn test_from_file_rss() {
                ConfigBuilder {
                    root: path::Path::new("tests/fixtures/config").to_path_buf(),
                    rss: Some("rss.xml".to_owned()),
-                   name: Some("My blog!".to_owned()),
-                   description: Some("Blog description".to_owned()),
-                   link: Some("http://example.com".to_owned()),
+                   site: SiteBuilder {
+                       name: Some("My blog!".to_owned()),
+                       description: Some("Blog description".to_owned()),
+                       base_url: Some("http://example.com".to_owned()),
+                       ..Default::default()
+                   },
                    ..Default::default()
                });
 }

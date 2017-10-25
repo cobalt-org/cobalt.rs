@@ -236,6 +236,13 @@ impl From<GlobalConfig> for config::ConfigBuilder {
             ..Default::default()
         };
 
+        let site = config::SiteBuilder {
+            name: name,
+            description: description,
+            base_url: link,
+            ..Default::default()
+        };
+
         config::ConfigBuilder {
             source: source,
             destination: dest,
@@ -247,9 +254,7 @@ impl From<GlobalConfig> for config::ConfigBuilder {
             template_extensions: template_extensions,
             rss: rss,
             jsonfeed: jsonfeed,
-            name: name,
-            description: description,
-            link: link,
+            site: site,
             ignore: ignore,
             excerpt_separator: excerpt_separator,
             dump: vec![],

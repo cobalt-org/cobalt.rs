@@ -167,7 +167,7 @@ pub fn build(config: &Config) -> Result<()> {
 
     // load data files
     let mut data_map: HashMap<String, Value> = HashMap::new();
-    let data_root = source.join(&config.data);
+    let data_root = source.join(&config.site.data_dir);
     let data_files_builder = FilesBuilder::new(data_root.as_path())?;
     let data_files = data_files_builder.build()?;
 
@@ -354,15 +354,18 @@ pub fn build(config: &Config) -> Result<()> {
 // creates a new RSS file with the contents of the site blog
 fn create_rss(path: &str, dest: &Path, config: &Config, posts: &[Document]) -> Result<()> {
     let name = config
+        .site
         .name
         .as_ref()
         .ok_or(ErrorKind::ConfigFileMissingFields)?;
     let description = config
+        .site
         .description
         .as_ref()
         .ok_or(ErrorKind::ConfigFileMissingFields)?;
     let link = config
-        .link
+        .site
+        .base_url
         .as_ref()
         .ok_or(ErrorKind::ConfigFileMissingFields)?;
 
@@ -393,15 +396,18 @@ fn create_rss(path: &str, dest: &Path, config: &Config, posts: &[Document]) -> R
 // creates a new jsonfeed file with the contents of the site blog
 fn create_jsonfeed(path: &str, dest: &Path, config: &Config, posts: &[Document]) -> Result<()> {
     let name = config
+        .site
         .name
         .as_ref()
         .ok_or(ErrorKind::ConfigFileMissingFields)?;
     let description = config
+        .site
         .description
         .as_ref()
         .ok_or(ErrorKind::ConfigFileMissingFields)?;
     let link = config
-        .link
+        .site
+        .base_url
         .as_ref()
         .ok_or(ErrorKind::ConfigFileMissingFields)?;
 
