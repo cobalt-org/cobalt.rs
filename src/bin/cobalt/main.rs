@@ -87,7 +87,6 @@ fn run() -> Result<()> {
         .about("A static site generator written in Rust.")
         .setting(AppSettings::SubcommandRequired)
         .setting(AppSettings::GlobalVersion)
-        .args(&args::get_config_args())
         .args(&args::get_logging_args())
         .subcommand(new::init_command_args())
         .subcommand(new::new_command_args())
@@ -123,17 +122,14 @@ fn run() -> Result<()> {
     let mut builder = args::get_logging(&global_matches, matches)?;
     builder.init().unwrap();
 
-    let config = args::get_config(&global_matches, matches)?;
-    let config = config.build()?;
-
     match command {
-        "init" => new::init_command(config, matches),
-        "new" => new::new_command(config, matches),
-        "build" => build::build_command(config, matches),
-        "clean" => build::clean_command(config, matches),
-        "serve" => serve::serve_command(config, matches),
-        "watch" => serve::watch_command(config, matches),
-        "import" => build::import_command(config, matches),
+        "init" => new::init_command(matches),
+        "new" => new::new_command(matches),
+        "build" => build::build_command(matches),
+        "clean" => build::clean_command(matches),
+        "serve" => serve::serve_command(matches),
+        "watch" => serve::watch_command(matches),
+        "import" => build::import_command(matches),
         "list-syntax-themes" => {
             for name in list_syntax_themes() {
                 println!("{}", name);

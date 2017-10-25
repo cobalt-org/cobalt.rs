@@ -6,19 +6,20 @@ use std::sync::mpsc::channel;
 use std::thread;
 
 use clap;
-use cobalt;
 use cobalt::files;
 use hyper;
 use hyper::server::{Server, Request, Response};
 use hyper::uri::RequestUri;
 use notify::{Watcher, RecursiveMode, raw_watcher};
 
+use args;
 use build;
 use error::*;
 
 pub fn watch_command_args() -> clap::App<'static, 'static> {
     clap::SubCommand::with_name("watch")
         .about("build, serve, and watch the project at the source dir")
+        .args(&args::get_config_args())
         .arg(clap::Arg::with_name("port")
                  .short("P")
                  .long("port")
@@ -28,7 +29,10 @@ pub fn watch_command_args() -> clap::App<'static, 'static> {
                  .takes_value(true))
 }
 
-pub fn watch_command(config: cobalt::Config, matches: &clap::ArgMatches) -> Result<()> {
+pub fn watch_command(matches: &clap::ArgMatches) -> Result<()> {
+    let config = args::get_config(matches)?;
+    let config = config.build()?;
+
     build::build(&config)?;
 
     let source = path::Path::new(&config.source);
@@ -86,6 +90,7 @@ pub fn watch_command(config: cobalt::Config, matches: &clap::ArgMatches) -> Resu
 pub fn serve_command_args() -> clap::App<'static, 'static> {
     clap::SubCommand::with_name("serve")
         .about("build and serve the cobalt project at the source dir")
+        .args(&args::get_config_args())
         .arg(clap::Arg::with_name("port")
                  .short("P")
                  .long("port")
@@ -95,7 +100,10 @@ pub fn serve_command_args() -> clap::App<'static, 'static> {
                  .takes_value(true))
 }
 
-pub fn serve_command(config: cobalt::Config, matches: &clap::ArgMatches) -> Result<()> {
+pub fn serve_command(matches: &clap::ArgMatches) -> Result<()> {
+    let config = args::get_config(matches)?;
+    let config = config.build()?;
+
     build::build(&config)?;
     let port = matches.value_of("port").unwrap().to_string();
     let dest = path::Path::new(&config.dest);

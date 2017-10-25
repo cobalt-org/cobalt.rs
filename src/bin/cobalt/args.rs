@@ -14,36 +14,28 @@ pub fn get_config_args() -> Vec<clap::Arg<'static, 'static>> {
          .long("config")
          .value_name("FILE")
          .help("Config file to use [default: .cobalt.yml]")
-         .global(true)
          .takes_value(true),
      clap::Arg::with_name("destination")
          .short("d")
          .long("destination")
          .value_name("DIR")
          .help("Destination folder [default: ./]")
-         .global(true)
          .takes_value(true),
      clap::Arg::with_name("drafts")
          .long("drafts")
          .help("Include drafts.")
-         .global(true)
          .takes_value(false),
      clap::Arg::with_name("dump")
          .long("dump")
          .possible_values(&cobalt::Dump::variants())
          .help("Dump the specified internal state")
-         .global(true)
          .multiple(true)
          .takes_value(true)]
         .to_vec()
 }
 
-pub fn get_config(global_matches: &clap::ArgMatches,
-                  matches: &clap::ArgMatches)
-                  -> Result<cobalt::ConfigBuilder> {
-    let config_path = matches
-        .value_of("config")
-        .or_else(|| global_matches.value_of("config"));
+pub fn get_config(matches: &clap::ArgMatches) -> Result<cobalt::ConfigBuilder> {
+    let config_path = matches.value_of("config");
 
     // Fetch config information if available
     let mut config = if let Some(config_path) = config_path {
@@ -54,18 +46,10 @@ pub fn get_config(global_matches: &clap::ArgMatches,
         cobalt::ConfigBuilder::from_cwd(cwd)?
     };
 
-    config.abs_dest = matches
-        .value_of("destination")
-        .or_else(|| global_matches.value_of("destination"))
-        .map(str::to_string);
+    config.abs_dest = matches.value_of("destination").map(str::to_string);
 
     config.include_drafts = matches.is_present("drafts");
 
-    if global_matches.is_present("dump") {
-        let mut dump = values_t!(global_matches, "dump", cobalt::Dump)?;
-        config.dump.append(&mut dump);
-        info!("Setting: {:?}", config.dump);
-    }
     if matches.is_present("dump") {
         let mut dump = values_t!(matches, "dump", cobalt::Dump)?;
         config.dump.append(&mut dump);

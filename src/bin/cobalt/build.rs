@@ -6,11 +6,13 @@ use clap;
 use cobalt;
 use ghp;
 
+use args;
 use error::*;
 
 pub fn build_command_args() -> clap::App<'static, 'static> {
     clap::SubCommand::with_name("build")
         .about("build the cobalt project at the source dir")
+        .args(&args::get_config_args())
         .arg(clap::Arg::with_name("import")
                  .short("i")
                  .long("import")
@@ -32,7 +34,10 @@ pub fn build_command_args() -> clap::App<'static, 'static> {
                  .takes_value(true))
 }
 
-pub fn build_command(config: cobalt::Config, matches: &clap::ArgMatches) -> Result<()> {
+pub fn build_command(matches: &clap::ArgMatches) -> Result<()> {
+    let config = args::get_config(matches)?;
+    let config = config.build()?;
+
     build(&config)?;
     info!("Build successful");
 
@@ -53,10 +58,15 @@ pub fn build(config: &cobalt::Config) -> Result<()> {
 }
 
 pub fn clean_command_args() -> clap::App<'static, 'static> {
-    clap::SubCommand::with_name("clean").about("cleans directory set as destination")
+    clap::SubCommand::with_name("clean")
+        .about("cleans directory set as destination")
+        .args(&args::get_config_args())
 }
 
-pub fn clean_command(config: cobalt::Config, _matches: &clap::ArgMatches) -> Result<()> {
+pub fn clean_command(matches: &clap::ArgMatches) -> Result<()> {
+    let config = args::get_config(matches)?;
+    let config = config.build()?;
+
     let cwd = env::current_dir().unwrap_or_else(|_| path::PathBuf::new());
     let destdir = config
         .dest
@@ -77,6 +87,7 @@ pub fn clean_command(config: cobalt::Config, _matches: &clap::ArgMatches) -> Res
 pub fn import_command_args() -> clap::App<'static, 'static> {
     clap::SubCommand::with_name("import")
         .about("moves the contents of the dest folder to the gh-pages branch")
+        .args(&args::get_config_args())
         .arg(clap::Arg::with_name("branch")
                  .short("b")
                  .long("branch")
@@ -93,7 +104,10 @@ pub fn import_command_args() -> clap::App<'static, 'static> {
                  .takes_value(true))
 }
 
-pub fn import_command(config: cobalt::Config, matches: &clap::ArgMatches) -> Result<()> {
+pub fn import_command(matches: &clap::ArgMatches) -> Result<()> {
+    let config = args::get_config(matches)?;
+    let config = config.build()?;
+
     let branch = matches.value_of("branch").unwrap().to_string();
     let message = matches.value_of("message").unwrap().to_string();
     import(&config, &branch, &message)?;

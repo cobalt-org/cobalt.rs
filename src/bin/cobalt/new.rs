@@ -1,6 +1,7 @@
 use clap;
 use cobalt;
 
+use args;
 use error::*;
 
 pub fn init_command_args() -> clap::App<'static, 'static> {
@@ -12,7 +13,7 @@ pub fn init_command_args() -> clap::App<'static, 'static> {
                  .index(1))
 }
 
-pub fn init_command(_config: cobalt::Config, matches: &clap::ArgMatches) -> Result<()> {
+pub fn init_command(matches: &clap::ArgMatches) -> Result<()> {
     let directory = matches.value_of("DIRECTORY").unwrap();
 
     cobalt::create_new_project(&directory.to_string())
@@ -25,6 +26,7 @@ pub fn init_command(_config: cobalt::Config, matches: &clap::ArgMatches) -> Resu
 pub fn new_command_args() -> clap::App<'static, 'static> {
     clap::SubCommand::with_name("new")
         .about("Create a new post or page")
+        .args(&args::get_config_args())
         .arg(clap::Arg::with_name("FILETYPE")
                  .help("Type of file to create eg post or page")
                  .default_value("post")
@@ -36,7 +38,10 @@ pub fn new_command_args() -> clap::App<'static, 'static> {
                  .takes_value(true))
 }
 
-pub fn new_command(config: cobalt::Config, matches: &clap::ArgMatches) -> Result<()> {
+pub fn new_command(matches: &clap::ArgMatches) -> Result<()> {
+    let config = args::get_config(matches)?;
+    let config = config.build()?;
+
     let filetype = matches.value_of("FILETYPE").unwrap();
     let filename = matches.value_of("FILENAME").unwrap();
 
