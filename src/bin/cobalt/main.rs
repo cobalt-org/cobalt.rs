@@ -66,18 +66,15 @@ extern crate clap;
 #[macro_use]
 extern crate log;
 
+mod args;
 mod build;
 mod error;
-mod serve;
 mod new;
-
-use std::fs;
+mod serve;
 
 use clap::{Arg, App, SubCommand, AppSettings};
-use cobalt::{Config, Dump, jekyll};
+use cobalt::jekyll;
 use cobalt::{list_syntaxes, list_syntax_themes};
-use env_logger::LogBuilder;
-use log::{LogRecord, LogLevelFilter};
 
 use error::*;
 
@@ -90,155 +87,26 @@ fn run() -> Result<()> {
         .about("A static site generator written in Rust.")
         .setting(AppSettings::SubcommandRequired)
         .setting(AppSettings::GlobalVersion)
-        .arg(Arg::with_name("config")
-                 .short("c")
-                 .long("config")
-                 .value_name("FILE")
-                 .help("Config file to use [default: .cobalt.yml]")
-                 .global(true)
-                 .takes_value(true))
-        .arg(Arg::with_name("source")
-                 .short("s")
-                 .long("source")
-                 .value_name("DIR")
-                 .help("Source folder [default: ./]")
-                 .global(true)
-                 .takes_value(true))
-        .arg(Arg::with_name("destination")
-                 .short("d")
-                 .long("destination")
-                 .value_name("DIR")
-                 .help("Destination folder [default: ./]")
-                 .global(true)
-                 .takes_value(true))
-        .arg(Arg::with_name("layouts")
-                 .short("l")
-                 .long("layouts")
-                 .value_name("DIR")
-                 .help("Layout templates folder [default: ./_layouts]")
-                 .global(true)
-                 .takes_value(true))
-        .arg(Arg::with_name("posts")
-                 .short("p")
-                 .long("posts")
-                 .value_name("DIR")
-                 .help("Posts folder [default: ./posts]")
-                 .global(true)
-                 .takes_value(true))
-        .arg(Arg::with_name("drafts")
-                 .long("drafts")
-                 .help("Include drafts.")
-                 .global(true)
-                 .takes_value(false))
-        .arg(Arg::with_name("log-level")
-                 .short("L")
-                 .long("log-level")
-                 .possible_values(&["error", "warn", "info", "debug", "trace", "off"])
-                 .help("Log level [default: info]")
-                 .global(true)
-                 .takes_value(true))
-        .arg(Arg::with_name("trace")
-                 .long("trace")
-                 .help("Log ultra-verbose (trace level) information")
-                 .global(true)
-                 .takes_value(false))
-        .arg(Arg::with_name("silent")
-                 .long("silent")
-                 .help("Suppress all output")
-                 .global(true)
-                 .takes_value(false))
-        .arg(Arg::with_name("dump")
-                 .long("dump")
-                 .possible_values(&Dump::variants())
-                 .help("Dump the specified internal state")
-                 .global(true)
-                 .multiple(true)
-                 .takes_value(true))
-        .subcommand(SubCommand::with_name("init")
-                        .about("create a new cobalt project")
-                        .arg(Arg::with_name("DIRECTORY")
-                                 .help("Suppress all output")
-                                 .default_value("./")
-                                 .index(1)))
-        .subcommand(SubCommand::with_name("new")
-                        .about("Create a new post or page")
-                        .arg(Arg::with_name("FILETYPE")
-                                 .help("Type of file to create eg post or page")
-                                 .default_value("post")
-                                 .takes_value(true))
-                        .arg(Arg::with_name("FILENAME")
-                                 .help("File to create")
-                                 .default_value_if("FILETYPE", Some("page"), "new_page.md")
-                                 .default_value("new_post.md")
-                                 .takes_value(true)))
-        .subcommand(SubCommand::with_name("build")
-                        .about("build the cobalt project at the source dir")
-                        .arg(Arg::with_name("import")
-                                 .short("i")
-                                 .long("import")
-                                 .help("Import after build to gh-pages branch")
-                                 .takes_value(false))
-                        .arg(Arg::with_name("branch")
-                                 .short("b")
-                                 .long("branch")
-                                 .value_name("BRANCH")
-                                 .help("Branch that will be used to import the site to")
-                                 .default_value("gh-pages")
-                                 .takes_value(true))
-                        .arg(Arg::with_name("message")
-                                 .short("m")
-                                 .long("message")
-                                 .value_name("COMMIT-MESSAGE")
-                                 .help("Commit message that will be used on import")
-                                 .default_value("cobalt site import")
-                                 .takes_value(true)))
-        .subcommand(SubCommand::with_name("clean").about("cleans directory set as destination"))
-        .subcommand(SubCommand::with_name("serve")
-                        .about("build and serve the cobalt project at the source dir")
-                        .arg(Arg::with_name("port")
-                                 .short("P")
-                                 .long("port")
-                                 .value_name("INT")
-                                 .help("Port to serve from")
-                                 .default_value("3000")
-                                 .takes_value(true)))
-        .subcommand(SubCommand::with_name("watch")
-                        .about("build, serve, and watch the project at the source dir")
-                        .arg(Arg::with_name("port")
-                                 .short("P")
-                                 .long("port")
-                                 .value_name("INT")
-                                 .help("Port to serve from")
-                                 .default_value("3000")
-                                 .takes_value(true)))
-        .subcommand(SubCommand::with_name("import")
-                        .about("moves the contents of the dest folder to the gh-pages branch")
-                        .arg(Arg::with_name("branch")
-                                 .short("b")
-                                 .long("branch")
-                                 .value_name("BRANCH")
-                                 .help("Branch that will be used to import the site to")
-                                 .default_value("gh-pages")
-                                 .takes_value(true))
-                        .arg(Arg::with_name("message")
-                                 .short("m")
-                                 .long("message")
-                                 .value_name("COMMIT-MESSAGE")
-                                 .help("Commit message that will be used on import")
-                                 .default_value("cobalt site import")
-                                 .takes_value(true)))
+        .args(&args::get_logging_args())
+        .subcommand(new::init_command_args())
+        .subcommand(new::new_command_args())
+        .subcommand(build::build_command_args())
+        .subcommand(build::clean_command_args())
+        .subcommand(serve::serve_command_args())
+        .subcommand(serve::watch_command_args())
+        .subcommand(build::import_command_args())
         .subcommand(SubCommand::with_name("list-syntax-themes").about("list available themes"))
         .subcommand(SubCommand::with_name("list-syntaxes").about("list supported syntaxes"))
         .subcommand(SubCommand::with_name("convert-jekyll")
                         .about("convert jekyll website to cobalt")
-                        .arg(Arg::with_name("jksrc")
-                                 .long("jksrc")
+                        .arg(Arg::with_name("source")
+                                 .long("source")
                                  .value_name("JEKYLL-FILE-OR-DIR")
                                  .help("Jekyll posts' directory")
                                  .required(true)
                                  .takes_value(true))
-                        .arg(Arg::with_name("jkdst")
-                                 .long("jkdst")
+                        .arg(Arg::with_name("destination")
+                                 .long("destination")
                                  .value_name("DIR")
                                  .help("Output dir of converted posts")
                                  .takes_value(true)
@@ -251,103 +119,17 @@ fn run() -> Result<()> {
         (_, None) => unreachable!(),
     };
 
-    let format = |record: &LogRecord| {
-        let level = format!("[{}]", record.level()).to_lowercase();
-        format!("{:8} {}", level, record.args())
-    };
-
-    let mut builder = LogBuilder::new();
-    builder.format(format);
-
-    match matches
-              .value_of("log-level")
-              .or_else(|| global_matches.value_of("log-level")) {
-        Some("error") => builder.filter(None, LogLevelFilter::Error),
-        Some("warn") => builder.filter(None, LogLevelFilter::Warn),
-        Some("debug") => builder.filter(None, LogLevelFilter::Debug),
-        Some("trace") => builder.filter(None, LogLevelFilter::Trace),
-        Some("off") => builder.filter(None, LogLevelFilter::Off),
-        Some("info") | _ => builder.filter(None, LogLevelFilter::Info),
-    };
-
-    if matches.is_present("trace") {
-        builder.filter(None, LogLevelFilter::Trace);
-    }
-
-    if matches.is_present("silent") {
-        builder.filter(None, LogLevelFilter::Off);
-    }
-
+    let mut builder = args::get_logging(&global_matches, matches)?;
     builder.init().unwrap();
 
-    let config_path = matches
-        .value_of("config")
-        .or_else(|| global_matches.value_of("config"))
-        .unwrap_or(".cobalt.yml")
-        .to_string();
-
-    // Fetch config information if available
-    let mut config: Config = if fs::metadata(&config_path).is_ok() {
-        info!("Using config file {}", &config_path);
-
-        match Config::from_file(&config_path) {
-            Ok(config) => config,
-            Err(e) => {
-                error!("Error reading config file:");
-                error!("{}", e);
-                std::process::exit(1);
-            }
-        }
-    } else {
-        warn!("No .cobalt.yml file found in current directory, using default config.");
-        Default::default()
-    };
-
-    config.source = matches
-        .value_of("source")
-        .or_else(|| global_matches.value_of("source"))
-        .map(str::to_string)
-        .unwrap_or(config.source);
-
-    config.dest = matches
-        .value_of("destination")
-        .or_else(|| global_matches.value_of("destination"))
-        .map(str::to_string)
-        .unwrap_or(config.dest);
-
-    config.layouts = matches
-        .value_of("layouts")
-        .or_else(|| global_matches.value_of("layouts"))
-        .map(str::to_string)
-        .unwrap_or(config.layouts);
-
-    config.posts = matches
-        .value_of("posts")
-        .or_else(|| global_matches.value_of("posts"))
-        .map(str::to_string)
-        .unwrap_or(config.posts);
-
-    config.include_drafts = matches.is_present("drafts");
-
-    if global_matches.is_present("dump") {
-        let mut dump = values_t!(global_matches, "dump", Dump)?;
-        config.dump.append(&mut dump);
-        info!("Setting: {:?}", config.dump);
-    }
-    if matches.is_present("dump") {
-        let mut dump = values_t!(matches, "dump", Dump)?;
-        config.dump.append(&mut dump);
-        info!("Setting: {:?}", config.dump);
-    }
-
     match command {
-        "init" => new::init_command(config, matches),
-        "new" => new::new_command(config, matches),
-        "build" => build::build_command(config, matches),
-        "clean" => build::clean_command(config, matches),
-        "serve" => serve::serve_command(config, matches),
-        "watch" => serve::watch_command(config, matches),
-        "import" => build::import_command(config, matches),
+        "init" => new::init_command(matches),
+        "new" => new::new_command(matches),
+        "build" => build::build_command(matches),
+        "clean" => build::clean_command(matches),
+        "serve" => serve::serve_command(matches),
+        "watch" => serve::watch_command(matches),
+        "import" => build::import_command(matches),
         "list-syntax-themes" => {
             for name in list_syntax_themes() {
                 println!("{}", name);
@@ -361,8 +143,8 @@ fn run() -> Result<()> {
             Ok(())
         }
         "convert-jekyll" => {
-            let source = matches.value_of("jksrc").unwrap().to_string();
-            let dest = matches.value_of("jkdst").unwrap().to_string();
+            let source = matches.value_of("source").unwrap().to_string();
+            let dest = matches.value_of("destination").unwrap().to_string();
             jekyll::jk_document::convert_from_jk(std::path::Path::new(&source),
                                                  std::path::Path::new(&dest))
                 .chain_err(|| "Jekyll conversion failed.")

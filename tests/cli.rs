@@ -169,7 +169,7 @@ pub fn clean_warning() {
         .fails_with(1)
         .stderr()
         .contains(
-            "Destination directory is same as current directory. Cancelling the \
+            "Attempting to delete current directory, Cancelling the \
               operation",
         )
         .unwrap();

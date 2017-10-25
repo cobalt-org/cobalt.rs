@@ -267,7 +267,7 @@ impl Document {
 
     /// Metadata for generating RSS feeds
     pub fn to_rss(&self, root_url: &str) -> Result<rss::Item> {
-        let link = root_url.to_owned() + &self.url_path;
+        let link = format!("{}/{}", root_url, &self.url_path);
         let guid = rss::GuidBuilder::default()
             .value(link.clone())
             .permalink(true)
@@ -285,7 +285,7 @@ impl Document {
 
     /// Metadata for generating JSON feeds
     pub fn to_jsonfeed(&self, root_url: &str) -> jsonfeed::Item {
-        let link = root_url.to_owned() + &self.url_path;
+        let link = format!("{}/{}", root_url, &self.url_path);
 
         jsonfeed::Item {
             id: link.clone(),
