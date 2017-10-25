@@ -21,6 +21,7 @@ pub struct SiteBuilder {
     pub name: Option<String>,
     pub description: Option<String>,
     pub base_url: Option<String>,
+    pub data: Option<liquid::Object>,
     #[serde(skip)]
     pub data_dir: &'static str,
 }
@@ -31,6 +32,7 @@ impl Default for SiteBuilder {
             name: None,
             description: None,
             base_url: None,
+            data: None,
             data_dir: DATA_DIR,
         }
     }
@@ -42,6 +44,7 @@ impl SiteBuilder {
             name,
             description,
             base_url,
+            data,
             data_dir,
         } = self;
         let base_url = base_url.map(|mut l| {
@@ -61,7 +64,7 @@ impl SiteBuilder {
         if let Some(ref base_url) = base_url {
             attributes.insert("base_url".to_owned(), liquid::Value::str(base_url));
         }
-        let mut data = liquid::Object::new();
+        let mut data = data.unwrap_or_default();
         insert_data_dir(&mut data, &root.join(data_dir))?;
         if !data.is_empty() {
             attributes.insert("data".to_owned(), liquid::Value::Object(data));
