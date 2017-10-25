@@ -154,7 +154,7 @@ pub struct ConfigBuilder {
     pub ignore: Vec<String>,
     pub excerpt_separator: String,
     pub syntax_highlight: SyntaxHighlight,
-    pub layouts: &'static str,
+    pub layouts_dir: &'static str,
     pub sass: SassOptions,
     // This is a debug-only field and should be transient rather than persistently set.
     #[serde(skip)]
@@ -180,7 +180,7 @@ impl Default for ConfigBuilder {
             ignore: vec![],
             excerpt_separator: "\n\n".to_owned(),
             syntax_highlight: SyntaxHighlight::default(),
-            layouts: LAYOUTS_DIR,
+            layouts_dir: LAYOUTS_DIR,
             sass: SassOptions::default(),
             dump: vec![],
         }
@@ -251,7 +251,7 @@ impl ConfigBuilder {
             ignore,
             excerpt_separator,
             syntax_highlight,
-            layouts,
+            layouts_dir,
             sass,
             dump,
         } = self;
@@ -287,7 +287,7 @@ impl ConfigBuilder {
             template_extensions,
             excerpt_separator,
             syntax_highlight,
-            layouts,
+            layouts_dir,
             sass,
             dump,
         };
@@ -314,7 +314,7 @@ pub struct Config {
     pub ignore: Vec<String>,
     pub excerpt_separator: String,
     pub syntax_highlight: SyntaxHighlight,
-    pub layouts: &'static str,
+    pub layouts_dir: &'static str,
     pub sass: SassOptions,
     pub dump: Vec<Dump>,
 }

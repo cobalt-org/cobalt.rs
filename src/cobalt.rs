@@ -74,7 +74,7 @@ pub fn build(config: &Config) -> Result<()> {
     let template_extensions: Vec<&OsStr> =
         config.template_extensions.iter().map(OsStr::new).collect();
 
-    let layouts = source.join(&config.layouts);
+    let layouts = source.join(&config.layouts_dir);
     let mut layouts_cache = HashMap::new();
     let posts_path = source.join(&config.posts);
 
