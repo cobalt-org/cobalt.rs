@@ -36,7 +36,7 @@ pub fn watch_command(matches: &clap::ArgMatches) -> Result<()> {
     build::build(&config)?;
 
     let source = path::Path::new(&config.source);
-    let dest = path::Path::new(&config.dest).to_owned();
+    let dest = path::Path::new(&config.destination).to_owned();
     let ignore_dest = {
         let ignore_dest = dest.join("**/*");
         let ignore_dest = ignore_dest
@@ -106,7 +106,7 @@ pub fn serve_command(matches: &clap::ArgMatches) -> Result<()> {
 
     build::build(&config)?;
     let port = matches.value_of("port").unwrap().to_string();
-    let dest = path::Path::new(&config.dest);
+    let dest = path::Path::new(&config.destination);
     serve(dest, &port)?;
 
     Ok(())

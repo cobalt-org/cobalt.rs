@@ -238,7 +238,7 @@ impl From<GlobalConfig> for config::ConfigBuilder {
 
         config::ConfigBuilder {
             source: source,
-            dest: dest,
+            destination: dest,
             drafts: drafts,
             include_drafts: include_drafts,
             posts: posts,

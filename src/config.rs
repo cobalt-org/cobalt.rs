@@ -92,7 +92,7 @@ pub struct ConfigBuilder {
     #[serde(skip)]
     pub root: path::PathBuf,
     pub source: String,
-    pub dest: String,
+    pub destination: String,
     #[serde(skip)]
     pub abs_dest: Option<String>,
     #[serde(skip)]
@@ -124,7 +124,7 @@ impl Default for ConfigBuilder {
         ConfigBuilder {
             root: path::PathBuf::new(),
             source: "./".to_owned(),
-            dest: "./".to_owned(),
+            destination: "./".to_owned(),
             abs_dest: None,
             layouts: LAYOUTS_DIR,
             drafts: "_drafts".to_owned(),
@@ -198,7 +198,7 @@ impl ConfigBuilder {
         let ConfigBuilder {
             root,
             source,
-            dest,
+            destination,
             abs_dest,
             layouts,
             drafts,
@@ -243,9 +243,9 @@ impl ConfigBuilder {
 
         let config = Config {
             source: root.join(source),
-            dest: abs_dest
+            destination: abs_dest
                 .map(|s| s.into())
-                .unwrap_or_else(|| root.join(dest)),
+                .unwrap_or_else(|| root.join(destination)),
             layouts,
             drafts,
             data,
@@ -275,7 +275,7 @@ impl ConfigBuilder {
 #[serde(deny_unknown_fields, default)]
 pub struct Config {
     pub source: path::PathBuf,
-    pub dest: path::PathBuf,
+    pub destination: path::PathBuf,
     pub layouts: &'static str,
     pub drafts: String,
     pub data: &'static str,
@@ -349,7 +349,7 @@ fn test_from_file_ok() {
     assert_eq!(result,
                ConfigBuilder {
                    root: path::Path::new("tests/fixtures/config").to_path_buf(),
-                   dest: "./dest".to_owned(),
+                   destination: "./dest".to_owned(),
                    posts: "_my_posts".to_owned(),
                    ..Default::default()
                });
@@ -393,7 +393,7 @@ fn test_from_cwd_ok() {
     assert_eq!(result,
                ConfigBuilder {
                    root: path::Path::new("tests/fixtures/config").to_path_buf(),
-                   dest: "./dest".to_owned(),
+                   destination: "./dest".to_owned(),
                    posts: "_my_posts".to_owned(),
                    ..Default::default()
                });
@@ -416,7 +416,7 @@ fn test_build_dest() {
     assert_eq!(result,
                Config {
                    source: path::Path::new("tests/fixtures/config").to_path_buf(),
-                   dest: path::Path::new("tests/fixtures/config/./dest").to_path_buf(),
+                   destination: path::Path::new("tests/fixtures/config/./dest").to_path_buf(),
                    posts: "_my_posts".to_owned(),
                    ..Default::default()
                });
@@ -430,7 +430,7 @@ fn test_build_abs_dest() {
     assert_eq!(result,
                Config {
                    source: path::Path::new("tests/fixtures/config").to_path_buf(),
-                   dest: path::Path::new("hello/world").to_path_buf(),
+                   destination: path::Path::new("hello/world").to_path_buf(),
                    posts: "_my_posts".to_owned(),
                    ..Default::default()
                });

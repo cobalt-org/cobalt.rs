@@ -69,7 +69,7 @@ pub fn build(config: &Config) -> Result<()> {
     trace!("Build configuration: {:?}", config);
 
     let source = config.source.as_path();
-    let dest = config.dest.as_path();
+    let dest = config.destination.as_path();
 
     let template_extensions: Vec<&OsStr> =
         config.template_extensions.iter().map(OsStr::new).collect();
