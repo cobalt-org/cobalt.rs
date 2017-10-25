@@ -142,23 +142,23 @@ pub struct ConfigBuilder {
     #[serde(skip)]
     pub abs_dest: Option<String>,
     #[serde(skip)]
-    pub layouts: &'static str,
-    pub drafts: String,
     pub include_drafts: bool,
     pub posts: String,
+    pub drafts: String,
     pub post_path: Option<String>,
     pub post_order: SortOrder,
-    pub template_extensions: Vec<String>,
     pub rss: Option<String>,
     pub jsonfeed: Option<String>,
     pub site: SiteBuilder,
+    pub template_extensions: Vec<String>,
     pub ignore: Vec<String>,
     pub excerpt_separator: String,
+    pub syntax_highlight: SyntaxHighlight,
+    pub layouts: &'static str,
+    pub sass: SassOptions,
     // This is a debug-only field and should be transient rather than persistently set.
     #[serde(skip)]
     pub dump: Vec<Dump>,
-    pub syntax_highlight: SyntaxHighlight,
-    pub sass: SassOptions,
 }
 
 impl Default for ConfigBuilder {
@@ -168,21 +168,21 @@ impl Default for ConfigBuilder {
             source: "./".to_owned(),
             destination: "./".to_owned(),
             abs_dest: None,
-            layouts: LAYOUTS_DIR,
-            drafts: "_drafts".to_owned(),
             include_drafts: false,
             posts: "posts".to_owned(),
+            drafts: "_drafts".to_owned(),
             post_path: None,
             post_order: SortOrder::default(),
-            template_extensions: vec!["md".to_owned(), "liquid".to_owned()],
             rss: None,
             jsonfeed: None,
             site: SiteBuilder::default(),
+            template_extensions: vec!["md".to_owned(), "liquid".to_owned()],
             ignore: vec![],
             excerpt_separator: "\n\n".to_owned(),
-            dump: vec![],
             syntax_highlight: SyntaxHighlight::default(),
+            layouts: LAYOUTS_DIR,
             sass: SassOptions::default(),
+            dump: vec![],
         }
     }
 }
@@ -239,21 +239,21 @@ impl ConfigBuilder {
             source,
             destination,
             abs_dest,
-            layouts,
-            drafts,
             include_drafts,
             posts,
+            drafts,
             post_path,
             post_order,
-            template_extensions,
             rss,
             jsonfeed,
             site,
+            template_extensions,
             ignore,
             excerpt_separator,
-            dump,
             syntax_highlight,
+            layouts,
             sass,
+            dump,
         } = self;
 
         let result: Result<()> = match has_syntax_theme(&syntax_highlight.theme) {
@@ -275,21 +275,21 @@ impl ConfigBuilder {
             destination: abs_dest
                 .map(|s| s.into())
                 .unwrap_or_else(|| root.join(destination)),
-            layouts,
-            drafts,
             include_drafts,
             posts,
+            drafts,
             post_path,
             post_order,
-            template_extensions,
             rss,
             jsonfeed,
             site: site.build()?,
             ignore,
+            template_extensions,
             excerpt_separator,
-            dump,
             syntax_highlight,
+            layouts,
             sass,
+            dump,
         };
 
         Ok(config)
@@ -302,21 +302,21 @@ impl ConfigBuilder {
 pub struct Config {
     pub source: path::PathBuf,
     pub destination: path::PathBuf,
-    pub layouts: &'static str,
-    pub drafts: String,
     pub include_drafts: bool,
     pub posts: String,
+    pub drafts: String,
     pub post_path: Option<String>,
     pub post_order: SortOrder,
-    pub template_extensions: Vec<String>,
     pub rss: Option<String>,
     pub jsonfeed: Option<String>,
     pub site: SiteBuilder,
+    pub template_extensions: Vec<String>,
     pub ignore: Vec<String>,
     pub excerpt_separator: String,
-    pub dump: Vec<Dump>,
     pub syntax_highlight: SyntaxHighlight,
+    pub layouts: &'static str,
     pub sass: SassOptions,
+    pub dump: Vec<Dump>,
 }
 
 impl Default for Config {
