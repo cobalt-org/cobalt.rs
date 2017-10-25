@@ -72,14 +72,14 @@ pub fn clean_command(matches: &clap::ArgMatches) -> Result<()> {
         .dest
         .canonicalize()
         .unwrap_or_else(|_| path::PathBuf::new());
-    if cwd == destdir {
-        bail!("Destination directory is same as current directory. \
+    if cwd.starts_with(&destdir) {
+        bail!("Attempting to delete current directory, \
                        Cancelling the operation");
     }
 
-    fs::remove_dir_all(&config.dest)?;
+    fs::remove_dir_all(&destdir)?;
 
-    info!("directory \"{:?}\" removed", &config.dest);
+    info!("directory \"{:?}\" removed", &destdir);
 
     Ok(())
 }
