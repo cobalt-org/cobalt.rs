@@ -263,13 +263,13 @@ fn create_rss(path: &str, dest: &Path, config: &Config, posts: &[Document]) -> R
         .posts
         .name
         .as_ref()
-        .or(config.site.name.as_ref())
+        .or_else(|| config.site.name.as_ref())
         .ok_or(ErrorKind::ConfigFileMissingFields)?;
     let description = config
         .posts
         .description
         .as_ref()
-        .or(config.site.description.as_ref())
+        .or_else(|| config.site.description.as_ref())
         .ok_or(ErrorKind::ConfigFileMissingFields)?;
     let link = config
         .site
