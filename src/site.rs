@@ -52,6 +52,15 @@ impl SiteBuilder {
                                     });
 
         let mut attributes = liquid::Object::new();
+        if let Some(ref name) = name {
+            attributes.insert("name".to_owned(), liquid::Value::str(name));
+        }
+        if let Some(ref description) = description {
+            attributes.insert("description".to_owned(), liquid::Value::str(description));
+        }
+        if let Some(ref base_url) = base_url {
+            attributes.insert("base_url".to_owned(), liquid::Value::str(base_url));
+        }
         let mut data = liquid::Object::new();
         insert_data_dir(&mut data, &root.join(data_dir))?;
         if !data.is_empty() {
