@@ -257,15 +257,20 @@ impl ConfigBuilder {
         let mut posts = posts;
         posts.default = posts.default.merge(default);
 
+        let source = root.join(source);
+        let destination = abs_dest
+            .map(|s| s.into())
+            .unwrap_or_else(|| root.join(destination));
+
+        let site = site.build(&source)?;
+
         let config = Config {
-            source: root.join(source),
-            destination: abs_dest
-                .map(|s| s.into())
-                .unwrap_or_else(|| root.join(destination)),
+            source,
+            destination,
             include_drafts,
             pages,
             posts,
-            site: site.build()?,
+            site,
             ignore,
             template_extensions,
             syntax_highlight,
@@ -287,7 +292,7 @@ pub struct Config {
     pub include_drafts: bool,
     pub pages: PageBuilder,
     pub posts: PostBuilder,
-    pub site: site::SiteBuilder,
+    pub site: site::Site,
     pub template_extensions: Vec<String>,
     pub ignore: Vec<String>,
     pub syntax_highlight: SyntaxHighlight,

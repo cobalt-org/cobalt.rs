@@ -1,16 +1,12 @@
 use std::fs::{self, File};
 use std::collections::HashMap;
 use std::io::Write;
-use std::io::Read;
 use std::path::Path;
 use std::ffi::OsStr;
-use liquid::Value;
+use liquid;
 use rss;
 use jsonfeed::Feed;
 use jsonfeed;
-use serde_yaml;
-use serde_json;
-use toml;
 
 #[cfg(feature = "sass")]
 use sass_rs;
@@ -22,46 +18,6 @@ use config::{Config, SortOrder};
 #[cfg(feature = "sass")]
 use config::SassOutputStyle;
 use files::FilesBuilder;
-
-fn deep_insert(data_map: &mut HashMap<String, Value>,
-               file_path: &Path,
-               target_key: String,
-               data: Value)
-               -> Result<()> {
-    // now find the nested map it is supposed to be in
-    let target_map = if let Some(path) = file_path.parent() {
-        let mut map = data_map;
-        for part in path.iter() {
-            if let Some(key) = part.to_str() {
-                let cur_map = map;
-                map = if let Some(sub_map) = cur_map
-                       .entry(String::from(key))
-                       .or_insert_with(|| Value::Object(HashMap::new()))
-                       .as_object_mut() {
-                    sub_map
-                } else {
-                    bail!("Aborting: Dublicate in data tree. Would overwrite {} ",
-                          &key)
-                }
-            } else {
-                bail!("The data from {:?} can't be loaded as it contains non utf-8 characters",
-                      path);
-            }
-        }
-        map
-    } else {
-        data_map
-    };
-
-    match target_map.insert(target_key, data) {
-        None => Ok(()),
-        _ => {
-            Err(format!("The data from {:?} can't be loaded: the key already exists",
-                        file_path)
-                    .into())
-        }
-    }
-}
 
 /// The primary build function that transforms a directory into a site
 pub fn build(config: &Config) -> Result<()> {
@@ -154,47 +110,6 @@ pub fn build(config: &Config) -> Result<()> {
         }
     }
 
-    // load data files
-    let mut data_map: HashMap<String, Value> = HashMap::new();
-    let data_root = source.join(&config.site.data_dir);
-    let data_files_builder = FilesBuilder::new(data_root.as_path())?;
-    let data_files = data_files_builder.build()?;
-
-    for df in data_files.files() {
-
-        let ext = df.extension().unwrap_or_else(|| OsStr::new(""));
-        let file_stem = df.file_stem()
-            .expect("Files will always return with a stem");
-
-        let file_name = String::from(file_stem.to_str().unwrap());
-        let full_path = data_root.join(df.clone());
-        let data: Value;
-
-        if ext == OsStr::new("yml") || ext == OsStr::new("yaml") {
-            let reader = File::open(full_path)?;
-            data = serde_yaml::from_reader(reader)?;
-        } else if ext == OsStr::new("json") {
-            let reader = File::open(full_path)?;
-            data = serde_json::from_reader(reader)?;
-        } else if ext == OsStr::new("toml") {
-            let mut reader = File::open(full_path)?;
-            let mut text = String::new();
-            reader.read_to_string(&mut text)?;
-            data = toml::from_str(&text)?;
-        } else {
-            warn!("Skipping loading of data {:?}: unknown file type.",
-                  full_path);
-            warn!("Supported data files extensions are: yml, yaml, json and toml.");
-            continue;
-        }
-
-        deep_insert(&mut data_map, &df, file_name, data)?;
-    }
-
-    // now wrap it all into the global site-object
-    let mut site = HashMap::new();
-    site.insert("data".to_owned(), Value::Object(data_map));
-
     // January 1, 1970 0:00:00 UTC, the beginning of time
     let default_date = datetime::DateTime::default();
 
@@ -216,9 +131,9 @@ pub fn build(config: &Config) -> Result<()> {
     }
 
     // collect all posts attributes to pass them to other posts for rendering
-    let simple_posts_data: Vec<Value> = posts
+    let simple_posts_data: Vec<liquid::Value> = posts
         .iter()
-        .map(|x| Value::Object(x.attributes.clone()))
+        .map(|x| liquid::Value::Object(x.attributes.clone()))
         .collect();
 
     trace!("Generating posts");
@@ -252,7 +167,8 @@ pub fn build(config: &Config) -> Result<()> {
         }
 
         let mut context = post.get_render_context(&simple_posts_data);
-        context.set_val("site", Value::Object(site.clone()));
+        context.set_val("site",
+                        liquid::Value::Object(config.site.attributes.clone()));
 
         post.render_excerpt(&mut context, source, &config.syntax_highlight.theme)
             .chain_err(|| format!("Failed to render excerpt for {:?}", post.file_path))?;
@@ -276,9 +192,9 @@ pub fn build(config: &Config) -> Result<()> {
 
     // during post rendering additional attributes such as content were
     // added to posts. collect them so that non-post documents can access them
-    let posts_data: Vec<Value> = posts
+    let posts_data: Vec<liquid::Value> = posts
         .into_iter()
-        .map(|x| Value::Object(x.attributes))
+        .map(|x| liquid::Value::Object(x.attributes))
         .collect();
 
     trace!("Generating other documents");
@@ -301,7 +217,8 @@ pub fn build(config: &Config) -> Result<()> {
         }
 
         let mut context = doc.get_render_context(&posts_data);
-        context.set_val("site", Value::Object(site.clone()));
+        context.set_val("site",
+                        liquid::Value::Object(config.site.attributes.clone()));
 
         let doc_html = doc.render(&mut context,
                                   source,
