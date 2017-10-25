@@ -99,14 +99,14 @@ fn run() -> Result<()> {
         .subcommand(SubCommand::with_name("list-syntaxes").about("list supported syntaxes"))
         .subcommand(SubCommand::with_name("convert-jekyll")
                         .about("convert jekyll website to cobalt")
-                        .arg(Arg::with_name("jksrc")
-                                 .long("jksrc")
+                        .arg(Arg::with_name("source")
+                                 .long("source")
                                  .value_name("JEKYLL-FILE-OR-DIR")
                                  .help("Jekyll posts' directory")
                                  .required(true)
                                  .takes_value(true))
-                        .arg(Arg::with_name("jkdst")
-                                 .long("jkdst")
+                        .arg(Arg::with_name("destination")
+                                 .long("destination")
                                  .value_name("DIR")
                                  .help("Output dir of converted posts")
                                  .takes_value(true)
@@ -143,8 +143,8 @@ fn run() -> Result<()> {
             Ok(())
         }
         "convert-jekyll" => {
-            let source = matches.value_of("jksrc").unwrap().to_string();
-            let dest = matches.value_of("jkdst").unwrap().to_string();
+            let source = matches.value_of("source").unwrap().to_string();
+            let dest = matches.value_of("destination").unwrap().to_string();
             jekyll::jk_document::convert_from_jk(std::path::Path::new(&source),
                                                  std::path::Path::new(&dest))
                 .chain_err(|| "Jekyll conversion failed.")
