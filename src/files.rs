@@ -8,17 +8,16 @@ use error::Result;
 
 pub struct FilesBuilder {
     root_dir: PathBuf,
-    ignore: GitignoreBuilder,
+    ignore: Vec<String>,
+    ignore_hidden: bool,
 }
 
 impl FilesBuilder {
     pub fn new(root_dir: &Path) -> Result<FilesBuilder> {
-        let mut ignore = GitignoreBuilder::new(root_dir);
-        ignore.add_line(None, ".*")?;
-        ignore.add_line(None, "_*")?;
         let builder = FilesBuilder {
             root_dir: root_dir.to_path_buf(),
-            ignore: ignore,
+            ignore: Default::default(),
+            ignore_hidden: true,
         };
 
         Ok(builder)
@@ -26,12 +25,26 @@ impl FilesBuilder {
 
     pub fn add_ignore(&mut self, line: &str) -> Result<&mut FilesBuilder> {
         debug!("{:?}: adding '{}' ignore pattern", self.root_dir, line);
-        self.ignore.add_line(None, line)?;
+        self.ignore.push(line.to_owned());
+        Ok(self)
+    }
+
+    pub fn ignore_hidden(&mut self, ignore: bool) -> Result<&mut FilesBuilder> {
+        self.ignore_hidden = ignore;
         Ok(self)
     }
 
     pub fn build(&self) -> Result<Files> {
-        let files = Files::new(self.root_dir.as_path(), self.ignore.build()?);
+        let mut ignore = GitignoreBuilder::new(&self.root_dir);
+        if self.ignore_hidden {
+            ignore.add_line(None, ".*")?;
+            ignore.add_line(None, "_*")?;
+        }
+        for line in &self.ignore {
+            ignore.add_line(None, line)?;
+        }
+
+        let files = Files::new(self.root_dir.as_path(), ignore.build()?);
         Ok(files)
     }
 }

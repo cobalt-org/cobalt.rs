@@ -39,15 +39,6 @@ pub fn build(config: &Config) -> Result<()> {
 
     let mut documents = vec![];
 
-    let ignore_dest = {
-        let ignore_dest = dest.join("**/*");
-        let ignore_dest = ignore_dest
-            .to_str()
-            .ok_or_else(|| format!("Cannot convert pathname {:?} to UTF-8", dest))?
-            .to_owned();
-        Some(ignore_dest)
-    };
-
     let mut page_files = FilesBuilder::new(source)?;
     page_files
         .add_ignore(&format!("!{}", config.posts.dir))?
@@ -56,9 +47,6 @@ pub fn build(config: &Config) -> Result<()> {
         .add_ignore(&format!("{}/**/_*/**", config.posts.dir))?;
     for line in &config.ignore {
         page_files.add_ignore(line.as_str())?;
-    }
-    if let Some(ref ignore_dest) = ignore_dest {
-        page_files.add_ignore(ignore_dest)?;
     }
     let page_files = page_files.build()?;
     for file_path in page_files.files().filter(|p| {
@@ -237,9 +225,6 @@ pub fn build(config: &Config) -> Result<()> {
         let mut asset_files = FilesBuilder::new(source)?;
         for line in &config.ignore {
             asset_files.add_ignore(line.as_str())?;
-        }
-        if let Some(ref ignore_dest) = ignore_dest {
-            asset_files.add_ignore(ignore_dest)?;
         }
         let asset_files = asset_files.build()?;
         for file_path in asset_files.files().filter(|p| {

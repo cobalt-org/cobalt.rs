@@ -257,6 +257,14 @@ impl ConfigBuilder {
         let mut posts = posts;
         posts.default = posts.default.merge(default);
 
+        let mut ignore = ignore;
+        if let Ok(rel_dest) = path::Path::new(&destination).strip_prefix(&source) {
+            let rel_dest = rel_dest.to_str().expect("started as a utf-8 string");
+            if !rel_dest.is_empty() {
+                ignore.push(rel_dest.to_owned());
+            }
+        }
+
         let source = root.join(source);
         let destination = abs_dest
             .map(|s| s.into())
@@ -446,6 +454,7 @@ fn test_build_dest() {
                            .set_post(true),
                        ..Default::default()
                    },
+                   ignore: ["dest".to_owned()].to_vec(),
                    ..Default::default()
                });
 }
@@ -468,6 +477,7 @@ fn test_build_abs_dest() {
                            .set_post(true),
                        ..Default::default()
                    },
+                   ignore: ["dest".to_owned()].to_vec(),
                    ..Default::default()
                });
 }
