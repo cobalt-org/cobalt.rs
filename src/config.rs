@@ -7,6 +7,7 @@ use serde_yaml;
 
 use frontmatter;
 use legacy::wildwest;
+use site;
 use syntax_highlight::has_syntax_theme;
 
 arg_enum! {
@@ -83,53 +84,6 @@ impl Default for SyntaxHighlight {
     }
 }
 
-const DATA_DIR: &'static str = "_data";
-
-#[derive(Debug, PartialEq)]
-#[derive(Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct SiteBuilder {
-    pub name: Option<String>,
-    pub description: Option<String>,
-    pub base_url: Option<String>,
-    #[serde(skip)]
-    pub data_dir: &'static str,
-}
-
-impl Default for SiteBuilder {
-    fn default() -> SiteBuilder {
-        SiteBuilder {
-            name: None,
-            description: None,
-            base_url: None,
-            data_dir: DATA_DIR,
-        }
-    }
-}
-
-impl SiteBuilder {
-    pub fn build(self) -> Result<SiteBuilder> {
-        let SiteBuilder {
-            name,
-            description,
-            base_url,
-            data_dir,
-        } = self;
-        let base_url = base_url.map(|mut l| {
-                                        if l.ends_with('/') {
-                                            l.pop();
-                                        }
-                                        l
-                                    });
-        Ok(SiteBuilder {
-               name,
-               description,
-               base_url,
-               data_dir,
-           })
-    }
-}
-
 #[derive(Debug, PartialEq, Default)]
 #[derive(Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -183,7 +137,7 @@ pub struct ConfigBuilder {
     pub default: frontmatter::FrontmatterBuilder,
     pub pages: PageBuilder,
     pub posts: PostBuilder,
-    pub site: SiteBuilder,
+    pub site: site::SiteBuilder,
     pub template_extensions: Vec<String>,
     pub ignore: Vec<String>,
     pub syntax_highlight: SyntaxHighlight,
@@ -208,7 +162,7 @@ impl Default for ConfigBuilder {
                 .set_post(false),
             pages: PageBuilder::default(),
             posts: PostBuilder::default(),
-            site: SiteBuilder::default(),
+            site: site::SiteBuilder::default(),
             template_extensions: vec!["md".to_owned(), "liquid".to_owned()],
             ignore: vec![],
             syntax_highlight: SyntaxHighlight::default(),
@@ -333,7 +287,7 @@ pub struct Config {
     pub include_drafts: bool,
     pub pages: PageBuilder,
     pub posts: PostBuilder,
-    pub site: SiteBuilder,
+    pub site: site::SiteBuilder,
     pub template_extensions: Vec<String>,
     pub ignore: Vec<String>,
     pub syntax_highlight: SyntaxHighlight,
@@ -416,7 +370,7 @@ fn test_from_file_rss() {
                        rss: Some("rss.xml".to_owned()),
                        ..Default::default()
                    },
-                   site: SiteBuilder {
+                   site: site::SiteBuilder {
                        name: Some("My blog!".to_owned()),
                        description: Some("Blog description".to_owned()),
                        base_url: Some("http://example.com".to_owned()),

@@ -99,6 +99,7 @@ mod cobalt;
 mod config;
 mod document;
 mod new;
+mod site;
 mod slug;
 mod datetime;
 mod frontmatter;

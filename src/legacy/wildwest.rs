@@ -3,8 +3,9 @@ use std::default::Default;
 use liquid;
 
 use super::super::config;
-use super::super::frontmatter;
 use super::super::datetime;
+use super::super::frontmatter;
+use super::super::site;
 
 #[derive(Debug, Eq, PartialEq, Default, Clone)]
 #[derive(Serialize, Deserialize)]
@@ -242,7 +243,7 @@ impl From<GlobalConfig> for config::ConfigBuilder {
                 .set_post(true),
         };
 
-        let site = config::SiteBuilder {
+        let site = site::SiteBuilder {
             name: name,
             description: description,
             base_url: link,
