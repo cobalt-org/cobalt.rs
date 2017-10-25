@@ -66,143 +66,19 @@ extern crate clap;
 #[macro_use]
 extern crate log;
 
+mod args;
 mod build;
 mod error;
-mod serve;
 mod new;
-
-use std::env;
+mod serve;
 
 use clap::{Arg, App, SubCommand, AppSettings};
-use cobalt::{ConfigBuilder, Dump, jekyll};
+use cobalt::jekyll;
 use cobalt::{list_syntaxes, list_syntax_themes};
-use env_logger::LogBuilder;
-use log::{LogRecord, LogLevelFilter};
 
 use error::*;
 
 quick_main!(run);
-
-fn get_config_args() -> Vec<Arg<'static, 'static>> {
-    [Arg::with_name("config")
-         .short("c")
-         .long("config")
-         .value_name("FILE")
-         .help("Config file to use [default: .cobalt.yml]")
-         .global(true)
-         .takes_value(true),
-     Arg::with_name("destination")
-         .short("d")
-         .long("destination")
-         .value_name("DIR")
-         .help("Destination folder [default: ./]")
-         .global(true)
-         .takes_value(true),
-     Arg::with_name("drafts")
-         .long("drafts")
-         .help("Include drafts.")
-         .global(true)
-         .takes_value(false),
-     Arg::with_name("dump")
-         .long("dump")
-         .possible_values(&Dump::variants())
-         .help("Dump the specified internal state")
-         .global(true)
-         .multiple(true)
-         .takes_value(true)]
-        .to_vec()
-}
-
-fn get_config(global_matches: &clap::ArgMatches,
-              matches: &clap::ArgMatches)
-              -> Result<ConfigBuilder> {
-    let config_path = matches
-        .value_of("config")
-        .or_else(|| global_matches.value_of("config"));
-
-    // Fetch config information if available
-    let mut config = if let Some(config_path) = config_path {
-        ConfigBuilder::from_file(config_path)
-            .chain_err(|| format!("Error reading config file {:?}", config_path))?
-    } else {
-        let cwd = env::current_dir().expect("How does this fail?");
-        ConfigBuilder::from_cwd(cwd)?
-    };
-
-    config.abs_dest = matches
-        .value_of("destination")
-        .or_else(|| global_matches.value_of("destination"))
-        .map(str::to_string);
-
-    config.include_drafts = matches.is_present("drafts");
-
-    if global_matches.is_present("dump") {
-        let mut dump = values_t!(global_matches, "dump", Dump)?;
-        config.dump.append(&mut dump);
-        info!("Setting: {:?}", config.dump);
-    }
-    if matches.is_present("dump") {
-        let mut dump = values_t!(matches, "dump", Dump)?;
-        config.dump.append(&mut dump);
-        info!("Setting: {:?}", config.dump);
-    }
-
-    Ok(config)
-}
-
-fn get_logging_args() -> Vec<Arg<'static, 'static>> {
-    [Arg::with_name("log-level")
-         .short("L")
-         .long("log-level")
-         .possible_values(&["error", "warn", "info", "debug", "trace", "off"])
-         .help("Log level [default: info]")
-         .global(true)
-         .takes_value(true),
-     Arg::with_name("trace")
-         .long("trace")
-         .help("Log ultra-verbose (trace level) information")
-         .global(true)
-         .takes_value(false),
-     Arg::with_name("silent")
-         .long("silent")
-         .help("Suppress all output")
-         .global(true)
-         .takes_value(false)]
-        .to_vec()
-}
-
-fn get_logging(global_matches: &clap::ArgMatches,
-               matches: &clap::ArgMatches)
-               -> Result<LogBuilder> {
-    let format = |record: &LogRecord| {
-        let level = format!("[{}]", record.level()).to_lowercase();
-        format!("{:8} {}", level, record.args())
-    };
-
-    let mut builder = LogBuilder::new();
-    builder.format(format);
-
-    match matches
-              .value_of("log-level")
-              .or_else(|| global_matches.value_of("log-level")) {
-        Some("error") => builder.filter(None, LogLevelFilter::Error),
-        Some("warn") => builder.filter(None, LogLevelFilter::Warn),
-        Some("debug") => builder.filter(None, LogLevelFilter::Debug),
-        Some("trace") => builder.filter(None, LogLevelFilter::Trace),
-        Some("off") => builder.filter(None, LogLevelFilter::Off),
-        Some("info") | _ => builder.filter(None, LogLevelFilter::Info),
-    };
-
-    if matches.is_present("trace") {
-        builder.filter(None, LogLevelFilter::Trace);
-    }
-
-    if matches.is_present("silent") {
-        builder.filter(None, LogLevelFilter::Off);
-    }
-
-    Ok(builder)
-}
 
 fn run() -> Result<()> {
     let app_cli = App::new("Cobalt")
@@ -211,8 +87,8 @@ fn run() -> Result<()> {
         .about("A static site generator written in Rust.")
         .setting(AppSettings::SubcommandRequired)
         .setting(AppSettings::GlobalVersion)
-        .args(&get_config_args())
-        .args(&get_logging_args())
+        .args(&args::get_config_args())
+        .args(&args::get_logging_args())
         .subcommand(new::init_command_args())
         .subcommand(new::new_command_args())
         .subcommand(build::build_command_args())
@@ -244,10 +120,10 @@ fn run() -> Result<()> {
         (_, None) => unreachable!(),
     };
 
-    let mut builder = get_logging(&global_matches, matches)?;
+    let mut builder = args::get_logging(&global_matches, matches)?;
     builder.init().unwrap();
 
-    let config = get_config(&global_matches, matches)?;
+    let config = args::get_config(&global_matches, matches)?;
     let config = config.build()?;
 
     match command {
