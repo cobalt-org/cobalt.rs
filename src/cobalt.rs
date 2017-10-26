@@ -52,18 +52,20 @@ pub fn build(config: &Config) -> Result<()> {
     for file_path in page_files.files().filter(|p| {
         template_extensions.contains(&p.extension().unwrap_or_else(|| OsStr::new("")))
     }) {
-        // if the document is in the posts folder it's considered a post
-        let src_path = source.join(file_path.as_path());
-        let is_post = src_path.starts_with(posts_path.as_path());
+        let rel_src = file_path
+            .strip_prefix(source)
+            .expect("file was found under the root");
 
+        // if the document is in the posts folder it's considered a post
+        let is_post = file_path.starts_with(posts_path.as_path());
         let default_front = if is_post {
             config.posts.default.clone()
         } else {
             config.pages.default.clone()
         };
 
-        let doc = Document::parse(source, &file_path, &file_path, default_front)
-            .chain_err(|| format!("Failed to parse {:?}", src_path))?;
+        let doc = Document::parse(&file_path, rel_src, default_front)
+            .chain_err(|| format!("Failed to parse {:?}", rel_src))?;
         if !doc.front.is_draft || config.include_drafts {
             documents.push(doc);
         }
@@ -81,18 +83,16 @@ pub fn build(config: &Config) -> Result<()> {
             for file_path in draft_files.files().filter(|p| {
                 template_extensions.contains(&p.extension().unwrap_or_else(|| OsStr::new("")))
             }) {
-                let new_path = posts_path.join(&file_path);
-                let new_path = new_path
-                    .strip_prefix(source)
-                    .expect("Entry not in source folder");
+                // Provide a fake path as if it was not a draft
+                let rel_src = file_path
+                    .strip_prefix(&drafts_root)
+                    .expect("file was found under the root");
+                let new_path = Path::new(&config.posts.dir).join(rel_src);
 
                 let default_front = config.posts.default.clone().set_draft(true);
 
-                let doc = Document::parse(&drafts_root, &file_path, new_path, default_front)
-                    .chain_err(|| {
-                                   let src_path = drafts_root.join(file_path);
-                                   format!("Failed to parse {:?}", src_path)
-                               })?;
+                let doc = Document::parse(&file_path, &new_path, default_front)
+                    .chain_err(|| format!("Failed to parse {:?}", rel_src))?;
                 documents.push(doc);
             }
         }
@@ -233,8 +233,10 @@ pub fn build(config: &Config) -> Result<()> {
             if file_path.extension() == Some(OsStr::new("scss")) {
                 compile_sass(config, source, dest, file_path)?;
             } else {
-                let src_file = source.join(&file_path);
-                copy_file(src_file.as_path(), dest.join(file_path).as_path())?;
+                let rel_src = file_path
+                    .strip_prefix(source)
+                    .expect("file was found under the root");
+                copy_file(&file_path, dest.join(rel_src).as_path())?;
             }
         }
     }
@@ -349,10 +351,12 @@ fn compile_sass_internal(config: &Config,
         SassOutputStyle::Compact => sass_rs::OutputStyle::Compact,
         SassOutputStyle::Compressed => sass_rs::OutputStyle::Compressed,
     };
+    let content = sass_rs::compile_file(file_path, sass_opts)?;
 
-    let src_file = source.join(file_path);
-    let content = sass_rs::compile_file(src_file.as_path(), sass_opts.clone())?;
-    let mut dest_file = dest.join(file_path);
+    let rel_src = file_path
+        .strip_prefix(source)
+        .expect("file was found under the root");
+    let mut dest_file = dest.join(rel_src);
     dest_file.set_extension("css");
 
     create_document_file(content, dest_file)

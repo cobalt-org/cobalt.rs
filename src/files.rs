@@ -62,12 +62,7 @@ impl<'a> FilesIterator<'a> {
             .filter_entry(move |e| files.includes_entry(e))
             .filter_map(|e| e.ok())
             .filter(|e| e.file_type().is_file())
-            .filter_map(move |e| {
-                            e.path()
-                                .strip_prefix(files.root_dir.as_path())
-                                .ok()
-                                .map(|p| p.to_path_buf())
-                        });
+            .map(move |e| e.path().to_path_buf());
         FilesIterator { inner: Box::new(walker) }
     }
 }
@@ -431,7 +426,10 @@ mod tests {
     fn files_iter_matches_include() {
         let root_dir = Path::new("tests/fixtures/hidden_files");
         let files = FilesBuilder::new(root_dir).unwrap().build().unwrap();
-        let mut actual: Vec<_> = files.files().collect();
+        let mut actual: Vec<_> = files
+            .files()
+            .map(|f| f.strip_prefix(root_dir).unwrap().to_owned())
+            .collect();
         actual.sort();
 
         let expected = vec![Path::new("child/child.txt").to_path_buf(),

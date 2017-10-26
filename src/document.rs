@@ -34,14 +34,6 @@ fn read_file<P: AsRef<Path>>(path: P) -> Result<String> {
     Ok(text)
 }
 
-fn read_document<PB: Into<PathBuf>, P: AsRef<Path>>(root: PB, relpath: P) -> Result<String> {
-    let path = root.into().join(relpath);
-    let mut file = File::open(path)?;
-    let mut text = String::new();
-    file.read_to_string(&mut text)?;
-    Ok(text)
-}
-
 fn split_document(content: &str) -> Result<(Option<&str>, &str)> {
     if FRONT_MATTER_DIVIDE.is_match(content) {
         let mut splits = FRONT_MATTER_DIVIDE.splitn(content, 2);
@@ -226,13 +218,12 @@ impl Document {
         }
     }
 
-    pub fn parse(root_path: &Path,
-                 source_file: &Path,
-                 dest_file: &Path,
+    pub fn parse(src_path: &Path,
+                 rel_path: &Path,
                  default_front: frontmatter::FrontmatterBuilder)
                  -> Result<Document> {
-        trace!("Parsing {:?}", source_file);
-        let content = read_document(root_path, source_file)?;
+        trace!("Parsing {:?}", rel_path);
+        let content = read_file(src_path)?;
         let (front, content) = split_document(&content)?;
         let legacy_front: wildwest::FrontmatterBuilder =
             front
@@ -241,11 +232,11 @@ impl Document {
                 .unwrap_or_else(wildwest::FrontmatterBuilder::new);
 
         let front: frontmatter::FrontmatterBuilder = legacy_front.into();
-        let front = front.merge_path(dest_file).merge(default_front);
+        let front = front.merge_path(rel_path).merge(default_front);
 
         let front = front.build()?;
 
-        let perma_attributes = permalink_attributes(&front, dest_file);
+        let perma_attributes = permalink_attributes(&front, rel_path);
         let (file_path, url_path) = {
             let permalink = front.path.as_ref();
             let url_path = explode_permalink(permalink, perma_attributes);
@@ -253,9 +244,8 @@ impl Document {
             (file_path, url_path)
         };
 
-        let doc_attributes = document_attributes(&front,
-                                                 source_file.to_str().unwrap_or(""),
-                                                 url_path.as_ref());
+        let doc_attributes =
+            document_attributes(&front, rel_path.to_str().unwrap_or(""), url_path.as_ref());
 
         Ok(Document::new(url_path,
                          file_path,

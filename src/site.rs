@@ -156,16 +156,19 @@ fn load_data(data_path: &path::Path) -> Result<liquid::Value> {
 fn insert_data_dir(data: &mut liquid::Object, data_root: &path::Path) -> Result<()> {
     let data_files_builder = files::FilesBuilder::new(data_root)?;
     let data_files = data_files_builder.build()?;
-    for df in data_files.files() {
-        let file_stem = df.file_stem()
+    for full_path in data_files.files() {
+        let rel_path = full_path
+            .strip_prefix(data_root)
+            .expect("file was found under the root");
+
+        let file_stem = full_path
+            .file_stem()
             .expect("Files will always return with a stem");
         let file_stem = String::from(file_stem.to_str().unwrap());
 
-        let full_path = data_root.join(df.clone());
-
         let data_fragment = load_data(&full_path)?;
 
-        deep_insert(data, &df, file_stem, data_fragment)?;
+        deep_insert(data, rel_path, file_stem, data_fragment)?;
     }
 
     Ok(())
