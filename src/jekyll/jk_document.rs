@@ -1,6 +1,6 @@
 use std::ffi;
 use std::fs;
-use std::io::{Read, Write};
+use std::io::Write;
 use std::path;
 
 use itertools;
@@ -8,6 +8,7 @@ use liquid;
 use regex;
 use serde_yaml;
 
+use files;
 use frontmatter;
 use datetime;
 use legacy::wildwest;
@@ -83,7 +84,7 @@ impl JkDocument {
     }
 
     pub fn parse(source_file: &path::Path) -> Result<JkDocument> {
-        let doc: String = read_file(source_file)?;
+        let doc: String = files::read_file(source_file)?;
         JkDocument::parse_string(doc)
     }
 
@@ -143,13 +144,6 @@ pub fn convert_from_jk(source: &path::Path, dest: &path::Path) -> Result<()> {
     } else {
         Err(ErrorKind::InternalError.into())
     }
-}
-
-fn read_file<P: AsRef<path::Path>>(path: P) -> Result<String> {
-    let mut file = fs::File::open(path.as_ref())?;
-    let mut text = String::new();
-    file.read_to_string(&mut text)?;
-    Ok(text)
 }
 
 fn split_document(content: &str) -> Result<(Option<&str>, &str)> {

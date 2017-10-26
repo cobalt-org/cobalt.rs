@@ -1,11 +1,9 @@
-use std::fs::File;
 use std::collections::HashMap;
 use std::collections::hash_map::Entry;
 use std::path::{Path, PathBuf};
 use std::default::Default;
 use error::Result;
 use chrono::{Datelike, Timelike};
-use std::io::Read;
 use regex::Regex;
 use rss;
 use jsonfeed;
@@ -17,6 +15,7 @@ use syntax_highlight::{initialize_codeblock, decorate_markdown};
 use liquid::{Renderable, LiquidOptions, Context, Value, LocalTemplateRepository};
 
 use config;
+use files;
 use frontmatter;
 use pulldown_cmark as cmark;
 use liquid;
@@ -25,13 +24,6 @@ use legacy::wildwest;
 lazy_static!{
     static ref FRONT_MATTER_DIVIDE: Regex = Regex::new(r"---\s*\r?\n").unwrap();
     static ref MARKDOWN_REF: Regex = Regex::new(r"(?m:^ {0,3}\[[^\]]+\]:.+$)").unwrap();
-}
-
-fn read_file<P: AsRef<Path>>(path: P) -> Result<String> {
-    let mut file = File::open(path.as_ref())?;
-    let mut text = String::new();
-    file.read_to_string(&mut text)?;
-    Ok(text)
 }
 
 fn split_document(content: &str) -> Result<(Option<&str>, &str)> {
@@ -223,7 +215,7 @@ impl Document {
                  default_front: frontmatter::FrontmatterBuilder)
                  -> Result<Document> {
         trace!("Parsing {:?}", rel_path);
-        let content = read_file(src_path)?;
+        let content = files::read_file(src_path)?;
         let (front, content) = split_document(&content)?;
         let legacy_front: wildwest::FrontmatterBuilder =
             front
@@ -414,12 +406,13 @@ impl Document {
         if let Some(ref layout) = self.front.layout {
             let layout_data_ref = match layouts_cache.entry(layout.to_owned()) {
                 Entry::Vacant(vacant) => {
-                    let layout_data = try!(read_file(layouts_dir.join(layout)).map_err(|e| {
-                        format!("Layout {} can not be read (defined in {:?}): {}",
-                                layout,
-                                self.file_path,
-                                e)
-                    }));
+                    let layout_data =
+                        try!(files::read_file(layouts_dir.join(layout)).map_err(|e| {
+                            format!("Layout {} can not be read (defined in {:?}): {}",
+                                    layout,
+                                    self.file_path,
+                                    e)
+                        }));
                     vacant.insert(layout_data)
                 }
                 Entry::Occupied(occupied) => occupied.into_mut(),

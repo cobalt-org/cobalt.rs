@@ -1,10 +1,10 @@
 use std::default::Default;
 use std::path;
-use std::fs::File;
-use std::io::Read;
-use error::*;
+
 use serde_yaml;
 
+use error::*;
+use files;
 use frontmatter;
 use legacy::wildwest;
 use site;
@@ -179,12 +179,7 @@ impl ConfigBuilder {
     }
 
     fn from_file_internal(path: path::PathBuf) -> Result<ConfigBuilder> {
-        let content = {
-            let mut buffer = String::new();
-            let mut f = File::open(&path)?;
-            f.read_to_string(&mut buffer)?;
-            buffer
-        };
+        let content = files::read_file(&path)?;
 
         if content.trim().is_empty() {
             return Ok(ConfigBuilder::default());
@@ -205,7 +200,7 @@ impl ConfigBuilder {
     }
 
     fn from_cwd_internal(cwd: path::PathBuf) -> Result<ConfigBuilder> {
-        let file_path = find_project_file(&cwd, ".cobalt.yml");
+        let file_path = files::find_project_file(&cwd, ".cobalt.yml");
         let mut config = file_path
             .map(|p| {
                      info!("Using config file {:?}", &p);
@@ -257,8 +252,8 @@ impl ConfigBuilder {
         let mut posts = posts;
         posts.default = posts.default.merge(default);
 
-        let source = cleanup_path(source);
-        let destination = cleanup_path(destination);
+        let source = files::cleanup_path(source);
+        let destination = files::cleanup_path(destination);
 
         let mut ignore = ignore;
         if let Ok(rel_dest) = path::Path::new(&destination).strip_prefix(&source) {
@@ -318,80 +313,6 @@ impl Default for Config {
             .build()
             .expect("default config should not fail")
     }
-}
-fn find_project_file<P: Into<path::PathBuf>>(dir: P, name: &str) -> Option<path::PathBuf> {
-    find_project_file_internal(dir.into(), name)
-}
-
-fn find_project_file_internal(dir: path::PathBuf, name: &str) -> Option<path::PathBuf> {
-    let mut file_path = dir;
-    file_path.push(name);
-    while !file_path.exists() {
-        file_path.pop(); // filename
-        let hit_bottom = !file_path.pop();
-        if hit_bottom {
-            return None;
-        }
-        file_path.push(name);
-    }
-    Some(file_path)
-}
-
-fn cleanup_path(path: String) -> String {
-    let stripped = path.trim_left_matches("./");
-    if stripped == "." {
-        String::new()
-    } else {
-        stripped.to_owned()
-    }
-}
-
-#[test]
-fn find_project_file_same_dir() {
-    let actual = find_project_file("tests/fixtures/config", ".cobalt.yml").unwrap();
-    let expected = path::Path::new("tests/fixtures/config/.cobalt.yml");
-    assert_eq!(actual, expected);
-}
-
-#[test]
-fn find_project_file_parent_dir() {
-    let actual = find_project_file("tests/fixtures/config/child", ".cobalt.yml").unwrap();
-    let expected = path::Path::new("tests/fixtures/config/.cobalt.yml");
-    assert_eq!(actual, expected);
-}
-
-#[test]
-fn find_project_file_doesnt_exist() {
-    let expected = path::Path::new("<NOT FOUND>");
-    let actual = find_project_file("tests/fixtures/", ".cobalt.yml")
-        .unwrap_or_else(|| expected.into());
-    assert_eq!(actual, expected);
-}
-
-#[test]
-fn cleanup_path_empty() {
-    assert_eq!(cleanup_path("".to_owned()), "".to_owned());
-}
-
-#[test]
-fn cleanup_path_dot() {
-    assert_eq!(cleanup_path(".".to_owned()), "".to_owned());
-}
-
-#[test]
-fn cleanup_path_current_dir() {
-    assert_eq!(cleanup_path("./".to_owned()), "".to_owned());
-}
-
-#[test]
-fn cleanup_path_current_dir_extreme() {
-    assert_eq!(cleanup_path("././././.".to_owned()), "".to_owned());
-}
-
-#[test]
-fn cleanup_path_current_dir_child() {
-    assert_eq!(cleanup_path("./build/file.txt".to_owned()),
-               "build/file.txt".to_owned());
 }
 
 #[test]
