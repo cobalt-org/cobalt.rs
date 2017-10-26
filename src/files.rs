@@ -24,7 +24,7 @@ impl FilesBuilder {
     }
 
     pub fn add_ignore(&mut self, line: &str) -> Result<&mut FilesBuilder> {
-        debug!("{:?}: adding '{}' ignore pattern", self.root_dir, line);
+        trace!("{:?}: adding '{}' ignore pattern", self.root_dir, line);
         self.ignore.push(line.to_owned());
         Ok(self)
     }
@@ -131,11 +131,11 @@ impl Files {
         match self.ignore.matched(path, is_dir) {
             Match::None => true,
             Match::Ignore(glob) => {
-                debug!("{:?}: ignored {:?}", path, glob.original());
+                trace!("{:?}: ignored {:?}", path, glob.original());
                 false
             }
             Match::Whitelist(glob) => {
-                debug!("{:?}: allowed {:?}", path, glob.original());
+                trace!("{:?}: allowed {:?}", path, glob.original());
                 true
             }
         }

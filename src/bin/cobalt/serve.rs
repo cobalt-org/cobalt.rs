@@ -68,7 +68,7 @@ pub fn watch_command(matches: &clap::ArgMatches) -> Result<()> {
         let event = rx.recv().chain_err(|| "Notify error")?;
         let rebuild = if let Some(ref event_path) = event.path {
             if site_files.includes_file(event_path) {
-                trace!("Page changed {:?}", event);
+                debug!("Page changed {:?}", event);
                 true
             } else {
                 trace!("Ignored file changed {:?}", event);
