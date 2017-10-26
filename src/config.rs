@@ -5,7 +5,9 @@ use std::io::Read;
 use error::*;
 use serde_yaml;
 
+use frontmatter;
 use legacy::wildwest;
+use site;
 use syntax_highlight::has_syntax_theme;
 
 arg_enum! {
@@ -82,7 +84,42 @@ impl Default for SyntaxHighlight {
     }
 }
 
-const DATA_DIR: &'static str = "_data";
+#[derive(Debug, PartialEq, Default)]
+#[derive(Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct PageBuilder {
+    pub default: frontmatter::FrontmatterBuilder,
+}
+
+#[derive(Debug, PartialEq)]
+#[derive(Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct PostBuilder {
+    pub name: Option<String>,
+    pub description: Option<String>,
+    pub dir: String,
+    pub drafts_dir: Option<String>,
+    pub order: SortOrder,
+    pub rss: Option<String>,
+    pub jsonfeed: Option<String>,
+    pub default: frontmatter::FrontmatterBuilder,
+}
+
+impl Default for PostBuilder {
+    fn default() -> PostBuilder {
+        Self {
+            name: None,
+            description: None,
+            dir: "posts".to_owned(),
+            drafts_dir: None,
+            order: SortOrder::default(),
+            rss: None,
+            jsonfeed: None,
+            default: frontmatter::FrontmatterBuilder::new().set_post(true),
+        }
+    }
+}
+
 const LAYOUTS_DIR: &'static str = "_layouts";
 
 #[derive(Debug, PartialEq)]
@@ -92,31 +129,23 @@ pub struct ConfigBuilder {
     #[serde(skip)]
     pub root: path::PathBuf,
     pub source: String,
-    pub dest: String,
+    pub destination: String,
     #[serde(skip)]
     pub abs_dest: Option<String>,
     #[serde(skip)]
-    pub layouts: &'static str,
-    pub drafts: String,
-    #[serde(skip)]
-    pub data: &'static str,
     pub include_drafts: bool,
-    pub posts: String,
-    pub post_path: Option<String>,
-    pub post_order: SortOrder,
+    pub default: frontmatter::FrontmatterBuilder,
+    pub pages: PageBuilder,
+    pub posts: PostBuilder,
+    pub site: site::SiteBuilder,
     pub template_extensions: Vec<String>,
-    pub rss: Option<String>,
-    pub jsonfeed: Option<String>,
-    pub name: Option<String>,
-    pub description: Option<String>,
-    pub link: Option<String>,
     pub ignore: Vec<String>,
-    pub excerpt_separator: String,
+    pub syntax_highlight: SyntaxHighlight,
+    pub layouts_dir: &'static str,
+    pub sass: SassOptions,
     // This is a debug-only field and should be transient rather than persistently set.
     #[serde(skip)]
     pub dump: Vec<Dump>,
-    pub syntax_highlight: SyntaxHighlight,
-    pub sass: SassOptions,
 }
 
 impl Default for ConfigBuilder {
@@ -124,26 +153,22 @@ impl Default for ConfigBuilder {
         ConfigBuilder {
             root: path::PathBuf::new(),
             source: "./".to_owned(),
-            dest: "./".to_owned(),
+            destination: "./".to_owned(),
             abs_dest: None,
-            layouts: LAYOUTS_DIR,
-            drafts: "_drafts".to_owned(),
-            data: DATA_DIR,
             include_drafts: false,
-            posts: "posts".to_owned(),
-            post_path: None,
-            post_order: SortOrder::default(),
+            default: frontmatter::FrontmatterBuilder::new()
+                .set_excerpt_separator("\n\n".to_owned())
+                .set_draft(false)
+                .set_post(false),
+            pages: PageBuilder::default(),
+            posts: PostBuilder::default(),
+            site: site::SiteBuilder::default(),
             template_extensions: vec!["md".to_owned(), "liquid".to_owned()],
-            rss: None,
-            jsonfeed: None,
-            name: None,
-            description: None,
-            link: None,
             ignore: vec![],
-            excerpt_separator: "\n\n".to_owned(),
-            dump: vec![],
             syntax_highlight: SyntaxHighlight::default(),
+            layouts_dir: LAYOUTS_DIR,
             sass: SassOptions::default(),
+            dump: vec![],
         }
     }
 }
@@ -198,34 +223,20 @@ impl ConfigBuilder {
         let ConfigBuilder {
             root,
             source,
-            dest,
+            destination,
             abs_dest,
-            layouts,
-            drafts,
-            data,
             include_drafts,
+            default,
+            pages,
             posts,
-            post_path,
-            post_order,
+            site,
             template_extensions,
-            rss,
-            jsonfeed,
-            name,
-            description,
-            link,
             ignore,
-            excerpt_separator,
-            dump,
             syntax_highlight,
+            layouts_dir,
             sass,
+            dump,
         } = self;
-
-        let link = link.map(|mut l| {
-                                if l.ends_with('/') {
-                                    l.pop();
-                                }
-                                l
-                            });
 
         let result: Result<()> = match has_syntax_theme(&syntax_highlight.theme) {
             Ok(true) => Ok(()),
@@ -241,29 +252,42 @@ impl ConfigBuilder {
         };
         result?;
 
+        let mut pages = pages;
+        pages.default = pages.default.merge(default.clone());
+        let mut posts = posts;
+        posts.default = posts.default.merge(default);
+
+        let source = cleanup_path(source);
+        let destination = cleanup_path(destination);
+
+        let mut ignore = ignore;
+        if let Ok(rel_dest) = path::Path::new(&destination).strip_prefix(&source) {
+            let rel_dest = rel_dest.to_str().expect("started as a utf-8 string");
+            if !rel_dest.is_empty() {
+                ignore.push(format!("/{}", rel_dest.to_owned()));
+            }
+        }
+
+        let source = root.join(source);
+        let destination = abs_dest
+            .map(|s| s.into())
+            .unwrap_or_else(|| root.join(destination));
+
+        let site = site.build(&source)?;
+
         let config = Config {
-            source: root.join(source),
-            dest: abs_dest
-                .map(|s| s.into())
-                .unwrap_or_else(|| root.join(dest)),
-            layouts,
-            drafts,
-            data,
+            source,
+            destination,
             include_drafts,
+            pages,
             posts,
-            post_path,
-            post_order,
-            template_extensions,
-            rss,
-            jsonfeed,
-            name,
-            description,
-            link,
+            site,
             ignore,
-            excerpt_separator,
-            dump,
+            template_extensions,
             syntax_highlight,
+            layouts_dir,
             sass,
+            dump,
         };
 
         Ok(config)
@@ -275,25 +299,17 @@ impl ConfigBuilder {
 #[serde(deny_unknown_fields, default)]
 pub struct Config {
     pub source: path::PathBuf,
-    pub dest: path::PathBuf,
-    pub layouts: &'static str,
-    pub drafts: String,
-    pub data: &'static str,
+    pub destination: path::PathBuf,
     pub include_drafts: bool,
-    pub posts: String,
-    pub post_path: Option<String>,
-    pub post_order: SortOrder,
+    pub pages: PageBuilder,
+    pub posts: PostBuilder,
+    pub site: site::Site,
     pub template_extensions: Vec<String>,
-    pub rss: Option<String>,
-    pub jsonfeed: Option<String>,
-    pub name: Option<String>,
-    pub description: Option<String>,
-    pub link: Option<String>,
     pub ignore: Vec<String>,
-    pub excerpt_separator: String,
-    pub dump: Vec<Dump>,
     pub syntax_highlight: SyntaxHighlight,
+    pub layouts_dir: &'static str,
     pub sass: SassOptions,
+    pub dump: Vec<Dump>,
 }
 
 impl Default for Config {
@@ -321,6 +337,15 @@ fn find_project_file_internal(dir: path::PathBuf, name: &str) -> Option<path::Pa
     Some(file_path)
 }
 
+fn cleanup_path(path: String) -> String {
+    let stripped = path.trim_left_matches("./");
+    if stripped == "." {
+        String::new()
+    } else {
+        stripped.to_owned()
+    }
+}
+
 #[test]
 fn find_project_file_same_dir() {
     let actual = find_project_file("tests/fixtures/config", ".cobalt.yml").unwrap();
@@ -344,13 +369,43 @@ fn find_project_file_doesnt_exist() {
 }
 
 #[test]
+fn cleanup_path_empty() {
+    assert_eq!(cleanup_path("".to_owned()), "".to_owned());
+}
+
+#[test]
+fn cleanup_path_dot() {
+    assert_eq!(cleanup_path(".".to_owned()), "".to_owned());
+}
+
+#[test]
+fn cleanup_path_current_dir() {
+    assert_eq!(cleanup_path("./".to_owned()), "".to_owned());
+}
+
+#[test]
+fn cleanup_path_current_dir_extreme() {
+    assert_eq!(cleanup_path("././././.".to_owned()), "".to_owned());
+}
+
+#[test]
+fn cleanup_path_current_dir_child() {
+    assert_eq!(cleanup_path("./build/file.txt".to_owned()),
+               "build/file.txt".to_owned());
+}
+
+#[test]
 fn test_from_file_ok() {
     let result = ConfigBuilder::from_file("tests/fixtures/config/.cobalt.yml").unwrap();
     assert_eq!(result,
                ConfigBuilder {
                    root: path::Path::new("tests/fixtures/config").to_path_buf(),
-                   dest: "./dest".to_owned(),
-                   posts: "_my_posts".to_owned(),
+                   destination: "./dest".to_owned(),
+                   posts: PostBuilder {
+                       dir: "_my_posts".to_owned(),
+                       drafts_dir: Some("_drafts".to_owned()),
+                       ..Default::default()
+                   },
                    ..Default::default()
                });
 }
@@ -361,10 +416,17 @@ fn test_from_file_rss() {
     assert_eq!(result,
                ConfigBuilder {
                    root: path::Path::new("tests/fixtures/config").to_path_buf(),
-                   rss: Some("rss.xml".to_owned()),
-                   name: Some("My blog!".to_owned()),
-                   description: Some("Blog description".to_owned()),
-                   link: Some("http://example.com".to_owned()),
+                   posts: PostBuilder {
+                       drafts_dir: Some("_drafts".to_owned()),
+                       rss: Some("rss.xml".to_owned()),
+                       ..Default::default()
+                   },
+                   site: site::SiteBuilder {
+                       name: Some("My blog!".to_owned()),
+                       description: Some("Blog description".to_owned()),
+                       base_url: Some("http://example.com".to_owned()),
+                       ..Default::default()
+                   },
                    ..Default::default()
                });
 }
@@ -393,8 +455,12 @@ fn test_from_cwd_ok() {
     assert_eq!(result,
                ConfigBuilder {
                    root: path::Path::new("tests/fixtures/config").to_path_buf(),
-                   dest: "./dest".to_owned(),
-                   posts: "_my_posts".to_owned(),
+                   destination: "./dest".to_owned(),
+                   posts: PostBuilder {
+                       dir: "_my_posts".to_owned(),
+                       drafts_dir: Some("_drafts".to_owned()),
+                       ..Default::default()
+                   },
                    ..Default::default()
                });
 }
@@ -416,8 +482,17 @@ fn test_build_dest() {
     assert_eq!(result,
                Config {
                    source: path::Path::new("tests/fixtures/config").to_path_buf(),
-                   dest: path::Path::new("tests/fixtures/config/./dest").to_path_buf(),
-                   posts: "_my_posts".to_owned(),
+                   destination: path::Path::new("tests/fixtures/config/./dest").to_path_buf(),
+                   posts: PostBuilder {
+                       dir: "_my_posts".to_owned(),
+                       drafts_dir: Some("_drafts".to_owned()),
+                       default: frontmatter::FrontmatterBuilder::new()
+                           .set_excerpt_separator("\n\n".to_owned())
+                           .set_draft(false)
+                           .set_post(true),
+                       ..Default::default()
+                   },
+                   ignore: ["/dest".to_owned()].to_vec(),
                    ..Default::default()
                });
 }
@@ -430,8 +505,17 @@ fn test_build_abs_dest() {
     assert_eq!(result,
                Config {
                    source: path::Path::new("tests/fixtures/config").to_path_buf(),
-                   dest: path::Path::new("hello/world").to_path_buf(),
-                   posts: "_my_posts".to_owned(),
+                   destination: path::Path::new("hello/world").to_path_buf(),
+                   posts: PostBuilder {
+                       dir: "_my_posts".to_owned(),
+                       drafts_dir: Some("_drafts".to_owned()),
+                       default: frontmatter::FrontmatterBuilder::new()
+                           .set_excerpt_separator("\n\n".to_owned())
+                           .set_draft(false)
+                           .set_post(true),
+                       ..Default::default()
+                   },
+                   ignore: ["/dest".to_owned()].to_vec(),
                    ..Default::default()
                });
 }

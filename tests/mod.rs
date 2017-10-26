@@ -89,12 +89,12 @@ fn run_test(name: &str) -> Result<(), cobalt::Error> {
     let config = config.build()?;
 
     // try to create the target directory, ignore errors
-    fs::create_dir_all(&config.dest).is_ok();
+    fs::create_dir_all(&config.destination).is_ok();
 
     let result = cobalt::build(&config);
 
     if result.is_ok() {
-        assert_dirs_eq(&config.dest, &target);
+        assert_dirs_eq(&config.destination, &target);
     }
 
     // clean up

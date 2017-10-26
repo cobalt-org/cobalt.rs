@@ -91,7 +91,7 @@ pub fn create_new_project_for_path(dest: &Path) -> Result<()> {
 
 pub fn create_new_document(doc_type: &str, name: &str, config: &Config) -> Result<()> {
     let path = Path::new(&config.source);
-    let full_path = &path.join(&config.posts).join(name);
+    let full_path = &path.join(&config.posts.dir).join(name);
 
     match doc_type {
         "page" => create_file(name, INDEX_LIQUID)?,

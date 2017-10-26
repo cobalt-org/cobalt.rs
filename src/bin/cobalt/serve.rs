@@ -35,16 +35,23 @@ pub fn watch_command(matches: &clap::ArgMatches) -> Result<()> {
 
     build::build(&config)?;
 
-    let source = path::Path::new(&config.source);
-    let dest = path::Path::new(&config.dest).to_owned();
-    let ignore_dest = {
-        let ignore_dest = dest.join("**/*");
-        let ignore_dest = ignore_dest
-            .to_str()
-            .ok_or_else(|| format!("Cannot convert pathname {:?} to UTF-8", dest))?
-            .to_owned();
-        Some(ignore_dest)
-    };
+    // canonicalize is to ensure there is no question that `watcher`s paths come back safe for
+    // Files::includes_file
+    let source = path::Path::new(&config.source)
+        .canonicalize()
+        .chain_err(|| "Failed in processing source")?;
+    let dest = path::Path::new(&config.destination).to_owned();
+
+    // Be as broad as possible in what can cause a rebuild to
+    // ensure we don't miss anything (normal file walks will miss
+    // `_layouts`, etc).
+    let mut site_files = files::FilesBuilder::new(&source)?;
+    site_files.ignore_hidden(false)?;
+    for line in &config.ignore {
+        site_files.add_ignore(line.as_str())?;
+    }
+    let site_files = site_files.build()?;
+
     let port = matches.value_of("port").unwrap().to_string();
     thread::spawn(move || if serve(&dest, &port).is_err() {
                       process::exit(1)
@@ -53,25 +60,15 @@ pub fn watch_command(matches: &clap::ArgMatches) -> Result<()> {
     let (tx, rx) = channel();
     let mut watcher = raw_watcher(tx).chain_err(|| "Notify error")?;
     watcher
-        .watch(&config.source, RecursiveMode::Recursive)
+        .watch(&source, RecursiveMode::Recursive)
         .chain_err(|| "Notify error")?;
     info!("Watching {:?} for changes", &config.source);
 
     loop {
         let event = rx.recv().chain_err(|| "Notify error")?;
         let rebuild = if let Some(ref event_path) = event.path {
-            // Be as broad as possible in what can cause a rebuild to
-            // ensure we don't miss anything (normal file walks will miss
-            // `_layouts`, etc).
-            let mut page_files = files::FilesBuilder::new(source)?;
-            page_files.add_ignore("!.*")?.add_ignore("!_*")?;
-            if let Some(ref ignore_dest) = ignore_dest {
-                page_files.add_ignore(ignore_dest)?;
-            }
-            let page_files = page_files.build()?;
-
-            if page_files.includes_file(event_path) {
-                trace!("Page changed {:?}", event);
+            if site_files.includes_file(event_path) {
+                debug!("Page changed {:?}", event);
                 true
             } else {
                 trace!("Ignored file changed {:?}", event);
@@ -106,7 +103,7 @@ pub fn serve_command(matches: &clap::ArgMatches) -> Result<()> {
 
     build::build(&config)?;
     let port = matches.value_of("port").unwrap().to_string();
-    let dest = path::Path::new(&config.dest);
+    let dest = path::Path::new(&config.destination);
     serve(dest, &port)?;
 
     Ok(())

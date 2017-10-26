@@ -51,7 +51,9 @@ pub fn build_command(matches: &clap::ArgMatches) -> Result<()> {
 }
 
 pub fn build(config: &cobalt::Config) -> Result<()> {
-    info!("Building from {:?} into {:?}", config.source, config.dest);
+    info!("Building from {:?} into {:?}",
+          config.source,
+          config.destination);
     cobalt::build(config)?;
 
     Ok(())
@@ -69,7 +71,7 @@ pub fn clean_command(matches: &clap::ArgMatches) -> Result<()> {
 
     let cwd = env::current_dir().unwrap_or_else(|_| path::PathBuf::new());
     let destdir = config
-        .dest
+        .destination
         .canonicalize()
         .unwrap_or_else(|_| path::PathBuf::new());
     if cwd.starts_with(&destdir) {
@@ -116,12 +118,12 @@ pub fn import_command(matches: &clap::ArgMatches) -> Result<()> {
 }
 
 fn import(config: &cobalt::Config, branch: &str, message: &str) -> Result<()> {
-    info!("Importing {:?} to {}", config.dest, branch);
+    info!("Importing {:?} to {}", config.destination, branch);
 
-    if !config.dest.is_dir() {
-        bail!("`{:?}` is not a directory", config.dest);
+    if !config.destination.is_dir() {
+        bail!("`{:?}` is not a directory", config.destination);
     }
-    ghp::import_dir(&config.dest, branch, message)?;
+    ghp::import_dir(&config.destination, branch, message)?;
 
     Ok(())
 }

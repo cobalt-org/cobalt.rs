@@ -8,30 +8,43 @@ use error::Result;
 
 pub struct FilesBuilder {
     root_dir: PathBuf,
-    ignore: GitignoreBuilder,
+    ignore: Vec<String>,
+    ignore_hidden: bool,
 }
 
 impl FilesBuilder {
     pub fn new(root_dir: &Path) -> Result<FilesBuilder> {
-        let mut ignore = GitignoreBuilder::new(root_dir);
-        ignore.add_line(None, ".*")?;
-        ignore.add_line(None, "_*")?;
         let builder = FilesBuilder {
             root_dir: root_dir.to_path_buf(),
-            ignore: ignore,
+            ignore: Default::default(),
+            ignore_hidden: true,
         };
 
         Ok(builder)
     }
 
     pub fn add_ignore(&mut self, line: &str) -> Result<&mut FilesBuilder> {
-        debug!("{:?}: adding '{}' ignore pattern", self.root_dir, line);
-        self.ignore.add_line(None, line)?;
+        trace!("{:?}: adding '{}' ignore pattern", self.root_dir, line);
+        self.ignore.push(line.to_owned());
+        Ok(self)
+    }
+
+    pub fn ignore_hidden(&mut self, ignore: bool) -> Result<&mut FilesBuilder> {
+        self.ignore_hidden = ignore;
         Ok(self)
     }
 
     pub fn build(&self) -> Result<Files> {
-        let files = Files::new(self.root_dir.as_path(), self.ignore.build()?);
+        let mut ignore = GitignoreBuilder::new(&self.root_dir);
+        if self.ignore_hidden {
+            ignore.add_line(None, ".*")?;
+            ignore.add_line(None, "_*")?;
+        }
+        for line in &self.ignore {
+            ignore.add_line(None, line)?;
+        }
+
+        let files = Files::new(self.root_dir.as_path(), ignore.build()?);
         Ok(files)
     }
 }
@@ -49,12 +62,7 @@ impl<'a> FilesIterator<'a> {
             .filter_entry(move |e| files.includes_entry(e))
             .filter_map(|e| e.ok())
             .filter(|e| e.file_type().is_file())
-            .filter_map(move |e| {
-                            e.path()
-                                .strip_prefix(files.root_dir.as_path())
-                                .ok()
-                                .map(|p| p.to_path_buf())
-                        });
+            .map(move |e| e.path().to_path_buf());
         FilesIterator { inner: Box::new(walker) }
     }
 }
@@ -123,11 +131,11 @@ impl Files {
         match self.ignore.matched(path, is_dir) {
             Match::None => true,
             Match::Ignore(glob) => {
-                debug!("{:?}: ignored {:?}", path, glob.original());
+                trace!("{:?}: ignored {:?}", path, glob.original());
                 false
             }
             Match::Whitelist(glob) => {
-                debug!("{:?}: allowed {:?}", path, glob.original());
+                trace!("{:?}: allowed {:?}", path, glob.original());
                 true
             }
         }
@@ -418,7 +426,10 @@ mod tests {
     fn files_iter_matches_include() {
         let root_dir = Path::new("tests/fixtures/hidden_files");
         let files = FilesBuilder::new(root_dir).unwrap().build().unwrap();
-        let mut actual: Vec<_> = files.files().collect();
+        let mut actual: Vec<_> = files
+            .files()
+            .map(|f| f.strip_prefix(root_dir).unwrap().to_owned())
+            .collect();
         actual.sort();
 
         let expected = vec![Path::new("child/child.txt").to_path_buf(),
