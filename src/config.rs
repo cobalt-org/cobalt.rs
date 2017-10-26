@@ -257,6 +257,9 @@ impl ConfigBuilder {
         let mut posts = posts;
         posts.default = posts.default.merge(default);
 
+        let source = cleanup_path(source);
+        let destination = cleanup_path(destination);
+
         let mut ignore = ignore;
         if let Ok(rel_dest) = path::Path::new(&destination).strip_prefix(&source) {
             let rel_dest = rel_dest.to_str().expect("started as a utf-8 string");
@@ -334,6 +337,15 @@ fn find_project_file_internal(dir: path::PathBuf, name: &str) -> Option<path::Pa
     Some(file_path)
 }
 
+fn cleanup_path(path: String) -> String {
+    let stripped = path.trim_left_matches("./");
+    if stripped == "." {
+        String::new()
+    } else {
+        stripped.to_owned()
+    }
+}
+
 #[test]
 fn find_project_file_same_dir() {
     let actual = find_project_file("tests/fixtures/config", ".cobalt.yml").unwrap();
@@ -354,6 +366,32 @@ fn find_project_file_doesnt_exist() {
     let actual = find_project_file("tests/fixtures/", ".cobalt.yml")
         .unwrap_or_else(|| expected.into());
     assert_eq!(actual, expected);
+}
+
+#[test]
+fn cleanup_path_empty() {
+    assert_eq!(cleanup_path("".to_owned()), "".to_owned());
+}
+
+#[test]
+fn cleanup_path_dot() {
+    assert_eq!(cleanup_path(".".to_owned()), "".to_owned());
+}
+
+#[test]
+fn cleanup_path_current_dir() {
+    assert_eq!(cleanup_path("./".to_owned()), "".to_owned());
+}
+
+#[test]
+fn cleanup_path_current_dir_extreme() {
+    assert_eq!(cleanup_path("././././.".to_owned()), "".to_owned());
+}
+
+#[test]
+fn cleanup_path_current_dir_child() {
+    assert_eq!(cleanup_path("./build/file.txt".to_owned()),
+               "build/file.txt".to_owned());
 }
 
 #[test]
