@@ -244,7 +244,7 @@ impl From<GlobalConfig> for config::ConfigBuilder {
         };
 
         let site = site::SiteBuilder {
-            name: name,
+            title: name,
             description: description,
             base_url: link,
             ..Default::default()

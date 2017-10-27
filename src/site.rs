@@ -18,7 +18,7 @@ const DATA_DIR: &'static str = "_data";
 #[derive(Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct SiteBuilder {
-    pub name: Option<String>,
+    pub title: Option<String>,
     pub description: Option<String>,
     pub base_url: Option<String>,
     pub data: Option<liquid::Object>,
@@ -29,7 +29,7 @@ pub struct SiteBuilder {
 impl Default for SiteBuilder {
     fn default() -> SiteBuilder {
         SiteBuilder {
-            name: None,
+            title: None,
             description: None,
             base_url: None,
             data: None,
@@ -41,7 +41,7 @@ impl Default for SiteBuilder {
 impl SiteBuilder {
     pub fn build(self, root: &path::Path) -> Result<Site> {
         let SiteBuilder {
-            name,
+            title,
             description,
             base_url,
             data,
@@ -55,8 +55,8 @@ impl SiteBuilder {
                                     });
 
         let mut attributes = liquid::Object::new();
-        if let Some(ref name) = name {
-            attributes.insert("name".to_owned(), liquid::Value::str(name));
+        if let Some(ref title) = title {
+            attributes.insert("title".to_owned(), liquid::Value::str(title));
         }
         if let Some(ref description) = description {
             attributes.insert("description".to_owned(), liquid::Value::str(description));
@@ -71,7 +71,7 @@ impl SiteBuilder {
         }
 
         Ok(Site {
-               name,
+               title,
                description,
                base_url,
                attributes,
@@ -83,7 +83,7 @@ impl SiteBuilder {
 #[derive(Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Site {
-    pub name: Option<String>,
+    pub title: Option<String>,
     pub description: Option<String>,
     pub base_url: Option<String>,
     pub attributes: liquid::Object,
