@@ -7,6 +7,7 @@ use error::*;
 use files;
 use frontmatter;
 use legacy::wildwest;
+use sass;
 use site;
 use syntax_highlight::has_syntax_theme;
 
@@ -38,36 +39,6 @@ pub enum SortOrder {
 impl Default for SortOrder {
     fn default() -> SortOrder {
         SortOrder::Desc
-    }
-}
-
-#[derive(Debug, Eq, PartialEq, Hash, Copy, Clone)]
-#[derive(Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub enum SassOutputStyle {
-    Nested,
-    Expanded,
-    Compact,
-    Compressed,
-}
-
-const SASS_IMPORT_DIR: &'static str = "_sass";
-
-#[derive(Debug, PartialEq)]
-#[derive(Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct SassOptions {
-    #[serde(skip)]
-    pub import_dir: &'static str,
-    pub style: SassOutputStyle,
-}
-
-impl Default for SassOptions {
-    fn default() -> SassOptions {
-        SassOptions {
-            import_dir: SASS_IMPORT_DIR,
-            style: SassOutputStyle::Nested,
-        }
     }
 }
 
@@ -142,7 +113,7 @@ pub struct ConfigBuilder {
     pub ignore: Vec<String>,
     pub syntax_highlight: SyntaxHighlight,
     pub layouts_dir: &'static str,
-    pub sass: SassOptions,
+    pub sass: sass::SassOptions,
     // This is a debug-only field and should be transient rather than persistently set.
     #[serde(skip)]
     pub dump: Vec<Dump>,
@@ -167,7 +138,7 @@ impl Default for ConfigBuilder {
             ignore: vec![],
             syntax_highlight: SyntaxHighlight::default(),
             layouts_dir: LAYOUTS_DIR,
-            sass: SassOptions::default(),
+            sass: sass::SassOptions::default(),
             dump: vec![],
         }
     }
@@ -303,7 +274,7 @@ pub struct Config {
     pub ignore: Vec<String>,
     pub syntax_highlight: SyntaxHighlight,
     pub layouts_dir: &'static str,
-    pub sass: SassOptions,
+    pub sass: sass::SassOptions,
     pub dump: Vec<Dump>,
 }
 

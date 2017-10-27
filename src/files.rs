@@ -1,5 +1,6 @@
-use std::fs::File;
+use std::fs;
 use std::io::Read;
+use std::io::Write;
 use std::path;
 
 use ignore::Match;
@@ -172,10 +173,44 @@ pub fn cleanup_path(path: String) -> String {
 }
 
 pub fn read_file<P: AsRef<path::Path>>(path: P) -> Result<String> {
-    let mut file = File::open(path.as_ref())?;
+    let mut file = fs::File::open(path.as_ref())?;
     let mut text = String::new();
     file.read_to_string(&mut text)?;
     Ok(text)
+}
+
+pub fn copy_file(src_file: &path::Path, dest_file: &path::Path) -> Result<()> {
+    // create target directories if any exist
+    if let Some(parent) = dest_file.parent() {
+        fs::create_dir_all(parent)
+            .map_err(|e| format!("Could not create {:?}: {}", parent, e))?;
+    }
+
+    debug!("Copying {:?} to {:?}", src_file, dest_file);
+    fs::copy(src_file, dest_file)
+        .map_err(|e| format!("Could not copy {:?} into {:?}: {}", src_file, dest_file, e))?;
+    Ok(())
+}
+
+pub fn create_document_file<S: AsRef<str>, P: AsRef<path::Path>>(content: S,
+                                                                 dest_file: P)
+                                                                 -> Result<()> {
+    create_document_file_internal(content.as_ref(), dest_file.as_ref())
+}
+
+fn create_document_file_internal(content: &str, dest_file: &path::Path) -> Result<()> {
+    // create target directories if any exist
+    if let Some(parent) = dest_file.parent() {
+        fs::create_dir_all(parent)
+            .map_err(|e| format!("Could not create {:?}: {}", parent, e))?;
+    }
+
+    let mut file = fs::File::create(dest_file)
+        .map_err(|e| format!("Could not create {:?}: {}", dest_file, e))?;
+
+    file.write_all(content.as_bytes())?;
+    info!("Created {}", dest_file.display());
+    Ok(())
 }
 
 #[cfg(test)]
