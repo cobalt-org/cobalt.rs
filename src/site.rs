@@ -165,11 +165,14 @@ fn insert_data_dir(data: &mut liquid::Object, data_root: &path::Path) -> Result<
             .file_stem()
             .expect("Files will always return with a stem");
         let file_stem = String::from(file_stem.to_str().unwrap());
+        let data_fragment = load_data(&full_path)
+            .chain_err(|| format!("Loading data from {:?} failed", full_path))?;
 
-        let data_fragment = load_data(&full_path)?;
-
-        deep_insert(data, rel_path, file_stem, data_fragment)?;
+        deep_insert(data, rel_path, file_stem, data_fragment)
+            .chain_err(|| format!("Merging data into {:?} failed", rel_path))?;
     }
+
+    trace!("Done loading data directory.");
 
     Ok(())
 }
