@@ -422,7 +422,7 @@ fn test_from_file_rss() {
                        ..Default::default()
                    },
                    site: site::SiteBuilder {
-                       name: Some("My blog!".to_owned()),
+                       title: Some("My blog!".to_owned()),
                        description: Some("Blog description".to_owned()),
                        base_url: Some("http://example.com".to_owned()),
                        ..Default::default()

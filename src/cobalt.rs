@@ -250,7 +250,7 @@ fn create_rss(path: &str, dest: &Path, config: &Config, posts: &[Document]) -> R
         .posts
         .name
         .as_ref()
-        .or_else(|| config.site.name.as_ref())
+        .or_else(|| config.site.title.as_ref())
         .ok_or(ErrorKind::ConfigFileMissingFields)?;
     let description = config
         .posts
@@ -291,14 +291,16 @@ fn create_rss(path: &str, dest: &Path, config: &Config, posts: &[Document]) -> R
 // creates a new jsonfeed file with the contents of the site blog
 fn create_jsonfeed(path: &str, dest: &Path, config: &Config, posts: &[Document]) -> Result<()> {
     let name = config
-        .site
+        .posts
         .name
         .as_ref()
+        .or_else(|| config.site.title.as_ref())
         .ok_or(ErrorKind::ConfigFileMissingFields)?;
     let description = config
-        .site
+        .posts
         .description
         .as_ref()
+        .or_else(|| config.site.description.as_ref())
         .ok_or(ErrorKind::ConfigFileMissingFields)?;
     let link = config
         .site
