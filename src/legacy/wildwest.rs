@@ -64,7 +64,7 @@ impl From<frontmatter::FrontmatterBuilder> for FrontmatterBuilder {
         let mut legacy = liquid::Object::new();
 
         let frontmatter::FrontmatterBuilder {
-            path,
+            permalink,
             slug,
             title,
             description,
@@ -77,7 +77,7 @@ impl From<frontmatter::FrontmatterBuilder> for FrontmatterBuilder {
             is_post: _is_post,
             custom,
         } = internal;
-        if let Some(path) = path {
+        if let Some(path) = permalink {
             legacy.insert("path".to_owned(), liquid::Value::Str(path));
         }
         if let Some(slug) = slug {

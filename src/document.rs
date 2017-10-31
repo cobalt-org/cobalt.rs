@@ -230,7 +230,7 @@ impl Document {
 
         let perma_attributes = permalink_attributes(&front, rel_path);
         let (file_path, url_path) = {
-            let permalink = front.path.as_ref();
+            let permalink = front.permalink.as_ref();
             let url_path = explode_permalink(permalink, perma_attributes);
             let file_path = format_url_as_file(&url_path);
             (file_path, url_path)
