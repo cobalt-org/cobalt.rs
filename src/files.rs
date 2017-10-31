@@ -1,4 +1,7 @@
-use std::path::{Path, PathBuf};
+use std::fs;
+use std::io::Read;
+use std::io::Write;
+use std::path;
 
 use ignore::Match;
 use ignore::gitignore::{Gitignore, GitignoreBuilder};
@@ -7,13 +10,13 @@ use walkdir::{WalkDir, DirEntry, WalkDirIterator};
 use error::Result;
 
 pub struct FilesBuilder {
-    root_dir: PathBuf,
+    root_dir: path::PathBuf,
     ignore: Vec<String>,
     ignore_hidden: bool,
 }
 
 impl FilesBuilder {
-    pub fn new(root_dir: &Path) -> Result<FilesBuilder> {
+    pub fn new(root_dir: &path::Path) -> Result<FilesBuilder> {
         let builder = FilesBuilder {
             root_dir: root_dir.to_path_buf(),
             ignore: Default::default(),
@@ -50,7 +53,7 @@ impl FilesBuilder {
 }
 
 pub struct FilesIterator<'a> {
-    inner: Box<Iterator<Item = PathBuf> + 'a>,
+    inner: Box<Iterator<Item = path::PathBuf> + 'a>,
 }
 
 impl<'a> FilesIterator<'a> {
@@ -68,34 +71,34 @@ impl<'a> FilesIterator<'a> {
 }
 
 impl<'a> Iterator for FilesIterator<'a> {
-    type Item = PathBuf;
+    type Item = path::PathBuf;
 
-    fn next(&mut self) -> Option<PathBuf> {
+    fn next(&mut self) -> Option<path::PathBuf> {
         self.inner.next()
     }
 }
 
 #[derive(Debug, Clone)]
 pub struct Files {
-    root_dir: PathBuf,
+    root_dir: path::PathBuf,
     ignore: Gitignore,
 }
 
 impl Files {
-    fn new(root_dir: &Path, ignore: Gitignore) -> Files {
+    fn new(root_dir: &path::Path, ignore: Gitignore) -> Files {
         Files {
             root_dir: root_dir.to_path_buf(),
             ignore: ignore,
         }
     }
 
-    pub fn includes_file(&self, file: &Path) -> bool {
+    pub fn includes_file(&self, file: &path::Path) -> bool {
         let is_dir = false;
         self.includes_path(file, is_dir)
     }
 
     #[cfg(test)]
-    pub fn includes_dir(&self, dir: &Path) -> bool {
+    pub fn includes_dir(&self, dir: &path::Path) -> bool {
         let is_dir = true;
         self.includes_path(dir, is_dir)
     }
@@ -109,14 +112,14 @@ impl Files {
         self.includes_path_leaf(entry.path(), entry.file_type().is_dir())
     }
 
-    fn includes_path(&self, path: &Path, is_dir: bool) -> bool {
+    fn includes_path(&self, path: &path::Path, is_dir: bool) -> bool {
         let parent = path.parent();
         if let Some(mut parent) = parent {
             if parent.starts_with(&self.root_dir) {
                 // HACK: Gitignore seems to act differently on Windows/Linux, so putting this in to
                 // get them to act the same
-                if parent == Path::new(".") {
-                    parent = Path::new("./");
+                if parent == path::Path::new(".") {
+                    parent = path::Path::new("./");
                 }
                 if !self.includes_path(parent, parent.is_dir()) {
                     return false;
@@ -127,7 +130,7 @@ impl Files {
         self.includes_path_leaf(path, is_dir)
     }
 
-    fn includes_path_leaf(&self, path: &Path, is_dir: bool) -> bool {
+    fn includes_path_leaf(&self, path: &path::Path, is_dir: bool) -> bool {
         match self.ignore.matched(path, is_dir) {
             Match::None => true,
             Match::Ignore(glob) => {
@@ -142,30 +145,98 @@ impl Files {
     }
 }
 
+pub fn find_project_file<P: Into<path::PathBuf>>(dir: P, name: &str) -> Option<path::PathBuf> {
+    find_project_file_internal(dir.into(), name)
+}
+
+fn find_project_file_internal(dir: path::PathBuf, name: &str) -> Option<path::PathBuf> {
+    let mut file_path = dir;
+    file_path.push(name);
+    while !file_path.exists() {
+        file_path.pop(); // filename
+        let hit_bottom = !file_path.pop();
+        if hit_bottom {
+            return None;
+        }
+        file_path.push(name);
+    }
+    Some(file_path)
+}
+
+pub fn cleanup_path(path: String) -> String {
+    let stripped = path.trim_left_matches("./");
+    if stripped == "." {
+        String::new()
+    } else {
+        stripped.to_owned()
+    }
+}
+
+pub fn read_file<P: AsRef<path::Path>>(path: P) -> Result<String> {
+    let mut file = fs::File::open(path.as_ref())?;
+    let mut text = String::new();
+    file.read_to_string(&mut text)?;
+    Ok(text)
+}
+
+pub fn copy_file(src_file: &path::Path, dest_file: &path::Path) -> Result<()> {
+    // create target directories if any exist
+    if let Some(parent) = dest_file.parent() {
+        fs::create_dir_all(parent)
+            .map_err(|e| format!("Could not create {:?}: {}", parent, e))?;
+    }
+
+    debug!("Copying {:?} to {:?}", src_file, dest_file);
+    fs::copy(src_file, dest_file)
+        .map_err(|e| format!("Could not copy {:?} into {:?}: {}", src_file, dest_file, e))?;
+    Ok(())
+}
+
+pub fn create_document_file<S: AsRef<str>, P: AsRef<path::Path>>(content: S,
+                                                                 dest_file: P)
+                                                                 -> Result<()> {
+    create_document_file_internal(content.as_ref(), dest_file.as_ref())
+}
+
+fn create_document_file_internal(content: &str, dest_file: &path::Path) -> Result<()> {
+    // create target directories if any exist
+    if let Some(parent) = dest_file.parent() {
+        fs::create_dir_all(parent)
+            .map_err(|e| format!("Could not create {:?}: {}", parent, e))?;
+    }
+
+    let mut file = fs::File::create(dest_file)
+        .map_err(|e| format!("Could not create {:?}: {}", dest_file, e))?;
+
+    file.write_all(content.as_bytes())?;
+    info!("Created {}", dest_file.display());
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     macro_rules! assert_includes_dir {
         ($root: expr, $ignores: expr, $test: expr, $included: expr) => {
-            let mut files = FilesBuilder::new(Path::new($root)).unwrap();
+            let mut files = FilesBuilder::new(path::Path::new($root)).unwrap();
             let ignores: &[&str] = $ignores;
             for ignore in ignores {
                 files.add_ignore(ignore).unwrap();
             }
             let files = files.build().unwrap();
-            assert_eq!(files.includes_dir(Path::new($test)), $included);
+            assert_eq!(files.includes_dir(path::Path::new($test)), $included);
         }
     }
     macro_rules! assert_includes_file {
         ($root: expr, $ignores: expr, $test: expr, $included: expr) => {
-            let mut files = FilesBuilder::new(Path::new($root)).unwrap();
+            let mut files = FilesBuilder::new(path::Path::new($root)).unwrap();
             let ignores: &[&str] = $ignores;
             for ignore in ignores {
                 files.add_ignore(ignore).unwrap();
             }
             let files = files.build().unwrap();
-            assert_eq!(files.includes_file(Path::new($test)), $included);
+            assert_eq!(files.includes_file(path::Path::new($test)), $included);
         }
     }
 
@@ -424,7 +495,7 @@ mod tests {
 
     #[test]
     fn files_iter_matches_include() {
-        let root_dir = Path::new("tests/fixtures/hidden_files");
+        let root_dir = path::Path::new("tests/fixtures/hidden_files");
         let files = FilesBuilder::new(root_dir).unwrap().build().unwrap();
         let mut actual: Vec<_> = files
             .files()
@@ -432,9 +503,58 @@ mod tests {
             .collect();
         actual.sort();
 
-        let expected = vec![Path::new("child/child.txt").to_path_buf(),
-                            Path::new("child.txt").to_path_buf()];
+        let expected = vec![path::Path::new("child/child.txt").to_path_buf(),
+                            path::Path::new("child.txt").to_path_buf()];
 
         assert_eq!(expected, actual);
     }
+
+    #[test]
+    fn find_project_file_same_dir() {
+        let actual = find_project_file("tests/fixtures/config", ".cobalt.yml").unwrap();
+        let expected = path::Path::new("tests/fixtures/config/.cobalt.yml");
+        assert_eq!(actual, expected);
+    }
+
+    #[test]
+    fn find_project_file_parent_dir() {
+        let actual = find_project_file("tests/fixtures/config/child", ".cobalt.yml").unwrap();
+        let expected = path::Path::new("tests/fixtures/config/.cobalt.yml");
+        assert_eq!(actual, expected);
+    }
+
+    #[test]
+    fn find_project_file_doesnt_exist() {
+        let expected = path::Path::new("<NOT FOUND>");
+        let actual = find_project_file("tests/fixtures/", ".cobalt.yml")
+            .unwrap_or_else(|| expected.into());
+        assert_eq!(actual, expected);
+    }
+
+    #[test]
+    fn cleanup_path_empty() {
+        assert_eq!(cleanup_path("".to_owned()), "".to_owned());
+    }
+
+    #[test]
+    fn cleanup_path_dot() {
+        assert_eq!(cleanup_path(".".to_owned()), "".to_owned());
+    }
+
+    #[test]
+    fn cleanup_path_current_dir() {
+        assert_eq!(cleanup_path("./".to_owned()), "".to_owned());
+    }
+
+    #[test]
+    fn cleanup_path_current_dir_extreme() {
+        assert_eq!(cleanup_path("././././.".to_owned()), "".to_owned());
+    }
+
+    #[test]
+    fn cleanup_path_current_dir_child() {
+        assert_eq!(cleanup_path("./build/file.txt".to_owned()),
+                   "build/file.txt".to_owned());
+    }
+
 }

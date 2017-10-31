@@ -5,6 +5,7 @@ use liquid;
 use super::super::config;
 use super::super::datetime;
 use super::super::frontmatter;
+use super::super::sass;
 use super::super::site;
 
 #[derive(Debug, Eq, PartialEq, Default, Clone)]
@@ -251,12 +252,12 @@ impl From<GlobalConfig> for config::ConfigBuilder {
         };
 
         let syntax_highlight = config::SyntaxHighlight { theme: syntax_highlight.theme };
-        let sass = config::SassOptions {
+        let sass = sass::SassOptions {
             style: match sass.style {
-                SassOutputStyle::Nested => config::SassOutputStyle::Nested,
-                SassOutputStyle::Expanded => config::SassOutputStyle::Expanded,
-                SassOutputStyle::Compact => config::SassOutputStyle::Compact,
-                SassOutputStyle::Compressed => config::SassOutputStyle::Compressed,
+                SassOutputStyle::Nested => sass::SassOutputStyle::Nested,
+                SassOutputStyle::Expanded => sass::SassOutputStyle::Expanded,
+                SassOutputStyle::Compact => sass::SassOutputStyle::Compact,
+                SassOutputStyle::Compressed => sass::SassOutputStyle::Compressed,
             },
             ..Default::default()
         };

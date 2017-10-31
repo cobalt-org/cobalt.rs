@@ -1,7 +1,6 @@
 use std::default::Default;
 use std::ffi::OsStr;
 use std::fs;
-use std::io::Read;
 use std::path;
 
 use liquid;
@@ -139,9 +138,7 @@ fn load_data(data_path: &path::Path) -> Result<liquid::Value> {
         let reader = fs::File::open(data_path)?;
         data = serde_json::from_reader(reader)?;
     } else if ext == OsStr::new("toml") {
-        let mut reader = fs::File::open(data_path)?;
-        let mut text = String::new();
-        reader.read_to_string(&mut text)?;
+        let text = files::read_file(data_path)?;
         data = toml::from_str(&text)?;
     } else {
         bail!("Failed to load of data {:?}: unknown file type '{:?}'.\n\
