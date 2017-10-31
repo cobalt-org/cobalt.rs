@@ -44,7 +44,7 @@ impl From<FrontmatterBuilder> for frontmatter::FrontmatterBuilder {
                             .and_then(|v| v.as_str().map(|s| s.to_owned())))
             .merge_permalink(custom_attributes
                                  .remove("path")
-                                 .and_then(|v| v.as_str().map(|s| s.to_owned())))
+                                 .and_then(|v| v.as_str().map(|s| convert_permalink(s.to_owned()))))
             .merge_draft(custom_attributes.remove("draft").and_then(|v| v.as_bool()))
             .merge_excerpt_separator(custom_attributes
                                          .remove("excerpt_separator")
@@ -240,7 +240,7 @@ impl From<GlobalConfig> for config::ConfigBuilder {
             rss: rss,
             jsonfeed: jsonfeed,
             default: frontmatter::FrontmatterBuilder::new()
-                .set_permalink(post_path)
+                .set_permalink(post_path.map(convert_permalink))
                 .set_post(true),
         };
 
@@ -277,5 +277,34 @@ impl From<GlobalConfig> for config::ConfigBuilder {
             dump: vec![],
             ..Default::default()
         }
+    }
+}
+
+fn convert_permalink(mut perma: String) -> String {
+    if perma.starts_with('/') {
+        perma
+    } else {
+        perma.insert(0, '/');
+        perma
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn convert_permalink_empty() {
+        assert_eq!(convert_permalink("".into()), "/");
+    }
+
+    #[test]
+    fn convert_permalink_abs() {
+        assert_eq!(convert_permalink("/root".into()), "/root");
+    }
+
+    #[test]
+    fn convert_permalink_rel() {
+        assert_eq!(convert_permalink("rel".into()), "/rel");
     }
 }
