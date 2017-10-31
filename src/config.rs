@@ -223,6 +223,15 @@ impl ConfigBuilder {
         let mut posts = posts;
         posts.default = posts.default.merge(default);
 
+        if posts.dir.starts_with('/') {
+            bail!("posts dir {} must be a relative path", posts.dir)
+        }
+        if let Some(ref drafts_dir) = posts.drafts_dir {
+            if drafts_dir.starts_with('/') {
+                bail!("posts dir {} must be a relative path", drafts_dir)
+            }
+        }
+
         let source = files::cleanup_path(source);
         let destination = files::cleanup_path(destination);
 
@@ -368,6 +377,11 @@ fn test_from_cwd_not_found() {
 }
 
 #[test]
+fn test_build_default() {
+    let config = ConfigBuilder::default();
+    config.build().unwrap();
+}
+#[test]
 fn test_build_dest() {
     let result = ConfigBuilder::from_file("tests/fixtures/config/.cobalt.yml").unwrap();
     let result = result.build().unwrap();
@@ -410,4 +424,34 @@ fn test_build_abs_dest() {
                    ignore: ["/dest".to_owned()].to_vec(),
                    ..Default::default()
                });
+}
+
+#[test]
+fn test_build_posts_rel() {
+    let mut config = ConfigBuilder::default();
+    config.posts.dir = "rel".into();
+    let config = config.build().unwrap();
+    assert_eq!(config.posts.dir, "rel");
+}
+
+#[test]
+fn test_build_posts_abs() {
+    let mut config = ConfigBuilder::default();
+    config.posts.dir = "/root".into();
+    assert!(config.build().is_err());
+}
+
+#[test]
+fn test_build_drafts_rel() {
+    let mut config = ConfigBuilder::default();
+    config.posts.drafts_dir = Some("rel".into());
+    let config = config.build().unwrap();
+    assert_eq!(config.posts.drafts_dir, Some("rel".into()));
+}
+
+#[test]
+fn test_build_drafts_abs() {
+    let mut config = ConfigBuilder::default();
+    config.posts.drafts_dir = Some("/root".into());
+    assert!(config.build().is_err());
 }
