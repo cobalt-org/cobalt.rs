@@ -1,9 +1,18 @@
 use std::path;
+use std::collections::HashMap;
+
 use liquid;
 
 use error::Result;
 use datetime;
 use slug;
+
+const PATH_ALIAS: &'static str = "/:path/:filename:output_ext";
+lazy_static!{
+    static ref PERMALINK_ALIASES: HashMap<&'static str, &'static str> = [
+        ("path", PATH_ALIAS),
+    ].iter().map(|&(k, v)| (k, v)).collect();
+}
 
 #[derive(Debug, Eq, PartialEq, Hash, Copy, Clone)]
 #[derive(Serialize, Deserialize)]
@@ -300,11 +309,16 @@ impl FrontmatterBuilder {
 
         let is_post = is_post.unwrap_or(false);
 
-        let permalink = permalink.unwrap_or_else(|| {
-            let default_permalink = "/:path/:filename:output_ext";
-
-            default_permalink.to_owned()
-        });
+        let permalink = permalink.unwrap_or_else(|| PATH_ALIAS.to_owned());
+        let permalink = if !permalink.starts_with('/') {
+            let resolved =
+                *PERMALINK_ALIASES
+                    .get(permalink.as_str())
+                    .ok_or_else(|| format!("Unsupported permalink alias '{}'", permalink))?;
+            resolved.to_owned()
+        } else {
+            permalink
+        };
 
         let fm = Frontmatter {
             permalink: permalink,
