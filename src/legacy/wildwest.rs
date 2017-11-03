@@ -273,7 +273,7 @@ impl From<GlobalConfig> for config::ConfigBuilder {
             template_extensions: template_extensions,
             ignore: ignore,
             syntax_highlight: syntax_highlight,
-            sass: sass,
+            assets: config::AssetsBuilder { sass },
             dump: vec![],
             ..Default::default()
         }

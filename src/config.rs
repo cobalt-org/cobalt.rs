@@ -91,6 +91,13 @@ impl Default for PostBuilder {
     }
 }
 
+#[derive(Debug, PartialEq, Default)]
+#[derive(Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct AssetsBuilder {
+    pub sass: sass::SassOptions,
+}
+
 const LAYOUTS_DIR: &'static str = "_layouts";
 
 #[derive(Debug, PartialEq)]
@@ -113,7 +120,7 @@ pub struct ConfigBuilder {
     pub ignore: Vec<String>,
     pub syntax_highlight: SyntaxHighlight,
     pub layouts_dir: &'static str,
-    pub sass: sass::SassOptions,
+    pub assets: AssetsBuilder,
     // This is a debug-only field and should be transient rather than persistently set.
     #[serde(skip)]
     pub dump: Vec<Dump>,
@@ -138,7 +145,7 @@ impl Default for ConfigBuilder {
             ignore: vec![],
             syntax_highlight: SyntaxHighlight::default(),
             layouts_dir: LAYOUTS_DIR,
-            sass: sass::SassOptions::default(),
+            assets: AssetsBuilder::default(),
             dump: vec![],
         }
     }
@@ -200,7 +207,7 @@ impl ConfigBuilder {
             ignore,
             syntax_highlight,
             layouts_dir,
-            sass,
+            assets,
             dump,
         } = self;
 
@@ -261,7 +268,7 @@ impl ConfigBuilder {
             template_extensions,
             syntax_highlight,
             layouts_dir,
-            sass,
+            assets,
             dump,
         };
 
@@ -283,7 +290,7 @@ pub struct Config {
     pub ignore: Vec<String>,
     pub syntax_highlight: SyntaxHighlight,
     pub layouts_dir: &'static str,
-    pub sass: sass::SassOptions,
+    pub assets: AssetsBuilder,
     pub dump: Vec<Dump>,
 }
 

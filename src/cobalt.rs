@@ -227,7 +227,7 @@ pub fn build(config: &Config) -> Result<()> {
             !template_extensions.contains(&p.extension().unwrap_or_else(|| OsStr::new("")))
         }) {
             if file_path.extension() == Some(OsStr::new("scss")) {
-                sass::compile_sass(&config.sass, source, dest, file_path)?;
+                sass::compile_sass(&config.assets.sass, source, dest, file_path)?;
             } else {
                 let rel_src = file_path
                     .strip_prefix(source)
