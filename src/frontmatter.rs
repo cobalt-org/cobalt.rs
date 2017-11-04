@@ -262,33 +262,31 @@ impl FrontmatterBuilder {
         self.merge_path_ref(relpath.as_ref())
     }
 
-    fn merge_path_ref(self, relpath: &path::Path) -> Self {
-        let mut fm = self;
-
-        if fm.format.is_none() {
+    fn merge_path_ref(mut self, relpath: &path::Path) -> Self {
+        if self.format.is_none() {
             let ext = relpath.extension().and_then(|os| os.to_str()).unwrap_or("");
             let format = match ext {
                 "md" => SourceFormat::Markdown,
                 _ => SourceFormat::Raw,
             };
-            fm.format = Some(format);
+            self.format = Some(format);
         }
 
-        if fm.slug.is_none() {
+        if self.slug.is_none() {
             let file_stem = file_stem(relpath);
             let slug = slug::slugify(file_stem);
-            fm.slug = Some(slug);
+            self.slug = Some(slug);
         }
 
-        if fm.title.is_none() {
-            let slug = fm.slug
+        if self.title.is_none() {
+            let slug = self.slug
                 .as_ref()
                 .expect("slug has been unconditionally initialized");
             let title = slug::titleize_slug(slug);
-            fm.title = Some(title);
+            self.title = Some(title);
         }
 
-        fm
+        self
     }
 
     pub fn build(self) -> Result<Frontmatter> {
@@ -359,8 +357,7 @@ pub struct Frontmatter {
 }
 
 /// Shallow merge of `liquid::Object`'s
-fn merge_objects(primary: liquid::Object, secondary: liquid::Object) -> liquid::Object {
-    let mut primary = primary;
+fn merge_objects(mut primary: liquid::Object, secondary: liquid::Object) -> liquid::Object {
     for (key, value) in secondary {
         primary
             .entry(key.to_owned())
