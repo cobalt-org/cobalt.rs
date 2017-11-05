@@ -150,7 +150,8 @@ pub fn build(config: &Config) -> Result<()> {
             files::create_document_file(content, dest.join(file_path))?;
         }
 
-        let mut context = post.get_render_context(&simple_posts_data);
+        let mut context = post.get_render_context();
+        context.set_val("posts", liquid::Value::Array(simple_posts_data.clone()));
         context.set_val("site",
                         liquid::Value::Object(config.site.attributes.clone()));
 
@@ -200,7 +201,8 @@ pub fn build(config: &Config) -> Result<()> {
             files::create_document_file(content, dest.join(file_path))?;
         }
 
-        let mut context = doc.get_render_context(&posts_data);
+        let mut context = doc.get_render_context();
+        context.set_val("posts", liquid::Value::Array(posts_data.clone()));
         context.set_val("site",
                         liquid::Value::Object(config.site.attributes.clone()));
 

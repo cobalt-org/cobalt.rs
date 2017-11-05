@@ -294,10 +294,8 @@ impl Document {
 
 
     /// Prepares liquid context for further rendering.
-    pub fn get_render_context(&self, posts: &[Value]) -> Context {
-        let mut context = Context::with_values(self.attributes.clone());
-        context.set_val("posts", Value::Array(posts.to_vec()));
-        context
+    pub fn get_render_context(&self) -> Context {
+        Context::with_values(self.attributes.clone())
     }
 
     /// Renders liquid templates into HTML in the context of current document.
