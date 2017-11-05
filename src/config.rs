@@ -131,7 +131,7 @@ impl Default for ConfigBuilder {
         ConfigBuilder {
             root: path::PathBuf::new(),
             source: "./".to_owned(),
-            destination: "./".to_owned(),
+            destination: "./_site".to_owned(),
             abs_dest: None,
             include_drafts: false,
             default: frontmatter::FrontmatterBuilder::new()
