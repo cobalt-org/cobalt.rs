@@ -9,6 +9,7 @@ use frontmatter;
 use legacy::wildwest;
 use sass;
 use site;
+use slug;
 use syntax_highlight::has_syntax_theme;
 
 arg_enum! {
@@ -67,6 +68,7 @@ pub struct PageBuilder {
 #[serde(deny_unknown_fields)]
 pub struct PostBuilder {
     pub name: Option<String>,
+    pub slug: Option<String>,
     pub description: Option<String>,
     pub dir: String,
     pub drafts_dir: Option<String>,
@@ -80,6 +82,7 @@ impl Default for PostBuilder {
     fn default() -> PostBuilder {
         Self {
             name: None,
+            slug: None,
             description: None,
             dir: "posts".to_owned(),
             drafts_dir: None,
@@ -227,15 +230,22 @@ impl ConfigBuilder {
 
         let mut pages = pages;
         pages.default = pages.default.merge(default.clone());
+
         let mut posts = posts;
         posts.default = posts.default.merge(default);
-
         if posts.dir.starts_with('/') {
             bail!("posts dir {} must be a relative path", posts.dir)
         }
         if let Some(ref drafts_dir) = posts.drafts_dir {
             if drafts_dir.starts_with('/') {
                 bail!("posts dir {} must be a relative path", drafts_dir)
+            }
+        }
+        if posts.slug.is_none() {
+            if let Some(ref name) = posts.name {
+                posts.slug = Some(slug::slugify(name));
+            } else {
+                posts.slug = Some(posts.dir.clone());
             }
         }
 
@@ -324,6 +334,7 @@ fn test_from_file_rss() {
     assert_eq!(result,
                ConfigBuilder {
                    root: path::Path::new("tests/fixtures/config").to_path_buf(),
+                   destination: "./".to_owned(),
                    posts: PostBuilder {
                        drafts_dir: Some("_drafts".to_owned()),
                        rss: Some("rss.xml".to_owned()),
@@ -395,8 +406,9 @@ fn test_build_dest() {
     assert_eq!(result,
                Config {
                    source: path::Path::new("tests/fixtures/config").to_path_buf(),
-                   destination: path::Path::new("tests/fixtures/config/./dest").to_path_buf(),
+                   destination: path::Path::new("tests/fixtures/config/dest").to_path_buf(),
                    posts: PostBuilder {
+                       slug: Some("_my_posts".to_owned()),
                        dir: "_my_posts".to_owned(),
                        drafts_dir: Some("_drafts".to_owned()),
                        default: frontmatter::FrontmatterBuilder::new()
@@ -420,6 +432,7 @@ fn test_build_abs_dest() {
                    source: path::Path::new("tests/fixtures/config").to_path_buf(),
                    destination: path::Path::new("hello/world").to_path_buf(),
                    posts: PostBuilder {
+                       slug: Some("_my_posts".to_owned()),
                        dir: "_my_posts".to_owned(),
                        drafts_dir: Some("_drafts".to_owned()),
                        default: frontmatter::FrontmatterBuilder::new()

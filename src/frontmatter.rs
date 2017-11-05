@@ -274,10 +274,16 @@ impl FrontmatterBuilder {
             self.format = Some(format);
         }
 
-        if self.slug.is_none() {
+        if self.published_date.is_none() || self.slug.is_none() {
             let file_stem = file_stem(relpath);
-            let slug = slug::slugify(file_stem);
-            self.slug = Some(slug);
+            let (file_date, file_stem) = parse_file_stem(file_stem);
+            if self.published_date.is_none() {
+                self.published_date = file_date;
+            }
+            if self.slug.is_none() {
+                let slug = slug::slugify(file_stem);
+                self.slug = Some(slug);
+            }
         }
 
         if self.title.is_none() {
@@ -286,11 +292,6 @@ impl FrontmatterBuilder {
                 .expect("slug has been unconditionally initialized");
             let title = slug::titleize_slug(slug);
             self.title = Some(title);
-        }
-
-        if self.published_date.is_none() {
-            let file_stem = file_stem(relpath);
-            self.published_date = extract_date(file_stem);
         }
 
         self
@@ -384,12 +385,14 @@ fn file_stem_path(p: &path::Path) -> String {
         .unwrap_or_else(|| "".to_owned())
 }
 
-fn extract_date(stem: String) -> Option<datetime::DateTime> {
+fn parse_file_stem(stem: String) -> (Option<datetime::DateTime>, String) {
     lazy_static!{
-       static ref DATE_PREFIX_REF: regex::Regex = regex::Regex::new(r"^(\d{4})-(\d{1,2})-(\d{1,2})[- ].*$").unwrap();
+       static ref DATE_PREFIX_REF: regex::Regex =
+           regex::Regex::new(r"^(\d{4})-(\d{1,2})-(\d{1,2})[- ](.*)$")
+           .unwrap();
     }
 
-    DATE_PREFIX_REF.captures(&stem).and_then(|caps| {
+    let parts = DATE_PREFIX_REF.captures(&stem).and_then(|caps| {
         let year: i32 = caps.get(1)
             .expect("unconditional capture")
             .as_str()
@@ -405,11 +408,20 @@ fn extract_date(stem: String) -> Option<datetime::DateTime> {
             .as_str()
             .parse()
             .expect("regex gets back an integer");
-        datetime::DateTime::default()
+        let published = datetime::DateTime::default()
             .with_year(year)
             .and_then(|d| d.with_month(month))
-            .and_then(|d| d.with_day(day))
-    })
+            .and_then(|d| d.with_day(day));
+        published.map(|p| {
+                          (Some(p),
+                           caps.get(4)
+                               .expect("unconditional capture")
+                               .as_str()
+                               .to_owned())
+                      })
+    });
+
+    parts.unwrap_or((None, stem))
 }
 
 #[cfg(test)]
@@ -424,71 +436,78 @@ mod test {
     }
 
     #[test]
-    fn extract_date_empty() {
-        assert_eq!(extract_date("".to_owned()), None);
+    fn parse_file_stem_empty() {
+        assert_eq!(parse_file_stem("".to_owned()), (None, "".to_owned()));
     }
 
     #[test]
-    fn extract_date_none() {
-        assert_eq!(extract_date("First Blog Post".to_owned()), None);
+    fn parse_file_stem_none() {
+        assert_eq!(parse_file_stem("First Blog Post".to_owned()),
+                   (None, "First Blog Post".to_owned()));
     }
 
     #[test]
-    fn extract_date_out_of_range_month() {
-        assert_eq!(extract_date("2017-30-5 First Blog Post".to_owned()), None);
+    fn parse_file_stem_out_of_range_month() {
+        assert_eq!(parse_file_stem("2017-30-5 First Blog Post".to_owned()),
+                   (None, "2017-30-5 First Blog Post".to_owned()));
     }
 
     #[test]
-    fn extract_date_out_of_range_day() {
-        assert_eq!(extract_date("2017-3-50 First Blog Post".to_owned()), None);
+    fn parse_file_stem_out_of_range_day() {
+        assert_eq!(parse_file_stem("2017-3-50 First Blog Post".to_owned()),
+                   (None, "2017-3-50 First Blog Post".to_owned()));
     }
 
     #[test]
-    fn extract_date_single_digit() {
-        assert_eq!(extract_date("2017-3-5 First Blog Post".to_owned()),
-                   Some(datetime::DateTime::default()
-                            .with_year(2017)
-                            .unwrap()
-                            .with_month(3)
-                            .unwrap()
-                            .with_day(5)
-                            .unwrap()));
+    fn parse_file_stem_single_digit() {
+        assert_eq!(parse_file_stem("2017-3-5 First Blog Post".to_owned()),
+                   (Some(datetime::DateTime::default()
+                             .with_year(2017)
+                             .unwrap()
+                             .with_month(3)
+                             .unwrap()
+                             .with_day(5)
+                             .unwrap()),
+                    "First Blog Post".to_owned()));
     }
 
     #[test]
-    fn extract_date_double_digit() {
-        assert_eq!(extract_date("2017-12-25 First Blog Post".to_owned()),
-                   Some(datetime::DateTime::default()
-                            .with_year(2017)
-                            .unwrap()
-                            .with_month(12)
-                            .unwrap()
-                            .with_day(25)
-                            .unwrap()));
+    fn parse_file_stem_double_digit() {
+        assert_eq!(parse_file_stem("2017-12-25 First Blog Post".to_owned()),
+                   (Some(datetime::DateTime::default()
+                             .with_year(2017)
+                             .unwrap()
+                             .with_month(12)
+                             .unwrap()
+                             .with_day(25)
+                             .unwrap()),
+                    "First Blog Post".to_owned()));
     }
 
     #[test]
-    fn extract_date_double_digit_leading_zero() {
-        assert_eq!(extract_date("2017-03-05 First Blog Post".to_owned()),
-                   Some(datetime::DateTime::default()
-                            .with_year(2017)
-                            .unwrap()
-                            .with_month(3)
-                            .unwrap()
-                            .with_day(5)
-                            .unwrap()));
+    fn parse_file_stem_double_digit_leading_zero() {
+        assert_eq!(parse_file_stem("2017-03-05 First Blog Post".to_owned()),
+                   (Some(datetime::DateTime::default()
+                             .with_year(2017)
+                             .unwrap()
+                             .with_month(3)
+                             .unwrap()
+                             .with_day(5)
+                             .unwrap()),
+                    "First Blog Post".to_owned()));
     }
 
     #[test]
-    fn extract_date_dashed() {
-        assert_eq!(extract_date("2017-3-5-First-Blog-Post".to_owned()),
-                   Some(datetime::DateTime::default()
-                            .with_year(2017)
-                            .unwrap()
-                            .with_month(3)
-                            .unwrap()
-                            .with_day(5)
-                            .unwrap()));
+    fn parse_file_stem_dashed() {
+        assert_eq!(parse_file_stem("2017-3-5-First-Blog-Post".to_owned()),
+                   (Some(datetime::DateTime::default()
+                             .with_year(2017)
+                             .unwrap()
+                             .with_month(3)
+                             .unwrap()
+                             .with_day(5)
+                             .unwrap()),
+                    "First-Blog-Post".to_owned()));
     }
 
     #[test]
