@@ -151,6 +151,7 @@ pub fn build(config: &Config) -> Result<()> {
         }
 
         let mut context = post.get_render_context();
+        // TODO(epage): Switch `posts` to `parent` which is an object see #323
         context.set_val("posts", liquid::Value::Array(simple_posts_data.clone()));
         context.set_val("site",
                         liquid::Value::Object(config.site.attributes.clone()));
@@ -202,6 +203,7 @@ pub fn build(config: &Config) -> Result<()> {
         }
 
         let mut context = doc.get_render_context();
+        // TODO(epage): Switch `posts` to an object see #323
         context.set_val("posts", liquid::Value::Array(posts_data.clone()));
         context.set_val("site",
                         liquid::Value::Object(config.site.attributes.clone()));
