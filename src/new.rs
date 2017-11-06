@@ -6,10 +6,7 @@ use config::Config;
 
 const COBALT_YML: &'static [u8] = b"name: cobalt blog
 source: \".\"
-dest: \"build\"
-ignore:
-  - .git/*
-  - build/*
+dest: \"./_site\"
 ";
 
 const DEFAULT_LAYOUT: &'static [u8] = b"<!DOCTYPE html>
