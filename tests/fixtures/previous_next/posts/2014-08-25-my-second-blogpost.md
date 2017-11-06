@@ -1,7 +1,7 @@
 extends: posts.liquid
 
 title:   My second Blogpost
-date:    25/08/2014 at 15:36
+date:    25 Aug 2014 15:36:20 +0100
 ---
 # {{ title }}
 

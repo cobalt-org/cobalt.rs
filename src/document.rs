@@ -67,9 +67,6 @@ fn format_path_variable(source_file: &Path) -> String {
 fn permalink_attributes(front: &frontmatter::Frontmatter,
                         dest_file: &Path)
                         -> HashMap<String, String> {
-    // TODO replace "date", "pretty", "ordinal" and "none"
-    // for Jekyl compatibility
-
     let mut attributes = HashMap::new();
 
     attributes.insert(":path".to_owned(), format_path_variable(dest_file));
@@ -79,8 +76,12 @@ fn permalink_attributes(front: &frontmatter::Frontmatter,
         attributes.insert(":filename".to_owned(), filename.to_owned());
     }
 
+    // TODO(epage): Add `collection` (the collection's slug), see #257
+    // or `parent.slug`, see #323
+
     attributes.insert(":slug".to_owned(), front.slug.clone());
 
+    // TODO(epage): slugify categories?  See #257
     attributes.insert(":categories".to_owned(),
                       itertools::join(front.categories.iter(), "/"));
 
@@ -98,6 +99,7 @@ fn permalink_attributes(front: &frontmatter::Frontmatter,
     }
 
     // Allow customizing any of the above with custom frontmatter attributes
+    // TODO(epage): Place in a `custom` variable.  See #257
     for (key, val) in &front.custom {
         let key = format!(":{}", key);
         // HACK: We really should support nested types
@@ -113,6 +115,7 @@ fn explode_permalink<S: Into<String>>(permalink: S, attributes: HashMap<String, 
 }
 
 fn explode_permalink_string(permalink: String, attributes: HashMap<String, String>) -> String {
+    // TODO(epage): Switch to liquid templating
     let mut p = permalink;
 
     for (key, val) in attributes {
@@ -160,6 +163,7 @@ fn document_attributes(front: &frontmatter::Frontmatter,
     let mut attributes = liquid::Object::new();
 
     attributes.insert("path".to_owned(), liquid::Value::str(url_path));
+    // TODO(epage): Remove?  See #257
     attributes.insert("source".to_owned(), liquid::Value::str(source_file));
     attributes.insert("title".to_owned(), liquid::Value::str(&front.title));
     if let Some(ref description) = front.description {
@@ -172,12 +176,16 @@ fn document_attributes(front: &frontmatter::Frontmatter,
                                                .map(|c| liquid::Value::str(c))
                                                .collect()));
     if let Some(ref published_date) = front.published_date {
+        // TODO(epage): Rename to published_date. See #257
         attributes.insert("date".to_owned(),
                           liquid::Value::Str(published_date.format()));
     }
+    // TODO(epage): Rename to `is_draft`. See #257
     attributes.insert("draft".to_owned(), liquid::Value::Bool(front.is_draft));
+    // TODO(epage): Remove? See #257
     attributes.insert("is_post".to_owned(), liquid::Value::Bool(front.is_post));
 
+    // TODO(epage): Place in a `custom` variable.  See #257
     for (key, val) in &front.custom {
         attributes.insert(key.clone(), val.clone());
     }
@@ -230,7 +238,7 @@ impl Document {
 
         let perma_attributes = permalink_attributes(&front, rel_path);
         let (file_path, url_path) = {
-            let permalink = front.path.as_ref();
+            let permalink = front.permalink.as_ref();
             let url_path = explode_permalink(permalink, perma_attributes);
             let file_path = format_url_as_file(&url_path);
             (file_path, url_path)
@@ -294,10 +302,8 @@ impl Document {
 
 
     /// Prepares liquid context for further rendering.
-    pub fn get_render_context(&self, posts: &[Value]) -> Context {
-        let mut context = Context::with_values(self.attributes.clone());
-        context.set_val("posts", Value::Array(posts.to_vec()));
-        context
+    pub fn get_render_context(&self) -> Context {
+        Context::with_values(self.attributes.clone())
     }
 
     /// Renders liquid templates into HTML in the context of current document.

@@ -150,7 +150,9 @@ pub fn build(config: &Config) -> Result<()> {
             files::create_document_file(content, dest.join(file_path))?;
         }
 
-        let mut context = post.get_render_context(&simple_posts_data);
+        let mut context = post.get_render_context();
+        // TODO(epage): Switch `posts` to `parent` which is an object see #323
+        context.set_val("posts", liquid::Value::Array(simple_posts_data.clone()));
         context.set_val("site",
                         liquid::Value::Object(config.site.attributes.clone()));
 
@@ -200,7 +202,9 @@ pub fn build(config: &Config) -> Result<()> {
             files::create_document_file(content, dest.join(file_path))?;
         }
 
-        let mut context = doc.get_render_context(&posts_data);
+        let mut context = doc.get_render_context();
+        // TODO(epage): Switch `posts` to an object see #323
+        context.set_val("posts", liquid::Value::Array(posts_data.clone()));
         context.set_val("site",
                         liquid::Value::Object(config.site.attributes.clone()));
 
@@ -227,7 +231,7 @@ pub fn build(config: &Config) -> Result<()> {
             !template_extensions.contains(&p.extension().unwrap_or_else(|| OsStr::new("")))
         }) {
             if file_path.extension() == Some(OsStr::new("scss")) {
-                sass::compile_sass(&config.sass, source, dest, file_path)?;
+                sass::compile_sass(&config.assets.sass, source, dest, file_path)?;
             } else {
                 let rel_src = file_path
                     .strip_prefix(source)

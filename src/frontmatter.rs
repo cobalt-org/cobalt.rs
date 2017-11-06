@@ -1,9 +1,20 @@
 use std::path;
+use std::collections::HashMap;
+
+use chrono::Datelike;
 use liquid;
+use regex;
 
 use error::Result;
 use datetime;
 use slug;
+
+const PATH_ALIAS: &'static str = "/:path/:filename:output_ext";
+lazy_static!{
+    static ref PERMALINK_ALIASES: HashMap<&'static str, &'static str> = [
+        ("path", PATH_ALIAS),
+    ].iter().map(|&(k, v)| (k, v)).collect();
+}
 
 #[derive(Debug, Eq, PartialEq, Hash, Copy, Clone)]
 #[derive(Serialize, Deserialize)]
@@ -23,7 +34,7 @@ impl Default for SourceFormat {
 #[derive(Serialize, Deserialize)]
 #[serde(deny_unknown_fields, default)]
 pub struct FrontmatterBuilder {
-    pub path: Option<String>,
+    pub permalink: Option<String>,
     pub slug: Option<String>,
     pub title: Option<String>,
     pub description: Option<String>,
@@ -41,49 +52,47 @@ pub struct FrontmatterBuilder {
 }
 
 impl FrontmatterBuilder {
-    pub fn new() -> FrontmatterBuilder {
-        FrontmatterBuilder::default()
+    pub fn new() -> Self {
+        Self::default()
     }
 
-    pub fn set_permalink<S: Into<Option<String>>>(self, permalink: S) -> FrontmatterBuilder {
-        FrontmatterBuilder {
-            path: permalink.into(),
+    pub fn set_permalink<S: Into<Option<String>>>(self, permalink: S) -> Self {
+        Self {
+            permalink: permalink.into(),
             ..self
         }
     }
 
-    pub fn set_slug<S: Into<Option<String>>>(self, slug: S) -> FrontmatterBuilder {
-        FrontmatterBuilder {
+    pub fn set_slug<S: Into<Option<String>>>(self, slug: S) -> Self {
+        Self {
             slug: slug.into(),
             ..self
         }
     }
 
-    pub fn set_title<S: Into<Option<String>>>(self, title: S) -> FrontmatterBuilder {
-        FrontmatterBuilder {
+    pub fn set_title<S: Into<Option<String>>>(self, title: S) -> Self {
+        Self {
             title: title.into(),
             ..self
         }
     }
 
-    pub fn set_description<S: Into<Option<String>>>(self, description: S) -> FrontmatterBuilder {
-        FrontmatterBuilder {
+    pub fn set_description<S: Into<Option<String>>>(self, description: S) -> Self {
+        Self {
             description: description.into(),
             ..self
         }
     }
 
-    pub fn set_categories<S: Into<Option<Vec<String>>>>(self, categories: S) -> FrontmatterBuilder {
-        FrontmatterBuilder {
+    pub fn set_categories<S: Into<Option<Vec<String>>>>(self, categories: S) -> Self {
+        Self {
             categories: categories.into(),
             ..self
         }
     }
 
-    pub fn set_excerpt_separator<S: Into<Option<String>>>(self,
-                                                          excerpt_separator: S)
-                                                          -> FrontmatterBuilder {
-        FrontmatterBuilder {
+    pub fn set_excerpt_separator<S: Into<Option<String>>>(self, excerpt_separator: S) -> Self {
+        Self {
             excerpt_separator: excerpt_separator.into(),
             ..self
         }
@@ -91,97 +100,93 @@ impl FrontmatterBuilder {
 
     pub fn set_published_date<D: Into<Option<datetime::DateTime>>>(self,
                                                                    published_date: D)
-                                                                   -> FrontmatterBuilder {
-        FrontmatterBuilder {
+                                                                   -> Self {
+        Self {
             published_date: published_date.into(),
             ..self
         }
     }
 
     #[cfg(test)]
-    pub fn set_format<S: Into<Option<SourceFormat>>>(self, format: S) -> FrontmatterBuilder {
-        FrontmatterBuilder {
+    pub fn set_format<S: Into<Option<SourceFormat>>>(self, format: S) -> Self {
+        Self {
             format: format.into(),
             ..self
         }
     }
 
-    pub fn set_layout<S: Into<Option<String>>>(self, layout: S) -> FrontmatterBuilder {
-        FrontmatterBuilder {
+    pub fn set_layout<S: Into<Option<String>>>(self, layout: S) -> Self {
+        Self {
             layout: layout.into(),
             ..self
         }
     }
 
-    pub fn set_draft<B: Into<Option<bool>>>(self, is_draft: B) -> FrontmatterBuilder {
-        FrontmatterBuilder {
+    pub fn set_draft<B: Into<Option<bool>>>(self, is_draft: B) -> Self {
+        Self {
             is_draft: is_draft.into(),
             ..self
         }
     }
 
-    pub fn set_post<B: Into<Option<bool>>>(self, is_post: B) -> FrontmatterBuilder {
-        FrontmatterBuilder {
+    pub fn set_post<B: Into<Option<bool>>>(self, is_post: B) -> Self {
+        Self {
             is_post: is_post.into(),
             ..self
         }
     }
 
-    pub fn merge_permalink<S: Into<Option<String>>>(self, permalink: S) -> FrontmatterBuilder {
-        self.merge(FrontmatterBuilder::new().set_permalink(permalink.into()))
+    pub fn merge_permalink<S: Into<Option<String>>>(self, permalink: S) -> Self {
+        self.merge(Self::new().set_permalink(permalink.into()))
     }
 
-    pub fn merge_slug<S: Into<Option<String>>>(self, slug: S) -> FrontmatterBuilder {
-        self.merge(FrontmatterBuilder::new().set_slug(slug.into()))
+    pub fn merge_slug<S: Into<Option<String>>>(self, slug: S) -> Self {
+        self.merge(Self::new().set_slug(slug.into()))
     }
 
-    pub fn merge_title<S: Into<Option<String>>>(self, title: S) -> FrontmatterBuilder {
-        self.merge(FrontmatterBuilder::new().set_title(title.into()))
+    pub fn merge_title<S: Into<Option<String>>>(self, title: S) -> Self {
+        self.merge(Self::new().set_title(title.into()))
     }
 
-    pub fn merge_description<S: Into<Option<String>>>(self, description: S) -> FrontmatterBuilder {
-        self.merge(FrontmatterBuilder::new().set_description(description.into()))
+    pub fn merge_description<S: Into<Option<String>>>(self, description: S) -> Self {
+        self.merge(Self::new().set_description(description.into()))
     }
 
-    pub fn merge_categories<S: Into<Option<Vec<String>>>>(self,
-                                                          categories: S)
-                                                          -> FrontmatterBuilder {
-        self.merge(FrontmatterBuilder::new().set_categories(categories.into()))
+    pub fn merge_categories<S: Into<Option<Vec<String>>>>(self, categories: S) -> Self {
+        self.merge(Self::new().set_categories(categories.into()))
     }
 
-    pub fn merge_excerpt_separator<S: Into<Option<String>>>(self,
-                                                            excerpt_separator: S)
-                                                            -> FrontmatterBuilder {
-        self.merge(FrontmatterBuilder::new().set_excerpt_separator(excerpt_separator.into()))
+    pub fn merge_excerpt_separator<S: Into<Option<String>>>(self, excerpt_separator: S) -> Self {
+        self.merge(Self::new().set_excerpt_separator(excerpt_separator.into()))
     }
 
     pub fn merge_published_date<D: Into<Option<datetime::DateTime>>>(self,
                                                                      published_date: D)
-                                                                     -> FrontmatterBuilder {
-        self.merge(FrontmatterBuilder::new().set_published_date(published_date.into()))
+                                                                     -> Self {
+        self.merge(Self::new().set_published_date(published_date.into()))
     }
 
     #[cfg(test)]
-    pub fn merge_format<S: Into<Option<SourceFormat>>>(self, format: S) -> FrontmatterBuilder {
-        self.merge(FrontmatterBuilder::new().set_format(format.into()))
+    pub fn merge_format<S: Into<Option<SourceFormat>>>(self, format: S) -> Self {
+        self.merge(Self::new().set_format(format.into()))
     }
 
-    pub fn merge_layout<S: Into<Option<String>>>(self, layout: S) -> FrontmatterBuilder {
-        self.merge(FrontmatterBuilder::new().set_layout(layout.into()))
+    pub fn merge_layout<S: Into<Option<String>>>(self, layout: S) -> Self {
+        self.merge(Self::new().set_layout(layout.into()))
     }
 
-    pub fn merge_draft<B: Into<Option<bool>>>(self, draft: B) -> FrontmatterBuilder {
-        self.merge(FrontmatterBuilder::new().set_draft(draft.into()))
+    pub fn merge_draft<B: Into<Option<bool>>>(self, draft: B) -> Self {
+        self.merge(Self::new().set_draft(draft.into()))
     }
 
     #[cfg(test)]
-    pub fn merge_post<B: Into<Option<bool>>>(self, post: B) -> FrontmatterBuilder {
-        self.merge(FrontmatterBuilder::new().set_post(post.into()))
+    pub fn merge_post<B: Into<Option<bool>>>(self, post: B) -> Self {
+        self.merge(Self::new().set_post(post.into()))
     }
 
-    pub fn merge_custom(self, other_custom: liquid::Object) -> FrontmatterBuilder {
-        let FrontmatterBuilder {
-            path,
+    pub fn merge_custom(self, other_custom: liquid::Object) -> Self {
+        let Self {
+            permalink,
             slug,
             title,
             description,
@@ -194,8 +199,8 @@ impl FrontmatterBuilder {
             is_post,
             custom,
         } = self;
-        FrontmatterBuilder {
-            path: path,
+        Self {
+            permalink: permalink,
             slug: slug,
             title: title,
             description: description,
@@ -210,9 +215,9 @@ impl FrontmatterBuilder {
         }
     }
 
-    pub fn merge(self, other: FrontmatterBuilder) -> FrontmatterBuilder {
-        let FrontmatterBuilder {
-            path,
+    pub fn merge(self, other: Self) -> Self {
+        let Self {
+            permalink,
             slug,
             title,
             description,
@@ -225,8 +230,8 @@ impl FrontmatterBuilder {
             is_post,
             custom,
         } = self;
-        let FrontmatterBuilder {
-            path: other_path,
+        let Self {
+            permalink: other_permalink,
             slug: other_slug,
             title: other_title,
             description: other_description,
@@ -239,8 +244,8 @@ impl FrontmatterBuilder {
             is_post: other_is_post,
             custom: other_custom,
         } = other;
-        FrontmatterBuilder {
-            path: path.or_else(|| other_path),
+        Self {
+            permalink: permalink.or_else(|| other_permalink),
             slug: slug.or_else(|| other_slug),
             title: title.or_else(|| other_title),
             description: description.or_else(|| other_description),
@@ -255,42 +260,46 @@ impl FrontmatterBuilder {
         }
     }
 
-    pub fn merge_path<P: AsRef<path::Path>>(self, relpath: P) -> FrontmatterBuilder {
+    pub fn merge_path<P: AsRef<path::Path>>(self, relpath: P) -> Self {
         self.merge_path_ref(relpath.as_ref())
     }
 
-    fn merge_path_ref(self, relpath: &path::Path) -> FrontmatterBuilder {
-        let mut fm = self;
-
-        if fm.format.is_none() {
+    fn merge_path_ref(mut self, relpath: &path::Path) -> Self {
+        if self.format.is_none() {
             let ext = relpath.extension().and_then(|os| os.to_str()).unwrap_or("");
             let format = match ext {
                 "md" => SourceFormat::Markdown,
                 _ => SourceFormat::Raw,
             };
-            fm.format = Some(format);
+            self.format = Some(format);
         }
 
-        if fm.slug.is_none() {
+        if self.published_date.is_none() || self.slug.is_none() {
             let file_stem = file_stem(relpath);
-            let slug = slug::slugify(file_stem);
-            fm.slug = Some(slug);
+            let (file_date, file_stem) = parse_file_stem(file_stem);
+            if self.published_date.is_none() {
+                self.published_date = file_date;
+            }
+            if self.slug.is_none() {
+                let slug = slug::slugify(file_stem);
+                self.slug = Some(slug);
+            }
         }
 
-        if fm.title.is_none() {
-            let slug = fm.slug
+        if self.title.is_none() {
+            let slug = self.slug
                 .as_ref()
                 .expect("slug has been unconditionally initialized");
             let title = slug::titleize_slug(slug);
-            fm.title = Some(title);
+            self.title = Some(title);
         }
 
-        fm
+        self
     }
 
     pub fn build(self) -> Result<Frontmatter> {
-        let FrontmatterBuilder {
-            path,
+        let Self {
+            permalink,
             slug,
             title,
             description,
@@ -306,14 +315,19 @@ impl FrontmatterBuilder {
 
         let is_post = is_post.unwrap_or(false);
 
-        let path = path.unwrap_or_else(|| {
-                                           let default_path = "/:path/:filename:output_ext";
-
-                                           default_path.to_owned()
-                                       });
+        let permalink = permalink.unwrap_or_else(|| PATH_ALIAS.to_owned());
+        let permalink = if !permalink.starts_with('/') {
+            let resolved =
+                *PERMALINK_ALIASES
+                    .get(permalink.as_str())
+                    .ok_or_else(|| format!("Unsupported permalink alias '{}'", permalink))?;
+            resolved.to_owned()
+        } else {
+            permalink
+        };
 
         let fm = Frontmatter {
-            path: path,
+            permalink: permalink,
             slug: slug.ok_or_else(|| "No slug")?,
             title: title.ok_or_else(|| "No title")?,
             description: description,
@@ -335,7 +349,7 @@ impl FrontmatterBuilder {
 #[derive(Serialize, Deserialize)]
 #[serde(deny_unknown_fields, default)]
 pub struct Frontmatter {
-    pub path: String,
+    pub permalink: String,
     pub slug: String,
     pub title: String,
     pub description: Option<String>,
@@ -351,8 +365,7 @@ pub struct Frontmatter {
 }
 
 /// Shallow merge of `liquid::Object`'s
-fn merge_objects(primary: liquid::Object, secondary: liquid::Object) -> liquid::Object {
-    let mut primary = primary;
+fn merge_objects(mut primary: liquid::Object, secondary: liquid::Object) -> liquid::Object {
     for (key, value) in secondary {
         primary
             .entry(key.to_owned())
@@ -372,6 +385,44 @@ fn file_stem_path(p: &path::Path) -> String {
         .unwrap_or_else(|| "".to_owned())
 }
 
+fn parse_file_stem(stem: String) -> (Option<datetime::DateTime>, String) {
+    lazy_static!{
+       static ref DATE_PREFIX_REF: regex::Regex =
+           regex::Regex::new(r"^(\d{4})-(\d{1,2})-(\d{1,2})[- ](.*)$")
+           .unwrap();
+    }
+
+    let parts = DATE_PREFIX_REF.captures(&stem).and_then(|caps| {
+        let year: i32 = caps.get(1)
+            .expect("unconditional capture")
+            .as_str()
+            .parse()
+            .expect("regex gets back an integer");
+        let month: u32 = caps.get(2)
+            .expect("unconditional capture")
+            .as_str()
+            .parse()
+            .expect("regex gets back an integer");
+        let day: u32 = caps.get(3)
+            .expect("unconditional capture")
+            .as_str()
+            .parse()
+            .expect("regex gets back an integer");
+        let published = datetime::DateTime::default()
+            .with_year(year)
+            .and_then(|d| d.with_month(month))
+            .and_then(|d| d.with_day(day));
+        published.map(|p| {
+                          (Some(p),
+                           caps.get(4)
+                               .expect("unconditional capture")
+                               .as_str()
+                               .to_owned())
+                      })
+    });
+
+    parts.unwrap_or((None, stem))
+}
 
 #[cfg(test)]
 mod test {
@@ -382,6 +433,81 @@ mod test {
         let input = path::PathBuf::from("/embedded/path/___filE-worlD-__09___.md");
         let actual = file_stem(input.as_path());
         assert_eq!(actual, "___filE-worlD-__09___");
+    }
+
+    #[test]
+    fn parse_file_stem_empty() {
+        assert_eq!(parse_file_stem("".to_owned()), (None, "".to_owned()));
+    }
+
+    #[test]
+    fn parse_file_stem_none() {
+        assert_eq!(parse_file_stem("First Blog Post".to_owned()),
+                   (None, "First Blog Post".to_owned()));
+    }
+
+    #[test]
+    fn parse_file_stem_out_of_range_month() {
+        assert_eq!(parse_file_stem("2017-30-5 First Blog Post".to_owned()),
+                   (None, "2017-30-5 First Blog Post".to_owned()));
+    }
+
+    #[test]
+    fn parse_file_stem_out_of_range_day() {
+        assert_eq!(parse_file_stem("2017-3-50 First Blog Post".to_owned()),
+                   (None, "2017-3-50 First Blog Post".to_owned()));
+    }
+
+    #[test]
+    fn parse_file_stem_single_digit() {
+        assert_eq!(parse_file_stem("2017-3-5 First Blog Post".to_owned()),
+                   (Some(datetime::DateTime::default()
+                             .with_year(2017)
+                             .unwrap()
+                             .with_month(3)
+                             .unwrap()
+                             .with_day(5)
+                             .unwrap()),
+                    "First Blog Post".to_owned()));
+    }
+
+    #[test]
+    fn parse_file_stem_double_digit() {
+        assert_eq!(parse_file_stem("2017-12-25 First Blog Post".to_owned()),
+                   (Some(datetime::DateTime::default()
+                             .with_year(2017)
+                             .unwrap()
+                             .with_month(12)
+                             .unwrap()
+                             .with_day(25)
+                             .unwrap()),
+                    "First Blog Post".to_owned()));
+    }
+
+    #[test]
+    fn parse_file_stem_double_digit_leading_zero() {
+        assert_eq!(parse_file_stem("2017-03-05 First Blog Post".to_owned()),
+                   (Some(datetime::DateTime::default()
+                             .with_year(2017)
+                             .unwrap()
+                             .with_month(3)
+                             .unwrap()
+                             .with_day(5)
+                             .unwrap()),
+                    "First Blog Post".to_owned()));
+    }
+
+    #[test]
+    fn parse_file_stem_dashed() {
+        assert_eq!(parse_file_stem("2017-3-5-First-Blog-Post".to_owned()),
+                   (Some(datetime::DateTime::default()
+                             .with_year(2017)
+                             .unwrap()
+                             .with_month(3)
+                             .unwrap()
+                             .with_day(5)
+                             .unwrap()),
+                    "First-Blog-Post".to_owned()));
     }
 
     #[test]
@@ -424,7 +550,7 @@ mod test {
     fn frontmatter_global_merge() {
         let empty = FrontmatterBuilder::new();
         let a = FrontmatterBuilder {
-            path: Some("path a".to_owned()),
+            permalink: Some("permalink a".to_owned()),
             slug: Some("slug a".to_owned()),
             title: Some("title a".to_owned()),
             description: Some("description a".to_owned()),
@@ -438,7 +564,7 @@ mod test {
             custom: liquid::Object::new(),
         };
         let b = FrontmatterBuilder {
-            path: Some("path b".to_owned()),
+            permalink: Some("permalink b".to_owned()),
             slug: Some("slug b".to_owned()),
             title: Some("title b".to_owned()),
             description: Some("description b".to_owned()),
@@ -465,7 +591,7 @@ mod test {
     #[test]
     fn frontmatter_local_merge() {
         let a = FrontmatterBuilder {
-            path: Some("path a".to_owned()),
+            permalink: Some("permalink a".to_owned()),
             slug: Some("slug a".to_owned()),
             title: Some("title a".to_owned()),
             description: Some("description a".to_owned()),
@@ -480,7 +606,7 @@ mod test {
         };
 
         let merge_b_into_a = a.clone()
-            .merge_permalink("path b".to_owned())
+            .merge_permalink("permalink b".to_owned())
             .merge_slug("slug b".to_owned())
             .merge_title("title b".to_owned())
             .merge_description("description b".to_owned())
@@ -506,7 +632,7 @@ mod test {
         assert_eq!(merge_empty_into_a, a);
 
         let merge_a_into_empty = FrontmatterBuilder::new()
-            .merge_permalink("path a".to_owned())
+            .merge_permalink("permalink a".to_owned())
             .merge_slug("slug a".to_owned())
             .merge_title("title a".to_owned())
             .merge_description("description a".to_owned())
