@@ -9,6 +9,11 @@ use serde;
 pub struct DateTime(chrono::DateTime<chrono::FixedOffset>);
 
 impl DateTime {
+    pub fn now() -> DateTime {
+        let d = chrono::Utc::now().with_timezone(&chrono::FixedOffset::east(0));
+        DateTime(d)
+    }
+
     pub fn parse<S: AsRef<str>>(d: S) -> Option<DateTime> {
         DateTime::parse_str(d.as_ref())
     }

@@ -90,7 +90,7 @@ pub use error::Error;
 pub use config::Config;
 pub use config::ConfigBuilder;
 pub use config::Dump;
-pub use new::{create_new_project, create_new_document};
+pub use new::{create_new_project, create_new_document, publish_document};
 
 pub mod error;
 pub mod files;

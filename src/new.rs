@@ -6,6 +6,8 @@ use liquid;
 
 use error::*;
 use config::Config;
+use datetime;
+use files;
 use legacy::wildwest;
 use slug;
 
@@ -143,6 +145,27 @@ fn create_file_for_path(path: &path::Path, content: &str) -> Result<()> {
         .chain_err(|| format!("Failed to create file {:?}", path))?;
 
     file.write_all(content.as_bytes())?;
+
+    Ok(())
+}
+
+pub fn publish_document(file: &path::Path) -> Result<()> {
+    let doc = files::read_file(file)?;
+    let doc = wildwest::DocumentBuilder::parse(&doc)?;
+    let wildwest::DocumentBuilder { front, content } = doc;
+
+    let date = datetime::DateTime::now();
+    let date = date.format();
+
+    let mut front = front.object();
+    front.remove("draft");
+    front.insert("date".to_owned(), liquid::Value::Str(date));
+
+    let front = wildwest::FrontmatterBuilder::with_object(front);
+    let doc = wildwest::DocumentBuilder { front, content };
+    let doc = doc.to_string();
+
+    files::write_document_file(doc, file)?;
 
     Ok(())
 }

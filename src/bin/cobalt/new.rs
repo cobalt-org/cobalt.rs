@@ -58,3 +58,24 @@ pub fn new_command(matches: &clap::ArgMatches) -> Result<()> {
 
     Ok(())
 }
+
+pub fn publish_command_args() -> clap::App<'static, 'static> {
+    clap::SubCommand::with_name("publish")
+        .about("Publish a document")
+        .arg(clap::Arg::with_name("FILENAME")
+                 .required(true)
+                 .help("Document path to publish")
+                 .takes_value(true))
+}
+
+pub fn publish_command(matches: &clap::ArgMatches) -> Result<()> {
+    let file = matches
+        .value_of("FILENAME")
+        .expect("required parameters are present");
+    let file = path::Path::new(file);
+
+    cobalt::publish_document(file)
+        .chain_err(|| format!("Could not publish `{:?}`", file))?;
+
+    Ok(())
+}
