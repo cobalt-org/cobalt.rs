@@ -4,9 +4,11 @@ use std::fmt;
 use liquid;
 use serde_yaml;
 
+use super::super::error::*;
 use super::super::config;
 use super::super::datetime;
 use super::super::frontmatter;
+use super::super::document;
 use super::super::sass;
 use super::super::site;
 
@@ -139,6 +141,18 @@ impl From<frontmatter::FrontmatterBuilder> for FrontmatterBuilder {
 pub struct DocumentBuilder {
     pub front: FrontmatterBuilder,
     pub content: String,
+}
+
+impl DocumentBuilder {
+    pub fn parse(content: &str) -> Result<Self> {
+        let (front, content) = document::split_document(content)?;
+        let front: FrontmatterBuilder = front
+            .map(|s| serde_yaml::from_str(s))
+            .map_or(Ok(None), |r| r.map(Some))?
+            .unwrap_or_else(FrontmatterBuilder::new);
+        let content = content.to_owned();
+        Ok(Self { front, content })
+    }
 }
 
 impl fmt::Display for DocumentBuilder {
