@@ -19,7 +19,7 @@ pub fn get_config_args() -> Vec<clap::Arg<'static, 'static>> {
          .short("d")
          .long("destination")
          .value_name("DIR")
-         .help("Destination folder [default: ./]")
+         .help("Site destination folder [default: ./]")
          .takes_value(true),
      clap::Arg::with_name("drafts")
          .long("drafts")
