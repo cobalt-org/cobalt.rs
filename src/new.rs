@@ -50,20 +50,15 @@ draft: true
 Welcome to the first post ever on cobalt.rs!
 ";
 
-const INDEX_LIQUID: &'static [u8] = b"extends: default.liquid
+const INDEX_MD: &'static [u8] = b"extends: default.liquid
 ---
-<div >
-  <h2>Blog!</h2>
-  <!--<br />-->
-  <div>
-    {% for post in posts %}
-      <div>
-        <h4>{{post.title}}</h4>
-        <h4><a href=\"{{post.path}}\">{{ post.title }}</a></h4>
-      </div>
-    {% endfor %}
-  </div>
-</div>
+## Blog!
+
+{% for post in posts %}
+#### {{post.title}}
+
+#### [{{ post.title }}]({{ post.path }})
+{% endfor %}
 ";
 
 pub fn create_new_project<P: AsRef<Path>>(dest: P) -> Result<()> {
@@ -74,7 +69,7 @@ pub fn create_new_project_for_path(dest: &Path) -> Result<()> {
     fs::create_dir_all(dest)?;
 
     create_file(&dest.join(".cobalt.yml"), COBALT_YML)?;
-    create_file(&dest.join("index.liquid"), INDEX_LIQUID)?;
+    create_file(&dest.join("index.md"), INDEX_MD)?;
 
     fs::create_dir_all(&dest.join("_layouts"))?;
     create_file(&dest.join("_layouts/default.liquid"), DEFAULT_LAYOUT)?;
@@ -91,7 +86,7 @@ pub fn create_new_document(doc_type: &str, name: &str, config: &Config) -> Resul
     let full_path = &path.join(&config.posts.dir).join(name);
 
     match doc_type {
-        "page" => create_file(name, INDEX_LIQUID)?,
+        "page" => create_file(name, INDEX_MD)?,
         "post" => create_file(full_path, POST_MD)?,
         _ => bail!("Unsupported document type {}", doc_type),
     }
