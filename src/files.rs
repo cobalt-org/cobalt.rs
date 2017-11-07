@@ -192,13 +192,13 @@ pub fn copy_file(src_file: &path::Path, dest_file: &path::Path) -> Result<()> {
     Ok(())
 }
 
-pub fn create_document_file<S: AsRef<str>, P: AsRef<path::Path>>(content: S,
-                                                                 dest_file: P)
-                                                                 -> Result<()> {
-    create_document_file_internal(content.as_ref(), dest_file.as_ref())
+pub fn write_document_file<S: AsRef<str>, P: AsRef<path::Path>>(content: S,
+                                                                dest_file: P)
+                                                                -> Result<()> {
+    write_document_file_internal(content.as_ref(), dest_file.as_ref())
 }
 
-fn create_document_file_internal(content: &str, dest_file: &path::Path) -> Result<()> {
+fn write_document_file_internal(content: &str, dest_file: &path::Path) -> Result<()> {
     // create target directories if any exist
     if let Some(parent) = dest_file.parent() {
         fs::create_dir_all(parent)
@@ -209,7 +209,7 @@ fn create_document_file_internal(content: &str, dest_file: &path::Path) -> Resul
         .map_err(|e| format!("Could not create {:?}: {}", dest_file, e))?;
 
     file.write_all(content.as_bytes())?;
-    info!("Created {}", dest_file.display());
+    info!("Wrote {}", dest_file.display());
     Ok(())
 }
 

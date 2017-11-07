@@ -147,7 +147,7 @@ pub fn build(config: &Config) -> Result<()> {
             let file_name = format!("_{}.{}.{}", file_name, dump, ext);
             file_path.set_file_name(file_name);
             trace!("Generating {:?}", file_path);
-            files::create_document_file(content, dest.join(file_path))?;
+            files::write_document_file(content, dest.join(file_path))?;
         }
 
         let mut context = post.get_render_context();
@@ -164,7 +164,7 @@ pub fn build(config: &Config) -> Result<()> {
                                     &mut layouts_cache,
                                     &config.syntax_highlight.theme)
             .chain_err(|| format!("Failed to render for {:?}", post.file_path))?;
-        files::create_document_file(post_html, dest.join(&post.file_path))?;
+        files::write_document_file(post_html, dest.join(&post.file_path))?;
     }
 
     // check if we should create an RSS file and create it!
@@ -199,7 +199,7 @@ pub fn build(config: &Config) -> Result<()> {
             let file_name = format!("_{}.{}.{}", file_name, dump, ext);
             file_path.set_file_name(file_name);
             trace!("Generating {:?}", file_path);
-            files::create_document_file(content, dest.join(file_path))?;
+            files::write_document_file(content, dest.join(file_path))?;
         }
 
         let mut context = doc.get_render_context();
@@ -214,7 +214,7 @@ pub fn build(config: &Config) -> Result<()> {
                                   &mut layouts_cache,
                                   &config.syntax_highlight.theme)
             .chain_err(|| format!("Failed to render for {:?}", doc.file_path))?;
-        files::create_document_file(doc_html, dest.join(doc.file_path))?;
+        files::write_document_file(doc_html, dest.join(doc.file_path))?;
     }
 
     // copy all remaining files in the source to the destination
