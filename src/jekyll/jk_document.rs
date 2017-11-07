@@ -3,7 +3,6 @@ use std::fs;
 use std::io::Write;
 use std::path;
 
-use itertools;
 use liquid;
 use regex;
 use serde_yaml;
@@ -62,60 +61,28 @@ impl From<JkFrontmatterBuilder> for wildwest::FrontmatterBuilder {
     }
 }
 
-#[derive(Debug, Default, Clone, Eq, PartialEq, Serialize, Deserialize)]
-pub struct JkDocument {
-    front: wildwest::FrontmatterBuilder,
-    content: String,
+fn convert_document(doc: String) -> Result<wildwest::DocumentBuilder> {
+    let (front, content) = split_document(&doc)?;
+    let front: JkFrontmatterBuilder = front
+        .map(|f| serde_yaml::from_str(f))
+        .unwrap_or_else(|| Ok(JkFrontmatterBuilder::default()))?;
+    let front: wildwest::FrontmatterBuilder = front.into();
+    let content = content.to_owned();
+
+    Ok(wildwest::DocumentBuilder { front, content })
 }
 
-impl JkDocument {
-    pub fn parse_string(doc: String) -> Result<JkDocument> {
-        let (front, content) = split_document(&doc)?;
-        let front: JkFrontmatterBuilder =
-            front
-                .map(|f| serde_yaml::from_str(f))
-                .unwrap_or_else(|| Ok(JkFrontmatterBuilder::default()))?;
-        let front: wildwest::FrontmatterBuilder = front.into();
-
-        Ok(JkDocument {
-               front: front,
-               content: content.to_owned(),
-           })
-    }
-
-    pub fn parse(source_file: &path::Path) -> Result<JkDocument> {
-        let doc: String = files::read_file(source_file)?;
-        JkDocument::parse_string(doc)
-    }
-
-
-    pub fn dump(self) -> Result<String> {
-        let front = self.front;
-        let front = dump_front(front)?;
-
-        let content = self.content;
-
-        let converted = itertools::join(&[front, "---".to_owned(), content], "\n");
-        Ok(converted)
-    }
-}
-
-fn dump_front(front: wildwest::FrontmatterBuilder) -> Result<String> {
-    let mut converted = serde_yaml::to_string(&front)?;
-    converted.drain(..4);
-    Ok(converted)
-}
-
-fn convert_document(source_file: &path::Path, dest_dir: &path::Path) -> Result<()> {
-    let doc = JkDocument::parse(source_file)?;
-    let converted = doc.dump()?;
+fn convert_document_file(source_file: &path::Path, dest_dir: &path::Path) -> Result<()> {
+    let doc = files::read_file(source_file)?;
+    let doc = convert_document(doc)?;
+    let doc = doc.to_string();
     let dest_file = dest_dir.join(source_file.with_extension("md").file_name().unwrap());
 
     if !dest_dir.exists() {
         fs::create_dir_all(&dest_dir)?;
     }
     let mut dest = fs::File::create(dest_file)?;
-    dest.write_all(converted.as_bytes())?;
+    dest.write_all(doc.as_bytes())?;
     Ok(())
 }
 
@@ -123,7 +90,7 @@ pub fn convert_from_jk(source: &path::Path, dest: &path::Path) -> Result<()> {
     if dest.is_file() {
         Err(ErrorKind::CantOutputInFile.into())
     } else if source.is_file() {
-        convert_document(source, dest)
+        convert_document_file(source, dest)
     } else if source.is_dir() {
         for file in source.read_dir()? {
             if let Ok(file) = file {
@@ -131,7 +98,7 @@ pub fn convert_from_jk(source: &path::Path, dest: &path::Path) -> Result<()> {
                 let ext = file_path.extension().unwrap_or_else(|| ffi::OsStr::new(""));
                 if file_path.is_file() {
                     if ext == "md" || ext == "markdown" {
-                        convert_document(&file.path(), dest)?
+                        convert_document_file(&file.path(), dest)?
                     } else {
                         warn!("unsupported file extension")
                     }
@@ -246,7 +213,7 @@ categories:
     fn frontmatter_full() {
         let front: JkFrontmatterBuilder = serde_yaml::from_str(FIXTURE_FULL).unwrap();
         let front: wildwest::FrontmatterBuilder = front.into();
-        let front = dump_front(front).unwrap();
+        let front = front.to_string();
         let front: liquid::Object = serde_yaml::from_str(&front).unwrap();
 
         let expected: liquid::Object =
@@ -275,7 +242,7 @@ tags:
     fn frontmatter_custom() {
         let front: JkFrontmatterBuilder = serde_yaml::from_str(FIXTURE_CUSTOM).unwrap();
         let front: wildwest::FrontmatterBuilder = front.into();
-        let front = dump_front(front).unwrap();
+        let front = front.to_string();
         let front: liquid::Object = serde_yaml::from_str(&front).unwrap();
 
         let expected: liquid::Object = [("id".to_owned(), liquid::Value::Num(33.0f32)),
@@ -300,8 +267,8 @@ tags:
     fn parse_string_ok() {
         let fixture = format!("---\n{}---\nthe content\n", FIXTURE_MINIMAL);
 
-        let doc = JkDocument::parse_string(fixture).unwrap();
-        let actual = doc.dump().unwrap();
+        let doc = convert_document(fixture).unwrap();
+        let actual = doc.to_string();
 
         let expected = format!("{}\n---\nthe content\n", EXPECTED_MINIMAL);
         assert_eq!(actual, expected);

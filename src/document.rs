@@ -26,7 +26,7 @@ lazy_static!{
     static ref MARKDOWN_REF: Regex = Regex::new(r"(?m:^ {0,3}\[[^\]]+\]:.+$)").unwrap();
 }
 
-fn split_document(content: &str) -> Result<(Option<&str>, &str)> {
+pub fn split_document(content: &str) -> Result<(Option<&str>, &str)> {
     if FRONT_MATTER_DIVIDE.is_match(content) {
         let mut splits = FRONT_MATTER_DIVIDE.splitn(content, 2);
 

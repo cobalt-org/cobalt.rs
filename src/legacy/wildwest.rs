@@ -1,6 +1,8 @@
 use std::default::Default;
+use std::fmt;
 
 use liquid;
+use serde_yaml;
 
 use super::super::config;
 use super::super::datetime;
@@ -13,8 +15,24 @@ use super::super::site;
 pub struct FrontmatterBuilder(liquid::Object);
 
 impl FrontmatterBuilder {
-    pub fn new() -> FrontmatterBuilder {
+    pub fn new() -> Self {
         FrontmatterBuilder(liquid::Object::new())
+    }
+
+    pub fn with_object(obj: liquid::Object) -> Self {
+        FrontmatterBuilder(obj)
+    }
+
+    pub fn object(self) -> liquid::Object {
+        self.0
+    }
+}
+
+impl fmt::Display for FrontmatterBuilder {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let mut converted = serde_yaml::to_string(self).map_err(|_| fmt::Error)?;
+        converted.drain(..4);
+        write!(f, "{}", converted)
     }
 }
 
@@ -114,6 +132,19 @@ impl From<frontmatter::FrontmatterBuilder> for FrontmatterBuilder {
         }
 
         FrontmatterBuilder(legacy)
+    }
+}
+
+#[derive(Debug, Eq, PartialEq, Default, Clone)]
+pub struct DocumentBuilder {
+    pub front: FrontmatterBuilder,
+    pub content: String,
+}
+
+impl fmt::Display for DocumentBuilder {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let front = self.front.to_string();
+        write!(f, "{}\n---\n{}", front, self.content)
     }
 }
 
