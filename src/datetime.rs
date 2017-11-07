@@ -19,7 +19,7 @@ impl DateTime {
     }
 
     fn parse_str(d: &str) -> Option<DateTime> {
-        chrono::DateTime::parse_from_str(d.as_ref(), "%d %B %Y %H:%M:%S %z")
+        chrono::DateTime::parse_from_str(d, "%d %B %Y %H:%M:%S %z")
             .ok()
             .map(DateTime)
     }
