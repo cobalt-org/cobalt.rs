@@ -182,16 +182,19 @@ impl ConfigBuilder {
 
     fn from_cwd_internal(cwd: path::PathBuf) -> Result<ConfigBuilder> {
         let file_path = files::find_project_file(&cwd, ".cobalt.yml");
-        let mut config = file_path
+        let config = file_path
             .map(|p| {
                      info!("Using config file {:?}", &p);
                      Self::from_file(&p).chain_err(|| format!("Error reading config file {:?}", p))
                  })
             .unwrap_or_else(|| {
                 warn!("No .cobalt.yml file found in current directory, using default config.");
-                Ok(ConfigBuilder::default())
+                let config = ConfigBuilder {
+                    root: cwd,
+                    ..Default::default()
+                };
+                Ok(config)
             })?;
-        config.root = cwd;
         Ok(config)
     }
 
@@ -370,7 +373,7 @@ fn test_from_file_not_found() {
 
 #[test]
 fn test_from_cwd_ok() {
-    let result = ConfigBuilder::from_cwd("tests/fixtures/config").unwrap();
+    let result = ConfigBuilder::from_cwd("tests/fixtures/config/child").unwrap();
     assert_eq!(result,
                ConfigBuilder {
                    root: path::Path::new("tests/fixtures/config").to_path_buf(),

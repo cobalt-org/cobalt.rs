@@ -1,3 +1,6 @@
+use std::env;
+use std::path;
+
 use clap;
 use cobalt;
 
@@ -25,16 +28,17 @@ pub fn init_command(matches: &clap::ArgMatches) -> Result<()> {
 
 pub fn new_command_args() -> clap::App<'static, 'static> {
     clap::SubCommand::with_name("new")
-        .about("Create a new post or page")
+        .about("Create a document")
         .args(&args::get_config_args())
-        .arg(clap::Arg::with_name("FILETYPE")
-                 .help("Type of file to create eg post or page")
-                 .default_value("post")
+        .arg(clap::Arg::with_name("TITLE")
+                 .required(true)
+                 .help("Title of the post")
                  .takes_value(true))
-        .arg(clap::Arg::with_name("FILENAME")
-                 .help("File to create")
-                 .default_value_if("FILETYPE", Some("page"), "new_page.md")
-                 .default_value("new_post.md")
+        .arg(clap::Arg::with_name("file")
+                 .short("f")
+                 .long("file")
+                 .value_name("DIR_OR_FILE")
+                 .help("New document's parent directory or file (default: `<CWD>/title.ext`)")
                  .takes_value(true))
 }
 
@@ -42,12 +46,36 @@ pub fn new_command(matches: &clap::ArgMatches) -> Result<()> {
     let config = args::get_config(matches)?;
     let config = config.build()?;
 
-    let filetype = matches.value_of("FILETYPE").unwrap();
-    let filename = matches.value_of("FILENAME").unwrap();
+    let title = matches.value_of("TITLE").unwrap();
 
-    cobalt::create_new_document(filetype, filename, &config)
-        .chain_err(|| format!("Could not create {}", filetype))?;
-    info!("Created new {} {}", filetype, filename);
+    let mut file = env::current_dir().expect("How does this fail?");
+    if let Some(rel_file) = matches.value_of("file") {
+        file.push(path::Path::new(rel_file))
+    }
+
+    cobalt::create_new_document(&config, title, file)
+        .chain_err(|| format!("Could not create `{}`", title))?;
+
+    Ok(())
+}
+
+pub fn publish_command_args() -> clap::App<'static, 'static> {
+    clap::SubCommand::with_name("publish")
+        .about("Publish a document")
+        .arg(clap::Arg::with_name("FILENAME")
+                 .required(true)
+                 .help("Document path to publish")
+                 .takes_value(true))
+}
+
+pub fn publish_command(matches: &clap::ArgMatches) -> Result<()> {
+    let file = matches
+        .value_of("FILENAME")
+        .expect("required parameters are present");
+    let file = path::Path::new(file);
+
+    cobalt::publish_document(file)
+        .chain_err(|| format!("Could not publish `{:?}`", file))?;
 
     Ok(())
 }

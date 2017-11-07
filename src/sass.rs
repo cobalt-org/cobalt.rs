@@ -71,7 +71,7 @@ fn compile_sass_internal(config: &SassOptions,
     let mut dest_file = dest.join(rel_src);
     dest_file.set_extension("css");
 
-    files::create_document_file(content, dest_file)
+    files::write_document_file(content, dest_file)
 }
 
 #[cfg(not(feature = "sass"))]

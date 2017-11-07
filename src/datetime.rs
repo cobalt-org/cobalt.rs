@@ -9,12 +9,17 @@ use serde;
 pub struct DateTime(chrono::DateTime<chrono::FixedOffset>);
 
 impl DateTime {
+    pub fn now() -> DateTime {
+        let d = chrono::Utc::now().with_timezone(&chrono::FixedOffset::east(0));
+        DateTime(d)
+    }
+
     pub fn parse<S: AsRef<str>>(d: S) -> Option<DateTime> {
         DateTime::parse_str(d.as_ref())
     }
 
     fn parse_str(d: &str) -> Option<DateTime> {
-        chrono::DateTime::parse_from_str(d.as_ref(), "%d %B %Y %H:%M:%S %z")
+        chrono::DateTime::parse_from_str(d, "%d %B %Y %H:%M:%S %z")
             .ok()
             .map(DateTime)
     }
