@@ -277,7 +277,7 @@ impl From<GlobalConfig> for config::ConfigBuilder {
             .set_draft(false)
             .set_post(false);
         let posts = config::PostBuilder {
-            name: None,
+            title: None,
             slug: None,
             description: None,
             dir: posts,

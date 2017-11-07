@@ -246,9 +246,9 @@ pub fn build(config: &Config) -> Result<()> {
 
 // creates a new RSS file with the contents of the site blog
 fn create_rss(path: &str, dest: &Path, config: &Config, posts: &[Document]) -> Result<()> {
-    let name = config
+    let title = config
         .posts
-        .name
+        .title
         .as_ref()
         .or_else(|| config.site.title.as_ref())
         .ok_or(ErrorKind::ConfigFileMissingFields)?;
@@ -268,7 +268,7 @@ fn create_rss(path: &str, dest: &Path, config: &Config, posts: &[Document]) -> R
     let items = items?;
 
     let channel = rss::ChannelBuilder::default()
-        .title(name.to_owned())
+        .title(title.to_owned())
         .link(link.to_owned())
         .description(description.to_owned())
         .items(items)
@@ -290,9 +290,9 @@ fn create_rss(path: &str, dest: &Path, config: &Config, posts: &[Document]) -> R
 }
 // creates a new jsonfeed file with the contents of the site blog
 fn create_jsonfeed(path: &str, dest: &Path, config: &Config, posts: &[Document]) -> Result<()> {
-    let name = config
+    let title = config
         .posts
-        .name
+        .title
         .as_ref()
         .or_else(|| config.site.title.as_ref())
         .ok_or(ErrorKind::ConfigFileMissingFields)?;
@@ -311,7 +311,7 @@ fn create_jsonfeed(path: &str, dest: &Path, config: &Config, posts: &[Document])
     let jsonitems = posts.iter().map(|doc| doc.to_jsonfeed(link)).collect();
 
     let feed = Feed {
-        title: name.to_string(),
+        title: title.to_string(),
         items: jsonitems,
         home_page_url: Some(link.to_string()),
         description: Some(description.to_string()),

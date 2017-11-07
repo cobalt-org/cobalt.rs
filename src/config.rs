@@ -67,7 +67,7 @@ pub struct PageBuilder {
 #[derive(Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct PostBuilder {
-    pub name: Option<String>,
+    pub title: Option<String>,
     pub slug: Option<String>,
     pub description: Option<String>,
     pub dir: String,
@@ -81,7 +81,7 @@ pub struct PostBuilder {
 impl Default for PostBuilder {
     fn default() -> PostBuilder {
         Self {
-            name: None,
+            title: None,
             slug: None,
             description: None,
             dir: "posts".to_owned(),
@@ -245,8 +245,8 @@ impl ConfigBuilder {
             }
         }
         if posts.slug.is_none() {
-            if let Some(ref name) = posts.name {
-                posts.slug = Some(slug::slugify(name));
+            if let Some(ref title) = posts.title {
+                posts.slug = Some(slug::slugify(title));
             } else {
                 posts.slug = Some(posts.dir.clone());
             }
