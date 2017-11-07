@@ -42,7 +42,7 @@ const POST_LAYOUT: &'static [u8] = b"<div>
 const POST_MD: &'static [u8] = b"extends: default.liquid
 
 title: First Post
-date: 14 January 2016 21:00:30 -0500
+draft: true
 ---
 
 # This is our first Post!
