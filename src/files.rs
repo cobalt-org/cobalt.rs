@@ -5,7 +5,7 @@ use std::path;
 
 use ignore::Match;
 use ignore::gitignore::{Gitignore, GitignoreBuilder};
-use walkdir::{WalkDir, DirEntry, WalkDirIterator};
+use walkdir::{WalkDir, DirEntry};
 
 use error::Result;
 

@@ -23,8 +23,8 @@ doc = false
 
 [dependencies]
 clap = "2.24"
-liquid = {version = "0.10", features=["serde"]}
-walkdir = "1.0"
+liquid = {version = "0.11", features=["serde"]}
+walkdir = "2.0"
 chrono = "0.4"
 log = "0.3"
 env_logger = "0.4"
@@ -37,8 +37,8 @@ regex = "0.2"
 clippy = {version = "0.0", optional = true}
 error-chain = "0.11"
 lazy_static = "0.2"
-itertools = "0.6"
-ignore = "0.2"
+itertools = "0.7"
+ignore = "0.3"
 serde = "1.0"
 serde_yaml = "0.7"
 serde_json = "1.0"
