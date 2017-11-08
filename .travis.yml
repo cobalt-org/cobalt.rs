@@ -4,7 +4,7 @@ language: rust
 env:
   global:
     - CRATE_NAME=cobalt
-    - COVERALLS=0.0.5
+    - COVERALLS=0.0.6
     - WHEN=0.1.0
 
 matrix:
