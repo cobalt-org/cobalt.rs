@@ -14,3 +14,15 @@ If you need assistance, you can join the `#cobalt` channel on `irc.mozilla.org` 
 
 We want you to feel safe and welcome and will enforce the [The Rust Code of Conduct](https://www.rust-lang.org/conduct.html) on all communication platforms of this project.
 Please contact [@johannhof](https://github.com/johannhof) for questions or in cases of violation.
+
+# Releasing
+
+When we're ready to release, a project owner should do the following
+- Determine what the next version is, according to semver
+- Bump version in a commit
+  - Run `clog --setversion <X>.<Y>.<Z>`, touch up the log
+  - Update the version in `Cargo.toml`
+  - Run `cargo check` to update `Cargo.lock`
+- Tag the commit via `git tag -a v<X>.<Y>.<Z>`
+- `git push upstream master --tag v<X>.<Y>.<Z>`
+- Run `cargo publish` (run `cargo login` first if needed)
