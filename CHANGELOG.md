@@ -1,3 +1,58 @@
+<a name="0.8.0"></a>
+## 0.8.0 (2017-11-09)
+
+
+#### Bug Fixes
+
+* **new:**
+  *  Pages start as md by default ([892d798d](https://github.com/cobalt-org/cobalt.rs/commit/892d798d5d56099f2aad1d8883395bc2063447d9))
+  *  Auto-created posts start as drafts ([0cfc1581](https://github.com/cobalt-org/cobalt.rs/commit/0cfc15818c8cb026d90ae127301d5364bd90f262))
+* **watch:**  Rebuilding ignores dest ([b72863b9](https://github.com/cobalt-org/cobalt.rs/commit/b72863b94e904054cb12e8be640cd5e9d0ec27ab))
+*   Auto-ignore dest in more cases ([8676a3a8](https://github.com/cobalt-org/cobalt.rs/commit/8676a3a8c3263212e61c886ce3ff85dc059ee3b1))
+*   Don't ignore dest look-alikes ([33c7d0de](https://github.com/cobalt-org/cobalt.rs/commit/33c7d0dec590e7ac3621a82e32c97c6ae2ed0f69))
+*   source/dest are now relative to config ([ce95b395](https://github.com/cobalt-org/cobalt.rs/commit/ce95b395412888f11ce2ab74d92dd297bbb74d45))
+* **clean:**  Better detect what we can't clean ([78bbfc3e](https://github.com/cobalt-org/cobalt.rs/commit/78bbfc3eb3248c150f9058d5d528022c769abbe7))
+* **cli:**  Clarify role of --destination ([a9fce407](https://github.com/cobalt-org/cobalt.rs/commit/a9fce407ba0a46ffd983819bfd30661acc435298))
+* **config:**
+  *  Don't support absolute paths ([6fd9af96](https://github.com/cobalt-org/cobalt.rs/commit/6fd9af96a0659eb9d85f3295924be5ae50dfb413), closes [#319](https://github.com/cobalt-org/cobalt.rs/issues/319))
+* **jekyll:**  Clean up flag names ([80468b9f](https://github.com/cobalt-org/cobalt.rs/commit/80468b9f5d40be7771a0a83c0e82dac49a120773))
+* **data-files:**  Provide information which file caused an error ([6b8e7018](https://github.com/cobalt-org/cobalt.rs/commit/6b8e7018336121447a8ee5d3e9f941bfc02627a5))
+* **error:**  Report file path on parse error ([c1cf01cd](https://github.com/cobalt-org/cobalt.rs/commit/c1cf01cd52ee94f1361b9e7fa02320044c4e83f5))
+* **log:**  Reduce noise when level is debug ([646d5897](https://github.com/cobalt-org/cobalt.rs/commit/646d5897dce4dac8af3269810349ec677646476f))
+
+#### Breaking Changes
+
+* **config:**
+  * Auto-ignore dest in more cases ([8676a3a8](https://github.com/cobalt-org/cobalt.rs/commit/8676a3a8c3263212e61c886ce3ff85dc059ee3b1))
+  * source/dest are now relative to config ([ce95b395](https://github.com/cobalt-org/cobalt.rs/commit/ce95b395412888f11ce2ab74d92dd297bbb74d45))
+  * Remove layouts config setting ([137fb960](https://github.com/cobalt-org/cobalt.rs/commit/137fb960ca970a1b569a477ce1195ca45dc20ec7))
+  * Find config in parent rather than default ([4e96a1fb](https://github.com/cobalt-org/cobalt.rs/commit/4e96a1fbeee7af20d243cc5930a0a2cc49e240bd))
+* **cli:**
+  * Remove global config flags ([b00aad63](https://github.com/cobalt-org/cobalt.rs/commit/b00aad63ff40f48997b4c9d7f797bbd383a393cf))
+  * Remove source/posts/layouts flags ([70b549da](https://github.com/cobalt-org/cobalt.rs/commit/70b549dac31e444095768166bea37ab0f9f108a1))
+* **jekyll:**  Clean up flag names ([80468b9f](https://github.com/cobalt-org/cobalt.rs/commit/80468b9f5d40be7771a0a83c0e82dac49a120773))
+
+#### Features
+
+* **init:**  Update defaults ([8a0eda99](https://github.com/cobalt-org/cobalt.rs/commit/8a0eda99e84d96653ca3950cb39a288821bc2ebe))
+* **new:**  Clearer contract for `cobalt new` ([8e44311f](https://github.com/cobalt-org/cobalt.rs/commit/8e44311f33579c6964cf96eb595bef56cae02241))
+*   New publish sub-command ([c0329df5](https://github.com/cobalt-org/cobalt.rs/commit/c0329df56eaaff938cca64f741c194c6772f24ad))
+*   Expose config's site values ([7fea9ddf](https://github.com/cobalt-org/cobalt.rs/commit/7fea9ddf27f069ec6cb3a3157a39c6e0eae10cc8), closes [#216](https://github.com/cobalt-org/cobalt.rs/issues/216))
+* **cli:**
+  * Remove global config flags ([b00aad63](https://github.com/cobalt-org/cobalt.rs/commit/b00aad63ff40f48997b4c9d7f797bbd383a393cf))
+  * Remove source/posts/layouts flags ([70b549da](https://github.com/cobalt-org/cobalt.rs/commit/70b549dac31e444095768166bea37ab0f9f108a1))
+* **config:**
+  *  Change future destination to `_site` ([da586c71](https://github.com/cobalt-org/cobalt.rs/commit/da586c71d1d1df911db2d143fe7b8777740d70ad))
+  *  Remove layouts config setting ([137fb960](https://github.com/cobalt-org/cobalt.rs/commit/137fb960ca970a1b569a477ce1195ca45dc20ec7))
+  *  Find config in parent rather than default ([4e96a1fb](https://github.com/cobalt-org/cobalt.rs/commit/4e96a1fbeee7af20d243cc5930a0a2cc49e240bd))
+* **front:**
+  *  Set `published_date` from filename ([ad69b1fc](https://github.com/cobalt-org/cobalt.rs/commit/ad69b1fcd22a57f6babac8b077c1f6453954144b))
+* **liquid:**  Upgrade to 0.11 ([fd366fb9](https://github.com/cobalt-org/cobalt.rs/commit/fd366fb949aaf43164d8e7011141bf408a1a5c7f))
+  * syntax: Add `arr[0]` and `obj["name"]` indexing (PR #141, fixes #127)
+  * value: Add `nil` value to support foreign data (PR #140)
+
+
+
 <a name="0.7.5"></a>
 ## 0.7.5 (2017-10-22)
 
