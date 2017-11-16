@@ -231,16 +231,16 @@ before_script:
 script:
   - cobalt build
 
-after_success: |
-  [ $TRAVIS_BRANCH = master ] &&
-  [ $TRAVIS_PULL_REQUEST = false ] &&
-  cobalt import &&
-  git config user.name "Cobalt Site Deployer" &&
-  git config user.email "name@example.com" &&
-  git push -fq https://${GH_TOKEN}@github.com/${TRAVIS_REPO_SLUG}.git gh-pages
+deploy:
+  provider: pages
+  skip_cleanup: true
+  github_token: $GH_TOKEN
+  local_dir: build
+  on:
+    branch: master
 ```
 
-For the `GH_TOKEN` you will need to create a personal access token, which can be found [here](https://github.com/settings/tokens), then you will need to use the [travis cli](https://github.com/travis-ci/travis.rb#the-travis-client-) tool to encrypt your personal access token. You can do this like so `travis encrypt GH_TOKEN=... --add env.global`
+For the `GH_TOKEN` you will need to create a personal access token, which can be found [here](https://github.com/settings/tokens), then you will need to use the [travis cli](https://github.com/travis-ci/travis.rb#the-travis-client-) tool to encrypt your personal access token. You can do this like so `travis encrypt GH_TOKEN=... --add env.global`(make sure to include the `public_repo` scope).
 
 ### With GitLab CI
 
