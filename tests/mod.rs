@@ -51,6 +51,8 @@ fn assert_dirs_eq(expected: &Path, actual: &Path) {
             .expect("Comparison error")
             .read_to_string(&mut created)
             .expect("Could not read to string");
+        original = original.trim().replace("\r\n", "\n");
+        created = created.trim().replace("\r\n", "\n");
 
         assert_diff!(&original, &created, " ", 0);
     }
