@@ -340,24 +340,6 @@ impl Document {
         Ok(html.to_owned())
     }
 
-    /// Extracts references iff markdown content.
-    fn extract_markdown_references(&self, excerpt_separator: &str) -> String {
-        let mut trail = String::new();
-
-        if self.front.format == frontmatter::SourceFormat::Markdown &&
-           MARKDOWN_REF.is_match(&self.content) {
-            for mat in MARKDOWN_REF.find_iter(&self.content) {
-                trail.push_str(mat.as_str());
-                trail.push('\n');
-            }
-        }
-        trail +
-        self.content
-            .split(excerpt_separator)
-            .next()
-            .unwrap_or(&self.content)
-    }
-
     /// Renders excerpt and adds it to attributes of the document.
     pub fn render_excerpt(&mut self,
                           context: &mut Context,
@@ -376,10 +358,8 @@ impl Document {
             } else if excerpt_separator.is_empty() {
                 try!(self.render_html("", context, source, syntax_theme))
             } else {
-                try!(self.render_html(&self.extract_markdown_references(excerpt_separator),
-                                      context,
-                                      source,
-                                      syntax_theme))
+                let excerpt = extract_excerpt(&self.content, self.front.format, excerpt_separator);
+                try!(self.render_html(&excerpt, context, source, syntax_theme))
             }
         };
 
@@ -456,6 +436,36 @@ impl Document {
                 Ok((content, ext))
             }
         }
+    }
+}
+
+fn extract_excerpt_raw(content: &str, excerpt_separator: &str) -> String {
+    content
+        .split(excerpt_separator)
+        .next()
+        .unwrap_or(&content)
+        .to_owned()
+}
+
+fn extract_excerpt_markdown(content: &str, excerpt_separator: &str) -> String {
+    let mut trail = String::new();
+
+    if MARKDOWN_REF.is_match(&content) {
+        for mat in MARKDOWN_REF.find_iter(&content) {
+            trail.push_str(mat.as_str());
+            trail.push('\n');
+        }
+    }
+    trail + content.split(excerpt_separator).next().unwrap_or(&content)
+}
+
+fn extract_excerpt(content: &str,
+                   format: frontmatter::SourceFormat,
+                   excerpt_separator: &str)
+                   -> String {
+    match format {
+        frontmatter::SourceFormat::Markdown => extract_excerpt_markdown(content, excerpt_separator),
+        frontmatter::SourceFormat::Raw => extract_excerpt_raw(content, excerpt_separator),
     }
 }
 
