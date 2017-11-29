@@ -15,7 +15,7 @@ dependencies = [
  "itertools 0.7.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "jsonfeed 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "lazy_static 0.2.9 (registry+https://github.com/rust-lang/crates.io-index)",
- "liquid 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "liquid 0.12.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.3.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "notify 4.0.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "pulldown-cmark 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -555,11 +555,11 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "liquid"
-version = "0.11.0"
+version = "0.12.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "chrono 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "itertools 0.6.5 (registry+https://github.com/rust-lang/crates.io-index)",
+ "itertools 0.7.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "lazy_static 0.2.9 (registry+https://github.com/rust-lang/crates.io-index)",
  "regex 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde 1.0.19 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1290,7 +1290,7 @@ dependencies = [
 "checksum libc 0.2.33 (registry+https://github.com/rust-lang/crates.io-index)" = "5ba3df4dcb460b9dfbd070d41c94c19209620c191b0340b929ce748a2bcd42d2"
 "checksum linked-hash-map 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)" = "6d262045c5b87c0861b3f004610afd0e2c851e2908d08b6c870cbb9d5f494ecd"
 "checksum linked-hash-map 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)" = "7860ec297f7008ff7a1e3382d7f7e1dcd69efc94751a2284bafc3d013c2aa939"
-"checksum liquid 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)" = "ccdae6631bed5f3f3b6fd6c08f2264291df277cff7045678dbccf31403641abb"
+"checksum liquid 0.12.0 (registry+https://github.com/rust-lang/crates.io-index)" = "a5ec11cc8ec913b2751b4ba4a61583b87cc890ad2eec5788ddf959636e8d1ab8"
 "checksum log 0.3.8 (registry+https://github.com/rust-lang/crates.io-index)" = "880f77541efa6e5cc74e76910c9884d9859683118839d6a1dc3b11e63512565b"
 "checksum matches 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)" = "100aabe6b8ff4e4a7e32c1c13523379802df0772b82466207ac25b013f193376"
 "checksum memchr 1.0.2 (registry+https://github.com/rust-lang/crates.io-index)" = "148fab2e51b4f1cfc66da2a7c32981d1d3c083a803978268bb11fe4b86925e7a"

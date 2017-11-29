@@ -10,9 +10,9 @@ use jsonfeed;
 use serde_yaml;
 use itertools;
 
-use syntax_highlight::{initialize_codeblock, decorate_markdown};
+use syntax_highlight::decorate_markdown;
 
-use liquid::{Renderable, LiquidOptions, Context, Value, LocalTemplateRepository};
+use liquid::{Renderable, LiquidOptions, Context, Value};
 
 use config;
 use files;
@@ -314,17 +314,10 @@ impl Document {
     fn render_html(&self,
                    content: &str,
                    context: &mut Context,
-                   source: &Path,
+                   parser: &LiquidOptions,
                    syntax_theme: &str)
                    -> Result<String> {
-        let mut options = LiquidOptions::default();
-        options.template_repository = Box::new(LocalTemplateRepository::new(source.to_owned()));
-        let highlight: Box<liquid::Block> = {
-            let syntax_theme = syntax_theme.to_owned();
-            Box::new(move |_, args, tokens, _| initialize_codeblock(args, tokens, &syntax_theme))
-        };
-        options.blocks.insert("highlight".to_string(), highlight);
-        let template = try!(liquid::parse(content, options));
+        let template = try!(liquid::parse(content, parser.clone()));
         let html = try!(template.render(context)).unwrap_or_default();
 
         let html = match self.front.format {
@@ -343,7 +336,7 @@ impl Document {
     /// Renders excerpt and adds it to attributes of the document.
     pub fn render_excerpt(&mut self,
                           context: &mut Context,
-                          source: &Path,
+                          parser: &LiquidOptions,
                           syntax_theme: &str)
                           -> Result<()> {
         let excerpt_html = {
@@ -354,12 +347,12 @@ impl Document {
             let excerpt_separator = &self.front.excerpt_separator;
 
             if let Some(excerpt_str) = excerpt_attr {
-                try!(self.render_html(excerpt_str, context, source, syntax_theme))
+                try!(self.render_html(excerpt_str, context, parser, syntax_theme))
             } else if excerpt_separator.is_empty() {
-                try!(self.render_html("", context, source, syntax_theme))
+                try!(self.render_html("", context, parser, syntax_theme))
             } else {
                 let excerpt = extract_excerpt(&self.content, self.front.format, excerpt_separator);
-                try!(self.render_html(&excerpt, context, source, syntax_theme))
+                try!(self.render_html(&excerpt, context, parser, syntax_theme))
             }
         };
 
@@ -379,12 +372,12 @@ impl Document {
     /// When we say "content" we mean only this document without extended layout.
     pub fn render(&mut self,
                   context: &mut Context,
-                  source: &Path,
+                  parser: &LiquidOptions,
                   layouts_dir: &Path,
                   layouts_cache: &mut HashMap<String, String>,
                   syntax_theme: &str)
                   -> Result<String> {
-        let content_html = try!(self.render_html(&self.content, context, source, syntax_theme));
+        let content_html = try!(self.render_html(&self.content, context, parser, syntax_theme));
         self.attributes
             .insert("content".to_owned(), Value::Str(content_html.clone()));
         context.set_val("content", Value::Str(content_html.clone()));
@@ -404,9 +397,7 @@ impl Document {
                 Entry::Occupied(occupied) => occupied.into_mut(),
             };
 
-            let mut options = LiquidOptions::default();
-            options.template_repository = Box::new(LocalTemplateRepository::new(source.to_owned()));
-            let template = try!(liquid::parse(layout_data_ref, options));
+            let template = try!(liquid::parse(layout_data_ref, parser.to_owned()));
             Ok(try!(template.render(context)).unwrap_or_default())
         } else {
             Ok(content_html)

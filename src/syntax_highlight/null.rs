@@ -71,30 +71,42 @@ impl liquid::Renderable for CodeBlock {
     }
 }
 
-pub fn initialize_codeblock(arguments: &[Token],
-                            tokens: &[Element],
-                            _theme_name: &str)
-                            -> Result<Box<liquid::Renderable>, liquid::Error> {
+#[derive(Clone)]
+pub struct CodeBlockParser {}
 
-    let content = tokens.iter().fold("".to_owned(), |a, b| {
-        match *b {
-            Expression(_, ref text) |
-            Tag(_, ref text) |
-            Raw(ref text) => text,
-        }.to_owned() + &a
-    });
+impl CodeBlockParser {
+    pub fn new(_syntax_theme: String) -> Self {
+        Self {}
+    }
+}
 
-    let lang = match arguments.iter().next() {
-        Some(&Identifier(ref x)) => Some(x.clone()),
-        _ => None,
-    };
+impl liquid::ParseBlock for CodeBlockParser {
+    fn parse(&self,
+             _tag_name: &str,
+             arguments: &[Token],
+             tokens: &[Element],
+             _options: &liquid::LiquidOptions)
+             -> Result<Box<liquid::Renderable>, liquid::Error> {
+        let content = tokens.iter().fold("".to_owned(), |a, b| {
+            match *b {
+                Expression(_, ref text) |
+                Tag(_, ref text) |
+                Raw(ref text) => text,
+            }.to_owned() + &a
+        });
 
-    let content = html_escape(&content);
+        let lang = match arguments.iter().next() {
+            Some(&Identifier(ref x)) => Some(x.clone()),
+            _ => None,
+        };
 
-    Ok(Box::new(CodeBlock {
-                    lang: lang,
-                    code: content,
-                }))
+        let content = html_escape(&content);
+
+        Ok(Box::new(CodeBlock {
+                        lang: lang,
+                        code: content,
+                    }))
+    }
 }
 
 pub type DecoratedParser<'a> = cmark::Parser<'a>;
@@ -130,9 +142,7 @@ mod test {
     fn codeblock_renders_rust() {
         let mut options: LiquidOptions = Default::default();
         options.blocks.insert("codeblock".to_string(),
-                              Box::new(|_, args, tokens, _| {
-                                           initialize_codeblock(args, tokens, "base16-ocean.dark")
-                                       }));
+                              Box::new(CodeBlockParser::new("base16-ocean.dark".to_owned())));
         let template = liquid::parse(&format!("{{% codeblock rust %}}{}{{% endcodeblock %}}",
                                               CODE_BLOCK),
                                      options)
