@@ -317,8 +317,8 @@ impl Document {
                    parser: &LiquidOptions,
                    syntax_theme: &str)
                    -> Result<String> {
-        let template = try!(liquid::parse(content, parser.clone()));
-        let html = try!(template.render(context)).unwrap_or_default();
+        let template = liquid::parse(content, parser.clone())?;
+        let html = template.render(context)?.unwrap_or_default();
 
         let html = match self.front.format {
             frontmatter::SourceFormat::Raw => html,
@@ -347,12 +347,12 @@ impl Document {
             let excerpt_separator = &self.front.excerpt_separator;
 
             if let Some(excerpt_str) = excerpt_attr {
-                try!(self.render_html(excerpt_str, context, parser, syntax_theme))
+                self.render_html(excerpt_str, context, parser, syntax_theme)?
             } else if excerpt_separator.is_empty() {
-                try!(self.render_html("", context, parser, syntax_theme))
+                self.render_html("", context, parser, syntax_theme)?
             } else {
                 let excerpt = extract_excerpt(&self.content, self.front.format, excerpt_separator);
-                try!(self.render_html(&excerpt, context, parser, syntax_theme))
+                self.render_html(&excerpt, context, parser, syntax_theme)?
             }
         };
 
@@ -377,7 +377,7 @@ impl Document {
                   layouts_cache: &mut HashMap<String, String>,
                   syntax_theme: &str)
                   -> Result<String> {
-        let content_html = try!(self.render_html(&self.content, context, parser, syntax_theme));
+        let content_html = self.render_html(&self.content, context, parser, syntax_theme)?;
         self.attributes
             .insert("content".to_owned(), Value::Str(content_html.clone()));
         context.set_val("content", Value::Str(content_html.clone()));
@@ -385,20 +385,20 @@ impl Document {
         if let Some(ref layout) = self.front.layout {
             let layout_data_ref = match layouts_cache.entry(layout.to_owned()) {
                 Entry::Vacant(vacant) => {
-                    let layout_data =
-                        try!(files::read_file(layouts_dir.join(layout)).map_err(|e| {
-                            format!("Layout {} can not be read (defined in {:?}): {}",
-                                    layout,
-                                    self.file_path,
-                                    e)
-                        }));
+                    let layout_data = files::read_file(layouts_dir.join(layout))
+                        .map_err(|e| {
+                                     format!("Layout {} can not be read (defined in {:?}): {}",
+                                             layout,
+                                             self.file_path,
+                                             e)
+                                 })?;
                     vacant.insert(layout_data)
                 }
                 Entry::Occupied(occupied) => occupied.into_mut(),
             };
 
-            let template = try!(liquid::parse(layout_data_ref, parser.to_owned()));
-            Ok(try!(template.render(context)).unwrap_or_default())
+            let template = liquid::parse(layout_data_ref, parser.to_owned())?;
+            Ok(template.render(context)?.unwrap_or_default())
         } else {
             Ok(content_html)
         }
