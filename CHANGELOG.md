@@ -1,3 +1,17 @@
+<a name="0.9.0"></a>
+## 0.9.0 (2017-11-30)
+
+
+#### Features
+
+* **liquid:**  Dedicated _includes dir ([dc4b9cef](https://github.com/cobalt-org/cobalt.rs/commit/dc4b9cefcd10d26bfa7a8cce1ef431dc53eafe29), closes [#328](https://github.com/cobalt-org/cobalt.rs/issues/328), breaks [#](https://github.com/cobalt-org/cobalt.rs/issues/))
+
+#### Breaking Changes
+
+* **liquid:**  Dedicated _includes dir ([dc4b9cef](https://github.com/cobalt-org/cobalt.rs/commit/dc4b9cefcd10d26bfa7a8cce1ef431dc53eafe29), closes [#328](https://github.com/cobalt-org/cobalt.rs/issues/328))
+
+
+
 <a name="0.8.0"></a>
 ## 0.8.0 (2017-11-09)
 
