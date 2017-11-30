@@ -435,20 +435,20 @@ fn extract_excerpt_raw(content: &str, excerpt_separator: &str) -> String {
     content
         .split(excerpt_separator)
         .next()
-        .unwrap_or(&content)
+        .unwrap_or(content)
         .to_owned()
 }
 
 fn extract_excerpt_markdown(content: &str, excerpt_separator: &str) -> String {
     let mut trail = String::new();
 
-    if MARKDOWN_REF.is_match(&content) {
-        for mat in MARKDOWN_REF.find_iter(&content) {
+    if MARKDOWN_REF.is_match(content) {
+        for mat in MARKDOWN_REF.find_iter(content) {
             trail.push_str(mat.as_str());
             trail.push('\n');
         }
     }
-    trail + content.split(excerpt_separator).next().unwrap_or(&content)
+    trail + content.split(excerpt_separator).next().unwrap_or(content)
 }
 
 fn extract_excerpt(content: &str,

@@ -34,7 +34,7 @@ pub fn build(config: &Config) -> Result<()> {
     debug!("Posts directory: {:?}", posts_path);
     debug!("Draft mode enabled: {}", config.include_drafts);
 
-    let parser = template::LiquidParser::with_config(&config)?;
+    let parser = template::LiquidParser::with_config(config)?;
 
     let mut documents = vec![];
 
