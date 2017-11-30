@@ -1,3 +1,4 @@
+#[allow(unused_imports)]
 use std::ascii::AsciiExt;
 
 use std::borrow::Cow::Owned;
