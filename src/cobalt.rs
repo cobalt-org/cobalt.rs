@@ -14,7 +14,7 @@ use document::Document;
 use error::*;
 use files;
 use sass;
-use syntax_highlight;
+use template;
 
 /// The primary build function that transforms a directory into a site
 pub fn build(config: &Config) -> Result<()> {
@@ -34,14 +34,7 @@ pub fn build(config: &Config) -> Result<()> {
     debug!("Posts directory: {:?}", posts_path);
     debug!("Draft mode enabled: {}", config.include_drafts);
 
-    let mut parser = liquid::LiquidOptions::default();
-    parser.template_repository = Box::new(liquid::LocalTemplateRepository::new(source.to_owned()));
-    let highlight: Box<liquid::ParseBlock> = {
-        let syntax_theme = config.syntax_highlight.theme.clone();
-        Box::new(syntax_highlight::CodeBlockParser::new(syntax_theme))
-    };
-    parser.blocks.insert("highlight".to_string(), highlight);
-    let parser = parser;
+    let parser = template::LiquidParser::with_config(&config)?;
 
     let mut documents = vec![];
 

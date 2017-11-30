@@ -104,6 +104,7 @@ mod site;
 mod slug;
 mod datetime;
 mod frontmatter;
+mod template;
 
 pub mod jekyll;
 mod legacy;

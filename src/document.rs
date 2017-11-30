@@ -12,7 +12,7 @@ use itertools;
 
 use syntax_highlight::decorate_markdown;
 
-use liquid::{Renderable, LiquidOptions, Context, Value};
+use liquid::{Renderable, Context, Value};
 
 use config;
 use files;
@@ -20,6 +20,7 @@ use frontmatter;
 use pulldown_cmark as cmark;
 use liquid;
 use legacy::wildwest;
+use template;
 
 lazy_static!{
     static ref FRONT_MATTER_DIVIDE: Regex = Regex::new(r"---\s*\r?\n").unwrap();
@@ -314,10 +315,10 @@ impl Document {
     fn render_html(&self,
                    content: &str,
                    context: &mut Context,
-                   parser: &LiquidOptions,
+                   parser: &template::LiquidParser,
                    syntax_theme: &str)
                    -> Result<String> {
-        let template = liquid::parse(content, parser.clone())?;
+        let template = parser.parse(content)?;
         let html = template.render(context)?.unwrap_or_default();
 
         let html = match self.front.format {
@@ -336,7 +337,7 @@ impl Document {
     /// Renders excerpt and adds it to attributes of the document.
     pub fn render_excerpt(&mut self,
                           context: &mut Context,
-                          parser: &LiquidOptions,
+                          parser: &template::LiquidParser,
                           syntax_theme: &str)
                           -> Result<()> {
         let excerpt_html = {
@@ -372,7 +373,7 @@ impl Document {
     /// When we say "content" we mean only this document without extended layout.
     pub fn render(&mut self,
                   context: &mut Context,
-                  parser: &LiquidOptions,
+                  parser: &template::LiquidParser,
                   layouts_dir: &Path,
                   layouts_cache: &mut HashMap<String, String>,
                   syntax_theme: &str)
@@ -397,7 +398,7 @@ impl Document {
                 Entry::Occupied(occupied) => occupied.into_mut(),
             };
 
-            let template = liquid::parse(layout_data_ref, parser.to_owned())?;
+            let template = parser.parse(layout_data_ref)?;
             Ok(template.render(context)?.unwrap_or_default())
         } else {
             Ok(content_html)
