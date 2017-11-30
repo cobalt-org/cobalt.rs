@@ -16,9 +16,13 @@ pub struct FilesBuilder {
 }
 
 impl FilesBuilder {
-    pub fn new(root_dir: &path::Path) -> Result<FilesBuilder> {
+    pub fn new<R: Into<path::PathBuf>>(root_dir: R) -> Result<FilesBuilder> {
+        Self::new_from_path(root_dir.into())
+    }
+
+    fn new_from_path(root_dir: path::PathBuf) -> Result<FilesBuilder> {
         let builder = FilesBuilder {
-            root_dir: root_dir.to_path_buf(),
+            root_dir: root_dir,
             ignore: Default::default(),
             ignore_hidden: true,
         };
