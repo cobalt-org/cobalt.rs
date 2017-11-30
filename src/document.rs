@@ -10,9 +10,9 @@ use jsonfeed;
 use serde_yaml;
 use itertools;
 
-use syntax_highlight::{initialize_codeblock, decorate_markdown};
+use syntax_highlight::decorate_markdown;
 
-use liquid::{Renderable, LiquidOptions, Context, Value, LocalTemplateRepository};
+use liquid::{Renderable, Context, Value};
 
 use config;
 use files;
@@ -20,6 +20,7 @@ use frontmatter;
 use pulldown_cmark as cmark;
 use liquid;
 use legacy::wildwest;
+use template;
 
 lazy_static!{
     static ref FRONT_MATTER_DIVIDE: Regex = Regex::new(r"---\s*\r?\n").unwrap();
@@ -314,18 +315,11 @@ impl Document {
     fn render_html(&self,
                    content: &str,
                    context: &mut Context,
-                   source: &Path,
+                   parser: &template::LiquidParser,
                    syntax_theme: &str)
                    -> Result<String> {
-        let mut options = LiquidOptions::default();
-        options.template_repository = Box::new(LocalTemplateRepository::new(source.to_owned()));
-        let highlight: Box<liquid::Block> = {
-            let syntax_theme = syntax_theme.to_owned();
-            Box::new(move |_, args, tokens, _| initialize_codeblock(args, tokens, &syntax_theme))
-        };
-        options.blocks.insert("highlight".to_string(), highlight);
-        let template = try!(liquid::parse(content, options));
-        let html = try!(template.render(context)).unwrap_or_default();
+        let template = parser.parse(content)?;
+        let html = template.render(context)?.unwrap_or_default();
 
         let html = match self.front.format {
             frontmatter::SourceFormat::Raw => html,
@@ -340,28 +334,10 @@ impl Document {
         Ok(html.to_owned())
     }
 
-    /// Extracts references iff markdown content.
-    fn extract_markdown_references(&self, excerpt_separator: &str) -> String {
-        let mut trail = String::new();
-
-        if self.front.format == frontmatter::SourceFormat::Markdown &&
-           MARKDOWN_REF.is_match(&self.content) {
-            for mat in MARKDOWN_REF.find_iter(&self.content) {
-                trail.push_str(mat.as_str());
-                trail.push('\n');
-            }
-        }
-        trail +
-        self.content
-            .split(excerpt_separator)
-            .next()
-            .unwrap_or(&self.content)
-    }
-
     /// Renders excerpt and adds it to attributes of the document.
     pub fn render_excerpt(&mut self,
                           context: &mut Context,
-                          source: &Path,
+                          parser: &template::LiquidParser,
                           syntax_theme: &str)
                           -> Result<()> {
         let excerpt_html = {
@@ -372,14 +348,12 @@ impl Document {
             let excerpt_separator = &self.front.excerpt_separator;
 
             if let Some(excerpt_str) = excerpt_attr {
-                try!(self.render_html(excerpt_str, context, source, syntax_theme))
+                self.render_html(excerpt_str, context, parser, syntax_theme)?
             } else if excerpt_separator.is_empty() {
-                try!(self.render_html("", context, source, syntax_theme))
+                self.render_html("", context, parser, syntax_theme)?
             } else {
-                try!(self.render_html(&self.extract_markdown_references(excerpt_separator),
-                                      context,
-                                      source,
-                                      syntax_theme))
+                let excerpt = extract_excerpt(&self.content, self.front.format, excerpt_separator);
+                self.render_html(&excerpt, context, parser, syntax_theme)?
             }
         };
 
@@ -399,12 +373,12 @@ impl Document {
     /// When we say "content" we mean only this document without extended layout.
     pub fn render(&mut self,
                   context: &mut Context,
-                  source: &Path,
+                  parser: &template::LiquidParser,
                   layouts_dir: &Path,
                   layouts_cache: &mut HashMap<String, String>,
                   syntax_theme: &str)
                   -> Result<String> {
-        let content_html = try!(self.render_html(&self.content, context, source, syntax_theme));
+        let content_html = self.render_html(&self.content, context, parser, syntax_theme)?;
         self.attributes
             .insert("content".to_owned(), Value::Str(content_html.clone()));
         context.set_val("content", Value::Str(content_html.clone()));
@@ -412,22 +386,20 @@ impl Document {
         if let Some(ref layout) = self.front.layout {
             let layout_data_ref = match layouts_cache.entry(layout.to_owned()) {
                 Entry::Vacant(vacant) => {
-                    let layout_data =
-                        try!(files::read_file(layouts_dir.join(layout)).map_err(|e| {
-                            format!("Layout {} can not be read (defined in {:?}): {}",
-                                    layout,
-                                    self.file_path,
-                                    e)
-                        }));
+                    let layout_data = files::read_file(layouts_dir.join(layout))
+                        .map_err(|e| {
+                                     format!("Layout {} can not be read (defined in {:?}): {}",
+                                             layout,
+                                             self.file_path,
+                                             e)
+                                 })?;
                     vacant.insert(layout_data)
                 }
                 Entry::Occupied(occupied) => occupied.into_mut(),
             };
 
-            let mut options = LiquidOptions::default();
-            options.template_repository = Box::new(LocalTemplateRepository::new(source.to_owned()));
-            let template = try!(liquid::parse(layout_data_ref, options));
-            Ok(try!(template.render(context)).unwrap_or_default())
+            let template = parser.parse(layout_data_ref)?;
+            Ok(template.render(context)?.unwrap_or_default())
         } else {
             Ok(content_html)
         }
@@ -456,6 +428,36 @@ impl Document {
                 Ok((content, ext))
             }
         }
+    }
+}
+
+fn extract_excerpt_raw(content: &str, excerpt_separator: &str) -> String {
+    content
+        .split(excerpt_separator)
+        .next()
+        .unwrap_or(content)
+        .to_owned()
+}
+
+fn extract_excerpt_markdown(content: &str, excerpt_separator: &str) -> String {
+    let mut trail = String::new();
+
+    if MARKDOWN_REF.is_match(content) {
+        for mat in MARKDOWN_REF.find_iter(content) {
+            trail.push_str(mat.as_str());
+            trail.push('\n');
+        }
+    }
+    trail + content.split(excerpt_separator).next().unwrap_or(content)
+}
+
+fn extract_excerpt(content: &str,
+                   format: frontmatter::SourceFormat,
+                   excerpt_separator: &str)
+                   -> String {
+    match format {
+        frontmatter::SourceFormat::Markdown => extract_excerpt_markdown(content, excerpt_separator),
+        frontmatter::SourceFormat::Raw => extract_excerpt_raw(content, excerpt_separator),
     }
 }
 

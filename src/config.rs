@@ -102,6 +102,7 @@ pub struct AssetsBuilder {
 }
 
 const LAYOUTS_DIR: &'static str = "_layouts";
+const INCLUDES_DIR: &'static str = "_includes";
 
 #[derive(Debug, PartialEq)]
 #[derive(Serialize, Deserialize)]
@@ -123,6 +124,7 @@ pub struct ConfigBuilder {
     pub ignore: Vec<String>,
     pub syntax_highlight: SyntaxHighlight,
     pub layouts_dir: &'static str,
+    pub includes_dir: &'static str,
     pub assets: AssetsBuilder,
     // This is a debug-only field and should be transient rather than persistently set.
     #[serde(skip)]
@@ -148,6 +150,7 @@ impl Default for ConfigBuilder {
             ignore: vec![],
             syntax_highlight: SyntaxHighlight::default(),
             layouts_dir: LAYOUTS_DIR,
+            includes_dir: INCLUDES_DIR,
             assets: AssetsBuilder::default(),
             dump: vec![],
         }
@@ -213,6 +216,7 @@ impl ConfigBuilder {
             ignore,
             syntax_highlight,
             layouts_dir,
+            includes_dir,
             assets,
             dump,
         } = self;
@@ -281,6 +285,7 @@ impl ConfigBuilder {
             template_extensions,
             syntax_highlight,
             layouts_dir,
+            includes_dir,
             assets,
             dump,
         };
@@ -303,6 +308,7 @@ pub struct Config {
     pub ignore: Vec<String>,
     pub syntax_highlight: SyntaxHighlight,
     pub layouts_dir: &'static str,
+    pub includes_dir: &'static str,
     pub assets: AssetsBuilder,
     pub dump: Vec<Dump>,
 }

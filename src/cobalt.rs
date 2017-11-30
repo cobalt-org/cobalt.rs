@@ -14,6 +14,7 @@ use document::Document;
 use error::*;
 use files;
 use sass;
+use template;
 
 /// The primary build function that transforms a directory into a site
 pub fn build(config: &Config) -> Result<()> {
@@ -32,6 +33,8 @@ pub fn build(config: &Config) -> Result<()> {
     debug!("Layouts directory: {:?}", layouts);
     debug!("Posts directory: {:?}", posts_path);
     debug!("Draft mode enabled: {}", config.include_drafts);
+
+    let parser = template::LiquidParser::with_config(config)?;
 
     let mut documents = vec![];
 
@@ -156,10 +159,10 @@ pub fn build(config: &Config) -> Result<()> {
         context.set_val("site",
                         liquid::Value::Object(config.site.attributes.clone()));
 
-        post.render_excerpt(&mut context, source, &config.syntax_highlight.theme)
+        post.render_excerpt(&mut context, &parser, &config.syntax_highlight.theme)
             .chain_err(|| format!("Failed to render excerpt for {:?}", post.file_path))?;
         let post_html = post.render(&mut context,
-                                    source,
+                                    &parser,
                                     &layouts,
                                     &mut layouts_cache,
                                     &config.syntax_highlight.theme)
@@ -209,7 +212,7 @@ pub fn build(config: &Config) -> Result<()> {
                         liquid::Value::Object(config.site.attributes.clone()));
 
         let doc_html = doc.render(&mut context,
-                                  source,
+                                  &parser,
                                   &layouts,
                                   &mut layouts_cache,
                                   &config.syntax_highlight.theme)

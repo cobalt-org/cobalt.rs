@@ -1,3 +1,4 @@
+#[allow(unused_imports)]
 use std::ascii::AsciiExt;
 
 use std::borrow::Cow::Owned;
@@ -77,28 +78,43 @@ impl liquid::Renderable for CodeBlock {
     }
 }
 
-pub fn initialize_codeblock(arguments: &[Token],
-                            tokens: &[Element],
-                            theme_name: &str)
-                            -> Result<Box<liquid::Renderable>, liquid::Error> {
-    let content = tokens.iter().fold("".to_owned(), |a, b| {
-        match *b {
-            Expression(_, ref text) |
-            Tag(_, ref text) |
-            Raw(ref text) => text,
-        }.to_owned() + &a
-    });
+#[derive(Clone)]
+pub struct CodeBlockParser {
+    syntax_theme: String,
+}
 
-    let lang = match arguments.iter().next() {
-        Some(&Identifier(ref x)) => Some(x.clone()),
-        _ => None,
-    };
+impl CodeBlockParser {
+    pub fn new(syntax_theme: String) -> Self {
+        Self { syntax_theme }
+    }
+}
 
-    Ok(Box::new(CodeBlock {
-                    code: content,
-                    lang: lang,
-                    theme: SETUP.theme_set.themes[theme_name].clone(),
-                }))
+impl liquid::ParseBlock for CodeBlockParser {
+    fn parse(&self,
+             _tag_name: &str,
+             arguments: &[Token],
+             tokens: &[Element],
+             _options: &liquid::LiquidOptions)
+             -> Result<Box<liquid::Renderable>, liquid::Error> {
+        let content = tokens.iter().fold("".to_owned(), |a, b| {
+            match *b {
+                Expression(_, ref text) |
+                Tag(_, ref text) |
+                Raw(ref text) => text,
+            }.to_owned() + &a
+        });
+
+        let lang = match arguments.iter().next() {
+            Some(&Identifier(ref x)) => Some(x.clone()),
+            _ => None,
+        };
+
+        Ok(Box::new(CodeBlock {
+                        code: content,
+                        lang: lang,
+                        theme: SETUP.theme_set.themes[&self.syntax_theme].clone(),
+                    }))
+    }
 }
 
 pub struct DecoratedParser<'a> {
@@ -237,11 +253,7 @@ mod test {
         {
             let mut options: LiquidOptions = Default::default();
             options.blocks.insert("codeblock".to_string(),
-                                  Box::new(|_, args, tokens, _| {
-                                               initialize_codeblock(args,
-                                                                    tokens,
-                                                                    "base16-ocean.dark")
-                                           }));
+                                  Box::new(CodeBlockParser::new("base16-ocean.dark".to_owned())));
             let template = liquid::parse(&format!("{{% codeblock rust %}}{}{{% endcodeblock %}}",
                                                   CODE_BLOCK),
                                          options)
