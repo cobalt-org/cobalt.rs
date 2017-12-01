@@ -55,6 +55,7 @@ extern crate env_logger;
 extern crate ghp;
 extern crate hyper;
 extern crate notify;
+extern crate regex;
 extern crate serde_yaml;
 
 #[macro_use]
