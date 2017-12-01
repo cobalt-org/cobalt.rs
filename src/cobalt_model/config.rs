@@ -1,4 +1,4 @@
-use std::default::Default;
+use std::fmt;
 use std::path;
 
 use serde_yaml;
@@ -76,6 +76,14 @@ pub struct PostBuilder {
     pub rss: Option<String>,
     pub jsonfeed: Option<String>,
     pub default: frontmatter::FrontmatterBuilder,
+}
+
+impl PostBuilder {
+    // Ugly hack until I get around to really implementing this
+    pub fn build(mut self) -> Self {
+        self.default = self.default.clone().set_post(true);
+        self
+    }
 }
 
 impl Default for PostBuilder {
@@ -182,8 +190,7 @@ impl ConfigBuilder {
         let mut config = if content.trim().is_empty() {
             ConfigBuilder::default()
         } else {
-            let config: ConfigBuilder = serde_yaml::from_str(&content)?;
-            config
+            serde_yaml::from_str(&content)?
         };
 
         let mut root = path;
@@ -269,6 +276,7 @@ impl ConfigBuilder {
                 posts.slug = Some(posts.dir.clone());
             }
         }
+        let posts = posts.build();
 
         let source = files::cleanup_path(source);
         let destination = files::cleanup_path(destination);
@@ -314,6 +322,14 @@ impl ConfigBuilder {
     }
 }
 
+impl fmt::Display for ConfigBuilder {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let mut converted = serde_yaml::to_string(self).map_err(|_| fmt::Error)?;
+        converted.drain(..4);
+        write!(f, "{}", converted)
+    }
+}
+
 #[derive(Debug, PartialEq)]
 #[derive(Serialize, Deserialize)]
 #[serde(deny_unknown_fields, default)]
@@ -342,7 +358,6 @@ impl Default for Config {
 }
 
 #[test]
-#[ignore]
 fn test_from_file_ok() {
     let result = ConfigBuilder::from_file("tests/fixtures/config/.cobalt.yml").unwrap();
     assert_eq!(result.root,
@@ -350,7 +365,6 @@ fn test_from_file_ok() {
 }
 
 #[test]
-#[ignore]
 fn test_from_file_alternate_name() {
     let result = ConfigBuilder::from_file("tests/fixtures/config/rss.yml").unwrap();
     assert_eq!(result.root,
@@ -358,7 +372,6 @@ fn test_from_file_alternate_name() {
 }
 
 #[test]
-#[ignore]
 fn test_from_file_empty() {
     let result = ConfigBuilder::from_file("tests/fixtures/config/empty.yml").unwrap();
     assert_eq!(result.root,
@@ -366,21 +379,18 @@ fn test_from_file_empty() {
 }
 
 #[test]
-#[ignore]
 fn test_from_file_invalid_syntax() {
     let result = ConfigBuilder::from_file("tests/fixtures/config/invalid_syntax.yml");
     assert!(result.is_err());
 }
 
 #[test]
-#[ignore]
 fn test_from_file_not_found() {
     let result = ConfigBuilder::from_file("tests/fixtures/config/config_does_not_exist.yml");
     assert!(result.is_err());
 }
 
 #[test]
-#[ignore]
 fn test_from_cwd_ok() {
     let result = ConfigBuilder::from_cwd("tests/fixtures/config/child").unwrap();
     assert_eq!(result.root,
@@ -388,7 +398,6 @@ fn test_from_cwd_ok() {
 }
 
 #[test]
-#[ignore]
 fn test_from_cwd_not_found() {
     let result = ConfigBuilder::from_cwd("tests/fixtures").unwrap();
     assert_eq!(result.root, path::Path::new("tests/fixtures").to_path_buf());
@@ -401,7 +410,6 @@ fn test_build_default() {
 }
 
 #[test]
-#[ignore]
 fn test_build_dest() {
     let result = ConfigBuilder::from_file("tests/fixtures/config/.cobalt.yml").unwrap();
     let result = result.build().unwrap();
@@ -412,7 +420,6 @@ fn test_build_dest() {
 }
 
 #[test]
-#[ignore]
 fn test_build_abs_dest() {
     let mut result = ConfigBuilder::from_file("tests/fixtures/config/.cobalt.yml").unwrap();
     result.abs_dest = Some("hello/world".to_owned());

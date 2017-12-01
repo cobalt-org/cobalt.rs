@@ -1,1 +1,64 @@
+---
+source: "./"
+destination: "./"
 include_drafts: true
+default:
+  permalink: ~
+  slug: ~
+  title: ~
+  description: ~
+  categories: ~
+  excerpt_separator: "\n\n"
+  published_date: ~
+  format: ~
+  layout: ~
+  is_draft: false
+  data: {}
+pages:
+  default:
+    permalink: ~
+    slug: ~
+    title: ~
+    description: ~
+    categories: ~
+    excerpt_separator: ~
+    published_date: ~
+    format: ~
+    layout: ~
+    is_draft: ~
+    data: {}
+posts:
+  title: ~
+  slug: ~
+  description: ~
+  dir: posts
+  drafts_dir: _drafts
+  order: Desc
+  rss: ~
+  jsonfeed: ~
+  default:
+    permalink: ~
+    slug: ~
+    title: ~
+    description: ~
+    categories: ~
+    excerpt_separator: ~
+    published_date: ~
+    format: ~
+    layout: ~
+    is_draft: ~
+    data: {}
+site:
+  title: ~
+  description: ~
+  base_url: ~
+  data: ~
+template_extensions:
+  - md
+  - liquid
+ignore: []
+syntax_highlight:
+  theme: "base16-ocean.dark"
+assets:
+  sass:
+    style: Nested

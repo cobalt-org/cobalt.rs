@@ -6,6 +6,7 @@ use cobalt;
 use ghp;
 use hyper;
 use notify;
+use serde_yaml;
 
 error_chain! {
 
@@ -13,13 +14,14 @@ error_chain! {
     }
 
     foreign_links {
-        Cobalt(cobalt::Error);
-        Notify(notify::Error);
         Clap(clap::Error);
+        Cobalt(cobalt::Error);
         Ghp(ghp::Error);
-        Io(io::Error);
         Hyper(hyper::Error);
+        Io(io::Error);
+        Notify(notify::Error);
         Recv(sync::mpsc::RecvError);
+        SerdeYaml(serde_yaml::Error);
     }
 
     errors {

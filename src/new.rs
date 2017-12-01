@@ -11,9 +11,13 @@ use cobalt_model::slug;
 use cobalt_model;
 use legacy_model;
 
-const COBALT_YML: &'static str = "name: cobalt blog
-source: \".\"
-dest: \"./_site\"
+const COBALT_YML: &'static str = "
+site:
+  title: cobalt blog
+  description: Blog Posts Go Here
+  base_url: http://example.com
+posts:
+  rss: rss.xml
 ";
 
 const DEFAULT_LAYOUT: &'static str = "<!DOCTYPE html>
