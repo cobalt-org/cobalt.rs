@@ -25,6 +25,11 @@ pub fn get_config_args() -> Vec<clap::Arg<'static, 'static>> {
          .long("drafts")
          .help("Include drafts.")
          .takes_value(false),
+     clap::Arg::with_name("no-drafts")
+         .long("no-drafts")
+         .help("Ignore drafts.")
+         .conflicts_with("drafts")
+         .takes_value(false),
      clap::Arg::with_name("dump")
          .long("dump")
          .possible_values(&cobalt::Dump::variants())
@@ -48,7 +53,12 @@ pub fn get_config(matches: &clap::ArgMatches) -> Result<cobalt::ConfigBuilder> {
 
     config.abs_dest = matches.value_of("destination").map(str::to_string);
 
-    config.include_drafts = matches.is_present("drafts");
+    if matches.is_present("drafts") {
+        config.include_drafts = true;
+    }
+    if matches.is_present("no-drafts") {
+        config.include_drafts = false;
+    }
 
     if matches.is_present("dump") {
         let mut dump = values_t!(matches, "dump", cobalt::Dump)?;

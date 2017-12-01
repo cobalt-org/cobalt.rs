@@ -127,7 +127,6 @@ pub struct ConfigBuilder {
     pub destination: String,
     #[serde(skip)]
     pub abs_dest: Option<String>,
-    #[serde(skip)]
     pub include_drafts: bool,
     pub default: frontmatter::FrontmatterBuilder,
     pub pages: PageBuilder,
