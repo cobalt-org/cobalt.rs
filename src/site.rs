@@ -154,6 +154,8 @@ fn load_data(data_path: &path::Path) -> Result<liquid::Value> {
 }
 
 fn insert_data_dir(data: &mut liquid::Object, data_root: &path::Path) -> Result<()> {
+    info!("Loading data from {:?}", data_root);
+
     let data_files_builder = files::FilesBuilder::new(data_root)?;
     let data_files = data_files_builder.build()?;
     for full_path in data_files.files() {
@@ -171,8 +173,6 @@ fn insert_data_dir(data: &mut liquid::Object, data_root: &path::Path) -> Result<
         deep_insert(data, rel_path, file_stem, data_fragment)
             .chain_err(|| format!("Merging data into {:?} failed", rel_path))?;
     }
-
-    trace!("Done loading data directory.");
 
     Ok(())
 }

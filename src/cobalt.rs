@@ -248,6 +248,9 @@ pub fn build(config: &Config) -> Result<()> {
 
 // creates a new RSS file with the contents of the site blog
 fn create_rss(path: &str, dest: &Path, config: &Config, posts: &[Document]) -> Result<()> {
+    let rss_path = dest.join(path);
+    info!("Creating RSS file at {}", rss_path.display());
+
     let title = config
         .posts
         .title
@@ -279,19 +282,19 @@ fn create_rss(path: &str, dest: &Path, config: &Config, posts: &[Document]) -> R
     let rss_string = channel.to_string();
     trace!("RSS data: {}", rss_string);
 
-    let rss_path = dest.join(path);
-
     let mut rss_file = File::create(&rss_path)?;
     rss_file
         .write_all(br#"<?xml version="1.0" encoding="UTF-8"?>"#)?;
     rss_file.write_all(&rss_string.into_bytes())?;
     rss_file.write_all(b"\n")?;
 
-    info!("Created RSS file at {}", rss_path.display());
     Ok(())
 }
 // creates a new jsonfeed file with the contents of the site blog
 fn create_jsonfeed(path: &str, dest: &Path, config: &Config, posts: &[Document]) -> Result<()> {
+    let jsonfeed_path = dest.join(path);
+    info!("Creating jsonfeed file at {}", jsonfeed_path.display());
+
     let title = config
         .posts
         .title
@@ -321,10 +324,7 @@ fn create_jsonfeed(path: &str, dest: &Path, config: &Config, posts: &[Document])
     };
 
     let jsonfeed_string = jsonfeed::to_string(&feed).unwrap();
-    let jsonfeed_path = dest.join(path);
-    let mut jsonfeed_file = File::create(&jsonfeed_path)?;
-    jsonfeed_file.write_all(&jsonfeed_string.into_bytes())?;
+    files::write_document_file(jsonfeed_string, jsonfeed_path)?;
 
-    info!("Created jsonfeed file at {}", jsonfeed_path.display());
     Ok(())
 }
