@@ -179,12 +179,13 @@ impl ConfigBuilder {
     fn from_file_internal(path: path::PathBuf) -> Result<ConfigBuilder> {
         let content = files::read_file(&path)?;
 
-        if content.trim().is_empty() {
-            return Ok(ConfigBuilder::default());
-        }
-
-        let config: wildwest::GlobalConfig = serde_yaml::from_str(&content)?;
-        let mut config: ConfigBuilder = config.into();
+        let mut config = if content.trim().is_empty() {
+            ConfigBuilder::default()
+        } else {
+            let config: wildwest::GlobalConfig = serde_yaml::from_str(&content)?;
+            let config: ConfigBuilder = config.into();
+            config
+        };
 
         let mut root = path;
         root.pop(); // Remove filename
@@ -358,7 +359,8 @@ fn test_from_file_alternate_name() {
 #[test]
 fn test_from_file_empty() {
     let result = ConfigBuilder::from_file("tests/fixtures/config/empty.yml").unwrap();
-    assert_eq!(result, ConfigBuilder { ..Default::default() });
+    assert_eq!(result.root,
+               path::Path::new("tests/fixtures/config").to_path_buf());
 }
 
 #[test]
