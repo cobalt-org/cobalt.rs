@@ -344,45 +344,21 @@ impl Default for Config {
 #[test]
 fn test_from_file_ok() {
     let result = ConfigBuilder::from_file("tests/fixtures/config/.cobalt.yml").unwrap();
-    assert_eq!(result,
-               ConfigBuilder {
-                   root: path::Path::new("tests/fixtures/config").to_path_buf(),
-                   destination: "./dest".to_owned(),
-                   posts: PostBuilder {
-                       dir: "_my_posts".to_owned(),
-                       drafts_dir: Some("_drafts".to_owned()),
-                       ..Default::default()
-                   },
-                   ..Default::default()
-               });
+    assert_eq!(result.root,
+               path::Path::new("tests/fixtures/config").to_path_buf());
 }
 
 #[test]
-fn test_from_file_rss() {
+fn test_from_file_alternate_name() {
     let result = ConfigBuilder::from_file("tests/fixtures/config/rss.yml").unwrap();
-    assert_eq!(result,
-               ConfigBuilder {
-                   root: path::Path::new("tests/fixtures/config").to_path_buf(),
-                   destination: "./".to_owned(),
-                   posts: PostBuilder {
-                       drafts_dir: Some("_drafts".to_owned()),
-                       rss: Some("rss.xml".to_owned()),
-                       ..Default::default()
-                   },
-                   site: site::SiteBuilder {
-                       title: Some("My blog!".to_owned()),
-                       description: Some("Blog description".to_owned()),
-                       base_url: Some("http://example.com".to_owned()),
-                       ..Default::default()
-                   },
-                   ..Default::default()
-               });
+    assert_eq!(result.root,
+               path::Path::new("tests/fixtures/config").to_path_buf());
 }
 
 #[test]
 fn test_from_file_empty() {
     let result = ConfigBuilder::from_file("tests/fixtures/config/empty.yml").unwrap();
-    assert_eq!((result), ConfigBuilder { ..Default::default() });
+    assert_eq!(result, ConfigBuilder { ..Default::default() });
 }
 
 #[test]
@@ -400,27 +376,14 @@ fn test_from_file_not_found() {
 #[test]
 fn test_from_cwd_ok() {
     let result = ConfigBuilder::from_cwd("tests/fixtures/config/child").unwrap();
-    assert_eq!(result,
-               ConfigBuilder {
-                   root: path::Path::new("tests/fixtures/config").to_path_buf(),
-                   destination: "./dest".to_owned(),
-                   posts: PostBuilder {
-                       dir: "_my_posts".to_owned(),
-                       drafts_dir: Some("_drafts".to_owned()),
-                       ..Default::default()
-                   },
-                   ..Default::default()
-               });
+    assert_eq!(result.root,
+               path::Path::new("tests/fixtures/config").to_path_buf());
 }
 
 #[test]
 fn test_from_cwd_not_found() {
     let result = ConfigBuilder::from_cwd("tests/fixtures").unwrap();
-    assert_eq!(result,
-               ConfigBuilder {
-                   root: path::Path::new("tests/fixtures").to_path_buf(),
-                   ..Default::default()
-               });
+    assert_eq!(result.root, path::Path::new("tests/fixtures").to_path_buf());
 }
 
 #[test]
@@ -432,23 +395,10 @@ fn test_build_default() {
 fn test_build_dest() {
     let result = ConfigBuilder::from_file("tests/fixtures/config/.cobalt.yml").unwrap();
     let result = result.build().unwrap();
-    assert_eq!(result,
-               Config {
-                   source: path::Path::new("tests/fixtures/config").to_path_buf(),
-                   destination: path::Path::new("tests/fixtures/config/dest").to_path_buf(),
-                   posts: PostBuilder {
-                       slug: Some("_my_posts".to_owned()),
-                       dir: "_my_posts".to_owned(),
-                       drafts_dir: Some("_drafts".to_owned()),
-                       default: frontmatter::FrontmatterBuilder::new()
-                           .set_excerpt_separator("\n\n".to_owned())
-                           .set_draft(false)
-                           .set_post(true),
-                       ..Default::default()
-                   },
-                   ignore: ["/dest".to_owned()].to_vec(),
-                   ..Default::default()
-               });
+    assert_eq!(result.source,
+               path::Path::new("tests/fixtures/config").to_path_buf());
+    assert_eq!(result.destination,
+               path::Path::new("tests/fixtures/config/dest").to_path_buf());
 }
 
 #[test]
@@ -456,23 +406,10 @@ fn test_build_abs_dest() {
     let mut result = ConfigBuilder::from_file("tests/fixtures/config/.cobalt.yml").unwrap();
     result.abs_dest = Some("hello/world".to_owned());
     let result = result.build().unwrap();
-    assert_eq!(result,
-               Config {
-                   source: path::Path::new("tests/fixtures/config").to_path_buf(),
-                   destination: path::Path::new("hello/world").to_path_buf(),
-                   posts: PostBuilder {
-                       slug: Some("_my_posts".to_owned()),
-                       dir: "_my_posts".to_owned(),
-                       drafts_dir: Some("_drafts".to_owned()),
-                       default: frontmatter::FrontmatterBuilder::new()
-                           .set_excerpt_separator("\n\n".to_owned())
-                           .set_draft(false)
-                           .set_post(true),
-                       ..Default::default()
-                   },
-                   ignore: ["/dest".to_owned()].to_vec(),
-                   ..Default::default()
-               });
+    assert_eq!(result.source,
+               path::Path::new("tests/fixtures/config").to_path_buf());
+    assert_eq!(result.destination,
+               path::Path::new("hello/world").to_path_buf());
 }
 
 #[test]
