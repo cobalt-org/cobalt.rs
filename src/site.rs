@@ -15,7 +15,7 @@ const DATA_DIR: &'static str = "_data";
 
 #[derive(Debug, PartialEq, Clone)]
 #[derive(Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
+#[serde(deny_unknown_fields, default)]
 pub struct SiteBuilder {
     pub title: Option<String>,
     pub description: Option<String>,
@@ -44,8 +44,11 @@ impl SiteBuilder {
             description,
             base_url,
             data,
-            data_dir,
+            data_dir: _data_dir,
         } = self;
+        // HACK for serde #1105
+        let data_dir = DATA_DIR;
+
         let base_url = base_url.map(|mut l| {
                                         if l.ends_with('/') {
                                             l.pop();

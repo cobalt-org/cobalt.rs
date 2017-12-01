@@ -13,7 +13,6 @@ use datetime;
 use document::Document;
 use error::*;
 use files;
-use sass;
 use template;
 
 /// The primary build function that transforms a directory into a site
@@ -234,7 +233,7 @@ pub fn build(config: &Config) -> Result<()> {
             !template_extensions.contains(&p.extension().unwrap_or_else(|| OsStr::new("")))
         }) {
             if file_path.extension() == Some(OsStr::new("scss")) {
-                sass::compile_sass(&config.assets.sass, source, dest, file_path)?;
+                config.assets.sass.compile_file(source, dest, file_path)?;
             } else {
                 let rel_src = file_path
                     .strip_prefix(source)

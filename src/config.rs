@@ -45,7 +45,7 @@ impl Default for SortOrder {
 
 #[derive(Debug, PartialEq)]
 #[derive(Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
+#[serde(deny_unknown_fields, default)]
 pub struct SyntaxHighlight {
     pub theme: String,
 }
@@ -58,14 +58,14 @@ impl Default for SyntaxHighlight {
 
 #[derive(Debug, PartialEq, Default)]
 #[derive(Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
+#[serde(deny_unknown_fields, default)]
 pub struct PageBuilder {
     pub default: frontmatter::FrontmatterBuilder,
 }
 
 #[derive(Debug, PartialEq)]
 #[derive(Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
+#[serde(deny_unknown_fields, default)]
 pub struct PostBuilder {
     pub title: Option<String>,
     pub slug: Option<String>,
@@ -96,9 +96,22 @@ impl Default for PostBuilder {
 
 #[derive(Debug, PartialEq, Default)]
 #[derive(Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
+#[serde(deny_unknown_fields, default)]
 pub struct AssetsBuilder {
-    pub sass: sass::SassOptions,
+    pub sass: sass::SassBuilder,
+}
+
+impl AssetsBuilder {
+    pub fn build(self) -> Assets {
+        Assets { sass: self.sass.build() }
+    }
+}
+
+#[derive(Debug, PartialEq, Default)]
+#[derive(Serialize, Deserialize)]
+#[serde(deny_unknown_fields, default)]
+pub struct Assets {
+    pub sass: sass::SassCompiler,
 }
 
 const LAYOUTS_DIR: &'static str = "_layouts";
@@ -123,7 +136,9 @@ pub struct ConfigBuilder {
     pub template_extensions: Vec<String>,
     pub ignore: Vec<String>,
     pub syntax_highlight: SyntaxHighlight,
+    #[serde(skip)]
     pub layouts_dir: &'static str,
+    #[serde(skip)]
     pub includes_dir: &'static str,
     pub assets: AssetsBuilder,
     // This is a debug-only field and should be transient rather than persistently set.
@@ -215,8 +230,8 @@ impl ConfigBuilder {
             template_extensions,
             ignore,
             syntax_highlight,
-            layouts_dir,
-            includes_dir,
+            layouts_dir: _layouts_dir,
+            includes_dir: _includes_dir,
             assets,
             dump,
         } = self;
@@ -272,7 +287,13 @@ impl ConfigBuilder {
             .map(|s| s.into())
             .unwrap_or_else(|| root.join(destination));
 
+        // HACK for serde #1105
+        let layouts_dir = LAYOUTS_DIR;
+        let includes_dir = INCLUDES_DIR;
+
         let site = site.build(&source)?;
+
+        let assets = assets.build();
 
         let config = Config {
             source,
@@ -309,7 +330,7 @@ pub struct Config {
     pub syntax_highlight: SyntaxHighlight,
     pub layouts_dir: &'static str,
     pub includes_dir: &'static str,
-    pub assets: AssetsBuilder,
+    pub assets: Assets,
     pub dump: Vec<Dump>,
 }
 
