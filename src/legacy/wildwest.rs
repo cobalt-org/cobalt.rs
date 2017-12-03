@@ -298,7 +298,7 @@ impl From<GlobalConfig> for config::ConfigBuilder {
         };
 
         let syntax_highlight = config::SyntaxHighlight { theme: syntax_highlight.theme };
-        let sass = sass::SassOptions {
+        let sass = sass::SassBuilder {
             style: match sass.style {
                 SassOutputStyle::Nested => sass::SassOutputStyle::Nested,
                 SassOutputStyle::Expanded => sass::SassOutputStyle::Expanded,

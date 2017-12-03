@@ -2,7 +2,6 @@ use std::collections::HashMap;
 use std::collections::hash_map::Entry;
 use std::path::{Path, PathBuf};
 use std::default::Default;
-use error::Result;
 use chrono::{Datelike, Timelike};
 use regex::Regex;
 use rss;
@@ -15,6 +14,7 @@ use syntax_highlight::decorate_markdown;
 use liquid::{Renderable, Context, Value};
 
 use config;
+use error::*;
 use files;
 use frontmatter;
 use pulldown_cmark as cmark;
@@ -381,9 +381,10 @@ impl Document {
         let content_html = self.render_html(&self.content, context, parser, syntax_theme)?;
         self.attributes
             .insert("content".to_owned(), Value::Str(content_html.clone()));
-        context.set_val("content", Value::Str(content_html.clone()));
 
         if let Some(ref layout) = self.front.layout {
+            context.set_val("content", Value::Str(content_html.clone()));
+
             let layout_data_ref = match layouts_cache.entry(layout.to_owned()) {
                 Entry::Vacant(vacant) => {
                     let layout_data = files::read_file(layouts_dir.join(layout))
@@ -398,8 +399,14 @@ impl Document {
                 Entry::Occupied(occupied) => occupied.into_mut(),
             };
 
-            let template = parser.parse(layout_data_ref)?;
-            Ok(template.render(context)?.unwrap_or_default())
+            let template = parser
+                .parse(layout_data_ref)
+                .chain_err(|| format!("Failed to parse layout {:?}", layout))?;
+            let content_html = template
+                .render(context)
+                .chain_err(|| format!("Failed to render layout {:?}", layout))?
+                .unwrap_or_default();
+            Ok(content_html)
         } else {
             Ok(content_html)
         }

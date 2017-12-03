@@ -28,8 +28,10 @@ impl InMemoryTemplateRepository {
 
     /// Overwrites previous, conflicting snippets
     fn load_from_pathbuf(mut self, root: path::PathBuf) -> Result<Self> {
-        let template_files = files::FilesBuilder::new(&root)?;
-        let template_files = template_files.build()?;
+        debug!("Loading snippets from {:?}", root);
+        let template_files = files::FilesBuilder::new(&root)?
+            .ignore_hidden(false)?
+            .build()?;
         for file_path in template_files.files() {
             let rel_path = file_path
                 .strip_prefix(root.as_path())
@@ -37,6 +39,7 @@ impl InMemoryTemplateRepository {
                 .to_str()
                 .expect("only UTF-8 characters supported in paths")
                 .to_owned();
+            trace!("Loading snippet {:?}", rel_path);
             let content = files::read_file(file_path)?;
             self.templates.insert(rel_path, content);
         }
