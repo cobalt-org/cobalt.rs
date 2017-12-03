@@ -4,13 +4,9 @@ use std::fmt;
 use liquid;
 use serde_yaml;
 
-use super::super::error::*;
-use super::super::config;
-use super::super::datetime;
-use super::super::frontmatter;
-use super::super::document;
-use super::super::sass;
-use super::super::site;
+use error::*;
+use cobalt_model;
+use document;
 
 #[derive(Debug, Eq, PartialEq, Default, Clone)]
 #[derive(Serialize, Deserialize)]
@@ -38,7 +34,7 @@ impl fmt::Display for FrontmatterBuilder {
     }
 }
 
-impl From<FrontmatterBuilder> for frontmatter::FrontmatterBuilder {
+impl From<FrontmatterBuilder> for cobalt_model::FrontmatterBuilder {
     fn from(legacy: FrontmatterBuilder) -> Self {
         // Convert legacy frontmatter into frontmatter (with `custom`)
         // In some cases, we need to remove some values due to processing done by later tools
@@ -48,7 +44,7 @@ impl From<FrontmatterBuilder> for frontmatter::FrontmatterBuilder {
         // - excerpt_separator: internal-only
         // - extends internal-only
         let mut custom_attributes = legacy.0;
-        frontmatter::FrontmatterBuilder::new()
+        cobalt_model::FrontmatterBuilder::new()
             .merge_title(custom_attributes
                              .remove("title")
                              .and_then(|v| v.as_str().map(|s| s.to_owned())))
@@ -72,18 +68,18 @@ impl From<FrontmatterBuilder> for frontmatter::FrontmatterBuilder {
             .merge_layout(custom_attributes
                               .remove("extends")
                               .and_then(|v| v.as_str().map(|s| s.to_owned())))
-            .merge_published_date(custom_attributes
-                                      .remove("date")
-                                      .and_then(|d| d.as_str().and_then(datetime::DateTime::parse)))
+            .merge_published_date(custom_attributes.remove("date").and_then(|d| {
+                d.as_str().and_then(cobalt_model::DateTime::parse)
+            }))
             .merge_custom(custom_attributes)
     }
 }
 
-impl From<frontmatter::FrontmatterBuilder> for FrontmatterBuilder {
-    fn from(internal: frontmatter::FrontmatterBuilder) -> Self {
+impl From<cobalt_model::FrontmatterBuilder> for FrontmatterBuilder {
+    fn from(internal: cobalt_model::FrontmatterBuilder) -> Self {
         let mut legacy = liquid::Object::new();
 
-        let frontmatter::FrontmatterBuilder {
+        let cobalt_model::FrontmatterBuilder {
             permalink,
             slug,
             title,
@@ -245,7 +241,7 @@ impl Default for GlobalConfig {
     }
 }
 
-impl From<GlobalConfig> for config::ConfigBuilder {
+impl From<GlobalConfig> for cobalt_model::ConfigBuilder {
     fn from(legacy: GlobalConfig) -> Self {
         let GlobalConfig {
             source,
@@ -268,15 +264,15 @@ impl From<GlobalConfig> for config::ConfigBuilder {
         } = legacy;
 
         let post_order = match post_order.as_ref() {
-            "asc" | "Asc" => config::SortOrder::Asc,
-            _ => config::SortOrder::Desc,
+            "asc" | "Asc" => cobalt_model::SortOrder::Asc,
+            _ => cobalt_model::SortOrder::Desc,
         };
 
-        let default = frontmatter::FrontmatterBuilder::new()
+        let default = cobalt_model::FrontmatterBuilder::new()
             .set_excerpt_separator(excerpt_separator)
             .set_draft(false)
             .set_post(false);
-        let posts = config::PostBuilder {
+        let posts = cobalt_model::PostBuilder {
             title: None,
             slug: None,
             description: None,
@@ -285,41 +281,41 @@ impl From<GlobalConfig> for config::ConfigBuilder {
             order: post_order,
             rss: rss,
             jsonfeed: jsonfeed,
-            default: frontmatter::FrontmatterBuilder::new()
+            default: cobalt_model::FrontmatterBuilder::new()
                 .set_permalink(post_path.map(convert_permalink))
                 .set_post(true),
         };
 
-        let site = site::SiteBuilder {
+        let site = cobalt_model::SiteBuilder {
             title: name,
             description: description,
             base_url: link,
             ..Default::default()
         };
 
-        let syntax_highlight = config::SyntaxHighlight { theme: syntax_highlight.theme };
-        let sass = sass::SassBuilder {
+        let syntax_highlight = cobalt_model::SyntaxHighlight { theme: syntax_highlight.theme };
+        let sass = cobalt_model::SassBuilder {
             style: match sass.style {
-                SassOutputStyle::Nested => sass::SassOutputStyle::Nested,
-                SassOutputStyle::Expanded => sass::SassOutputStyle::Expanded,
-                SassOutputStyle::Compact => sass::SassOutputStyle::Compact,
-                SassOutputStyle::Compressed => sass::SassOutputStyle::Compressed,
+                SassOutputStyle::Nested => cobalt_model::SassOutputStyle::Nested,
+                SassOutputStyle::Expanded => cobalt_model::SassOutputStyle::Expanded,
+                SassOutputStyle::Compact => cobalt_model::SassOutputStyle::Compact,
+                SassOutputStyle::Compressed => cobalt_model::SassOutputStyle::Compressed,
             },
             ..Default::default()
         };
 
-        config::ConfigBuilder {
+        cobalt_model::ConfigBuilder {
             source: source,
             destination: dest,
             include_drafts: include_drafts,
             default,
-            pages: config::PageBuilder::default(),
+            pages: cobalt_model::PageBuilder::default(),
             posts,
             site: site,
             template_extensions: template_extensions,
             ignore: ignore,
             syntax_highlight: syntax_highlight,
-            assets: config::AssetsBuilder { sass },
+            assets: cobalt_model::AssetsBuilder { sass },
             dump: vec![],
             ..Default::default()
         }

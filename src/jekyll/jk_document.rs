@@ -7,9 +7,8 @@ use liquid;
 use regex;
 use serde_yaml;
 
-use files;
-use frontmatter;
-use datetime;
+use cobalt_model;
+use cobalt_model::files;
 use legacy::wildwest;
 use jekyll::jk_errors::{ErrorKind, Result};
 
@@ -30,7 +29,7 @@ impl From<JkFrontmatterBuilder> for wildwest::FrontmatterBuilder {
     fn from(jk_front: JkFrontmatterBuilder) -> Self {
         // Convert jekyll frontmatter into frontmatter (with `custom`)
         let mut custom_attributes = jk_front.0;
-        let front = frontmatter::FrontmatterBuilder::new()
+        let front = cobalt_model::FrontmatterBuilder::new()
             .merge_slug(custom_attributes
                             .remove("slug")
                             .and_then(|v| v.as_str().map(|s| s.to_owned())))
@@ -53,9 +52,9 @@ impl From<JkFrontmatterBuilder> for wildwest::FrontmatterBuilder {
             .merge_layout(custom_attributes
                               .remove("layout")
                               .and_then(|v| v.as_str().map(|s| s.to_owned())))
-            .merge_published_date(custom_attributes
-                                      .remove("date")
-                                      .and_then(|d| d.as_str().and_then(datetime::DateTime::parse)))
+            .merge_published_date(custom_attributes.remove("date").and_then(|d| {
+                d.as_str().and_then(cobalt_model::DateTime::parse)
+            }))
             .merge_custom(custom_attributes);
         front.into()
     }

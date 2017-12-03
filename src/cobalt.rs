@@ -8,11 +8,11 @@ use rss;
 use jsonfeed::Feed;
 use jsonfeed;
 
-use config::{Config, SortOrder};
-use datetime;
+use cobalt_model::{Config, SortOrder};
+use cobalt_model::files;
+use cobalt_model;
 use document::Document;
 use error::*;
-use files;
 use template;
 
 /// The primary build function that transforms a directory into a site
@@ -97,7 +97,7 @@ pub fn build(config: &Config) -> Result<()> {
     }
 
     // January 1, 1970 0:00:00 UTC, the beginning of time
-    let default_date = datetime::DateTime::default();
+    let default_date = cobalt_model::DateTime::default();
 
     let (mut posts, documents): (Vec<Document>, Vec<Document>) =
         documents.into_iter().partition(|x| x.front.is_post);

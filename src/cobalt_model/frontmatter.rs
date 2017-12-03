@@ -6,8 +6,9 @@ use liquid;
 use regex;
 
 use error::Result;
-use datetime;
-use slug;
+
+use super::datetime;
+use super::slug;
 
 const PATH_ALIAS: &'static str = "/:path/:filename:output_ext";
 lazy_static!{

@@ -2,23 +2,21 @@ use std::collections::HashMap;
 use std::collections::hash_map::Entry;
 use std::path::{Path, PathBuf};
 use std::default::Default;
+
 use chrono::{Datelike, Timelike};
+use itertools;
+use jsonfeed;
+use liquid;
+use liquid::{Renderable, Context, Value};
+use pulldown_cmark as cmark;
 use regex::Regex;
 use rss;
-use jsonfeed;
 use serde_yaml;
-use itertools;
 
-use syntax_highlight::decorate_markdown;
-
-use liquid::{Renderable, Context, Value};
-
-use config;
 use error::*;
-use files;
-use frontmatter;
-use pulldown_cmark as cmark;
-use liquid;
+use cobalt_model::files;
+use cobalt_model;
+use syntax_highlight::decorate_markdown;
 use legacy::wildwest;
 use template;
 
@@ -65,7 +63,7 @@ fn format_path_variable(source_file: &Path) -> String {
     path
 }
 
-fn permalink_attributes(front: &frontmatter::Frontmatter,
+fn permalink_attributes(front: &cobalt_model::Frontmatter,
                         dest_file: &Path)
                         -> HashMap<String, String> {
     let mut attributes = HashMap::new();
@@ -99,7 +97,7 @@ fn permalink_attributes(front: &frontmatter::Frontmatter,
         attributes.insert(":second".to_owned(), format!("{:02}", &date.second()));
     }
 
-    // Allow customizing any of the above with custom frontmatter attributes
+    // Allow customizing any of the above with custom cobalt_model attributes
     // TODO(epage): Place in a `custom` variable.  See #257
     for (key, val) in &front.custom {
         let key = format!(":{}", key);
@@ -157,7 +155,7 @@ fn format_url_as_file_str(permalink: &str) -> PathBuf {
     path_buf
 }
 
-fn document_attributes(front: &frontmatter::Frontmatter,
+fn document_attributes(front: &cobalt_model::Frontmatter,
                        source_file: &str,
                        url_path: &str)
                        -> liquid::Object {
@@ -200,7 +198,7 @@ pub struct Document {
     pub file_path: PathBuf,
     pub content: String,
     pub attributes: liquid::Object,
-    pub front: frontmatter::Frontmatter,
+    pub front: cobalt_model::Frontmatter,
 }
 
 impl Document {
@@ -208,7 +206,7 @@ impl Document {
                file_path: PathBuf,
                content: String,
                attributes: liquid::Object,
-               front: frontmatter::Frontmatter)
+               front: cobalt_model::Frontmatter)
                -> Document {
         Document {
             url_path: url_path,
@@ -221,7 +219,7 @@ impl Document {
 
     pub fn parse(src_path: &Path,
                  rel_path: &Path,
-                 default_front: frontmatter::FrontmatterBuilder)
+                 default_front: cobalt_model::FrontmatterBuilder)
                  -> Result<Document> {
         trace!("Parsing {:?}", rel_path);
         let content = files::read_file(src_path)?;
@@ -232,7 +230,7 @@ impl Document {
                 .map_or(Ok(None), |r| r.map(Some))?
                 .unwrap_or_else(wildwest::FrontmatterBuilder::new);
 
-        let front: frontmatter::FrontmatterBuilder = legacy_front.into();
+        let front: cobalt_model::FrontmatterBuilder = legacy_front.into();
         let front = front.merge_path(rel_path).merge(default_front);
 
         let front = front.build()?;
@@ -322,8 +320,8 @@ impl Document {
         let html = template.render(context)?.unwrap_or_default();
 
         let html = match self.front.format {
-            frontmatter::SourceFormat::Raw => html,
-            frontmatter::SourceFormat::Markdown => {
+            cobalt_model::SourceFormat::Raw => html,
+            cobalt_model::SourceFormat::Markdown => {
                 let mut buf = String::new();
                 let options = cmark::OPTION_ENABLE_FOOTNOTES | cmark::OPTION_ENABLE_TABLES;
                 let parser = cmark::Parser::new_ext(&html, options);
@@ -412,26 +410,26 @@ impl Document {
         }
     }
 
-    pub fn render_dump(&self, dump: config::Dump) -> Result<(String, String)> {
+    pub fn render_dump(&self, dump: cobalt_model::Dump) -> Result<(String, String)> {
         match dump {
-            config::Dump::DocObject => {
+            cobalt_model::Dump::DocObject => {
                 let content = serde_yaml::to_string(&self.attributes)?;
                 Ok((content, "yml".to_owned()))
             }
-            config::Dump::DocTemplate => Ok((self.content.clone(), "liquid".to_owned())),
-            config::Dump::DocLinkObject => {
+            cobalt_model::Dump::DocTemplate => Ok((self.content.clone(), "liquid".to_owned())),
+            cobalt_model::Dump::DocLinkObject => {
                 let perma_attributes = permalink_attributes(&self.front, Path::new("<null>"));
                 let content = serde_yaml::to_string(&perma_attributes)?;
                 Ok((content, "yml".to_owned()))
             }
-            config::Dump::Document => {
-                let frontmatter = serde_yaml::to_string(&self.front)?;
+            cobalt_model::Dump::Document => {
+                let cobalt_model = serde_yaml::to_string(&self.front)?;
                 let content = self.content.clone();
                 let ext = match self.front.format {
-                    frontmatter::SourceFormat::Raw => "liquid",
-                    frontmatter::SourceFormat::Markdown => "md",
+                    cobalt_model::SourceFormat::Raw => "liquid",
+                    cobalt_model::SourceFormat::Markdown => "md",
                 }.to_owned();
-                let content = itertools::join(&[frontmatter, "---".to_owned(), content], "\n");
+                let content = itertools::join(&[cobalt_model, "---".to_owned(), content], "\n");
                 Ok((content, ext))
             }
         }
@@ -459,12 +457,14 @@ fn extract_excerpt_markdown(content: &str, excerpt_separator: &str) -> String {
 }
 
 fn extract_excerpt(content: &str,
-                   format: frontmatter::SourceFormat,
+                   format: cobalt_model::SourceFormat,
                    excerpt_separator: &str)
                    -> String {
     match format {
-        frontmatter::SourceFormat::Markdown => extract_excerpt_markdown(content, excerpt_separator),
-        frontmatter::SourceFormat::Raw => extract_excerpt_raw(content, excerpt_separator),
+        cobalt_model::SourceFormat::Markdown => {
+            extract_excerpt_markdown(content, excerpt_separator)
+        }
+        cobalt_model::SourceFormat::Raw => extract_excerpt_raw(content, excerpt_separator),
     }
 }
 
@@ -475,32 +475,32 @@ mod test {
     #[test]
     fn split_document_empty() {
         let input = "";
-        let (frontmatter, content) = split_document(input).unwrap();
-        assert!(frontmatter.is_none());
+        let (cobalt_model, content) = split_document(input).unwrap();
+        assert!(cobalt_model.is_none());
         assert_eq!(content, "");
     }
 
     #[test]
     fn split_document_no_front_matter() {
         let input = "Body";
-        let (frontmatter, content) = split_document(input).unwrap();
-        assert!(frontmatter.is_none());
+        let (cobalt_model, content) = split_document(input).unwrap();
+        assert!(cobalt_model.is_none());
         assert_eq!(content, "Body");
     }
 
     #[test]
     fn split_document_empty_front_matter() {
         let input = "---\nBody";
-        let (frontmatter, content) = split_document(input).unwrap();
-        assert!(frontmatter.is_none());
+        let (cobalt_model, content) = split_document(input).unwrap();
+        assert!(cobalt_model.is_none());
         assert_eq!(content, "Body");
     }
 
     #[test]
     fn split_document_empty_body() {
-        let input = "frontmatter---\n";
-        let (frontmatter, content) = split_document(input).unwrap();
-        assert_eq!(frontmatter.unwrap(), "frontmatter");
+        let input = "cobalt_model---\n";
+        let (cobalt_model, content) = split_document(input).unwrap();
+        assert_eq!(cobalt_model.unwrap(), "cobalt_model");
         assert_eq!(content, "");
     }
 

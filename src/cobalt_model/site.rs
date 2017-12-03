@@ -9,7 +9,8 @@ use serde_yaml;
 use toml;
 
 use error::*;
-use files;
+
+use super::files;
 
 const DATA_DIR: &'static str = "_data";
 

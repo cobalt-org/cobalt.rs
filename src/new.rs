@@ -5,11 +5,11 @@ use std::io::Write;
 use liquid;
 
 use error::*;
-use config::Config;
-use datetime;
-use files;
+use cobalt_model::Config;
+use cobalt_model::files;
+use cobalt_model::slug;
+use cobalt_model;
 use legacy::wildwest;
-use slug;
 
 const COBALT_YML: &'static str = "name: cobalt blog
 source: \".\"
@@ -154,7 +154,7 @@ pub fn publish_document(file: &path::Path) -> Result<()> {
     let doc = wildwest::DocumentBuilder::parse(&doc)?;
     let wildwest::DocumentBuilder { front, content } = doc;
 
-    let date = datetime::DateTime::now();
+    let date = cobalt_model::DateTime::now();
     let date = date.format();
 
     let mut front = front.object();

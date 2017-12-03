@@ -4,13 +4,14 @@ use std::path;
 use serde_yaml;
 
 use error::*;
-use files;
-use frontmatter;
 use legacy::wildwest;
-use sass;
-use site;
-use slug;
 use syntax_highlight::has_syntax_theme;
+
+use super::files;
+use super::frontmatter;
+use super::sass;
+use super::site;
+use super::slug;
 
 arg_enum! {
     #[derive(Serialize, Deserialize)]

@@ -1,6 +1,7 @@
+use std::convert;
 use std::fmt;
 use std::ops;
-use std::convert;
+
 use chrono;
 use chrono::TimeZone;
 use serde;

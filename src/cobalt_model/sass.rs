@@ -4,7 +4,7 @@ use std::path;
 use sass_rs;
 
 use error::*;
-use files;
+use super::files;
 
 #[derive(Debug, Eq, PartialEq, Hash, Copy, Clone)]
 #[derive(Serialize, Deserialize)]
