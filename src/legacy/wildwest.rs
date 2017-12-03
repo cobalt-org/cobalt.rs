@@ -1,11 +1,13 @@
 use std::default::Default;
 use std::fmt;
+use std::path;
 
 use liquid;
 use serde_yaml;
 
 use error::*;
 use cobalt_model;
+use cobalt_model::files;
 use document;
 
 #[derive(Debug, Eq, PartialEq, Default, Clone)]
@@ -198,6 +200,8 @@ impl Default for SyntaxHighlight {
 #[derive(Serialize, Deserialize)]
 #[serde(deny_unknown_fields, default)]
 pub struct GlobalConfig {
+    #[serde(skip)]
+    pub root: path::PathBuf,
     pub source: String,
     pub dest: String,
     pub drafts: String,
@@ -217,9 +221,55 @@ pub struct GlobalConfig {
     pub sass: SassOptions,
 }
 
+impl GlobalConfig {
+    pub fn from_file<P: Into<path::PathBuf>>(path: P) -> Result<GlobalConfig> {
+        Self::from_file_internal(path.into())
+    }
+
+    fn from_file_internal(path: path::PathBuf) -> Result<GlobalConfig> {
+        let content = files::read_file(&path)?;
+
+        let mut config = if content.trim().is_empty() {
+            GlobalConfig::default()
+        } else {
+            let config: GlobalConfig = serde_yaml::from_str(&content)?;
+            config
+        };
+
+        let mut root = path;
+        root.pop(); // Remove filename
+        config.root = root;
+
+        Ok(config)
+    }
+
+    pub fn from_cwd<P: Into<path::PathBuf>>(cwd: P) -> Result<GlobalConfig> {
+        Self::from_cwd_internal(cwd.into())
+    }
+
+    fn from_cwd_internal(cwd: path::PathBuf) -> Result<GlobalConfig> {
+        let file_path = files::find_project_file(&cwd, ".cobalt.yml");
+        let config = file_path
+            .map(|p| {
+                     info!("Using config file {:?}", &p);
+                     Self::from_file(&p).chain_err(|| format!("Error reading config file {:?}", p))
+                 })
+            .unwrap_or_else(|| {
+                warn!("No .cobalt.yml file found in current directory, using default config.");
+                let config = GlobalConfig {
+                    root: cwd,
+                    ..Default::default()
+                };
+                Ok(config)
+            })?;
+        Ok(config)
+    }
+}
+
 impl Default for GlobalConfig {
     fn default() -> GlobalConfig {
         GlobalConfig {
+            root: Default::default(),
             source: "./".to_owned(),
             dest: "./".to_owned(),
             drafts: "_drafts".to_owned(),
@@ -244,6 +294,7 @@ impl Default for GlobalConfig {
 impl From<GlobalConfig> for cobalt_model::ConfigBuilder {
     fn from(legacy: GlobalConfig) -> Self {
         let GlobalConfig {
+            root,
             source,
             dest,
             drafts,
@@ -305,6 +356,7 @@ impl From<GlobalConfig> for cobalt_model::ConfigBuilder {
         };
 
         cobalt_model::ConfigBuilder {
+            root: root,
             source: source,
             destination: dest,
             include_drafts: include_drafts,
