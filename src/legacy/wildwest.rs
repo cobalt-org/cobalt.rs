@@ -8,7 +8,6 @@ use serde_yaml;
 use error::*;
 use cobalt_model;
 use cobalt_model::files;
-use document;
 
 #[derive(Debug, Eq, PartialEq, Default, Clone)]
 #[derive(Serialize, Deserialize)]
@@ -25,14 +24,6 @@ impl FrontmatterBuilder {
 
     pub fn object(self) -> liquid::Object {
         self.0
-    }
-}
-
-impl fmt::Display for FrontmatterBuilder {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let mut converted = serde_yaml::to_string(self).map_err(|_| fmt::Error)?;
-        converted.drain(..4);
-        write!(f, "{}", converted)
     }
 }
 
@@ -135,30 +126,17 @@ impl From<cobalt_model::FrontmatterBuilder> for FrontmatterBuilder {
     }
 }
 
-#[derive(Debug, Eq, PartialEq, Default, Clone)]
-pub struct DocumentBuilder {
-    pub front: FrontmatterBuilder,
-    pub content: String,
-}
-
-impl DocumentBuilder {
-    pub fn parse(content: &str) -> Result<Self> {
-        let (front, content) = document::split_document(content)?;
-        let front: FrontmatterBuilder = front
-            .map(|s| serde_yaml::from_str(s))
-            .map_or(Ok(None), |r| r.map(Some))?
-            .unwrap_or_else(FrontmatterBuilder::new);
-        let content = content.to_owned();
-        Ok(Self { front, content })
-    }
-}
-
-impl fmt::Display for DocumentBuilder {
+impl fmt::Display for FrontmatterBuilder {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let front = self.front.to_string();
-        write!(f, "{}\n---\n{}", front, self.content)
+        let converted = cobalt_model::Front::to_string(self)
+            .map_err(|_| fmt::Error)?;
+        write!(f, "{}", converted)
     }
 }
+
+impl cobalt_model::Front for FrontmatterBuilder {}
+
+pub type DocumentBuilder = cobalt_model::DocumentBuilder<FrontmatterBuilder>;
 
 #[derive(Debug, Eq, PartialEq, Hash, Copy, Clone)]
 #[derive(Serialize, Deserialize)]

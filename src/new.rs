@@ -118,11 +118,11 @@ pub fn create_new_document(config: &Config, title: &str, file: path::PathBuf) ->
     };
 
     let doc = wildwest::DocumentBuilder::parse(doc)?;
-    let wildwest::DocumentBuilder { front, content } = doc;
+    let (front, content) = doc.parts();
     let mut front = front.object();
     front.insert("title".to_owned(), liquid::Value::str(title));
     let front = wildwest::FrontmatterBuilder::with_object(front);
-    let doc = wildwest::DocumentBuilder { front, content };
+    let doc = wildwest::DocumentBuilder::new(front, content);
     let doc = doc.to_string();
 
     create_file(&file, &doc)?;
@@ -152,7 +152,7 @@ fn create_file_for_path(path: &path::Path, content: &str) -> Result<()> {
 pub fn publish_document(file: &path::Path) -> Result<()> {
     let doc = files::read_file(file)?;
     let doc = wildwest::DocumentBuilder::parse(&doc)?;
-    let wildwest::DocumentBuilder { front, content } = doc;
+    let (front, content) = doc.parts();
 
     let date = cobalt_model::DateTime::now();
     let date = date.format();
@@ -162,7 +162,7 @@ pub fn publish_document(file: &path::Path) -> Result<()> {
     front.insert("date".to_owned(), liquid::Value::Str(date));
 
     let front = wildwest::FrontmatterBuilder::with_object(front);
-    let doc = wildwest::DocumentBuilder { front, content };
+    let doc = wildwest::DocumentBuilder::new(front, content);
     let doc = doc.to_string();
 
     files::write_document_file(doc, file)?;

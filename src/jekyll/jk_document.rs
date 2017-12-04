@@ -68,7 +68,7 @@ fn convert_document(doc: String) -> Result<wildwest::DocumentBuilder> {
     let front: wildwest::FrontmatterBuilder = front.into();
     let content = content.to_owned();
 
-    Ok(wildwest::DocumentBuilder { front, content })
+    Ok(wildwest::DocumentBuilder::new(front, content))
 }
 
 fn convert_document_file(source_file: &path::Path, dest_dir: &path::Path) -> Result<()> {

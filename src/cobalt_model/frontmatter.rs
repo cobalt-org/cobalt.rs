@@ -1,9 +1,12 @@
+use std::fmt;
 use std::path;
 use std::collections::HashMap;
 
 use chrono::Datelike;
 use liquid;
 use regex;
+use serde;
+use serde_yaml;
 
 use error::Result;
 
@@ -28,6 +31,22 @@ pub enum SourceFormat {
 impl Default for SourceFormat {
     fn default() -> SourceFormat {
         SourceFormat::Raw
+    }
+}
+
+// TODO(epage): Remove the serde traits and instead provide an impl based on if serde traits exist
+pub trait Front
+    : Default + fmt::Display + for<'de> serde::Deserialize<'de> + serde::Serialize
+    {
+    fn parse(content: &str) -> Result<Self> {
+        let front: Self = serde_yaml::from_str(content)?;
+        Ok(front)
+    }
+
+    fn to_string(&self) -> Result<String> {
+        let mut converted = serde_yaml::to_string(self)?;
+        converted.drain(..4);
+        Ok(converted)
     }
 }
 
@@ -346,6 +365,15 @@ impl FrontmatterBuilder {
     }
 }
 
+impl fmt::Display for FrontmatterBuilder {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let converted = Front::to_string(self).map_err(|_| fmt::Error)?;
+        write!(f, "{}", converted)
+    }
+}
+
+impl Front for FrontmatterBuilder {}
+
 #[derive(Debug, Eq, PartialEq, Default, Clone)]
 #[derive(Serialize, Deserialize)]
 #[serde(deny_unknown_fields, default)]
@@ -363,6 +391,15 @@ pub struct Frontmatter {
     #[serde(skip)]
     pub is_post: bool,
     pub custom: liquid::Object,
+}
+
+impl Front for Frontmatter {}
+
+impl fmt::Display for Frontmatter {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let converted = Front::to_string(self).map_err(|_| fmt::Error)?;
+        write!(f, "{}", converted)
+    }
 }
 
 /// Shallow merge of `liquid::Object`'s

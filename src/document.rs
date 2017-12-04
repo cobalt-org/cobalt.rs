@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::collections::hash_map::Entry;
-use std::path::{Path, PathBuf};
 use std::default::Default;
+use std::path::{Path, PathBuf};
 
 use chrono::{Datelike, Timelike};
 use itertools;
