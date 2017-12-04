@@ -9,7 +9,7 @@ use serde_yaml;
 
 use cobalt_model;
 use cobalt_model::files;
-use legacy::wildwest;
+use legacy_model;
 use jekyll::jk_errors::{ErrorKind, Result};
 
 lazy_static! {
@@ -25,7 +25,7 @@ impl JkFrontmatterBuilder {
     }
 }
 
-impl From<JkFrontmatterBuilder> for wildwest::FrontmatterBuilder {
+impl From<JkFrontmatterBuilder> for legacy_model::FrontmatterBuilder {
     fn from(jk_front: JkFrontmatterBuilder) -> Self {
         // Convert jekyll frontmatter into frontmatter (with `custom`)
         let mut custom_attributes = jk_front.0;
@@ -60,15 +60,15 @@ impl From<JkFrontmatterBuilder> for wildwest::FrontmatterBuilder {
     }
 }
 
-fn convert_document(doc: String) -> Result<wildwest::DocumentBuilder> {
+fn convert_document(doc: String) -> Result<legacy_model::DocumentBuilder> {
     let (front, content) = split_document(&doc)?;
     let front: JkFrontmatterBuilder = front
         .map(|f| serde_yaml::from_str(f))
         .unwrap_or_else(|| Ok(JkFrontmatterBuilder::default()))?;
-    let front: wildwest::FrontmatterBuilder = front.into();
+    let front: legacy_model::FrontmatterBuilder = front.into();
     let content = content.to_owned();
 
-    Ok(wildwest::DocumentBuilder::new(front, content))
+    Ok(legacy_model::DocumentBuilder::new(front, content))
 }
 
 fn convert_document_file(source_file: &path::Path, dest_dir: &path::Path) -> Result<()> {
@@ -194,7 +194,7 @@ mod test {
     #[test]
     fn frontmatter_empty() {
         let front = JkFrontmatterBuilder::default();
-        let _front: wildwest::FrontmatterBuilder = front.into();
+        let _front: legacy_model::FrontmatterBuilder = front.into();
 
         // TODO(epage): Confirm jekyll defaults overrode cobalt defaults
     }
@@ -211,7 +211,7 @@ categories:
     #[test]
     fn frontmatter_full() {
         let front: JkFrontmatterBuilder = serde_yaml::from_str(FIXTURE_FULL).unwrap();
-        let front: wildwest::FrontmatterBuilder = front.into();
+        let front: legacy_model::FrontmatterBuilder = front.into();
         let front = front.to_string();
         let front: liquid::Object = serde_yaml::from_str(&front).unwrap();
 
@@ -240,7 +240,7 @@ tags:
     #[test]
     fn frontmatter_custom() {
         let front: JkFrontmatterBuilder = serde_yaml::from_str(FIXTURE_CUSTOM).unwrap();
-        let front: wildwest::FrontmatterBuilder = front.into();
+        let front: legacy_model::FrontmatterBuilder = front.into();
         let front = front.to_string();
         let front: liquid::Object = serde_yaml::from_str(&front).unwrap();
 

@@ -74,8 +74,7 @@ fn assert_dirs_eq(expected: &Path, actual: &Path) {
 fn run_test(name: &str) -> Result<(), cobalt::Error> {
     let target = format!("tests/target/{}/", name);
     let target: PathBuf = target.into();
-    let config = cobalt::legacy::wildwest::GlobalConfig::from_cwd(format!("tests/fixtures/{}",
-                                                                          name))?;
+    let config = cobalt::legacy_model::GlobalConfig::from_cwd(format!("tests/fixtures/{}", name))?;
     let mut config: cobalt::ConfigBuilder = config.into();
     let destdir = TempDir::new(name).expect("Tempdir not created");
 

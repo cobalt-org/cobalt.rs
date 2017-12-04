@@ -9,7 +9,7 @@ use cobalt_model::Config;
 use cobalt_model::files;
 use cobalt_model::slug;
 use cobalt_model;
-use legacy::wildwest;
+use legacy_model;
 
 const COBALT_YML: &'static str = "name: cobalt blog
 source: \".\"
@@ -117,12 +117,12 @@ pub fn create_new_document(config: &Config, title: &str, file: path::PathBuf) ->
         ("page", INDEX_MD)
     };
 
-    let doc = wildwest::DocumentBuilder::parse(doc)?;
+    let doc = legacy_model::DocumentBuilder::parse(doc)?;
     let (front, content) = doc.parts();
     let mut front = front.object();
     front.insert("title".to_owned(), liquid::Value::str(title));
-    let front = wildwest::FrontmatterBuilder::with_object(front);
-    let doc = wildwest::DocumentBuilder::new(front, content);
+    let front = legacy_model::FrontmatterBuilder::with_object(front);
+    let doc = legacy_model::DocumentBuilder::new(front, content);
     let doc = doc.to_string();
 
     create_file(&file, &doc)?;
@@ -151,7 +151,7 @@ fn create_file_for_path(path: &path::Path, content: &str) -> Result<()> {
 
 pub fn publish_document(file: &path::Path) -> Result<()> {
     let doc = files::read_file(file)?;
-    let doc = wildwest::DocumentBuilder::parse(&doc)?;
+    let doc = legacy_model::DocumentBuilder::parse(&doc)?;
     let (front, content) = doc.parts();
 
     let date = cobalt_model::DateTime::now();
@@ -161,8 +161,8 @@ pub fn publish_document(file: &path::Path) -> Result<()> {
     front.remove("draft");
     front.insert("date".to_owned(), liquid::Value::Str(date));
 
-    let front = wildwest::FrontmatterBuilder::with_object(front);
-    let doc = wildwest::DocumentBuilder::new(front, content);
+    let front = legacy_model::FrontmatterBuilder::with_object(front);
+    let doc = legacy_model::DocumentBuilder::new(front, content);
     let doc = doc.to_string();
 
     files::write_document_file(doc, file)?;

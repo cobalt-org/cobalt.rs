@@ -44,11 +44,11 @@ pub fn get_config(matches: &clap::ArgMatches) -> Result<cobalt::ConfigBuilder> {
 
     // Fetch config information if available
     let config = if let Some(config_path) = config_path {
-        cobalt::legacy::wildwest::GlobalConfig::from_file(config_path)
+        cobalt::legacy_model::GlobalConfig::from_file(config_path)
             .chain_err(|| format!("Error reading config file {:?}", config_path))?
     } else {
         let cwd = env::current_dir().expect("How does this fail?");
-        cobalt::legacy::wildwest::GlobalConfig::from_cwd(cwd)?
+        cobalt::legacy_model::GlobalConfig::from_cwd(cwd)?
     };
     let mut config: cobalt::ConfigBuilder = config.into();
 
