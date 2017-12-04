@@ -20,31 +20,6 @@ use syntax_highlight::decorate_markdown;
 use legacy::wildwest;
 use template;
 
-lazy_static!{
-    static ref FRONT_MATTER_DIVIDE: Regex = Regex::new(r"---\s*\r?\n").unwrap();
-    static ref MARKDOWN_REF: Regex = Regex::new(r"(?m:^ {0,3}\[[^\]]+\]:.+$)").unwrap();
-}
-
-pub fn split_document(content: &str) -> Result<(Option<&str>, &str)> {
-    if FRONT_MATTER_DIVIDE.is_match(content) {
-        let mut splits = FRONT_MATTER_DIVIDE.splitn(content, 2);
-
-        // above the split are the attributes
-        let front_split = splits.next().unwrap_or("");
-
-        // everything below the split becomes the new content
-        let content_split = splits.next().unwrap_or("");
-
-        if front_split.is_empty() {
-            Ok((None, content_split))
-        } else {
-            Ok((Some(front_split), content_split))
-        }
-    } else {
-        Ok((None, content))
-    }
-}
-
 /// Convert the source file's relative path into a format useful for generating permalinks that
 /// mirror the source directory hierarchy.
 fn format_path_variable(source_file: &Path) -> String {
@@ -223,14 +198,10 @@ impl Document {
                  -> Result<Document> {
         trace!("Parsing {:?}", rel_path);
         let content = files::read_file(src_path)?;
-        let (front, content) = split_document(&content)?;
-        let legacy_front: wildwest::FrontmatterBuilder =
-            front
-                .map(|s| serde_yaml::from_str(s))
-                .map_or(Ok(None), |r| r.map(Some))?
-                .unwrap_or_else(wildwest::FrontmatterBuilder::new);
-
-        let front: cobalt_model::FrontmatterBuilder = legacy_front.into();
+        let builder = wildwest::DocumentBuilder::parse(&content)?;
+        let builder: cobalt_model::DocumentBuilder<cobalt_model::FrontmatterBuilder> = builder
+            .into();
+        let (front, content) = builder.parts();
         let front = front.merge_path(rel_path).merge(default_front);
 
         let front = front.build()?;
@@ -445,6 +416,10 @@ fn extract_excerpt_raw(content: &str, excerpt_separator: &str) -> String {
 }
 
 fn extract_excerpt_markdown(content: &str, excerpt_separator: &str) -> String {
+    lazy_static!{
+       static ref MARKDOWN_REF: Regex = Regex::new(r"(?m:^ {0,3}\[[^\]]+\]:.+$)").unwrap();
+    }
+
     let mut trail = String::new();
 
     if MARKDOWN_REF.is_match(content) {
@@ -471,38 +446,6 @@ fn extract_excerpt(content: &str,
 #[cfg(test)]
 mod test {
     use super::*;
-
-    #[test]
-    fn split_document_empty() {
-        let input = "";
-        let (cobalt_model, content) = split_document(input).unwrap();
-        assert!(cobalt_model.is_none());
-        assert_eq!(content, "");
-    }
-
-    #[test]
-    fn split_document_no_front_matter() {
-        let input = "Body";
-        let (cobalt_model, content) = split_document(input).unwrap();
-        assert!(cobalt_model.is_none());
-        assert_eq!(content, "Body");
-    }
-
-    #[test]
-    fn split_document_empty_front_matter() {
-        let input = "---\nBody";
-        let (cobalt_model, content) = split_document(input).unwrap();
-        assert!(cobalt_model.is_none());
-        assert_eq!(content, "Body");
-    }
-
-    #[test]
-    fn split_document_empty_body() {
-        let input = "cobalt_model---\n";
-        let (cobalt_model, content) = split_document(input).unwrap();
-        assert_eq!(cobalt_model.unwrap(), "cobalt_model");
-        assert_eq!(content, "");
-    }
 
     #[test]
     fn format_path_variable_file() {
