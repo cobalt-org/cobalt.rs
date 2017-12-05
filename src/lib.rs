@@ -100,7 +100,7 @@ mod document;
 mod new;
 mod template;
 
-pub mod jekyll;
+pub mod jekyll_model;
 pub mod legacy_model;
 mod syntax_highlight;
 
