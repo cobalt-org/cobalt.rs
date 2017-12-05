@@ -87,27 +87,21 @@ extern crate serde;
 
 pub use cobalt::build;
 pub use error::Error;
-pub use config::Config;
-pub use config::ConfigBuilder;
-pub use config::Dump;
+pub use cobalt_model::Config;
+pub use cobalt_model::ConfigBuilder;
+pub use cobalt_model::Dump;
 pub use new::{create_new_project, create_new_document, publish_document};
 
 pub mod error;
-pub mod files;
+pub mod cobalt_model;
 
 mod cobalt;
-mod config;
 mod document;
 mod new;
-mod sass;
-mod site;
-mod slug;
-mod datetime;
-mod frontmatter;
 mod template;
 
-pub mod jekyll;
-mod legacy;
+pub mod jekyll_model;
+pub mod legacy_model;
 mod syntax_highlight;
 
 pub use syntax_highlight::{list_syntax_themes, list_syntaxes};

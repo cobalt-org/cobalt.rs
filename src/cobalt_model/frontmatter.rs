@@ -1,13 +1,17 @@
+use std::fmt;
 use std::path;
 use std::collections::HashMap;
 
 use chrono::Datelike;
 use liquid;
 use regex;
+use serde;
+use serde_yaml;
 
 use error::Result;
-use datetime;
-use slug;
+
+use super::datetime;
+use super::slug;
 
 const PATH_ALIAS: &'static str = "/:path/:filename:output_ext";
 lazy_static!{
@@ -30,6 +34,22 @@ impl Default for SourceFormat {
     }
 }
 
+// TODO(epage): Remove the serde traits and instead provide an impl based on if serde traits exist
+pub trait Front
+    : Default + fmt::Display + for<'de> serde::Deserialize<'de> + serde::Serialize
+    {
+    fn parse(content: &str) -> Result<Self> {
+        let front: Self = serde_yaml::from_str(content)?;
+        Ok(front)
+    }
+
+    fn to_string(&self) -> Result<String> {
+        let mut converted = serde_yaml::to_string(self)?;
+        converted.drain(..4);
+        Ok(converted)
+    }
+}
+
 #[derive(Debug, Eq, PartialEq, Default, Clone)]
 #[derive(Serialize, Deserialize)]
 #[serde(deny_unknown_fields, default)]
@@ -48,7 +68,7 @@ pub struct FrontmatterBuilder {
     // point but we need to first define those semantics.
     #[serde(skip)]
     pub is_post: Option<bool>,
-    pub custom: liquid::Object,
+    pub data: liquid::Object,
 }
 
 impl FrontmatterBuilder {
@@ -184,7 +204,7 @@ impl FrontmatterBuilder {
         self.merge(Self::new().set_post(post.into()))
     }
 
-    pub fn merge_custom(self, other_custom: liquid::Object) -> Self {
+    pub fn merge_data(self, other_data: liquid::Object) -> Self {
         let Self {
             permalink,
             slug,
@@ -197,7 +217,7 @@ impl FrontmatterBuilder {
             layout,
             is_draft,
             is_post,
-            custom,
+            data,
         } = self;
         Self {
             permalink: permalink,
@@ -211,7 +231,7 @@ impl FrontmatterBuilder {
             layout: layout,
             is_draft: is_draft,
             is_post: is_post,
-            custom: merge_objects(custom, other_custom),
+            data: merge_objects(data, other_data),
         }
     }
 
@@ -228,7 +248,7 @@ impl FrontmatterBuilder {
             layout,
             is_draft,
             is_post,
-            custom,
+            data,
         } = self;
         let Self {
             permalink: other_permalink,
@@ -242,7 +262,7 @@ impl FrontmatterBuilder {
             layout: other_layout,
             is_draft: other_is_draft,
             is_post: other_is_post,
-            custom: other_custom,
+            data: other_data,
         } = other;
         Self {
             permalink: permalink.or_else(|| other_permalink),
@@ -256,7 +276,7 @@ impl FrontmatterBuilder {
             layout: layout.or_else(|| other_layout),
             is_draft: is_draft.or_else(|| other_is_draft),
             is_post: is_post.or_else(|| other_is_post),
-            custom: merge_objects(custom, other_custom),
+            data: merge_objects(data, other_data),
         }
     }
 
@@ -310,7 +330,7 @@ impl FrontmatterBuilder {
             layout,
             is_draft,
             is_post,
-            custom,
+            data,
         } = self;
 
         let is_post = is_post.unwrap_or(false);
@@ -338,12 +358,21 @@ impl FrontmatterBuilder {
             layout: layout,
             is_draft: is_draft.unwrap_or(false),
             is_post: is_post,
-            custom: custom,
+            data: data,
         };
 
         Ok(fm)
     }
 }
+
+impl fmt::Display for FrontmatterBuilder {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let converted = Front::to_string(self).map_err(|_| fmt::Error)?;
+        write!(f, "{}", converted)
+    }
+}
+
+impl Front for FrontmatterBuilder {}
 
 #[derive(Debug, Eq, PartialEq, Default, Clone)]
 #[derive(Serialize, Deserialize)]
@@ -361,7 +390,16 @@ pub struct Frontmatter {
     pub is_draft: bool,
     #[serde(skip)]
     pub is_post: bool,
-    pub custom: liquid::Object,
+    pub data: liquid::Object,
+}
+
+impl Front for Frontmatter {}
+
+impl fmt::Display for Frontmatter {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let converted = Front::to_string(self).map_err(|_| fmt::Error)?;
+        write!(f, "{}", converted)
+    }
 }
 
 /// Shallow merge of `liquid::Object`'s
@@ -561,7 +599,7 @@ mod test {
             layout: Some("layout a".to_owned()),
             is_draft: Some(true),
             is_post: Some(false),
-            custom: liquid::Object::new(),
+            data: liquid::Object::new(),
         };
         let b = FrontmatterBuilder {
             permalink: Some("permalink b".to_owned()),
@@ -575,7 +613,7 @@ mod test {
             layout: Some("layout b".to_owned()),
             is_draft: Some(true),
             is_post: Some(false),
-            custom: liquid::Object::new(),
+            data: liquid::Object::new(),
         };
 
         let merge_b_into_a = a.clone().merge(b.clone());
@@ -602,7 +640,7 @@ mod test {
             layout: Some("layout a".to_owned()),
             is_draft: Some(true),
             is_post: Some(false),
-            custom: liquid::Object::new(),
+            data: liquid::Object::new(),
         };
 
         let merge_b_into_a = a.clone()

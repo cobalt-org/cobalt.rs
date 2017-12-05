@@ -6,9 +6,9 @@ use std::result;
 
 use liquid;
 
-use config;
 use error::*;
-use files;
+use cobalt_model;
+use cobalt_model::files;
 use syntax_highlight;
 
 #[derive(Clone, Debug, Default)]
@@ -82,7 +82,7 @@ pub struct LiquidParser {
 }
 
 impl LiquidParser {
-    pub fn with_config(config: &config::Config) -> Result<Self> {
+    pub fn with_config(config: &cobalt_model::Config) -> Result<Self> {
         let mut parser = liquid::LiquidOptions::default();
         let repo = InMemoryTemplateRepository::new()
             .load_from_path(config.source.join(&config.includes_dir))?

@@ -6,7 +6,7 @@ use std::sync::mpsc::channel;
 use std::thread;
 
 use clap;
-use cobalt::files;
+use cobalt::cobalt_model::files;
 use hyper;
 use hyper::server::{Server, Request, Response};
 use hyper::uri::RequestUri;

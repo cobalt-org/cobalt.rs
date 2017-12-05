@@ -69,11 +69,11 @@ extern crate log;
 mod args;
 mod build;
 mod error;
+mod jekyll;
 mod new;
 mod serve;
 
-use clap::{Arg, App, SubCommand, AppSettings};
-use cobalt::jekyll;
+use clap::{App, SubCommand, AppSettings};
 use cobalt::{list_syntaxes, list_syntax_themes};
 
 use error::*;
@@ -98,20 +98,7 @@ fn run() -> Result<()> {
         .subcommand(build::import_command_args())
         .subcommand(SubCommand::with_name("list-syntax-themes").about("list available themes"))
         .subcommand(SubCommand::with_name("list-syntaxes").about("list supported syntaxes"))
-        .subcommand(SubCommand::with_name("convert-jekyll")
-                        .about("convert jekyll website to cobalt")
-                        .arg(Arg::with_name("source")
-                                 .long("source")
-                                 .value_name("JEKYLL-FILE-OR-DIR")
-                                 .help("Jekyll posts' directory")
-                                 .required(true)
-                                 .takes_value(true))
-                        .arg(Arg::with_name("destination")
-                                 .long("destination")
-                                 .value_name("DIR")
-                                 .help("Output dir of converted posts")
-                                 .takes_value(true)
-                                 .default_value("./posts")));
+        .subcommand(jekyll::convert_command_args());
 
     let global_matches = app_cli.get_matches();
 
@@ -144,13 +131,7 @@ fn run() -> Result<()> {
             }
             Ok(())
         }
-        "convert-jekyll" => {
-            let source = matches.value_of("source").unwrap().to_string();
-            let dest = matches.value_of("destination").unwrap().to_string();
-            jekyll::jk_document::convert_from_jk(std::path::Path::new(&source),
-                                                 std::path::Path::new(&dest))
-                .chain_err(|| "Jekyll conversion failed.")
-        }
+        "convert-jekyll" => jekyll::convert_command(matches),
         _ => {
             bail!(global_matches.usage());
         }
