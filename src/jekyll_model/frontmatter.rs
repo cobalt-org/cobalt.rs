@@ -36,34 +36,34 @@ impl fmt::Display for FrontmatterBuilder {
 impl From<FrontmatterBuilder> for cobalt_model::FrontmatterBuilder {
     fn from(jk_front: FrontmatterBuilder) -> Self {
         // Convert jekyll frontmatter into frontmatter (with `custom`)
-        let mut custom_attributes = jk_front.0;
+        let mut unprocessed_attributes = jk_front.0;
         cobalt_model::FrontmatterBuilder::new()
-            .merge_slug(custom_attributes
+            .merge_slug(unprocessed_attributes
                             .remove("slug")
                             .and_then(|v| v.as_str().map(|s| s.to_owned())))
-            .merge_title(custom_attributes
+            .merge_title(unprocessed_attributes
                              .remove("title")
                              .and_then(|v| v.as_str().map(|s| s.to_owned())))
-            .merge_description(custom_attributes
+            .merge_description(unprocessed_attributes
                                    .remove("excerpt")
                                    .and_then(|v| v.as_str().map(|s| s.to_owned())))
-            .merge_categories(custom_attributes.remove("categories").and_then(|v| {
+            .merge_categories(unprocessed_attributes.remove("categories").and_then(|v| {
                 v.as_array()
                     .map(|v| v.iter().map(|v| v.to_string()).collect())
             }))
-            .merge_permalink(custom_attributes
+            .merge_permalink(unprocessed_attributes
                                  .remove("permalink")
                                  .and_then(|v| v.as_str().map(|s| s.to_owned())))
-            .merge_draft(custom_attributes
+            .merge_draft(unprocessed_attributes
                              .remove("published")
                              .and_then(|v| v.as_bool().map(|b| !b)))
-            .merge_layout(custom_attributes
+            .merge_layout(unprocessed_attributes
                               .remove("layout")
                               .and_then(|v| v.as_str().map(|s| s.to_owned())))
-            .merge_published_date(custom_attributes.remove("date").and_then(|d| {
+            .merge_published_date(unprocessed_attributes.remove("date").and_then(|d| {
                 d.as_str().and_then(cobalt_model::DateTime::parse)
             }))
-            .merge_custom(custom_attributes)
+            .merge_data(unprocessed_attributes)
     }
 }
 

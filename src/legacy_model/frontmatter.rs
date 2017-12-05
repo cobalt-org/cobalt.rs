@@ -24,42 +24,44 @@ impl FrontmatterBuilder {
 
 impl From<FrontmatterBuilder> for cobalt_model::FrontmatterBuilder {
     fn from(legacy: FrontmatterBuilder) -> Self {
-        // Convert legacy frontmatter into frontmatter (with `custom`)
+        // Convert legacy frontmatter into frontmatter (with `data`)
         // In some cases, we need to remove some values due to processing done by later tools
         // Otherwise, we can remove the converted values because most frontmatter content gets
         // populated into the final attributes (see `document_attributes`).
         // Exceptions
         // - excerpt_separator: internal-only
         // - extends internal-only
-        let mut custom_attributes = legacy.0;
+        let mut unprocessed_attributes = legacy.0;
         cobalt_model::FrontmatterBuilder::new()
-            .merge_title(custom_attributes
+            .merge_title(unprocessed_attributes
                              .remove("title")
                              .and_then(|v| v.as_str().map(|s| s.to_owned())))
-            .merge_description(custom_attributes
+            .merge_description(unprocessed_attributes
                                    .remove("description")
                                    .and_then(|v| v.as_str().map(|s| s.to_owned())))
-            .merge_categories(custom_attributes.remove("categories").and_then(|v| {
+            .merge_categories(unprocessed_attributes.remove("categories").and_then(|v| {
                 v.as_array()
                     .map(|v| v.iter().map(|v| v.to_string()).collect())
             }))
-            .merge_slug(custom_attributes
+            .merge_slug(unprocessed_attributes
                             .remove("slug")
                             .and_then(|v| v.as_str().map(|s| s.to_owned())))
-            .merge_permalink(custom_attributes
+            .merge_permalink(unprocessed_attributes
                                  .remove("path")
                                  .and_then(|v| v.as_str().map(|s| convert_permalink(s.to_owned()))))
-            .merge_draft(custom_attributes.remove("draft").and_then(|v| v.as_bool()))
-            .merge_excerpt_separator(custom_attributes
+            .merge_draft(unprocessed_attributes
+                             .remove("draft")
+                             .and_then(|v| v.as_bool()))
+            .merge_excerpt_separator(unprocessed_attributes
                                          .remove("excerpt_separator")
                                          .and_then(|v| v.as_str().map(|s| s.to_owned())))
-            .merge_layout(custom_attributes
+            .merge_layout(unprocessed_attributes
                               .remove("extends")
                               .and_then(|v| v.as_str().map(|s| s.to_owned())))
-            .merge_published_date(custom_attributes.remove("date").and_then(|d| {
+            .merge_published_date(unprocessed_attributes.remove("date").and_then(|d| {
                 d.as_str().and_then(cobalt_model::DateTime::parse)
             }))
-            .merge_custom(custom_attributes)
+            .merge_data(unprocessed_attributes)
     }
 }
 
@@ -79,7 +81,7 @@ impl From<cobalt_model::FrontmatterBuilder> for FrontmatterBuilder {
             layout,
             is_draft,
             is_post: _is_post,
-            custom,
+            data,
         } = internal;
         if let Some(path) = permalink {
             legacy.insert("path".to_owned(), liquid::Value::Str(path));
@@ -113,7 +115,7 @@ impl From<cobalt_model::FrontmatterBuilder> for FrontmatterBuilder {
         if let Some(draft) = is_draft {
             legacy.insert("draft".to_owned(), liquid::Value::Bool(draft));
         }
-        for (key, value) in custom {
+        for (key, value) in data {
             legacy.insert(key, value);
         }
 

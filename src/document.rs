@@ -73,8 +73,8 @@ fn permalink_attributes(front: &cobalt_model::Frontmatter,
     }
 
     // Allow customizing any of the above with custom cobalt_model attributes
-    // TODO(epage): Place in a `custom` variable.  See #257
-    for (key, val) in &front.custom {
+    // TODO(epage): Place in a `data` variable.  See #257
+    for (key, val) in &front.data {
         let key = format!(":{}", key);
         // HACK: We really should support nested types
         let val = val.to_string();
@@ -160,7 +160,7 @@ fn document_attributes(front: &cobalt_model::Frontmatter,
     attributes.insert("is_post".to_owned(), liquid::Value::Bool(front.is_post));
 
     // TODO(epage): Place in a `custom` variable.  See #257
-    for (key, val) in &front.custom {
+    for (key, val) in &front.data {
         attributes.insert(key.clone(), val.clone());
     }
 
