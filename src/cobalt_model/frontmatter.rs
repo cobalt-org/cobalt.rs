@@ -58,6 +58,7 @@ pub struct FrontmatterBuilder {
     pub slug: Option<String>,
     pub title: Option<String>,
     pub description: Option<String>,
+    pub excerpt: Option<String>,
     pub categories: Option<Vec<String>>,
     pub excerpt_separator: Option<String>,
     pub published_date: Option<datetime::DateTime>,
@@ -100,6 +101,13 @@ impl FrontmatterBuilder {
     pub fn set_description<S: Into<Option<String>>>(self, description: S) -> Self {
         Self {
             description: description.into(),
+            ..self
+        }
+    }
+
+    pub fn set_excerpt<S: Into<Option<String>>>(self, excerpt: S) -> Self {
+        Self {
+            excerpt: excerpt.into(),
             ..self
         }
     }
@@ -172,6 +180,10 @@ impl FrontmatterBuilder {
         self.merge(Self::new().set_description(description.into()))
     }
 
+    pub fn merge_excerpt<S: Into<Option<String>>>(self, excerpt: S) -> Self {
+        self.merge(Self::new().set_excerpt(excerpt.into()))
+    }
+
     pub fn merge_categories<S: Into<Option<Vec<String>>>>(self, categories: S) -> Self {
         self.merge(Self::new().set_categories(categories.into()))
     }
@@ -210,6 +222,7 @@ impl FrontmatterBuilder {
             slug,
             title,
             description,
+            excerpt,
             categories,
             excerpt_separator,
             published_date,
@@ -224,6 +237,7 @@ impl FrontmatterBuilder {
             slug: slug,
             title: title,
             description: description,
+            excerpt: excerpt,
             categories: categories,
             excerpt_separator: excerpt_separator,
             published_date: published_date,
@@ -241,6 +255,7 @@ impl FrontmatterBuilder {
             slug,
             title,
             description,
+            excerpt,
             categories,
             excerpt_separator,
             published_date,
@@ -255,6 +270,7 @@ impl FrontmatterBuilder {
             slug: other_slug,
             title: other_title,
             description: other_description,
+            excerpt: other_excerpt,
             categories: other_categories,
             excerpt_separator: other_excerpt_separator,
             published_date: other_published_date,
@@ -269,6 +285,7 @@ impl FrontmatterBuilder {
             slug: slug.or_else(|| other_slug),
             title: title.or_else(|| other_title),
             description: description.or_else(|| other_description),
+            excerpt: excerpt.or_else(|| other_excerpt),
             categories: categories.or_else(|| other_categories),
             excerpt_separator: excerpt_separator.or_else(|| other_excerpt_separator),
             published_date: published_date.or_else(|| other_published_date),
@@ -323,6 +340,7 @@ impl FrontmatterBuilder {
             slug,
             title,
             description,
+            excerpt,
             categories,
             excerpt_separator,
             published_date,
@@ -351,6 +369,7 @@ impl FrontmatterBuilder {
             slug: slug.ok_or_else(|| "No slug")?,
             title: title.ok_or_else(|| "No title")?,
             description: description,
+            excerpt: excerpt,
             categories: categories.unwrap_or_else(|| vec![]),
             excerpt_separator: excerpt_separator.unwrap_or_else(|| "\n\n".to_owned()),
             published_date: published_date,
@@ -382,6 +401,7 @@ pub struct Frontmatter {
     pub slug: String,
     pub title: String,
     pub description: Option<String>,
+    pub excerpt: Option<String>,
     pub categories: Vec<String>,
     pub excerpt_separator: String,
     pub published_date: Option<datetime::DateTime>,
@@ -592,6 +612,7 @@ mod test {
             slug: Some("slug a".to_owned()),
             title: Some("title a".to_owned()),
             description: Some("description a".to_owned()),
+            excerpt: Some("excerpt a".to_owned()),
             categories: Some(vec!["a".to_owned(), "b".to_owned()]),
             excerpt_separator: Some("excerpt_separator a".to_owned()),
             published_date: Some(datetime::DateTime::default()),
@@ -606,6 +627,7 @@ mod test {
             slug: Some("slug b".to_owned()),
             title: Some("title b".to_owned()),
             description: Some("description b".to_owned()),
+            excerpt: Some("excerpt b".to_owned()),
             categories: Some(vec!["b".to_owned(), "a".to_owned()]),
             excerpt_separator: Some("excerpt_separator b".to_owned()),
             published_date: Some(datetime::DateTime::default()),
@@ -633,6 +655,7 @@ mod test {
             slug: Some("slug a".to_owned()),
             title: Some("title a".to_owned()),
             description: Some("description a".to_owned()),
+            excerpt: Some("excerpt a".to_owned()),
             categories: Some(vec!["a".to_owned(), "b".to_owned()]),
             excerpt_separator: Some("excerpt_separator a".to_owned()),
             published_date: None,
@@ -648,6 +671,7 @@ mod test {
             .merge_slug("slug b".to_owned())
             .merge_title("title b".to_owned())
             .merge_description("description b".to_owned())
+            .merge_excerpt("excerpt b".to_owned())
             .merge_categories(vec!["a".to_owned(), "b".to_owned()])
             .merge_excerpt_separator("excerpt_separator b".to_owned())
             .merge_format(SourceFormat::Raw)
@@ -661,6 +685,7 @@ mod test {
             .merge_slug(None)
             .merge_title(None)
             .merge_description(None)
+            .merge_excerpt(None)
             .merge_categories(None)
             .merge_excerpt_separator(None)
             .merge_format(None)
@@ -674,6 +699,7 @@ mod test {
             .merge_slug("slug a".to_owned())
             .merge_title("title a".to_owned())
             .merge_description("description a".to_owned())
+            .merge_excerpt("excerpt a".to_owned())
             .merge_categories(vec!["a".to_owned(), "b".to_owned()])
             .merge_excerpt_separator("excerpt_separator a".to_owned())
             .merge_format(SourceFormat::Markdown)

@@ -310,9 +310,7 @@ impl Document {
                           syntax_theme: &str)
                           -> Result<()> {
         let excerpt_html = {
-            let excerpt_attr = self.attributes
-                .get("excerpt")
-                .and_then(|attr| attr.as_str());
+            let excerpt_attr = self.front.excerpt.as_ref();
 
             let excerpt_separator = &self.front.excerpt_separator;
 
