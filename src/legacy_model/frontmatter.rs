@@ -39,6 +39,9 @@ impl From<FrontmatterBuilder> for cobalt_model::FrontmatterBuilder {
             .merge_description(unprocessed_attributes
                                    .remove("description")
                                    .and_then(|v| v.as_str().map(|s| s.to_owned())))
+            .merge_excerpt(unprocessed_attributes
+                               .remove("excerpt")
+                               .and_then(|v| v.as_str().map(|s| s.to_owned())))
             .merge_categories(unprocessed_attributes.remove("categories").and_then(|v| {
                 v.as_array()
                     .map(|v| v.iter().map(|v| v.to_string()).collect())
@@ -74,6 +77,7 @@ impl From<cobalt_model::FrontmatterBuilder> for FrontmatterBuilder {
             slug,
             title,
             description,
+            excerpt,
             categories,
             excerpt_separator,
             published_date,
@@ -94,6 +98,9 @@ impl From<cobalt_model::FrontmatterBuilder> for FrontmatterBuilder {
         }
         if let Some(description) = description {
             legacy.insert("description".to_owned(), liquid::Value::Str(description));
+        }
+        if let Some(excerpt) = excerpt {
+            legacy.insert("excerpt".to_owned(), liquid::Value::Str(excerpt));
         }
         if let Some(categories) = categories {
             legacy.insert("categories".to_owned(),

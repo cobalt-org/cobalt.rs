@@ -157,9 +157,16 @@ pub fn build(config: &Config) -> Result<()> {
         context.set_val("posts", liquid::Value::Array(simple_posts_data.clone()));
         context.set_val("site",
                         liquid::Value::Object(config.site.attributes.clone()));
-
         post.render_excerpt(&mut context, &parser, &config.syntax_highlight.theme)
             .chain_err(|| format!("Failed to render excerpt for {:?}", post.file_path))?;
+
+        // Yes, this is terrible for performance but we need a new `get_render_context` to get an
+        // updated `excerpt`.  liquid#95 allow us to improve this.
+        let mut context = post.get_render_context();
+        // TODO(epage): Switch `posts` to `parent` which is an object see #323
+        context.set_val("posts", liquid::Value::Array(simple_posts_data.clone()));
+        context.set_val("site",
+                        liquid::Value::Object(config.site.attributes.clone()));
         let post_html = post.render(&mut context,
                                     &parser,
                                     &layouts,
