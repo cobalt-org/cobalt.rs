@@ -1,4 +1,4 @@
-extends: default.txt
+layout: default.txt
 ---
 This is my Index page!
 

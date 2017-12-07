@@ -1,8 +1,8 @@
-extends: posts.liquid
+layout: posts.liquid
 
 title:  Custom paths are available to non-posts
-date:   22 Aug 2014 15:36:20 +0100
-path:  test/hello.html
+published_date:   22 Aug 2014 15:36:20 +0100
+permalink:  /test/hello.html
 ---
 # {{ title }}
 

@@ -1,7 +1,7 @@
-extends: posts.exe
+layout: posts.exe
 
 title:   My first Blogpost
-date:    24 Aug 2014 15:36:20 +0100
+published_date:    24 Aug 2014 15:36:20 +0100
 ---
 # {{ title }}
 

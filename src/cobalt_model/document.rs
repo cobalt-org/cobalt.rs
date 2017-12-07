@@ -34,7 +34,12 @@ impl<T: frontmatter::Front> DocumentBuilder<T> {
 
 impl<T: frontmatter::Front> fmt::Display for DocumentBuilder<T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}\n---\n{}", self.front, self.content)
+        let front = self.front.to_string().map_err(|_| fmt::Error)?;
+        if front.trim().is_empty() {
+            write!(f, "{}", self.content)
+        } else {
+            write!(f, "{}\n---\n{}", front, self.content)
+        }
     }
 }
 
@@ -96,5 +101,12 @@ mod test {
         let (cobalt_model, content) = split_document(input).unwrap();
         assert_eq!(cobalt_model.unwrap(), "cobalt_model");
         assert_eq!(content, "");
+    }
+
+    #[test]
+    fn document_format_empty_has_no_front() {
+        let doc = DocumentBuilder::<frontmatter::FrontmatterBuilder>::default();
+        let doc = doc.to_string();
+        assert_eq!(doc, "");
     }
 }

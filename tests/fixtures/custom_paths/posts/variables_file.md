@@ -1,10 +1,11 @@
-extends: posts.liquid
+layout: posts.liquid
 
 title:  Variables file name
-thing: hello
-thang: world
-date:  3 May 2015 09:05:20 +0100
-path:  test/:thing/:thang.abc
+published_date:  3 May 2015 09:05:20 +0100
+permalink: /test/:thing/:thang.abc
+data:
+  thing: hello
+  thang: world
 ---
 # {{ title }}
 

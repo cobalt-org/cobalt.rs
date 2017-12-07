@@ -46,6 +46,9 @@ pub trait Front
     fn to_string(&self) -> Result<String> {
         let mut converted = serde_yaml::to_string(self)?;
         converted.drain(..4);
+        if converted == "{}" {
+            converted.clear();
+        }
         Ok(converted)
     }
 }
@@ -54,21 +57,33 @@ pub trait Front
 #[derive(Serialize, Deserialize)]
 #[serde(deny_unknown_fields, default)]
 pub struct FrontmatterBuilder {
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub permalink: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub slug: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub title: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub excerpt: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub categories: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub excerpt_separator: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub published_date: Option<datetime::DateTime>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub format: Option<SourceFormat>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub layout: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub is_draft: Option<bool>,
     // Controlled by where the file is found.  We might allow control over the type at a later
     // point but we need to first define those semantics.
     #[serde(skip)]
     pub is_post: Option<bool>,
+    #[serde(skip_serializing_if = "liquid::Object::is_empty")]
     pub data: liquid::Object,
 }
 

@@ -2,14 +2,11 @@ use std::path;
 use std::fs;
 use std::io::Write;
 
-use liquid;
-
 use error::*;
 use cobalt_model::Config;
 use cobalt_model::files;
 use cobalt_model::slug;
 use cobalt_model;
-use legacy_model;
 
 const COBALT_YML: &'static str = "
 site:
@@ -50,10 +47,10 @@ const POST_LAYOUT: &'static str = "<div>
 </div>
 ";
 
-const POST_MD: &'static str = "extends: default.liquid
+const POST_MD: &'static str = "layout: default.liquid
 
 title: First Post
-draft: true
+is_draft: true
 ---
 
 # This is our first Post!
@@ -61,7 +58,7 @@ draft: true
 Welcome to the first post ever on cobalt.rs!
 ";
 
-const INDEX_MD: &'static str = "extends: default.liquid
+const INDEX_MD: &'static str = "layout: default.liquid
 ---
 ## Blog!
 
@@ -121,12 +118,11 @@ pub fn create_new_document(config: &Config, title: &str, file: path::PathBuf) ->
         ("page", INDEX_MD)
     };
 
-    let doc = legacy_model::DocumentBuilder::parse(doc)?;
+    let doc = cobalt_model::DocumentBuilder::<cobalt_model::FrontmatterBuilder>::parse(doc)?;
     let (front, content) = doc.parts();
-    let mut front = front.object();
-    front.insert("title".to_owned(), liquid::Value::str(title));
-    let front = legacy_model::FrontmatterBuilder::with_object(front);
-    let doc = legacy_model::DocumentBuilder::new(front, content);
+    let front = front.set_title(title.to_owned());
+    let doc = cobalt_model::DocumentBuilder::<cobalt_model::FrontmatterBuilder>::new(front,
+                                                                                     content);
     let doc = doc.to_string();
 
     create_file(&file, &doc)?;
@@ -155,18 +151,14 @@ fn create_file_for_path(path: &path::Path, content: &str) -> Result<()> {
 
 pub fn publish_document(file: &path::Path) -> Result<()> {
     let doc = files::read_file(file)?;
-    let doc = legacy_model::DocumentBuilder::parse(&doc)?;
+    let doc = cobalt_model::DocumentBuilder::<cobalt_model::FrontmatterBuilder>::parse(&doc)?;
     let (front, content) = doc.parts();
 
     let date = cobalt_model::DateTime::now();
-    let date = date.format();
+    let front = front.set_draft(false).set_published_date(date);
 
-    let mut front = front.object();
-    front.remove("draft");
-    front.insert("date".to_owned(), liquid::Value::Str(date));
-
-    let front = legacy_model::FrontmatterBuilder::with_object(front);
-    let doc = legacy_model::DocumentBuilder::new(front, content);
+    let doc = cobalt_model::DocumentBuilder::<cobalt_model::FrontmatterBuilder>::new(front,
+                                                                                     content);
     let doc = doc.to_string();
 
     files::write_document_file(doc, file)?;

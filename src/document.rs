@@ -17,7 +17,6 @@ use error::*;
 use cobalt_model::files;
 use cobalt_model;
 use syntax_highlight::decorate_markdown;
-use legacy_model;
 use template;
 
 /// Convert the source file's relative path into a format useful for generating permalinks that
@@ -198,9 +197,8 @@ impl Document {
                  -> Result<Document> {
         trace!("Parsing {:?}", rel_path);
         let content = files::read_file(src_path)?;
-        let builder = legacy_model::DocumentBuilder::parse(&content)?;
-        let builder: cobalt_model::DocumentBuilder<cobalt_model::FrontmatterBuilder> = builder
-            .into();
+        let builder =
+            cobalt_model::DocumentBuilder::<cobalt_model::FrontmatterBuilder>::parse(&content)?;
         let (front, content) = builder.parts();
         let front = front.merge_path(rel_path).merge(default_front);
 

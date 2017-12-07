@@ -1,8 +1,8 @@
-extends: posts.liquid
+layout: posts.liquid
 
 title:   My first Blogpost
 description: It's my first blog post
-date:    01 Jan 2016 21:00:00 +0100
+published_date:    01 Jan 2016 21:00:00 +0100
 categories: [ foo, bar ]
 ---
 # {{ title }}

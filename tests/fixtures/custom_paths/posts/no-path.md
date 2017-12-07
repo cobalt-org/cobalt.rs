@@ -1,7 +1,7 @@
-extends: posts.liquid
+layout: posts.liquid
 
 title:  Custom paths
-date:  3 May 2015 07:05:20 +0100
+published_date:  3 May 2015 07:05:20 +0100
 ---
 # {{ title }}
 

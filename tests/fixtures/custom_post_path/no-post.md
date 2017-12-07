@@ -1,4 +1,4 @@
-extends: posts.liquid
+layout: posts.liquid
 
 title:  Not a post
 ---

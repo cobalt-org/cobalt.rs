@@ -68,68 +68,6 @@ impl From<FrontmatterBuilder> for cobalt_model::FrontmatterBuilder {
     }
 }
 
-impl From<cobalt_model::FrontmatterBuilder> for FrontmatterBuilder {
-    fn from(internal: cobalt_model::FrontmatterBuilder) -> Self {
-        let mut legacy = liquid::Object::new();
-
-        let cobalt_model::FrontmatterBuilder {
-            permalink,
-            slug,
-            title,
-            description,
-            excerpt,
-            categories,
-            excerpt_separator,
-            published_date,
-            format: _format,
-            layout,
-            is_draft,
-            is_post: _is_post,
-            data,
-        } = internal;
-        if let Some(path) = permalink {
-            legacy.insert("path".to_owned(), liquid::Value::Str(path));
-        }
-        if let Some(slug) = slug {
-            legacy.insert("slug".to_owned(), liquid::Value::Str(slug));
-        }
-        if let Some(title) = title {
-            legacy.insert("title".to_owned(), liquid::Value::Str(title));
-        }
-        if let Some(description) = description {
-            legacy.insert("description".to_owned(), liquid::Value::Str(description));
-        }
-        if let Some(excerpt) = excerpt {
-            legacy.insert("excerpt".to_owned(), liquid::Value::Str(excerpt));
-        }
-        if let Some(categories) = categories {
-            legacy.insert("categories".to_owned(),
-                          liquid::Value::Array(categories
-                                                   .into_iter()
-                                                   .map(liquid::Value::Str)
-                                                   .collect()));
-        }
-        if let Some(excerpt_separator) = excerpt_separator {
-            legacy.insert("excerpt_separator".to_owned(),
-                          liquid::Value::Str(excerpt_separator));
-        }
-        if let Some(date) = published_date {
-            legacy.insert("date".to_owned(), liquid::Value::Str(date.format()));
-        }
-        if let Some(extends) = layout {
-            legacy.insert("extends".to_owned(), liquid::Value::Str(extends));
-        }
-        if let Some(draft) = is_draft {
-            legacy.insert("draft".to_owned(), liquid::Value::Bool(draft));
-        }
-        for (key, value) in data {
-            legacy.insert(key, value);
-        }
-
-        FrontmatterBuilder(legacy)
-    }
-}
-
 impl fmt::Display for FrontmatterBuilder {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let converted = cobalt_model::Front::to_string(self)

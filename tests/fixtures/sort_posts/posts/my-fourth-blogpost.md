@@ -1,7 +1,7 @@
-extends: posts.liquid
+layout: posts.liquid
 
 title:   My fourth Blogpost
-date:    29 May 2016 23:00:00 +0100
+published_date:    29 May 2016 23:00:00 +0100
 ---
 # {{ title }}
 
