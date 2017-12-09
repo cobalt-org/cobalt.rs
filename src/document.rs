@@ -15,6 +15,7 @@ use serde_yaml;
 
 use error::*;
 use cobalt_model::files;
+use cobalt_model::slug;
 use cobalt_model;
 use syntax_highlight::decorate_markdown;
 use template;
@@ -49,16 +50,15 @@ fn permalink_attributes(front: &cobalt_model::Frontmatter,
         attributes.insert(":filename".to_owned(), filename.to_owned());
     }
 
+    attributes.insert(":output_ext".to_owned(), ".html".to_owned());
+
     // TODO(epage): Add `collection` (the collection's slug), see #257
     // or `parent.slug`, see #323
 
     attributes.insert(":slug".to_owned(), front.slug.clone());
 
-    // TODO(epage): slugify categories?  See #257
     attributes.insert(":categories".to_owned(),
-                      itertools::join(front.categories.iter(), "/"));
-
-    attributes.insert(":output_ext".to_owned(), ".html".to_owned());
+                      itertools::join(front.categories.iter().map(|c| slug::slugify(c)), "/"));
 
     if let Some(ref date) = front.published_date {
         attributes.insert(":year".to_owned(), date.year().to_string());
@@ -72,9 +72,8 @@ fn permalink_attributes(front: &cobalt_model::Frontmatter,
     }
 
     // Allow customizing any of the above with custom cobalt_model attributes
-    // TODO(epage): Place in a `data` variable.  See #257
     for (key, val) in &front.data {
-        let key = format!(":{}", key);
+        let key = format!(":data.{}", key);
         // HACK: We really should support nested types
         let val = val.to_string();
         attributes.insert(key, val);

@@ -3,6 +3,9 @@ use std::fmt;
 use liquid;
 
 use cobalt_model;
+use super::Permalink;
+use super::Part;
+use super::VARIABLES;
 
 #[derive(Debug, Eq, PartialEq, Default, Clone)]
 #[derive(Serialize, Deserialize)]
@@ -51,7 +54,7 @@ impl From<FrontmatterBuilder> for cobalt_model::FrontmatterBuilder {
                             .and_then(|v| v.as_str().map(|s| s.to_owned())))
             .merge_permalink(unprocessed_attributes
                                  .remove("path")
-                                 .and_then(|v| v.as_str().map(|s| convert_permalink(s.to_owned()))))
+                                 .and_then(|v| v.as_str().and_then(convert_permalink)))
             .merge_draft(unprocessed_attributes
                              .remove("draft")
                              .and_then(|v| v.as_bool()))
@@ -78,13 +81,25 @@ impl fmt::Display for FrontmatterBuilder {
 
 impl cobalt_model::Front for FrontmatterBuilder {}
 
-fn convert_permalink(mut perma: String) -> String {
-    if perma.starts_with('/') {
-        perma
+fn migrate_variable(var: String) -> Part {
+    let native_variable = {
+        let name: &str = &var;
+        VARIABLES.contains(&name)
+    };
+    if native_variable {
+        Part::Variable(var)
     } else {
-        perma.insert(0, '/');
-        perma
+        let mut scoped = "data.".to_owned();
+        scoped.push_str(&var);
+        Part::Variable(scoped)
     }
+}
+
+fn convert_permalink(perma: &str) -> Option<String> {
+    let perma = Permalink::parse(perma);
+    let perma = perma.resolve(&migrate_variable);
+    let perma = perma.to_string();
+    Some(perma)
 }
 
 #[cfg(test)]
@@ -93,16 +108,16 @@ mod tests {
 
     #[test]
     fn convert_permalink_empty() {
-        assert_eq!(convert_permalink("".into()), "/");
+        assert_eq!(convert_permalink("".into()), Some("/".to_owned()));
     }
 
     #[test]
     fn convert_permalink_abs() {
-        assert_eq!(convert_permalink("/root".into()), "/root");
+        assert_eq!(convert_permalink("/root".into()), Some("/root".to_owned()));
     }
 
     #[test]
     fn convert_permalink_rel() {
-        assert_eq!(convert_permalink("rel".into()), "/rel");
+        assert_eq!(convert_permalink("rel".into()), Some("/rel".to_owned()));
     }
 }

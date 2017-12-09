@@ -2,7 +2,7 @@ layout: posts.liquid
 
 title:  Variables
 published_date:  3 May 2015 08:05:20 +0100
-permalink: /test/:thing/
+permalink: /test/:data.thing/
 data:
   thing: hello
 ---
