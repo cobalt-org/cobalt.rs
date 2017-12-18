@@ -41,15 +41,13 @@ fn format_path_variable(source_file: &Path) -> String {
 fn permalink_attributes(front: &cobalt_model::Frontmatter, dest_file: &Path) -> liquid::Object {
     let mut attributes = liquid::Object::new();
 
-    attributes.insert("path".to_owned(),
+    attributes.insert("parent".to_owned(),
                       Value::Str(format_path_variable(dest_file)));
 
-    let filename = dest_file.file_stem().and_then(|s| s.to_str());
-    if let Some(filename) = filename {
-        attributes.insert("filename".to_owned(), Value::str(filename));
-    }
+    let filename = dest_file.file_stem().and_then(|s| s.to_str()).unwrap_or("");
+    attributes.insert("name".to_owned(), Value::str(filename));
 
-    attributes.insert("output_ext".to_owned(), Value::str(".html"));
+    attributes.insert("ext".to_owned(), Value::str(".html"));
 
     // TODO(epage): Add `collection` (the collection's slug), see #257
     // or `parent.slug`, see #323

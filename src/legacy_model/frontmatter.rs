@@ -86,6 +86,12 @@ fn migrate_variable(var: String) -> Part {
         let name: &str = &var;
         VARIABLES.contains(&name)
     };
+    let var = match var.as_str() {
+        "path" => "parent".to_owned(),
+        "filename" => "name".to_owned(),
+        "output_ext" => "ext".to_owned(),
+        x => x.to_owned(),
+    };
     let variable = if native_variable {
         format!("{{{{ {} }}}}", var)
     } else {
@@ -109,7 +115,7 @@ mod tests {
     #[test]
     fn migrate_variable_known() {
         let fixture = "path".to_owned();
-        let expected = Part::Constant("{{ path }}".to_owned());
+        let expected = Part::Constant("{{ parent }}".to_owned());
         let actual = migrate_variable(fixture);
         assert_eq!(actual, expected);
     }
@@ -140,7 +146,7 @@ mod tests {
     #[test]
     fn convert_permalink_known_variable() {
         assert_eq!(convert_permalink("hello/:path/world/:i_day/"),
-                   "/hello/{{ path }}/world/{{ i_day }}/".to_owned());
+                   "/hello/{{ parent }}/world/{{ i_day }}/".to_owned());
     }
 
     #[test]
