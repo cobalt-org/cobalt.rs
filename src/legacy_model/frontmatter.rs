@@ -54,7 +54,7 @@ impl From<FrontmatterBuilder> for cobalt_model::FrontmatterBuilder {
                             .and_then(|v| v.as_str().map(|s| s.to_owned())))
             .merge_permalink(unprocessed_attributes
                                  .remove("path")
-                                 .and_then(|v| v.as_str().and_then(convert_permalink)))
+                                 .and_then(|v| v.as_str().map(convert_permalink)))
             .merge_draft(unprocessed_attributes
                              .remove("draft")
                              .and_then(|v| v.as_bool()))
@@ -86,20 +86,20 @@ fn migrate_variable(var: String) -> Part {
         let name: &str = &var;
         VARIABLES.contains(&name)
     };
-    if native_variable {
-        Part::Variable(var)
+    let variable = if native_variable {
+        format!("{{{{ {} }}}}", var)
     } else {
-        let mut scoped = "data.".to_owned();
-        scoped.push_str(&var);
-        Part::Variable(scoped)
-    }
+        format!("{{{{ data.{} }}}}", var)
+    };
+
+    Part::Constant(variable)
 }
 
-fn convert_permalink(perma: &str) -> Option<String> {
+fn convert_permalink(perma: &str) -> String {
     let perma = Permalink::parse(perma);
     let perma = perma.resolve(&migrate_variable);
     let perma = perma.to_string();
-    Some(perma)
+    perma
 }
 
 #[cfg(test)]
@@ -107,17 +107,45 @@ mod tests {
     use super::*;
 
     #[test]
+    fn migrate_variable_known() {
+        let fixture = "path".to_owned();
+        let expected = Part::Constant("{{ path }}".to_owned());
+        let actual = migrate_variable(fixture);
+        assert_eq!(actual, expected);
+    }
+
+    #[test]
+    fn migrate_variable_unknown() {
+        let fixture = "gobbly/gook".to_owned();
+        let expected = Part::Constant("{{ data.gobbly/gook }}".to_owned());
+        let actual = migrate_variable(fixture);
+        assert_eq!(actual, expected);
+    }
+
+    #[test]
     fn convert_permalink_empty() {
-        assert_eq!(convert_permalink("".into()), Some("/".to_owned()));
+        assert_eq!(convert_permalink(""), "/".to_owned());
     }
 
     #[test]
     fn convert_permalink_abs() {
-        assert_eq!(convert_permalink("/root".into()), Some("/root".to_owned()));
+        assert_eq!(convert_permalink("/root"), "/root".to_owned());
     }
 
     #[test]
     fn convert_permalink_rel() {
-        assert_eq!(convert_permalink("rel".into()), Some("/rel".to_owned()));
+        assert_eq!(convert_permalink("rel"), "/rel".to_owned());
+    }
+
+    #[test]
+    fn convert_permalink_known_variable() {
+        assert_eq!(convert_permalink("hello/:path/world/:i_day/"),
+                   "/hello/{{ path }}/world/{{ i_day }}/".to_owned());
+    }
+
+    #[test]
+    fn convert_permalink_unknown_variable() {
+        assert_eq!(convert_permalink("hello/:party/world/:i_day/"),
+                   "/hello/{{ data.party/world/ }}{{ i_day }}/".to_owned());
     }
 }

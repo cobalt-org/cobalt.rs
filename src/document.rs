@@ -38,61 +38,64 @@ fn format_path_variable(source_file: &Path) -> String {
     path
 }
 
-fn permalink_attributes(front: &cobalt_model::Frontmatter,
-                        dest_file: &Path)
-                        -> HashMap<String, String> {
-    let mut attributes = HashMap::new();
+fn permalink_attributes(front: &cobalt_model::Frontmatter, dest_file: &Path) -> liquid::Object {
+    let mut attributes = liquid::Object::new();
 
-    attributes.insert(":path".to_owned(), format_path_variable(dest_file));
+    attributes.insert("path".to_owned(),
+                      Value::Str(format_path_variable(dest_file)));
 
     let filename = dest_file.file_stem().and_then(|s| s.to_str());
     if let Some(filename) = filename {
-        attributes.insert(":filename".to_owned(), filename.to_owned());
+        attributes.insert("filename".to_owned(), Value::str(filename));
     }
 
-    attributes.insert(":output_ext".to_owned(), ".html".to_owned());
+    attributes.insert("output_ext".to_owned(), Value::str(".html"));
 
     // TODO(epage): Add `collection` (the collection's slug), see #257
     // or `parent.slug`, see #323
 
-    attributes.insert(":slug".to_owned(), front.slug.clone());
+    attributes.insert("slug".to_owned(), Value::str(&front.slug));
 
-    attributes.insert(":categories".to_owned(),
-                      itertools::join(front.categories.iter().map(|c| slug::slugify(c)), "/"));
+    attributes.insert("categories".to_owned(),
+                      Value::Str(itertools::join(front
+                                                     .categories
+                                                     .iter()
+                                                     .map(|c| slug::slugify(c)),
+                                                 "/")));
 
     if let Some(ref date) = front.published_date {
-        attributes.insert(":year".to_owned(), date.year().to_string());
-        attributes.insert(":month".to_owned(), format!("{:02}", &date.month()));
-        attributes.insert(":i_month".to_owned(), date.month().to_string());
-        attributes.insert(":day".to_owned(), format!("{:02}", &date.day()));
-        attributes.insert(":i_day".to_owned(), date.day().to_string());
-        attributes.insert(":hour".to_owned(), format!("{:02}", &date.hour()));
-        attributes.insert(":minute".to_owned(), format!("{:02}", &date.minute()));
-        attributes.insert(":second".to_owned(), format!("{:02}", &date.second()));
+        attributes.insert("year".to_owned(), Value::Str(date.year().to_string()));
+        attributes.insert("month".to_owned(),
+                          Value::Str(format!("{:02}", &date.month())));
+        attributes.insert("i_month".to_owned(), Value::Str(date.month().to_string()));
+        attributes.insert("day".to_owned(), Value::Str(format!("{:02}", &date.day())));
+        attributes.insert("i_day".to_owned(), Value::Str(date.day().to_string()));
+        attributes.insert("hour".to_owned(),
+                          Value::Str(format!("{:02}", &date.hour())));
+        attributes.insert("minute".to_owned(),
+                          Value::Str(format!("{:02}", &date.minute())));
+        attributes.insert("second".to_owned(),
+                          Value::Str(format!("{:02}", &date.second())));
     }
 
-    // Allow customizing any of the above with custom cobalt_model attributes
-    for (key, val) in &front.data {
-        let key = format!(":data.{}", key);
-        // HACK: We really should support nested types
-        let val = val.to_string();
-        attributes.insert(key, val);
-    }
+    attributes.insert("data".to_owned(), Value::Object(front.data.clone()));
 
     attributes
 }
 
-fn explode_permalink<S: Into<String>>(permalink: S, attributes: HashMap<String, String>) -> String {
-    explode_permalink_string(permalink.into(), attributes)
+fn explode_permalink<S: AsRef<str>>(permalink: S, attributes: &liquid::Object) -> Result<String> {
+    explode_permalink_string(permalink.as_ref(), attributes)
 }
 
-fn explode_permalink_string(permalink: String, attributes: HashMap<String, String>) -> String {
-    // TODO(epage): Switch to liquid templating
-    let mut p = permalink;
-
-    for (key, val) in attributes {
-        p = p.replace(&key, &val);
+fn explode_permalink_string(permalink: &str, attributes: &liquid::Object) -> Result<String> {
+    lazy_static!{
+       static ref PERMALINK_PARSER: liquid::Parser = liquid::Parser::new();
     }
+    let p = PERMALINK_PARSER.parse(permalink)?;
+    let mut p = p.render(attributes)?;
+
+    // Handle the user doing windows-style
+    p = p.replace("\\", "/");
 
     // Handle cases where substutions were blank
     p = p.replace("//", "/");
@@ -101,7 +104,7 @@ fn explode_permalink_string(permalink: String, attributes: HashMap<String, Strin
         p.remove(0);
     }
 
-    p
+    Ok(p)
 }
 
 fn format_url_as_file<S: AsRef<str>>(permalink: S) -> PathBuf {
@@ -203,10 +206,11 @@ impl Document {
 
         let front = front.build()?;
 
-        let perma_attributes = permalink_attributes(&front, rel_path);
         let (file_path, url_path) = {
-            let permalink = front.permalink.as_ref();
-            let url_path = explode_permalink(permalink, perma_attributes);
+            let perma_attributes = permalink_attributes(&front, rel_path);
+            let url_path =
+                explode_permalink(&front.permalink, &perma_attributes)
+                    .chain_err(|| format!("Failed to create permalink `{}`", front.permalink))?;
             let file_path = format_url_as_file(&url_path);
             (file_path, url_path)
         };
@@ -455,22 +459,22 @@ mod test {
 
     #[test]
     fn explode_permalink_relative() {
-        let attributes = HashMap::new();
-        let actual = explode_permalink("relative/path", attributes);
+        let attributes = liquid::Object::new();
+        let actual = explode_permalink("relative/path", &attributes).unwrap();
         assert_eq!(actual, "relative/path");
     }
 
     #[test]
     fn explode_permalink_absolute() {
-        let attributes = HashMap::new();
-        let actual = explode_permalink("/abs/path", attributes);
+        let attributes = liquid::Object::new();
+        let actual = explode_permalink("/abs/path", &attributes).unwrap();
         assert_eq!(actual, "abs/path");
     }
 
     #[test]
     fn explode_permalink_blank_substitution() {
-        let attributes = HashMap::new();
-        let actual = explode_permalink("//path/middle//end", attributes);
+        let attributes = liquid::Object::new();
+        let actual = explode_permalink("//path/middle//end", &attributes).unwrap();
         assert_eq!(actual, "path/middle/end");
     }
 
