@@ -6,11 +6,11 @@ use serde_yaml;
 use error::*;
 use syntax_highlight::has_syntax_theme;
 
+use super::collection;
 use super::files;
 use super::frontmatter;
 use super::sass;
 use super::site;
-use super::slug;
 
 arg_enum! {
     #[derive(Serialize, Deserialize)]
@@ -26,20 +26,6 @@ arg_enum! {
 impl Dump {
     pub fn is_doc(&self) -> bool {
         true
-    }
-}
-
-#[derive(Debug, Eq, PartialEq, Hash, Copy, Clone)]
-#[derive(Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub enum SortOrder {
-    Asc,
-    Desc,
-}
-
-impl Default for SortOrder {
-    fn default() -> SortOrder {
-        SortOrder::Desc
     }
 }
 
@@ -63,41 +49,76 @@ pub struct PageBuilder {
     pub default: frontmatter::FrontmatterBuilder,
 }
 
+impl From<PageBuilder> for collection::CollectionBuilder {
+    fn from(config: PageBuilder) -> Self {
+        let slug = Some("pages".to_owned());
+        let dir = Some(".".to_owned());
+        collection::CollectionBuilder {
+            slug,
+            dir,
+            default: config.default,
+            ..Default::default()
+        }
+    }
+}
+
 #[derive(Debug, PartialEq)]
 #[derive(Serialize, Deserialize)]
 #[serde(deny_unknown_fields, default)]
 pub struct PostBuilder {
     pub title: Option<String>,
-    pub slug: Option<String>,
     pub description: Option<String>,
-    pub dir: String,
+    pub dir: Option<String>,
     pub drafts_dir: Option<String>,
-    pub order: SortOrder,
+    pub order: collection::SortOrder,
     pub rss: Option<String>,
     pub jsonfeed: Option<String>,
     pub default: frontmatter::FrontmatterBuilder,
 }
 
-impl PostBuilder {
-    // Ugly hack until I get around to really implementing this
-    pub fn build(mut self) -> Self {
-        self.default = self.default.clone().set_post(true);
-        self
+impl Default for PostBuilder {
+    fn default() -> Self {
+        Self {
+            title: Default::default(),
+            description: Default::default(),
+            dir: Some("posts".to_owned()),
+            drafts_dir: Default::default(),
+            order: Default::default(),
+            rss: Default::default(),
+            jsonfeed: Default::default(),
+            default: Default::default(),
+        }
     }
 }
 
-impl Default for PostBuilder {
-    fn default() -> PostBuilder {
-        Self {
-            title: None,
-            slug: None,
-            description: None,
-            dir: "posts".to_owned(),
-            drafts_dir: None,
-            order: SortOrder::default(),
-            rss: None,
-            jsonfeed: None,
-            default: frontmatter::FrontmatterBuilder::new().set_post(true),
+impl From<PostBuilder> for collection::CollectionBuilder {
+    fn from(config: PostBuilder) -> Self {
+        let PostBuilder {
+            title,
+            description,
+            dir,
+            drafts_dir,
+            order,
+            rss,
+            jsonfeed,
+            default,
+        } = config;
+
+        // HACK: We shouldn't allow a user to set this in the first place but too lazy to setup
+        // error reporting in here.
+        let default = default.set_post(true);
+
+        let slug = Some("posts".to_owned());
+        collection::CollectionBuilder {
+            title,
+            slug,
+            description,
+            dir,
+            drafts_dir,
+            order,
+            rss,
+            jsonfeed,
+            default,
         }
     }
 }
@@ -156,25 +177,25 @@ pub struct ConfigBuilder {
 impl Default for ConfigBuilder {
     fn default() -> ConfigBuilder {
         ConfigBuilder {
-            root: path::PathBuf::new(),
+            root: Default::default(),
             source: "./".to_owned(),
             destination: "./_site".to_owned(),
-            abs_dest: None,
+            abs_dest: Default::default(),
             include_drafts: false,
             default: frontmatter::FrontmatterBuilder::new()
                 .set_excerpt_separator("\n\n".to_owned())
                 .set_draft(false)
                 .set_post(false),
-            pages: PageBuilder::default(),
-            posts: PostBuilder::default(),
-            site: site::SiteBuilder::default(),
+            pages: Default::default(),
+            posts: Default::default(),
+            site: Default::default(),
             template_extensions: vec!["md".to_owned(), "liquid".to_owned()],
-            ignore: vec![],
+            ignore: Default::default(),
             syntax_highlight: SyntaxHighlight::default(),
             layouts_dir: LAYOUTS_DIR,
             includes_dir: INCLUDES_DIR,
             assets: AssetsBuilder::default(),
-            dump: vec![],
+            dump: Default::default(),
         }
     }
 }
@@ -256,27 +277,30 @@ impl ConfigBuilder {
         };
         result?;
 
-        let mut pages = pages;
-        pages.default = pages.default.merge(default.clone());
+        let pages: collection::CollectionBuilder = pages.into();
+        let mut pages = pages.merge_frontmatter(default.clone());
+        // Default with `site` because the pages are effectively the site
+        pages.title = Some(site.title
+                               .clone()
+                               .unwrap_or_else(|| "".to_owned())
+                               .to_owned());
+        pages.description = site.description.clone();
+        let pages = pages.build()?;
 
-        let mut posts = posts;
-        posts.default = posts.default.merge(default);
-        if posts.dir.starts_with('/') {
-            bail!("posts dir {} must be a relative path", posts.dir)
+        let posts: collection::CollectionBuilder = posts.into();
+        let mut posts = posts.merge_frontmatter(default);
+        // Default with `site` for people quickly bootstrapping a blog, the blog and site are
+        // effectively equivalent.
+        if posts.title.is_none() {
+            posts.title = Some(site.title
+                                   .clone()
+                                   .unwrap_or_else(|| "".to_owned())
+                                   .to_owned());
         }
-        if let Some(ref drafts_dir) = posts.drafts_dir {
-            if drafts_dir.starts_with('/') {
-                bail!("posts dir {} must be a relative path", drafts_dir)
-            }
+        if posts.description.is_none() {
+            posts.description = site.description.clone();
         }
-        if posts.slug.is_none() {
-            if let Some(ref title) = posts.title {
-                posts.slug = Some(slug::slugify(title));
-            } else {
-                posts.slug = Some(posts.dir.clone());
-            }
-        }
-        let posts = posts.build();
+        let posts = posts.build()?;
 
         let source = files::cleanup_path(source);
         let destination = files::cleanup_path(destination);
@@ -337,8 +361,8 @@ pub struct Config {
     pub source: path::PathBuf,
     pub destination: path::PathBuf,
     pub include_drafts: bool,
-    pub pages: PageBuilder,
-    pub posts: PostBuilder,
+    pub pages: collection::Collection,
+    pub posts: collection::Collection,
     pub site: site::Site,
     pub template_extensions: Vec<String>,
     pub ignore: Vec<String>,
@@ -433,7 +457,7 @@ fn test_build_abs_dest() {
 #[test]
 fn test_build_posts_rel() {
     let mut config = ConfigBuilder::default();
-    config.posts.dir = "rel".into();
+    config.posts.dir = Some("rel".to_owned());
     let config = config.build().unwrap();
     assert_eq!(config.posts.dir, "rel");
 }
@@ -441,7 +465,7 @@ fn test_build_posts_rel() {
 #[test]
 fn test_build_posts_abs() {
     let mut config = ConfigBuilder::default();
-    config.posts.dir = "/root".into();
+    config.posts.dir = Some("/root".to_owned());
     assert!(config.build().is_err());
 }
 

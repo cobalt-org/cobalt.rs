@@ -263,18 +263,13 @@ fn create_rss(path: &str, dest: &Path, config: &Config, posts: &[Document]) -> R
     let rss_path = dest.join(path);
     info!("Creating RSS file at {}", rss_path.display());
 
-    let title = config
-        .posts
-        .title
-        .as_ref()
-        .or_else(|| config.site.title.as_ref())
-        .ok_or(ErrorKind::ConfigFileMissingFields)?;
+    let title = &config.posts.title;
     let description = config
         .posts
         .description
         .as_ref()
-        .or_else(|| config.site.description.as_ref())
-        .ok_or(ErrorKind::ConfigFileMissingFields)?;
+        .map(|s| s.as_str())
+        .unwrap_or("");
     let link = config
         .site
         .base_url
@@ -302,23 +297,19 @@ fn create_rss(path: &str, dest: &Path, config: &Config, posts: &[Document]) -> R
 
     Ok(())
 }
+
 // creates a new jsonfeed file with the contents of the site blog
 fn create_jsonfeed(path: &str, dest: &Path, config: &Config, posts: &[Document]) -> Result<()> {
     let jsonfeed_path = dest.join(path);
     info!("Creating jsonfeed file at {}", jsonfeed_path.display());
 
-    let title = config
-        .posts
-        .title
-        .as_ref()
-        .or_else(|| config.site.title.as_ref())
-        .ok_or(ErrorKind::ConfigFileMissingFields)?;
+    let title = &config.posts.title;
     let description = config
         .posts
         .description
         .as_ref()
-        .or_else(|| config.site.description.as_ref())
-        .ok_or(ErrorKind::ConfigFileMissingFields)?;
+        .map(|s| s.as_str())
+        .unwrap_or("");
     let link = config
         .site
         .base_url
