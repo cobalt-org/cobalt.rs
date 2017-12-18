@@ -1,6 +1,4 @@
 use std::collections::HashMap;
-use std::fs;
-use std::io::Read;
 use std::path;
 use std::result;
 
@@ -12,12 +10,12 @@ use cobalt_model::files;
 use syntax_highlight;
 
 #[derive(Clone, Debug, Default)]
-struct InMemoryTemplateRepository {
+struct InMemoryInclude {
     templates: HashMap<String, String>,
-    legacy_path: Option<path::PathBuf>,
+    legacy: Option<liquid::compiler::FilesystemInclude>,
 }
 
-impl InMemoryTemplateRepository {
+impl InMemoryInclude {
     pub fn new() -> Self {
         Default::default()
     }
@@ -47,57 +45,51 @@ impl InMemoryTemplateRepository {
     }
 
     pub fn set_legacy_path(mut self, legacy_path: Option<path::PathBuf>) -> Self {
-        self.legacy_path = legacy_path;
+        self.legacy = legacy_path.map(|p| liquid::compiler::FilesystemInclude::new(p));
         self
     }
 }
 
-impl liquid::TemplateRepository for InMemoryTemplateRepository {
-    fn read_template(&self, path: &str) -> result::Result<String, liquid::Error> {
+impl liquid::compiler::Include for InMemoryInclude {
+    fn include(&self, path: &str) -> result::Result<String, liquid::Error> {
         self.templates
             .get(path)
             .map(|s| Ok(s.to_owned()))
             .unwrap_or_else(|| {
-                let legacy_path = self.legacy_path
-                    .clone()
-                    .ok_or_else(|| liquid::Error::from(&*format!("{:?} does not exist", path)))?;
-                let abs_path = legacy_path.join(path);
-                if !abs_path.exists() {
-                    return Err(liquid::Error::from(&*format!("{:?} does not exist", path)));
-                }
-
+                let content = self.legacy
+                    .as_ref()
+                    .ok_or_else(|| liquid::Error::from(&*format!("{:?} does not exist", path)))?
+                    .include(path)?;
                 warn!("Loading `include`s relative to `source` is deprecated, see {}.",
                       path);
-                let mut file = fs::File::open(abs_path)?;
-                let mut content = String::new();
-                file.read_to_string(&mut content)?;
                 Ok(content)
             })
     }
 }
 
-#[derive(Clone)]
 pub struct LiquidParser {
-    parser: liquid::LiquidOptions,
+    parser: liquid::Parser,
 }
 
 impl LiquidParser {
     pub fn with_config(config: &cobalt_model::Config) -> Result<Self> {
-        let mut parser = liquid::LiquidOptions::default();
-        let repo = InMemoryTemplateRepository::new()
+        let repo = InMemoryInclude::new()
             .load_from_path(config.source.join(&config.includes_dir))?
             .set_legacy_path(Some(config.source.clone()));
-        parser.template_repository = Box::new(repo);
-        let highlight: Box<liquid::ParseBlock> = {
+        let highlight: Box<liquid::compiler::ParseBlock> = {
             let syntax_theme = config.syntax_highlight.theme.clone();
             Box::new(syntax_highlight::CodeBlockParser::new(syntax_theme))
         };
-        parser.blocks.insert("highlight".to_string(), highlight);
+        let parser = liquid::ParserBuilder::with_liquid()
+            .extra_filters()
+            .include_source(Box::new(repo))
+            .block("highlight", highlight)
+            .build();
         Ok(Self { parser })
     }
 
     pub fn parse(&self, template: &str) -> Result<liquid::Template> {
-        let template = liquid::parse(template, self.parser.clone())?;
+        let template = self.parser.parse(template)?;
         Ok(template)
     }
 }

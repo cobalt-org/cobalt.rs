@@ -127,15 +127,18 @@ pub fn build(config: &Config) -> Result<()> {
         trace!("Generating {}", post.url_path);
 
         // posts are in reverse date order, so previous post is the next in the list (+1)
-        if let Some(previous) = simple_posts_data.get(i + 1) {
-            post.attributes
-                .insert("previous".to_owned(), previous.clone());
-        }
-        if i >= 1 {
-            if let Some(next) = simple_posts_data.get(i - 1) {
-                post.attributes.insert("next".to_owned(), next.clone());
-            }
-        }
+        let previous = simple_posts_data
+            .get(i + 1)
+            .map(|v| v.clone())
+            .unwrap_or(liquid::Value::Nil);
+        post.attributes.insert("previous".to_owned(), previous);
+        let next = if i >= 1 {
+            simple_posts_data.get(i - 1)
+        } else {
+            None
+        }.map(|v| v.clone())
+            .unwrap_or(liquid::Value::Nil);
+        post.attributes.insert("next".to_owned(), next);
 
         for dump in config.dump.iter().filter(|d| d.is_doc()) {
             trace!("Dumping {:?}", dump);
@@ -152,22 +155,24 @@ pub fn build(config: &Config) -> Result<()> {
             files::write_document_file(content, dest.join(file_path))?;
         }
 
-        let mut context = post.get_render_context();
+        let mut globals = post.attributes.clone();
         // TODO(epage): Switch `posts` to `parent` which is an object see #323
-        context.set_val("posts", liquid::Value::Array(simple_posts_data.clone()));
-        context.set_val("site",
-                        liquid::Value::Object(config.site.attributes.clone()));
-        post.render_excerpt(&mut context, &parser, &config.syntax_highlight.theme)
+        globals.insert("posts".to_owned(),
+                       liquid::Value::Array(simple_posts_data.clone()));
+        globals.insert("site".to_owned(),
+                       liquid::Value::Object(config.site.attributes.clone()));
+        post.render_excerpt(&globals, &parser, &config.syntax_highlight.theme)
             .chain_err(|| format!("Failed to render excerpt for {:?}", post.file_path))?;
 
-        // Yes, this is terrible for performance but we need a new `get_render_context` to get an
+        // Yes, this is terrible for performance but we need a new `attributes` to get an
         // updated `excerpt`.  liquid#95 allow us to improve this.
-        let mut context = post.get_render_context();
+        let mut globals = post.attributes.clone();
         // TODO(epage): Switch `posts` to `parent` which is an object see #323
-        context.set_val("posts", liquid::Value::Array(simple_posts_data.clone()));
-        context.set_val("site",
-                        liquid::Value::Object(config.site.attributes.clone()));
-        let post_html = post.render(&mut context,
+        globals.insert("posts".to_owned(),
+                       liquid::Value::Array(simple_posts_data.clone()));
+        globals.insert("site".to_owned(),
+                       liquid::Value::Object(config.site.attributes.clone()));
+        let post_html = post.render(&globals,
                                     &parser,
                                     &layouts,
                                     &mut layouts_cache,
@@ -211,13 +216,13 @@ pub fn build(config: &Config) -> Result<()> {
             files::write_document_file(content, dest.join(file_path))?;
         }
 
-        let mut context = doc.get_render_context();
-        // TODO(epage): Switch `posts` to an object see #323
-        context.set_val("posts", liquid::Value::Array(posts_data.clone()));
-        context.set_val("site",
-                        liquid::Value::Object(config.site.attributes.clone()));
+        let mut globals = doc.attributes.clone();
+        // TODO(epage): Switch `posts` to `parent` which is an object see #323
+        globals.insert("posts".to_owned(), liquid::Value::Array(posts_data.clone()));
+        globals.insert("site".to_owned(),
+                       liquid::Value::Object(config.site.attributes.clone()));
 
-        let doc_html = doc.render(&mut context,
+        let doc_html = doc.render(&globals,
                                   &parser,
                                   &layouts,
                                   &mut layouts_cache,

@@ -7,7 +7,7 @@ use chrono::{Datelike, Timelike};
 use itertools;
 use jsonfeed;
 use liquid;
-use liquid::{Renderable, Context, Value};
+use liquid::Value;
 use pulldown_cmark as cmark;
 use regex::Regex;
 use rss;
@@ -267,12 +267,6 @@ impl Document {
             .map(|s| s.to_owned())
     }
 
-
-    /// Prepares liquid context for further rendering.
-    pub fn get_render_context(&self) -> Context {
-        Context::with_values(self.attributes.clone())
-    }
-
     /// Renders liquid templates into HTML in the context of current document.
     ///
     /// Takes `content` string and returns rendered HTML. This function doesn't
@@ -280,12 +274,12 @@ impl Document {
     /// rendering content or excerpt.
     fn render_html(&self,
                    content: &str,
-                   context: &mut Context,
+                   globals: &liquid::Object,
                    parser: &template::LiquidParser,
                    syntax_theme: &str)
                    -> Result<String> {
         let template = parser.parse(content)?;
-        let html = template.render(context)?.unwrap_or_default();
+        let html = template.render(globals)?;
 
         let html = match self.front.format {
             cobalt_model::SourceFormat::Raw => html,
@@ -302,7 +296,7 @@ impl Document {
 
     /// Renders excerpt and adds it to attributes of the document.
     pub fn render_excerpt(&mut self,
-                          context: &mut Context,
+                          globals: &liquid::Object,
                           parser: &template::LiquidParser,
                           syntax_theme: &str)
                           -> Result<()> {
@@ -312,12 +306,12 @@ impl Document {
             let excerpt_separator = &self.front.excerpt_separator;
 
             if let Some(excerpt_str) = excerpt_attr {
-                self.render_html(excerpt_str, context, parser, syntax_theme)?
+                self.render_html(excerpt_str, globals, parser, syntax_theme)?
             } else if excerpt_separator.is_empty() {
-                self.render_html("", context, parser, syntax_theme)?
+                "".to_owned()
             } else {
                 let excerpt = extract_excerpt(&self.content, self.front.format, excerpt_separator);
-                self.render_html(&excerpt, context, parser, syntax_theme)?
+                self.render_html(&excerpt, globals, parser, syntax_theme)?
             }
         };
 
@@ -331,23 +325,23 @@ impl Document {
     /// Side effects:
     ///
     /// * content is inserted to the attributes of the document
-    /// * content is inserted to context
     /// * layout may be inserted to layouts cache
     ///
     /// When we say "content" we mean only this document without extended layout.
     pub fn render(&mut self,
-                  context: &mut Context,
+                  globals: &liquid::Object,
                   parser: &template::LiquidParser,
                   layouts_dir: &Path,
                   layouts_cache: &mut HashMap<String, String>,
                   syntax_theme: &str)
                   -> Result<String> {
-        let content_html = self.render_html(&self.content, context, parser, syntax_theme)?;
+        let content_html = self.render_html(&self.content, globals, parser, syntax_theme)?;
         self.attributes
             .insert("content".to_owned(), Value::Str(content_html.clone()));
 
         if let Some(ref layout) = self.front.layout {
-            context.set_val("content", Value::Str(content_html.clone()));
+            let mut globals = globals.clone();
+            globals.insert("content".to_owned(), Value::Str(content_html.clone()));
 
             let layout_data_ref = match layouts_cache.entry(layout.to_owned()) {
                 Entry::Vacant(vacant) => {
@@ -367,9 +361,8 @@ impl Document {
                 .parse(layout_data_ref)
                 .chain_err(|| format!("Failed to parse layout {:?}", layout))?;
             let content_html = template
-                .render(context)
-                .chain_err(|| format!("Failed to render layout {:?}", layout))?
-                .unwrap_or_default();
+                .render(&globals)
+                .chain_err(|| format!("Failed to render layout {:?}", layout))?;
             Ok(content_html)
         } else {
             Ok(content_html)
