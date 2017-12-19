@@ -322,29 +322,32 @@ impl Document {
         Ok(())
     }
 
+    /// Renders the content and adds it to attributes of the document.
+    ///
+    /// When we say "content" we mean only this document without extended layout.
+    pub fn render_content(&mut self,
+                          globals: &liquid::Object,
+                          parser: &template::LiquidParser,
+                          syntax_theme: &str)
+                          -> Result<()> {
+        let content_html = self.render_html(&self.content, globals, parser, syntax_theme)?;
+        self.attributes
+            .insert("content".to_owned(), Value::Str(content_html.clone()));
+        Ok(())
+    }
+
     /// Renders the document to an HTML string.
     ///
     /// Side effects:
     ///
-    /// * content is inserted to the attributes of the document
     /// * layout may be inserted to layouts cache
-    ///
-    /// When we say "content" we mean only this document without extended layout.
     pub fn render(&mut self,
                   globals: &liquid::Object,
                   parser: &template::LiquidParser,
                   layouts_dir: &Path,
-                  layouts_cache: &mut HashMap<String, String>,
-                  syntax_theme: &str)
+                  layouts_cache: &mut HashMap<String, String>)
                   -> Result<String> {
-        let content_html = self.render_html(&self.content, globals, parser, syntax_theme)?;
-        self.attributes
-            .insert("content".to_owned(), Value::Str(content_html.clone()));
-
         if let Some(ref layout) = self.front.layout {
-            let mut globals = globals.clone();
-            globals.insert("content".to_owned(), Value::Str(content_html.clone()));
-
             let layout_data_ref = match layouts_cache.entry(layout.to_owned()) {
                 Entry::Vacant(vacant) => {
                     let layout_data = files::read_file(layouts_dir.join(layout))
@@ -367,6 +370,13 @@ impl Document {
                 .chain_err(|| format!("Failed to render layout {:?}", layout))?;
             Ok(content_html)
         } else {
+            let content_html = globals
+                .get("content")
+                .ok_or("Internal error: content isn't in globals")?
+                .as_str()
+                .ok_or("Internal error: bad content format")?
+                .to_owned();
+
             Ok(content_html)
         }
     }
