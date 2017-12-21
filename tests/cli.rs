@@ -189,7 +189,7 @@ pub fn init_project_can_build() {
     assert_cli::Assert::command(&[&BIN, "init", "--trace"])
         .current_dir(initdir.path())
         .unwrap();
-    assert_cli::Assert::command(&[&BIN, "build", "--trace", "-d", &dest_param])
+    assert_cli::Assert::command(&[&BIN, "build", "--trace", "--drafts", "-d", &dest_param])
         .current_dir(initdir.path())
         .unwrap();
 

@@ -7,6 +7,6 @@ data:
   thing: hello
   thang: world
 ---
-# {{ title }}
+# {{ page.title }}
 
 This asserts that you can substitute any part of the url with custom variables

@@ -155,25 +155,23 @@ pub fn build(config: &Config) -> Result<()> {
             files::write_document_file(content, dest.join(file_path))?;
         }
 
-        let mut globals = post.attributes.clone();
-        // TODO(epage): Switch `posts` to `parent` which is an object see #323
-        globals.insert("posts".to_owned(),
-                       liquid::Value::Array(simple_posts_data.clone()));
-        globals.insert("site".to_owned(),
-                       liquid::Value::Object(config.site.attributes.clone()));
+        // Everything done with `globals` is terrible for performance.  liquid#95 allows us to
+        // improve this.
+        let mut globals: liquid::Object =
+            vec![("site".to_owned(), liquid::Value::Object(config.site.attributes.clone())),
+                 ("posts".to_owned(), liquid::Value::Array(simple_posts_data.clone()))]
+                .into_iter()
+                .collect();
+        globals.insert("page".to_owned(),
+                       liquid::Value::Object(post.attributes.clone()));
         post.render_excerpt(&globals, &parser, &config.syntax_highlight.theme)
             .chain_err(|| format!("Failed to render excerpt for {:?}", post.file_path))?;
         post.render_content(&globals, &parser, &config.syntax_highlight.theme)
             .chain_err(|| format!("Failed to render content for {:?}", post.file_path))?;
 
-        // Yes, this is terrible for performance but we need a new `attributes` to get an
-        // updated `excerpt`.  liquid#95 allow us to improve this.
-        let mut globals = post.attributes.clone();
-        // TODO(epage): Switch `posts` to `parent` which is an object see #323
-        globals.insert("posts".to_owned(),
-                       liquid::Value::Array(simple_posts_data.clone()));
-        globals.insert("site".to_owned(),
-                       liquid::Value::Object(config.site.attributes.clone()));
+        // Refresh `page` with the `excerpt` / `content` attribute
+        globals.insert("page".to_owned(),
+                       liquid::Value::Object(post.attributes.clone()));
         let post_html = post.render(&globals, &parser, &layouts, &mut layouts_cache)
             .chain_err(|| format!("Failed to render for {:?}", post.file_path))?;
         files::write_document_file(post_html, dest.join(&post.file_path))?;
@@ -214,19 +212,15 @@ pub fn build(config: &Config) -> Result<()> {
             files::write_document_file(content, dest.join(file_path))?;
         }
 
-        let mut globals = doc.attributes.clone();
-        // TODO(epage): Switch `posts` to `parent` which is an object see #323
-        globals.insert("posts".to_owned(), liquid::Value::Array(posts_data.clone()));
-        globals.insert("site".to_owned(),
-                       liquid::Value::Object(config.site.attributes.clone()));
+        let mut globals: liquid::Object =
+            vec![("site".to_owned(), liquid::Value::Object(config.site.attributes.clone())),
+                 ("posts".to_owned(), liquid::Value::Array(posts_data.clone()))]
+                .into_iter()
+                .collect();
+        globals.insert("page".to_owned(),
+                       liquid::Value::Object(doc.attributes.clone()));
         doc.render_content(&globals, &parser, &config.syntax_highlight.theme)
             .chain_err(|| format!("Failed to render content for {:?}", doc.file_path))?;
-
-        let mut globals = doc.attributes.clone();
-        // TODO(epage): Switch `posts` to `parent` which is an object see #323
-        globals.insert("posts".to_owned(), liquid::Value::Array(posts_data.clone()));
-        globals.insert("site".to_owned(),
-                       liquid::Value::Object(config.site.attributes.clone()));
 
         // Refresh `page` with the `excerpt` / `content` attribute
         globals.insert("page".to_owned(),

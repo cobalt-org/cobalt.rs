@@ -21,30 +21,15 @@ const DEFAULT_LAYOUT: &'static str = "<!DOCTYPE html>
 <html>
     <head>
         <meta charset=\"utf-8\">
-        {% if is_post %}
-          <title>{{ title }}</title>
-        {% else %}
-          <title>Cobalt.rs Blog</title>
-        {% endif %}
+        <title>{{ page.title }}</title>
     </head>
     <body>
     <div>
-      {% if is_post %}
-        {% include '_layouts/post.liquid' %}
-      {% else %}
-        {{ content }}
-      {% endif %}
+      <h2>{{ page.title }}</h2>
+      {{ page.content }}
     </div>
   </body>
 </html>
-";
-
-const POST_LAYOUT: &'static str = "<div>
-  <h2>{{ title }}</h2>
-  <p>
-    {{content}}
-  </p>
-</div>
 ";
 
 const POST_MD: &'static str = "layout: default.liquid
@@ -65,7 +50,7 @@ const INDEX_MD: &'static str = "layout: default.liquid
 {% for post in posts %}
 #### {{post.title}}
 
-#### [{{ post.title }}]({{ post.path }})
+[{{ post.title }}]({{ post.permalink }})
 {% endfor %}
 ";
 
@@ -81,7 +66,6 @@ pub fn create_new_project_for_path(dest: &path::Path) -> Result<()> {
 
     fs::create_dir_all(&dest.join("_layouts"))?;
     create_file(&dest.join("_layouts/default.liquid"), DEFAULT_LAYOUT)?;
-    create_file(&dest.join("_layouts/post.liquid"), POST_LAYOUT)?;
 
     fs::create_dir_all(&dest.join("posts"))?;
     create_file(&dest.join("posts/post-1.md"), POST_MD)?;

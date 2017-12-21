@@ -2,7 +2,7 @@ layout: posts.liquid
 
 title:   My first draft
 ---
-# {{ title }}
+# {{ page.title }}
 
 Hey there this is my first blogpost and this is super awesome.
 

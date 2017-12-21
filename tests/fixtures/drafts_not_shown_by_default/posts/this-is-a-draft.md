@@ -3,7 +3,7 @@ layout: posts.liquid
 title: Another draft
 is_draft: true
 ---
-# {{ title }}
+# {{ page.title }}
 
 Hey there this is my first blogpost and this is super awesome.
 

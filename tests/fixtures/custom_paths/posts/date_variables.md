@@ -6,6 +6,6 @@ permalink:  /{{year}}/{{data.thing}}/
 data:
   thing: hello
 ---
-# {{ title }}
+# {{ page.title }}
 
 This asserts interpolation of date variables and other variables.

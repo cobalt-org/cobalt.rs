@@ -130,38 +130,38 @@ fn format_url_as_file_str(permalink: &str) -> PathBuf {
 }
 
 fn document_attributes(front: &cobalt_model::Frontmatter,
-                       source_file: &str,
+                       source_file: &Path,
                        url_path: &str)
                        -> liquid::Object {
-    let mut attributes = liquid::Object::new();
+    let categories = liquid::Value::Array(front
+                                              .categories
+                                              .iter()
+                                              .map(|c| liquid::Value::str(c))
+                                              .collect());
+    // Reason for `file`:
+    // - Allow access to assets in the original location
+    // - Ease linking back to page's source
+    let file: liquid::Object = vec![("permalink".to_owned(),
+                                     liquid::Value::str(source_file.to_str().unwrap_or("")))]
+        .into_iter()
+        .collect();
+    let attributes =
+        vec![("permalink".to_owned(), liquid::Value::str(url_path)),
+             ("title".to_owned(), liquid::Value::str(&front.title)),
+             ("description".to_owned(),
+              liquid::Value::str(front.description.as_ref().map(|s| s.as_str()).unwrap_or(""))),
+             ("categories".to_owned(), categories),
+             ("is_draft".to_owned(), liquid::Value::Bool(front.is_draft)),
+             ("file".to_owned(), liquid::Value::Object(file)),
+             ("data".to_owned(), liquid::Value::Object(front.data.clone()))];
+    let mut attributes: liquid::Object = attributes.into_iter().collect();
 
-    attributes.insert("path".to_owned(), liquid::Value::str(url_path));
-    // TODO(epage): Remove?  See #257
-    attributes.insert("source".to_owned(), liquid::Value::str(source_file));
-    attributes.insert("title".to_owned(), liquid::Value::str(&front.title));
-    if let Some(ref description) = front.description {
-        attributes.insert("description".to_owned(), liquid::Value::str(description));
-    }
-    attributes.insert("categories".to_owned(),
-                      liquid::Value::Array(front
-                                               .categories
-                                               .iter()
-                                               .map(|c| liquid::Value::str(c))
-                                               .collect()));
     if let Some(ref published_date) = front.published_date {
-        // TODO(epage): Rename to published_date. See #257
-        attributes.insert("date".to_owned(),
+        attributes.insert("published_date".to_owned(),
                           liquid::Value::Str(published_date.format()));
     }
-    // TODO(epage): Rename to `is_draft`. See #257
-    attributes.insert("draft".to_owned(), liquid::Value::Bool(front.is_draft));
-    // TODO(epage): Remove? See #257
+    // TODO(epage): Provide a way to determine tbis
     attributes.insert("is_post".to_owned(), liquid::Value::Bool(front.is_post));
-
-    // TODO(epage): Place in a `custom` variable.  See #257
-    for (key, val) in &front.data {
-        attributes.insert(key.clone(), val.clone());
-    }
 
     attributes
 }
@@ -213,8 +213,7 @@ impl Document {
             (file_path, url_path)
         };
 
-        let doc_attributes =
-            document_attributes(&front, rel_path.to_str().unwrap_or(""), url_path.as_ref());
+        let doc_attributes = document_attributes(&front, rel_path, url_path.as_ref());
 
         Ok(Document::new(url_path,
                          file_path,
@@ -371,8 +370,10 @@ impl Document {
             Ok(content_html)
         } else {
             let content_html = globals
-                .get("content")
-                .ok_or("Internal error: content isn't in globals")?
+                .get("page")
+                .ok_or("Internal error: page isn't in globals")?
+                .get(&liquid::Index::with_key("content"))
+                .ok_or("Internal error: page.content isn't in globals")?
                 .as_str()
                 .ok_or("Internal error: bad content format")?
                 .to_owned();

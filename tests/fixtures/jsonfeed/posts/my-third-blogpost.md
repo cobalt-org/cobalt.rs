@@ -4,7 +4,7 @@ title:   My third Blogpost
 published_date:    27 May 2015 23:00:00 +0100
 categories: [ foo ]
 ---
-# {{ title }}
+# {{ page.title }}
 
 Hey there this is my first blogpost and this is super awesome.
 

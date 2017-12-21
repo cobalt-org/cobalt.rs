@@ -3,15 +3,15 @@ layout: posts.liquid
 title:   My third Blogpost
 published_date:    26 Aug 2014 15:36:20 +0100
 ---
-# {{ title }}
+# {{ page.title }}
 
 Hey there this is my third blogpost and this is super awesome.
 
 My Blog is lorem ipsum like, yes it is..
 
-{% if previous %}
-   <a class="prev" href="/{{previous.path}}">&laquo; {{previous.title}}</a>
+{% if page.previous %}
+   <a class="prev" href="/{{page.previous.permalink}}">&laquo; {{page.previous.title}}</a>
  {% endif %}
- {% if next %}
-   <a class="next" href="/{{next.path}}">{{next.title}} &raquo;</a>
+ {% if page.next %}
+   <a class="next" href="/{{page.next.permalink}}">{{page.next.title}} &raquo;</a>
 {% endif %}

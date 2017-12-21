@@ -2,18 +2,18 @@
 <html>
   <!-- start default.liquid -->
   <head>
-    {% if is_post %}
-      <title>{{ title }}</title>
+    {% if page.is_post %}
+      <title>{{ page.title }}</title>
     {% else %}
        <title>Cobalt.rs Blog</title>
     {% endif %}
   </head>
   <body>
     <div>
-      {% if is_post %}
+      {% if page.is_post %}
         {% include 'post.liquid' %}
       {% else %}
-        {{ content }}
+        {{ page.content }}
       {% endif %}
     </div>
   </body>

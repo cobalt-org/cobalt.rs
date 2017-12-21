@@ -1,7 +1,7 @@
 title:   My first Blogpost
 published_date:    24 Aug 2014 15:36:20 +0100
 ---
-# {{ title }}
+# {{ page.title }}
 
 Hey there this is my first blogpost and this is super awesome.
 

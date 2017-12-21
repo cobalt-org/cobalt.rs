@@ -24,7 +24,7 @@ pub fn migrate_command(matches: &clap::ArgMatches) -> Result<()> {
     let config = args::get_config(matches)?;
     let config = config.build()?;
 
-    migrate_includes(&config)?;
+    migrate_content(&config)?;
     migrate_front(&config)?;
 
     Ok(())
@@ -72,7 +72,64 @@ fn migrate_includes_path(content: String) -> Result<String> {
     Ok(content)
 }
 
-fn migrate_includes(config: &cobalt::Config) -> Result<()> {
+fn migrate_variables(content: String) -> Result<String> {
+    lazy_static!{
+        static ref REPLACEMENTS_REF: Vec<(regex::Regex, &'static str)> = vec![
+            // From tests
+            (r#"\{\{\s*title\s*}}"#, "{{ page.title }}"),
+            (r#"\{\{\s*(.*?)\.path\s*}}"#, "{{ $1.permalink }}"),
+            (r#"\{\{\s*path\s*}}"#, "{{ page.permalink }}"),
+            (r#"\{\{\s*content\s*}}"#, "{{ page.content }}"),
+            (r#"\{\{\s*previous\.(.*?)\s*}}"#, "{{ page.previous.$1 }}"),
+            (r#"\{\{\s*next\.(.*?)\s*}}"#, "{{ page.next.$1 }}"),
+            (r#"\{%\s*if\s+is_post\s*%}"#, "{% if page.is_post %}"),
+            (r#"\{%\s*if\s+previous\s*%}"#, "{% if page.previous %}"),
+            (r#"\{%\s*if\s+next\s*%}"#, "{% if page.next %}"),
+            (r#"\{%\s*if\s+draft\s*%}"#, "{% if page.is_draft %}"),
+            // from johannhof.github.io
+            (r#"\{\{\s*route\s*}}"#, "{{ page.data.route }}"),
+            (r#"\{%\s*if\s+route\s*"#, "{% if page.data.route "),
+            (r#"\{\{\s*date\s*"#, "{{ page.published_date "),
+            // From blog
+            (r#"\{\{\s*post\.date\s*"#, "{{ post.published_date "),
+            // From booyaa.github.io
+            (r#"\{%\s*assign\s+word_count\s*=\s*content"#, "{% assign word_count = page.content"),
+            (r#"\{%\s*assign\s+year\s*=\s*post.path"#, "{% assign year = post.permalink"),
+            (r#"\{%\s*assign\s+tags_list\s*=\s*post.tags"#, "{% assign tags_list = post.data.tags"),
+            (r#"\{%\s*assign\s+tags\s*=\s*post.tags"#, "{% assign tags = post.data.tags"),
+            // From deep-blog
+            (r#"\{%\s*if\s+lang\s*%}"#, "{% if page.data.lang %}"),
+            (r#"\{\{\s*lang\s*}}"#, "{{ page.data.lang }}"),
+            (r#"\{%\s*if\s+comments\s*%}"#, "{% if page.data.comments %}"),
+            (r#"\{%\s*if\s+dsq_thread_id\s*%}"#, "{% if page.data.dsq_thread_id %}"),
+            (r#"\{\{\s*dsq_thread_id\s*}}"#, "{{ page.data.dsq_thread_id }}"),
+            (r#"\{%\s*if\s+img_cover\s*%}"#, "{% if page.data.img_cover %}"),
+            (r#"\{\{\s*img_cover\s*}}"#, "{{ page.data.img_cover }}"),
+            (r#"\{%\s*if\s+post\.img_cover\s*%}"#, "{% if post.data.img_cover %}"),
+            (r#"\{\{\s*post\.img_cover\s*}}"#, "{{ post.data.img_cover }}"),
+            (r#"\{\{\s*post\.author\s*}}"#, "{{ post.data.author }}"),
+            // fnordig.de
+            (r#"\{%\s*assign\s+postyear\s*=\s*post.date"#,
+             "{% assign postyear = post.published_date"),
+            // hellorust
+            (r#"\{\{\s*author\s*}}"#, "{{ page.data.author }}"),
+            // mre
+            (r#"\{\{\s*title"#, "{{ page.title"),
+            (r#"\{%\s*if\s+title\s*!=\s*""\s*%}"#, r#"{% if page.title != "" %}"#),
+            (r#"\{%-\s*if\s+title\s*!=\s*""\s*%}"#, r#"{%- if page.title != "" %}"#),
+        ].into_iter()
+            .map(|(r, s)| (regex::Regex::new(r).unwrap(), s))
+            .collect();
+    }
+    let content = REPLACEMENTS_REF
+        .iter()
+        .fold(content, |content, &(ref search, ref replace)| {
+            search.replace_all(&content, *replace).into_owned()
+        });
+    Ok(content)
+}
+
+fn migrate_content(config: &cobalt::Config) -> Result<()> {
     let layouts_dir = config.source.join(config.layouts_dir);
     let includes_dir = config.source.join(config.includes_dir);
     info!("Migrating (potential) snippets to {:?}", includes_dir);
@@ -102,6 +159,7 @@ fn migrate_includes(config: &cobalt::Config) -> Result<()> {
     }) {
         let content = cobalt_model::files::read_file(&file)?;
         let content = migrate_includes_path(content)?;
+        let content = migrate_variables(content)?;
         cobalt_model::files::write_document_file(content, file)?;
     }
 
@@ -180,6 +238,99 @@ mod tests {
         let expected = r#"Hi {% include "head.liquid" %} my {% include "foot.liquid" %}" du"#
             .to_owned();
         let actual = migrate_includes_path(fixture).unwrap();
+        assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn migrate_variables_empty() {
+        let fixture = r#""#.to_owned();
+        let expected = r#""#.to_owned();
+        let actual = migrate_variables(fixture).unwrap();
+        assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn migrate_variables_title() {
+        let fixture = r#"<h1>{{ path }}</h1>"#.to_owned();
+        let expected = r#"<h1>{{ page.permalink }}</h1>"#.to_owned();
+        let actual = migrate_variables(fixture).unwrap();
+        assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn migrate_variables_path() {
+        let fixture = r#"<h2>{{ title }}</h2>"#.to_owned();
+        let expected = r#"<h2>{{ page.title }}</h2>"#.to_owned();
+        let actual = migrate_variables(fixture).unwrap();
+        assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn migrate_variables_content() {
+        let fixture = r#"<h2>{{ content }}</h2>"#.to_owned();
+        let expected = r#"<h2>{{ page.content }}</h2>"#.to_owned();
+        let actual = migrate_variables(fixture).unwrap();
+        assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn migrate_variables_scoped() {
+        let fixture = r#"<a href="{{post.path}}">{{ post.title }}</a>"#.to_owned();
+        let expected = r#"<a href="{{ post.permalink }}">{{ post.title }}</a>"#.to_owned();
+        let actual = migrate_variables(fixture).unwrap();
+        assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn migrate_variables_previous() {
+        let fixture = r#"<a ref="/{{previous.path}}">&laquo; {{previous.title}}</a>"#.to_owned();
+        let expected =
+            r#"<a ref="/{{ page.previous.permalink }}">&laquo; {{ page.previous.title }}</a>"#
+                .to_owned();
+        let actual = migrate_variables(fixture).unwrap();
+        assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn migrate_variables_next() {
+        let fixture = r#"<a class="next" href="/{{next.path}}">&laquo; {{next.title}}</a>"#
+            .to_owned();
+        let expected =
+            r#"<a class="next" href="/{{ page.next.permalink }}">&laquo; {{ page.next.title }}</a>"#
+                .to_owned();
+        let actual = migrate_variables(fixture).unwrap();
+        assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn migrate_variables_if_is_post() {
+        let fixture = r#"{% if is_post %}"#.to_owned();
+        let expected = r#"{% if page.is_post %}"#.to_owned();
+        let actual = migrate_variables(fixture).unwrap();
+        assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn migrate_variables_if_previous() {
+        let fixture = r#"{% if previous %}"#.to_owned();
+        let expected = r#"{% if page.previous %}"#.to_owned();
+        let actual = migrate_variables(fixture).unwrap();
+        assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn migrate_variables_if_next() {
+        let fixture = r#"{% if next %}"#.to_owned();
+        let expected = r#"{% if page.next %}"#.to_owned();
+        let actual = migrate_variables(fixture).unwrap();
+        assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn migrate_variables_if_is_draft() {
+        let fixture = r#"{% if draft %}"#.to_owned();
+        let expected = r#"{% if page.is_draft %}"#.to_owned();
+        let actual = migrate_variables(fixture).unwrap();
         assert_eq!(expected, actual);
     }
 }

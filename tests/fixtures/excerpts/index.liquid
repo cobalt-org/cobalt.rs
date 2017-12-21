@@ -7,7 +7,7 @@ layout: default.liquid
     {% for post in posts %}
       <div>
         <h4>{{post.title}}</h4>
-        <h4><a href="{{post.path}}">{{ post.title }}</a></h4>
+        <h4><a href="{{post.permalink}}">{{ post.title }}</a></h4>
         {{ post.excerpt }}
       </div>
     {% endfor %}
