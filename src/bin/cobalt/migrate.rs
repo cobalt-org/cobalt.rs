@@ -35,9 +35,8 @@ fn migrate_config(config_path: Option<&str>) -> Result<()> {
         path::Path::new(config_path).to_path_buf()
     } else {
         let cwd = env::current_dir().expect("How does this fail?");
-        let config_path = cobalt_model::files::find_project_file(&cwd, ".cobalt.yml")
-            .unwrap_or_else(|| cwd.join(".cobalt.yml"));
-        config_path
+        cobalt_model::files::find_project_file(&cwd, ".cobalt.yml")
+            .unwrap_or_else(|| cwd.join(".cobalt.yml"))
     };
     info!("Migrating {:?}", config_path);
 
@@ -66,8 +65,8 @@ fn migrate_includes_path(content: String) -> Result<String> {
     }
     let content = REPLACEMENTS_REF
         .iter()
-        .fold(content, |content, &(ref search, ref replace)| {
-            search.replace_all(&content, *replace).into_owned()
+        .fold(content, |content, &(ref search, replace)| {
+            search.replace_all(&content, replace).into_owned()
         });
     Ok(content)
 }
@@ -123,8 +122,8 @@ fn migrate_variables(content: String) -> Result<String> {
     }
     let content = REPLACEMENTS_REF
         .iter()
-        .fold(content, |content, &(ref search, ref replace)| {
-            search.replace_all(&content, *replace).into_owned()
+        .fold(content, |content, &(ref search, replace)| {
+            search.replace_all(&content, replace).into_owned()
         });
     Ok(content)
 }

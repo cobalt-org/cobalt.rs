@@ -55,11 +55,7 @@ fn permalink_attributes(front: &cobalt_model::Frontmatter, dest_file: &Path) -> 
     attributes.insert("slug".to_owned(), Value::str(&front.slug));
 
     attributes.insert("categories".to_owned(),
-                      Value::Str(itertools::join(front
-                                                     .categories
-                                                     .iter()
-                                                     .map(|c| slug::slugify(c)),
-                                                 "/")));
+                      Value::Str(itertools::join(front.categories.iter().map(slug::slugify), "/")));
 
     if let Some(ref date) = front.published_date {
         attributes.insert("year".to_owned(), Value::Str(date.year().to_string()));
@@ -365,7 +361,7 @@ impl Document {
                 .parse(layout_data_ref)
                 .chain_err(|| format!("Failed to parse layout {:?}", layout))?;
             let content_html = template
-                .render(&globals)
+                .render(globals)
                 .chain_err(|| format!("Failed to render layout {:?}", layout))?;
             Ok(content_html)
         } else {

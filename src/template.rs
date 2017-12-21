@@ -45,7 +45,7 @@ impl InMemoryInclude {
     }
 
     pub fn set_legacy_path(mut self, legacy_path: Option<path::PathBuf>) -> Self {
-        self.legacy = legacy_path.map(|p| liquid::compiler::FilesystemInclude::new(p));
+        self.legacy = legacy_path.map(liquid::compiler::FilesystemInclude::new);
         self
     }
 }

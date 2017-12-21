@@ -104,8 +104,7 @@ fn migrate_variable(var: String) -> Part {
 fn convert_permalink(perma: &str) -> String {
     let perma = Permalink::parse(perma);
     let perma = perma.resolve(&migrate_variable);
-    let perma = perma.to_string();
-    perma
+    perma.to_string()
 }
 
 #[cfg(test)]

@@ -129,14 +129,14 @@ pub fn build(config: &Config) -> Result<()> {
         // posts are in reverse date order, so previous post is the next in the list (+1)
         let previous = simple_posts_data
             .get(i + 1)
-            .map(|v| v.clone())
+            .cloned()
             .unwrap_or(liquid::Value::Nil);
         post.attributes.insert("previous".to_owned(), previous);
         let next = if i >= 1 {
             simple_posts_data.get(i - 1)
         } else {
             None
-        }.map(|v| v.clone())
+        }.cloned()
             .unwrap_or(liquid::Value::Nil);
         post.attributes.insert("next".to_owned(), next);
 
