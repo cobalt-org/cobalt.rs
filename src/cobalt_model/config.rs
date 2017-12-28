@@ -226,14 +226,14 @@ impl ConfigBuilder {
     }
 
     fn from_cwd_internal(cwd: path::PathBuf) -> Result<ConfigBuilder> {
-        let file_path = files::find_project_file(&cwd, ".cobalt.yml");
+        let file_path = files::find_project_file(&cwd, "_cobalt.yml");
         let config = file_path
             .map(|p| {
                      info!("Using config file {:?}", &p);
                      Self::from_file(&p).chain_err(|| format!("Error reading config file {:?}", p))
                  })
             .unwrap_or_else(|| {
-                warn!("No .cobalt.yml file found in current directory, using default config.");
+                warn!("No _cobalt.yml file found in current directory, using default config.");
                 let config = ConfigBuilder {
                     root: cwd,
                     ..Default::default()
@@ -383,7 +383,7 @@ impl Default for Config {
 
 #[test]
 fn test_from_file_ok() {
-    let result = ConfigBuilder::from_file("tests/fixtures/config/.cobalt.yml").unwrap();
+    let result = ConfigBuilder::from_file("tests/fixtures/config/_cobalt.yml").unwrap();
     assert_eq!(result.root,
                path::Path::new("tests/fixtures/config").to_path_buf());
 }
@@ -435,7 +435,7 @@ fn test_build_default() {
 
 #[test]
 fn test_build_dest() {
-    let result = ConfigBuilder::from_file("tests/fixtures/config/.cobalt.yml").unwrap();
+    let result = ConfigBuilder::from_file("tests/fixtures/config/_cobalt.yml").unwrap();
     let result = result.build().unwrap();
     assert_eq!(result.source,
                path::Path::new("tests/fixtures/config").to_path_buf());
@@ -445,7 +445,7 @@ fn test_build_dest() {
 
 #[test]
 fn test_build_abs_dest() {
-    let mut result = ConfigBuilder::from_file("tests/fixtures/config/.cobalt.yml").unwrap();
+    let mut result = ConfigBuilder::from_file("tests/fixtures/config/_cobalt.yml").unwrap();
     result.abs_dest = Some("hello/world".to_owned());
     let result = result.build().unwrap();
     assert_eq!(result.source,

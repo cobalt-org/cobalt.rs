@@ -1,5 +1,6 @@
 use std::env;
 use std::ffi;
+use std::fs;
 use std::path;
 
 use clap;
@@ -49,6 +50,12 @@ fn migrate_config(config_path: Option<&str>) -> Result<()> {
     };
     let config: cobalt::ConfigBuilder = config.into();
     let content = config.to_string();
+
+    fs::remove_file(&config_path)?;
+
+    let mut config_path = config_path;
+    config_path.set_file_name("_cobalt.yml");
+    let config_path = config_path;
     cobalt_model::files::write_document_file(content, config_path)?;
 
     Ok(())

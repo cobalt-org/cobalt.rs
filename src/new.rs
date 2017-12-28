@@ -61,7 +61,7 @@ pub fn create_new_project<P: AsRef<path::Path>>(dest: P) -> Result<()> {
 pub fn create_new_project_for_path(dest: &path::Path) -> Result<()> {
     fs::create_dir_all(dest)?;
 
-    create_file(&dest.join(".cobalt.yml"), COBALT_YML)?;
+    create_file(&dest.join("_cobalt.yml"), COBALT_YML)?;
     create_file(&dest.join("index.md"), INDEX_MD)?;
 
     fs::create_dir_all(&dest.join("_layouts"))?;

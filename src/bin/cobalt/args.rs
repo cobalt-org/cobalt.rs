@@ -13,7 +13,7 @@ pub fn get_config_args() -> Vec<clap::Arg<'static, 'static>> {
          .short("c")
          .long("config")
          .value_name("FILE")
-         .help("Config file to use [default: .cobalt.yml]")
+         .help("Config file to use [default: _cobalt.yml]")
          .takes_value(true),
      clap::Arg::with_name("destination")
          .short("d")
