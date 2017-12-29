@@ -274,3 +274,8 @@ pub fn sass_custom_config() {
 pub fn data_files() {
     run_test("data_files").expect("Build error");
 }
+
+#[test]
+pub fn published_date() {
+    run_test("published_date").expect("Build error");
+}

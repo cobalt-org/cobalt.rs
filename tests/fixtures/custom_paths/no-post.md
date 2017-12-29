@@ -1,7 +1,7 @@
 layout: posts.liquid
 
 title:  Custom paths are available to non-posts
-published_date:   22 Aug 2014 15:36:20 +0100
+published_date:   2014-08-22 15:36:20 +0100
 permalink:  /test/hello.html
 ---
 # {{ page.title }}

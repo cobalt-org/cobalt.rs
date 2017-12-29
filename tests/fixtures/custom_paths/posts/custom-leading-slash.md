@@ -1,7 +1,7 @@
 layout: posts.liquid
 
 title:  Custom paths with leading slash
-published_date:  3 May 2015 02:05:20 +0100
+published_date:  2015-05-03 02:05:20 +0100
 permalink:  /test/thing2.html
 ---
 # {{ page.title }}

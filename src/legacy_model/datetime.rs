@@ -6,37 +6,39 @@ use chrono;
 use chrono::TimeZone;
 use serde;
 
+use cobalt_model;
+
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Hash)]
 pub struct DateTime(chrono::DateTime<chrono::FixedOffset>);
 
 impl DateTime {
-    pub fn now() -> Self {
+    pub fn now() -> DateTime {
         let d = chrono::Utc::now().with_timezone(&chrono::FixedOffset::east(0));
         DateTime(d)
     }
 
-    pub fn parse<S: AsRef<str>>(d: S) -> Option<Self> {
-        Self::parse_str(d.as_ref())
+    pub fn parse<S: AsRef<str>>(d: S) -> Option<DateTime> {
+        DateTime::parse_str(d.as_ref())
     }
 
     fn parse_str(d: &str) -> Option<DateTime> {
-        chrono::DateTime::parse_from_str(d, "%Y-%m-%d %H:%M:%S %z")
+        chrono::DateTime::parse_from_str(d, "%d %B %Y %H:%M:%S %z")
             .ok()
             .map(DateTime)
     }
 
     pub fn format(&self) -> String {
-        self.0.format("%Y-%m-%d %H:%M:%S %z").to_string()
+        self.0.format("%d %B %Y %H:%M:%S %z").to_string()
     }
 
-    pub fn with_offset(&self, secs: i32) -> Option<Self> {
+    pub fn with_offset(&self, secs: i32) -> Option<DateTime> {
         let timezone = chrono::FixedOffset::east_opt(secs);
         timezone.map(|tz| self.0.with_timezone(&tz).into())
     }
 }
 
 impl Default for DateTime {
-    fn default() -> Self {
+    fn default() -> DateTime {
         let d = chrono::Utc
             .timestamp(0, 0)
             .with_timezone(&chrono::FixedOffset::east(0));
@@ -66,6 +68,12 @@ impl convert::From<chrono::DateTime<chrono::FixedOffset>> for DateTime {
 impl convert::From<DateTime> for chrono::DateTime<chrono::FixedOffset> {
     fn from(v: DateTime) -> Self {
         v.0
+    }
+}
+
+impl convert::From<DateTime> for cobalt_model::DateTime {
+    fn from(v: DateTime) -> Self {
+        v.0.into()
     }
 }
 
@@ -202,10 +210,7 @@ impl<'de> serde::de::Visitor<'de> for DateTimeVisitor {
     fn visit_str<E>(self, value: &str) -> Result<DateTime, E>
         where E: serde::de::Error
     {
-        DateTime::parse(value).ok_or_else(|| {
-            E::custom(format!("Invalid datetime '{}', must be `YYYY-MM-DD HH:MM:SS +/-TTTT",
-                              value))
-        })
+        DateTime::parse(value).ok_or_else(|| E::custom(format!("Invalid datetime '{}'", value)))
     }
 }
 
@@ -231,31 +236,32 @@ mod tests {
             .and_then(|d| d.with_hour(20))
             .and_then(|d| d.with_offset(1 * 60 * 60))
             .unwrap();
-        assert_eq!(d.format(), "2016-01-01 21:00:00 +0100");
+        assert_eq!(d.format(), "01 January 2016 21:00:00 +0100");
     }
 
     #[test]
-    fn parse() {
+    fn parse_short_month() {
         let expected = DateTime::default()
             .with_year(2016)
             .and_then(|d| d.with_month(1))
             .and_then(|d| d.with_day(1))
-            .and_then(|d| d.with_hour(3))
+            .and_then(|d| d.with_hour(20))
             .and_then(|d| d.with_offset(1 * 60 * 60))
             .unwrap();
-        assert_eq!(DateTime::parse("2016-1-1 4:00:00 +0100").unwrap(), expected);
+        assert_eq!(DateTime::parse("01 Jan 2016 21:00:00 +0100").unwrap(),
+                   expected);
     }
 
     #[test]
-    fn parse_leading_zero() {
+    fn parse_long_month() {
         let expected = DateTime::default()
             .with_year(2016)
             .and_then(|d| d.with_month(1))
             .and_then(|d| d.with_day(1))
-            .and_then(|d| d.with_hour(3))
+            .and_then(|d| d.with_hour(20))
             .and_then(|d| d.with_offset(1 * 60 * 60))
             .unwrap();
-        assert_eq!(DateTime::parse("2016-01-01 04:00:00 +0100").unwrap(),
+        assert_eq!(DateTime::parse("01 January 2016 21:00:00 +0100").unwrap(),
                    expected);
     }
 }

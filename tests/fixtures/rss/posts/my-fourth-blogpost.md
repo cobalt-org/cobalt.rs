@@ -1,7 +1,7 @@
 layout: posts.liquid
 
 title:   My fourth Blogpost
-published_date:    29 May 2015 23:00:00 +0100
+published_date:    2015-05-29 23:00:00 +0100
 ---
 # {{ page.title }}
 

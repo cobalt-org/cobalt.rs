@@ -1,7 +1,7 @@
 layout: posts.liquid
 
 title:   My first Blogpost
-published_date:    24 Aug 2014 15:36:20 +0100
+published_date:    2014-08-14 15:36:20 +0100
 ---
 # {{ page.title }}
 

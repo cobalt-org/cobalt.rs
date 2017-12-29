@@ -1,7 +1,7 @@
 layout: posts.liquid
 
 title:  Querystrings
-published_date:  9 May 2017 07:05:20 +0100
+published_date:  2017-05-09 07:05:20 +0100
 ---
 # {{ page.title }}
 

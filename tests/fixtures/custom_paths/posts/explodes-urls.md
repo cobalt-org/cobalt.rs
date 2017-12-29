@@ -1,7 +1,7 @@
 layout: posts.liquid
 
 title:  Boom
-published_date:  3 May 2015 06:05:20 +0100
+published_date:  2015-05-03 06:05:20 +0100
 permalink: /test/thing3/
 ---
 # {{ page.title }}

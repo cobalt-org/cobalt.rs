@@ -1,7 +1,7 @@
 layout: posts.liquid
 
 title:  Boom without trailing slash
-published_date:  3 May 2015 05:05:20 +0100
+published_date:  2015-05-03 05:05:20 +0100
 permalink: /test/thing4
 ---
 # {{ page.title }}

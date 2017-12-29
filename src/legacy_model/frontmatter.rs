@@ -3,6 +3,7 @@ use std::fmt;
 use liquid;
 
 use cobalt_model;
+use super::DateTime;
 use super::Permalink;
 use super::Part;
 use super::VARIABLES;
@@ -65,7 +66,7 @@ impl From<FrontmatterBuilder> for cobalt_model::FrontmatterBuilder {
                               .remove("extends")
                               .and_then(|v| v.as_str().map(|s| s.to_owned())))
             .merge_published_date(unprocessed_attributes.remove("date").and_then(|d| {
-                d.as_str().and_then(cobalt_model::DateTime::parse)
+                d.as_str().and_then(DateTime::parse).map(|d| d.into())
             }))
             .merge_data(unprocessed_attributes)
     }

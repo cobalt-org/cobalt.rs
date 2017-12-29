@@ -1,7 +1,7 @@
 layout: posts.liquid
 
 title:  Variables
-published_date:  3 May 2015 08:05:20 +0100
+published_date:  2015-05-03 08:05:20 +0100
 permalink: /test/{{data.thing}}/
 data:
   thing: hello
