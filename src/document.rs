@@ -297,23 +297,20 @@ impl Document {
                           parser: &template::LiquidParser,
                           syntax_theme: &str)
                           -> Result<()> {
-        let excerpt_html = {
-            let excerpt_attr = self.front.excerpt.as_ref();
-
-            let excerpt_separator = &self.front.excerpt_separator;
-
-            if let Some(excerpt_str) = excerpt_attr {
-                self.render_html(excerpt_str, globals, parser, syntax_theme)?
-            } else if excerpt_separator.is_empty() {
-                "".to_owned()
-            } else {
-                let excerpt = extract_excerpt(&self.content, self.front.format, excerpt_separator);
-                self.render_html(&excerpt, globals, parser, syntax_theme)?
-            }
+        let value = if let Some(excerpt_str) = self.front.excerpt.as_ref() {
+            let excerpt = self.render_html(excerpt_str, globals, parser, syntax_theme)?;
+            Value::Str(excerpt)
+        } else if self.front.excerpt_separator.is_empty() {
+            Value::Nil
+        } else {
+            let excerpt = extract_excerpt(&self.content,
+                                          self.front.format,
+                                          &self.front.excerpt_separator);
+            let excerpt = self.render_html(&excerpt, globals, parser, syntax_theme)?;
+            Value::Str(excerpt)
         };
 
-        self.attributes
-            .insert("excerpt".to_owned(), Value::Str(excerpt_html));
+        self.attributes.insert("excerpt".to_owned(), value);
         Ok(())
     }
 

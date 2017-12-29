@@ -219,6 +219,8 @@ pub fn build(config: &Config) -> Result<()> {
                 .collect();
         globals.insert("page".to_owned(),
                        liquid::Value::Object(doc.attributes.clone()));
+        doc.render_excerpt(&globals, &parser, &config.syntax_highlight.theme)
+            .chain_err(|| format!("Failed to render excerpt for {:?}", doc.file_path))?;
         doc.render_content(&globals, &parser, &config.syntax_highlight.theme)
             .chain_err(|| format!("Failed to render content for {:?}", doc.file_path))?;
 

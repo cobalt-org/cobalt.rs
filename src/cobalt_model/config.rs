@@ -37,8 +37,8 @@ pub struct SyntaxHighlight {
 }
 
 impl Default for SyntaxHighlight {
-    fn default() -> SyntaxHighlight {
-        SyntaxHighlight { theme: "base16-ocean.dark".to_owned() }
+    fn default() -> Self {
+        Self { theme: "base16-ocean.dark".to_owned() }
     }
 }
 
@@ -53,10 +53,11 @@ impl From<PageBuilder> for collection::CollectionBuilder {
     fn from(config: PageBuilder) -> Self {
         let slug = Some("pages".to_owned());
         let dir = Some(".".to_owned());
+        let default = config.default.merge_excerpt_separator("".to_owned());
         collection::CollectionBuilder {
             slug,
             dir,
-            default: config.default,
+            default: default,
             ..Default::default()
         }
     }
@@ -182,10 +183,7 @@ impl Default for ConfigBuilder {
             destination: "./_site".to_owned(),
             abs_dest: Default::default(),
             include_drafts: false,
-            default: frontmatter::FrontmatterBuilder::new()
-                .set_excerpt_separator("\n\n".to_owned())
-                .set_draft(false)
-                .set_post(false),
+            default: Default::default(),
             pages: Default::default(),
             posts: Default::default(),
             site: Default::default(),
