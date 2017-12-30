@@ -1,4 +1,4 @@
-use std::fs::File;
+use std::fs;
 use std::collections::HashMap;
 use std::io::Write;
 use std::path::Path;
@@ -290,7 +290,13 @@ fn create_rss(path: &str, dest: &Path, config: &Config, posts: &[Document]) -> R
     let rss_string = channel.to_string();
     trace!("RSS data: {}", rss_string);
 
-    let mut rss_file = File::create(&rss_path)?;
+    // create target directories if any exist
+    if let Some(parent) = rss_path.parent() {
+        fs::create_dir_all(parent)
+            .map_err(|e| format!("Could not create {:?}: {}", parent, e))?;
+    }
+
+    let mut rss_file = fs::File::create(&rss_path)?;
     rss_file
         .write_all(br#"<?xml version="1.0" encoding="UTF-8"?>"#)?;
     rss_file.write_all(&rss_string.into_bytes())?;
