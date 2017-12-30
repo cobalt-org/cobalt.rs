@@ -47,7 +47,7 @@ const INDEX_MD: &'static str = "layout: default.liquid
 ---
 ## Blog!
 
-{% for post in posts %}
+{% for post in collections.posts.pages %}
 #### {{post.title}}
 
 [{{ post.title }}]({{ post.permalink }})

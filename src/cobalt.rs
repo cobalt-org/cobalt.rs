@@ -100,7 +100,9 @@ pub fn build(config: &Config) -> Result<()> {
     let default_date = cobalt_model::DateTime::default();
 
     let (mut posts, documents): (Vec<Document>, Vec<Document>) =
-        documents.into_iter().partition(|x| x.front.is_post);
+        documents
+            .into_iter()
+            .partition(|x| x.front.collection == "posts");
 
     // sort documents by date, if there's no date (none was provided or it couldn't be read) then
     // fall back to the default date
@@ -157,9 +159,16 @@ pub fn build(config: &Config) -> Result<()> {
 
         // Everything done with `globals` is terrible for performance.  liquid#95 allows us to
         // improve this.
+        let mut posts_variable = config.posts.attributes.clone();
+        posts_variable.insert("pages".to_owned(),
+                              liquid::Value::Array(simple_posts_data.clone()));
+        let global_collection: liquid::Object = vec![(config.posts.slug.clone(),
+                                                      liquid::Value::Object(posts_variable))]
+            .into_iter()
+            .collect();
         let mut globals: liquid::Object =
             vec![("site".to_owned(), liquid::Value::Object(config.site.attributes.clone())),
-                 ("posts".to_owned(), liquid::Value::Array(simple_posts_data.clone()))]
+                 ("collections".to_owned(), liquid::Value::Object(global_collection))]
                 .into_iter()
                 .collect();
         globals.insert("page".to_owned(),
@@ -212,9 +221,15 @@ pub fn build(config: &Config) -> Result<()> {
             files::write_document_file(content, dest.join(file_path))?;
         }
 
+        let mut posts_variable = config.posts.attributes.clone();
+        posts_variable.insert("pages".to_owned(), liquid::Value::Array(posts_data.clone()));
+        let global_collection: liquid::Object = vec![(config.posts.slug.clone(),
+                                                      liquid::Value::Object(posts_variable))]
+            .into_iter()
+            .collect();
         let mut globals: liquid::Object =
             vec![("site".to_owned(), liquid::Value::Object(config.site.attributes.clone())),
-                 ("posts".to_owned(), liquid::Value::Array(posts_data.clone()))]
+                 ("collections".to_owned(), liquid::Value::Object(global_collection))]
                 .into_iter()
                 .collect();
         globals.insert("page".to_owned(),

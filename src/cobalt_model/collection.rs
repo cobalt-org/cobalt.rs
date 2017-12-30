@@ -85,6 +85,8 @@ impl CollectionBuilder {
             attributes.insert("jsonfeed".to_owned(), liquid::Value::str(jsonfeed));
         }
 
+        let default = default.set_collection(slug.clone());
+
         let new = Collection {
             title,
             slug,

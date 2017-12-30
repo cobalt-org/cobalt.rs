@@ -51,7 +51,8 @@ pub struct PageBuilder {
 
 impl From<PageBuilder> for collection::CollectionBuilder {
     fn from(config: PageBuilder) -> Self {
-        let slug = Some("pages".to_owned());
+        // Pages aren't publicly exposed as a collection
+        let slug = Some("".to_owned());
         let dir = Some(".".to_owned());
         let default = config.default.merge_excerpt_separator("".to_owned());
         collection::CollectionBuilder {
@@ -104,10 +105,6 @@ impl From<PostBuilder> for collection::CollectionBuilder {
             jsonfeed,
             default,
         } = config;
-
-        // HACK: We shouldn't allow a user to set this in the first place but too lazy to setup
-        // error reporting in here.
-        let default = default.set_post(true);
 
         let slug = Some("posts".to_owned());
         collection::CollectionBuilder {

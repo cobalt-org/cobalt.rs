@@ -149,6 +149,7 @@ fn document_attributes(front: &cobalt_model::Frontmatter,
              ("categories".to_owned(), categories),
              ("is_draft".to_owned(), liquid::Value::Bool(front.is_draft)),
              ("file".to_owned(), liquid::Value::Object(file)),
+             ("collection".to_owned(), liquid::Value::str(&front.collection)),
              ("data".to_owned(), liquid::Value::Object(front.data.clone()))];
     let mut attributes: liquid::Object = attributes.into_iter().collect();
 
@@ -156,8 +157,6 @@ fn document_attributes(front: &cobalt_model::Frontmatter,
         attributes.insert("published_date".to_owned(),
                           liquid::Value::Str(published_date.format()));
     }
-    // TODO(epage): Provide a way to determine tbis
-    attributes.insert("is_post".to_owned(), liquid::Value::Bool(front.is_post));
 
     attributes
 }

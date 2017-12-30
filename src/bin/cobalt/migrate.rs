@@ -88,16 +88,19 @@ fn migrate_variables(content: String) -> Result<String> {
             (r#"\{\{\s*content\s*}}"#, "{{ page.content }}"),
             (r#"\{\{\s*previous\.(.*?)\s*}}"#, "{{ page.previous.$1 }}"),
             (r#"\{\{\s*next\.(.*?)\s*}}"#, "{{ page.next.$1 }}"),
-            (r#"\{%\s*if\s+is_post\s*%}"#, "{% if page.is_post %}"),
+            (r#"\{%\s*if\s+is_post\s*%}"#, r#"{% if page.collection == "posts" %}"#),
             (r#"\{%\s*if\s+previous\s*%}"#, "{% if page.previous %}"),
             (r#"\{%\s*if\s+next\s*%}"#, "{% if page.next %}"),
             (r#"\{%\s*if\s+draft\s*%}"#, "{% if page.is_draft %}"),
+            (r#"\{%\s*for\s+post\s+in\s+posts\s*%}"#,
+             r#"{% for post in collections.posts.pages %}"#),
             // from johannhof.github.io
             (r#"\{\{\s*route\s*}}"#, "{{ page.data.route }}"),
             (r#"\{%\s*if\s+route\s*"#, "{% if page.data.route "),
             (r#"\{\{\s*date\s*"#, "{{ page.published_date "),
             // From blog
             (r#"\{\{\s*post\.date\s*"#, "{{ post.published_date "),
+            (r#"\{%\s*for\s+post\s+in\s+posts\s*"#, r#"{% for post in collections.posts.pages "#),
             // From booyaa.github.io
             (r#"\{%\s*assign\s+word_count\s*=\s*content"#, "{% assign word_count = page.content"),
             (r#"\{%\s*assign\s+year\s*=\s*post.path"#, "{% assign year = post.permalink"),
@@ -311,7 +314,7 @@ mod tests {
     #[test]
     fn migrate_variables_if_is_post() {
         let fixture = r#"{% if is_post %}"#.to_owned();
-        let expected = r#"{% if page.is_post %}"#.to_owned();
+        let expected = r#"{% if page.collection == "posts" %}"#.to_owned();
         let actual = migrate_variables(fixture).unwrap();
         assert_eq!(expected, actual);
     }
