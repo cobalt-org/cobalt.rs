@@ -40,8 +40,8 @@ matrix:
 install:
   - curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain $TRAVIS_RUST_VERSION
   - source ~/.cargo/env || true
-  - travis_wait cargo install cargo-travis --force --vers $COVERALLS
   - if [[ `cargo-when --version` != *$WHEN ]] ; then travis_wait cargo install cargo-when --force --vers $WHEN; fi
+#  - travis_wait cargo install cargo-travis --force --vers $COVERALLS
 
 script:
   - rustc -Vv

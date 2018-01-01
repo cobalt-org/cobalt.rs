@@ -112,7 +112,10 @@ impl SassCompiler {
                              dest: &path::Path,
                              file_path: &path::Path)
                              -> Result<()> {
-        let src_file = source.join(file_path);
-        files::copy_file(src_file.as_path(), dest.join(file_path).as_path())
+        let rel_src = file_path
+            .strip_prefix(source)
+            .expect("file was found under the root");
+        let dest_file = dest.join(rel_src);
+        files::copy_file(file_path, &dest_file)
     }
 }
