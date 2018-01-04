@@ -64,8 +64,8 @@ fn migrate_config(config_path: Option<&str>) -> Result<()> {
 fn migrate_includes_path(content: String) -> Result<String> {
     lazy_static!{
         static ref REPLACEMENTS_REF: Vec<(regex::Regex, &'static str)> = vec![
-            (r#"\{%\s*include\s*['"]_layouts/(.*?)['"]\s*%}"#, r#"{% include "$1" %}"#),
-            (r#"\{\{\s*include\s*['"]_layouts/(.*?)['"]\s*}}"#, r#"{% include "$1" %}"#),
+            (r#"\{%-?\s*include\s*['"]?_layouts/(.*?)['"]?\s*%}"#, r#"{% include "$1" %}"#),
+            (r#"\{\{\s*include\s*['"]?_layouts/(.*?)['"]?\s*}}"#, r#"{% include "$1" %}"#),
         ].into_iter()
             .map(|(r, s)| (regex::Regex::new(r).unwrap(), s))
             .collect();
@@ -124,8 +124,29 @@ fn migrate_variables(content: String) -> Result<String> {
             (r#"\{\{\s*author\s*}}"#, "{{ page.data.author }}"),
             // mre
             (r#"\{\{\s*title"#, "{{ page.title"),
-            (r#"\{%\s*if\s+title\s*!=\s*""\s*%}"#, r#"{% if page.title != "" %}"#),
-            (r#"\{%-\s*if\s+title\s*!=\s*""\s*%}"#, r#"{%- if page.title != "" %}"#),
+            (r#"\{%-?\s*if\s+title\s*==\s*""\s*%}"#, r#"{% if page.title == "" %}"#),
+            (r#"\{%-?\s*if\s+title\s*!=\s*""\s*%}"#, r#"{% if page.title != "" %}"#),
+            (r#"\{%-?\s*if\s+translations\s*%}"#, r#"{% if page.data.translations %}"#),
+            (r#"\{%-?\s*for\s+translation\s+in\s+translations\s*"#,
+             r#"{% for translation in page.data.translations "#),
+            (r#"\{%-?\s*if\s+comments\s*%}"#, r#"{% if page.data.comments %}"#),
+            (r#"\{%-?\s*for\s+comment\s+in\s+comments\s*"#,
+             r#"{% for comment in page.data.comments "#),
+            (r#"\{%-?\s*if\s+excerpt\s*%}"#, r#"{% if page.excerpt %}"#),
+            (r#"\{\{-?\s*excerpt\s+"#, "{{ page.excerpt "),
+            (r#"\{\{-?\s*content\s+"#, "{{ page.content "),
+            (r#"\{%-?\s*if\s+social_img\s*%}"#, r#"{% if page.data.social_img %}"#),
+            (r#"\{%-?\s*if\s+humandate\s*%}"#, r#"{% if page.data.humandate %}"#),
+            (r#"\{\{-?\s*humandate\s+"#, "{{ page.data.humandate "),
+            (r#"\{%-?\s*if\s+subtitle\s*%}"#, r#"{% if page.data.subtitle %}"#),
+            (r#"\{%-?\s*if\s+subtitle\s*==\s*""\s*%}"#, r#"{% if page.data.subtitle == "" %}"#),
+            (r#"\{%-?\s*if\s+subtitle\s*!=\s*""\s*%}"#, r#"{% if page.data.subtitle != "" %}"#),
+            (r#"\{\{-?\s*subtitle\s+"#, "{{ page.data.subtitle "),
+            (r#"\{\{\s*redirect_to\s*}}"#, "{{ page.data.redirect_to }}"),
+            (r#"\{\{\s*post\.humandate\s*"#, "{{ post.data.humandate "),
+            (r#"\{%-?\s*if\s+css\s*%}"#, r#"{% if page.data.css %}"#),
+            (r#"\{\{-?\s*css\s+"#, "{{ page.data.css "),
+            (r#"\| append: subtitle"#, "| append: page.data.subtitle "),
         ].into_iter()
             .map(|(r, s)| (regex::Regex::new(r).unwrap(), s))
             .collect();
