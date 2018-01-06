@@ -52,10 +52,11 @@
 
 extern crate cobalt;
 extern crate env_logger;
-extern crate notify;
 extern crate ghp;
-
 extern crate hyper;
+extern crate notify;
+extern crate regex;
+extern crate serde_yaml;
 
 #[macro_use]
 extern crate error_chain;
@@ -64,12 +65,16 @@ extern crate error_chain;
 extern crate clap;
 
 #[macro_use]
+extern crate lazy_static;
+
+#[macro_use]
 extern crate log;
 
 mod args;
 mod build;
 mod error;
 mod jekyll;
+mod migrate;
 mod new;
 mod serve;
 
@@ -98,6 +103,7 @@ fn run() -> Result<()> {
         .subcommand(build::import_command_args())
         .subcommand(SubCommand::with_name("list-syntax-themes").about("list available themes"))
         .subcommand(SubCommand::with_name("list-syntaxes").about("list supported syntaxes"))
+        .subcommand(migrate::migrate_command_args())
         .subcommand(jekyll::convert_command_args());
 
     let global_matches = app_cli.get_matches();
@@ -131,6 +137,7 @@ fn run() -> Result<()> {
             }
             Ok(())
         }
+        "migrate" => migrate::migrate_command(matches),
         "convert-jekyll" => jekyll::convert_command(matches),
         _ => {
             bail!(global_matches.usage());

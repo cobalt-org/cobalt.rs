@@ -1,7 +1,7 @@
-extends: default.liquid
+layout: default.liquid
 
 title: Explicit `excerpt`
-date: 14 January 2016 21:02:30 -0500
+published_date: 2016-01-14 21:02:30 -0500
 excerpt: Is in `markdown`
 ---
 

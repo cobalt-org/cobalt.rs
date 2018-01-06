@@ -13,7 +13,7 @@ use error::Result;
 use super::datetime;
 use super::slug;
 
-const PATH_ALIAS: &'static str = "/:path/:filename:output_ext";
+const PATH_ALIAS: &'static str = "/{{parent}}/{{name}}{{ext}}";
 lazy_static!{
     static ref PERMALINK_ALIASES: HashMap<&'static str, &'static str> = [
         ("path", PATH_ALIAS),
@@ -46,6 +46,9 @@ pub trait Front
     fn to_string(&self) -> Result<String> {
         let mut converted = serde_yaml::to_string(self)?;
         converted.drain(..4);
+        if converted == "{}" {
+            converted.clear();
+        }
         Ok(converted)
     }
 }
@@ -54,22 +57,34 @@ pub trait Front
 #[derive(Serialize, Deserialize)]
 #[serde(deny_unknown_fields, default)]
 pub struct FrontmatterBuilder {
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub permalink: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub slug: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub title: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub excerpt: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub categories: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub excerpt_separator: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub published_date: Option<datetime::DateTime>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub format: Option<SourceFormat>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub layout: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub is_draft: Option<bool>,
+    #[serde(skip_serializing_if = "liquid::Object::is_empty")]
+    pub data: liquid::Object,
     // Controlled by where the file is found.  We might allow control over the type at a later
     // point but we need to first define those semantics.
     #[serde(skip)]
-    pub is_post: Option<bool>,
-    pub data: liquid::Object,
+    pub collection: Option<String>,
 }
 
 impl FrontmatterBuilder {
@@ -157,9 +172,9 @@ impl FrontmatterBuilder {
         }
     }
 
-    pub fn set_post<B: Into<Option<bool>>>(self, is_post: B) -> Self {
+    pub fn set_collection<S: Into<Option<String>>>(self, collection: S) -> Self {
         Self {
-            is_post: is_post.into(),
+            collection: collection.into(),
             ..self
         }
     }
@@ -212,8 +227,8 @@ impl FrontmatterBuilder {
     }
 
     #[cfg(test)]
-    pub fn merge_post<B: Into<Option<bool>>>(self, post: B) -> Self {
-        self.merge(Self::new().set_post(post.into()))
+    pub fn merge_collection<S: Into<Option<String>>>(self, collection: S) -> Self {
+        self.merge(Self::new().set_collection(collection.into()))
     }
 
     pub fn merge_data(self, other_data: liquid::Object) -> Self {
@@ -229,7 +244,7 @@ impl FrontmatterBuilder {
             format,
             layout,
             is_draft,
-            is_post,
+            collection,
             data,
         } = self;
         Self {
@@ -244,7 +259,7 @@ impl FrontmatterBuilder {
             format: format,
             layout: layout,
             is_draft: is_draft,
-            is_post: is_post,
+            collection: collection,
             data: merge_objects(data, other_data),
         }
     }
@@ -262,7 +277,7 @@ impl FrontmatterBuilder {
             format,
             layout,
             is_draft,
-            is_post,
+            collection,
             data,
         } = self;
         let Self {
@@ -277,7 +292,7 @@ impl FrontmatterBuilder {
             format: other_format,
             layout: other_layout,
             is_draft: other_is_draft,
-            is_post: other_is_post,
+            collection: other_collection,
             data: other_data,
         } = other;
         Self {
@@ -292,7 +307,7 @@ impl FrontmatterBuilder {
             format: format.or_else(|| other_format),
             layout: layout.or_else(|| other_layout),
             is_draft: is_draft.or_else(|| other_is_draft),
-            is_post: is_post.or_else(|| other_is_post),
+            collection: collection.or_else(|| other_collection),
             data: merge_objects(data, other_data),
         }
     }
@@ -347,11 +362,11 @@ impl FrontmatterBuilder {
             format,
             layout,
             is_draft,
-            is_post,
+            collection,
             data,
         } = self;
 
-        let is_post = is_post.unwrap_or(false);
+        let collection = collection.unwrap_or_else(|| "".to_owned());
 
         let permalink = permalink.unwrap_or_else(|| PATH_ALIAS.to_owned());
         let permalink = if !permalink.starts_with('/') {
@@ -376,7 +391,7 @@ impl FrontmatterBuilder {
             format: format.unwrap_or_else(SourceFormat::default),
             layout: layout,
             is_draft: is_draft.unwrap_or(false),
-            is_post: is_post,
+            collection: collection,
             data: data,
         };
 
@@ -408,8 +423,7 @@ pub struct Frontmatter {
     pub format: SourceFormat,
     pub layout: Option<String>,
     pub is_draft: bool,
-    #[serde(skip)]
-    pub is_post: bool,
+    pub collection: String,
     pub data: liquid::Object,
 }
 
@@ -619,7 +633,7 @@ mod test {
             format: Some(SourceFormat::Markdown),
             layout: Some("layout a".to_owned()),
             is_draft: Some(true),
-            is_post: Some(false),
+            collection: Some("pages".to_owned()),
             data: liquid::Object::new(),
         };
         let b = FrontmatterBuilder {
@@ -634,7 +648,7 @@ mod test {
             format: Some(SourceFormat::Raw),
             layout: Some("layout b".to_owned()),
             is_draft: Some(true),
-            is_post: Some(false),
+            collection: Some("posts".to_owned()),
             data: liquid::Object::new(),
         };
 
@@ -662,7 +676,7 @@ mod test {
             format: Some(SourceFormat::Markdown),
             layout: Some("layout a".to_owned()),
             is_draft: Some(true),
-            is_post: Some(false),
+            collection: Some("pages".to_owned()),
             data: liquid::Object::new(),
         };
 
@@ -677,7 +691,7 @@ mod test {
             .merge_format(SourceFormat::Raw)
             .merge_layout("layout b".to_owned())
             .merge_draft(true)
-            .merge_post(false);
+            .merge_collection("posts".to_owned());
         assert_eq!(merge_b_into_a, a);
 
         let merge_empty_into_a = a.clone()
@@ -691,7 +705,7 @@ mod test {
             .merge_format(None)
             .merge_layout(None)
             .merge_draft(None)
-            .merge_post(None);
+            .merge_collection(None);
         assert_eq!(merge_empty_into_a, a);
 
         let merge_a_into_empty = FrontmatterBuilder::new()
@@ -705,7 +719,7 @@ mod test {
             .merge_format(SourceFormat::Markdown)
             .merge_layout("layout a".to_owned())
             .merge_draft(true)
-            .merge_post(false);
+            .merge_collection("pages".to_owned());
         assert_eq!(merge_a_into_empty, a);
     }
 

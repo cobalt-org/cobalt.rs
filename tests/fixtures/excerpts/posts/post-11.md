@@ -1,7 +1,7 @@
-extends: default.liquid
+layout: default.liquid
 
 title: Reference-style links immediately below first block do not resolve
-date: 11 Feb 2017 04:51:34 -0000
+published_date: 2017-02-11 04:51:34 -0000
 ---
 
 References are placed immediately below the first paragraph:

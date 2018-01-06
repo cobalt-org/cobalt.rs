@@ -1,7 +1,7 @@
-extends: default.liquid
+layout: default.liquid
 
 title: Reference-style links above first block and separated by blank line resolve
-date: 11 Feb 2017 04:45:01 -0000
+published_date: 2017-02-11 04:45:01 -0000
 ---
 
 [00]: /0

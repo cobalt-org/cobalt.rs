@@ -5,7 +5,6 @@ use clap;
 
 use cobalt::cobalt_model;
 use cobalt::cobalt_model::files;
-use cobalt::legacy_model;
 use cobalt::jekyll_model;
 
 use error::*;
@@ -74,7 +73,6 @@ fn convert_document_file(source_file: &path::Path, dest_file: &path::Path) -> Re
     let doc = files::read_file(source_file)?;
     let doc = jekyll_model::DocumentBuilder::parse(&doc)?;
     let doc: cobalt_model::DocumentBuilder<cobalt_model::FrontmatterBuilder> = doc.into();
-    let doc: legacy_model::DocumentBuilder = doc.into();
     let doc = doc.to_string();
     files::write_document_file(&doc, dest_file)?;
     Ok(())

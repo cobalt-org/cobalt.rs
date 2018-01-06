@@ -7,7 +7,7 @@ use chrono::{Datelike, Timelike};
 use itertools;
 use jsonfeed;
 use liquid;
-use liquid::{Renderable, Context, Value};
+use liquid::Value;
 use pulldown_cmark as cmark;
 use regex::Regex;
 use rss;
@@ -15,9 +15,9 @@ use serde_yaml;
 
 use error::*;
 use cobalt_model::files;
+use cobalt_model::slug;
 use cobalt_model;
 use syntax_highlight::decorate_markdown;
-use legacy_model;
 use template;
 
 /// Convert the source file's relative path into a format useful for generating permalinks that
@@ -38,63 +38,58 @@ fn format_path_variable(source_file: &Path) -> String {
     path
 }
 
-fn permalink_attributes(front: &cobalt_model::Frontmatter,
-                        dest_file: &Path)
-                        -> HashMap<String, String> {
-    let mut attributes = HashMap::new();
+fn permalink_attributes(front: &cobalt_model::Frontmatter, dest_file: &Path) -> liquid::Object {
+    let mut attributes = liquid::Object::new();
 
-    attributes.insert(":path".to_owned(), format_path_variable(dest_file));
+    attributes.insert("parent".to_owned(),
+                      Value::Str(format_path_variable(dest_file)));
 
-    let filename = dest_file.file_stem().and_then(|s| s.to_str());
-    if let Some(filename) = filename {
-        attributes.insert(":filename".to_owned(), filename.to_owned());
-    }
+    let filename = dest_file.file_stem().and_then(|s| s.to_str()).unwrap_or("");
+    attributes.insert("name".to_owned(), Value::str(filename));
+
+    attributes.insert("ext".to_owned(), Value::str(".html"));
 
     // TODO(epage): Add `collection` (the collection's slug), see #257
     // or `parent.slug`, see #323
 
-    attributes.insert(":slug".to_owned(), front.slug.clone());
+    attributes.insert("slug".to_owned(), Value::str(&front.slug));
 
-    // TODO(epage): slugify categories?  See #257
-    attributes.insert(":categories".to_owned(),
-                      itertools::join(front.categories.iter(), "/"));
-
-    attributes.insert(":output_ext".to_owned(), ".html".to_owned());
+    attributes.insert("categories".to_owned(),
+                      Value::Str(itertools::join(front.categories.iter().map(slug::slugify), "/")));
 
     if let Some(ref date) = front.published_date {
-        attributes.insert(":year".to_owned(), date.year().to_string());
-        attributes.insert(":month".to_owned(), format!("{:02}", &date.month()));
-        attributes.insert(":i_month".to_owned(), date.month().to_string());
-        attributes.insert(":day".to_owned(), format!("{:02}", &date.day()));
-        attributes.insert(":i_day".to_owned(), date.day().to_string());
-        attributes.insert(":hour".to_owned(), format!("{:02}", &date.hour()));
-        attributes.insert(":minute".to_owned(), format!("{:02}", &date.minute()));
-        attributes.insert(":second".to_owned(), format!("{:02}", &date.second()));
+        attributes.insert("year".to_owned(), Value::Str(date.year().to_string()));
+        attributes.insert("month".to_owned(),
+                          Value::Str(format!("{:02}", &date.month())));
+        attributes.insert("i_month".to_owned(), Value::Str(date.month().to_string()));
+        attributes.insert("day".to_owned(), Value::Str(format!("{:02}", &date.day())));
+        attributes.insert("i_day".to_owned(), Value::Str(date.day().to_string()));
+        attributes.insert("hour".to_owned(),
+                          Value::Str(format!("{:02}", &date.hour())));
+        attributes.insert("minute".to_owned(),
+                          Value::Str(format!("{:02}", &date.minute())));
+        attributes.insert("second".to_owned(),
+                          Value::Str(format!("{:02}", &date.second())));
     }
 
-    // Allow customizing any of the above with custom cobalt_model attributes
-    // TODO(epage): Place in a `data` variable.  See #257
-    for (key, val) in &front.data {
-        let key = format!(":{}", key);
-        // HACK: We really should support nested types
-        let val = val.to_string();
-        attributes.insert(key, val);
-    }
+    attributes.insert("data".to_owned(), Value::Object(front.data.clone()));
 
     attributes
 }
 
-fn explode_permalink<S: Into<String>>(permalink: S, attributes: HashMap<String, String>) -> String {
-    explode_permalink_string(permalink.into(), attributes)
+fn explode_permalink<S: AsRef<str>>(permalink: S, attributes: &liquid::Object) -> Result<String> {
+    explode_permalink_string(permalink.as_ref(), attributes)
 }
 
-fn explode_permalink_string(permalink: String, attributes: HashMap<String, String>) -> String {
-    // TODO(epage): Switch to liquid templating
-    let mut p = permalink;
-
-    for (key, val) in attributes {
-        p = p.replace(&key, &val);
+fn explode_permalink_string(permalink: &str, attributes: &liquid::Object) -> Result<String> {
+    lazy_static!{
+       static ref PERMALINK_PARSER: liquid::Parser = liquid::Parser::new();
     }
+    let p = PERMALINK_PARSER.parse(permalink)?;
+    let mut p = p.render(attributes)?;
+
+    // Handle the user doing windows-style
+    p = p.replace("\\", "/");
 
     // Handle cases where substutions were blank
     p = p.replace("//", "/");
@@ -103,7 +98,7 @@ fn explode_permalink_string(permalink: String, attributes: HashMap<String, Strin
         p.remove(0);
     }
 
-    p
+    Ok(p)
 }
 
 fn format_url_as_file<S: AsRef<str>>(permalink: S) -> PathBuf {
@@ -131,37 +126,36 @@ fn format_url_as_file_str(permalink: &str) -> PathBuf {
 }
 
 fn document_attributes(front: &cobalt_model::Frontmatter,
-                       source_file: &str,
+                       source_file: &Path,
                        url_path: &str)
                        -> liquid::Object {
-    let mut attributes = liquid::Object::new();
+    let categories = liquid::Value::Array(front
+                                              .categories
+                                              .iter()
+                                              .map(|c| liquid::Value::str(c))
+                                              .collect());
+    // Reason for `file`:
+    // - Allow access to assets in the original location
+    // - Ease linking back to page's source
+    let file: liquid::Object = vec![("permalink".to_owned(),
+                                     liquid::Value::str(source_file.to_str().unwrap_or("")))]
+        .into_iter()
+        .collect();
+    let attributes =
+        vec![("permalink".to_owned(), liquid::Value::str(url_path)),
+             ("title".to_owned(), liquid::Value::str(&front.title)),
+             ("description".to_owned(),
+              liquid::Value::str(front.description.as_ref().map(|s| s.as_str()).unwrap_or(""))),
+             ("categories".to_owned(), categories),
+             ("is_draft".to_owned(), liquid::Value::Bool(front.is_draft)),
+             ("file".to_owned(), liquid::Value::Object(file)),
+             ("collection".to_owned(), liquid::Value::str(&front.collection)),
+             ("data".to_owned(), liquid::Value::Object(front.data.clone()))];
+    let mut attributes: liquid::Object = attributes.into_iter().collect();
 
-    attributes.insert("path".to_owned(), liquid::Value::str(url_path));
-    // TODO(epage): Remove?  See #257
-    attributes.insert("source".to_owned(), liquid::Value::str(source_file));
-    attributes.insert("title".to_owned(), liquid::Value::str(&front.title));
-    if let Some(ref description) = front.description {
-        attributes.insert("description".to_owned(), liquid::Value::str(description));
-    }
-    attributes.insert("categories".to_owned(),
-                      liquid::Value::Array(front
-                                               .categories
-                                               .iter()
-                                               .map(|c| liquid::Value::str(c))
-                                               .collect()));
     if let Some(ref published_date) = front.published_date {
-        // TODO(epage): Rename to published_date. See #257
-        attributes.insert("date".to_owned(),
+        attributes.insert("published_date".to_owned(),
                           liquid::Value::Str(published_date.format()));
-    }
-    // TODO(epage): Rename to `is_draft`. See #257
-    attributes.insert("draft".to_owned(), liquid::Value::Bool(front.is_draft));
-    // TODO(epage): Remove? See #257
-    attributes.insert("is_post".to_owned(), liquid::Value::Bool(front.is_post));
-
-    // TODO(epage): Place in a `custom` variable.  See #257
-    for (key, val) in &front.data {
-        attributes.insert(key.clone(), val.clone());
     }
 
     attributes
@@ -198,24 +192,23 @@ impl Document {
                  -> Result<Document> {
         trace!("Parsing {:?}", rel_path);
         let content = files::read_file(src_path)?;
-        let builder = legacy_model::DocumentBuilder::parse(&content)?;
-        let builder: cobalt_model::DocumentBuilder<cobalt_model::FrontmatterBuilder> = builder
-            .into();
+        let builder =
+            cobalt_model::DocumentBuilder::<cobalt_model::FrontmatterBuilder>::parse(&content)?;
         let (front, content) = builder.parts();
         let front = front.merge_path(rel_path).merge(default_front);
 
         let front = front.build()?;
 
-        let perma_attributes = permalink_attributes(&front, rel_path);
         let (file_path, url_path) = {
-            let permalink = front.permalink.as_ref();
-            let url_path = explode_permalink(permalink, perma_attributes);
+            let perma_attributes = permalink_attributes(&front, rel_path);
+            let url_path =
+                explode_permalink(&front.permalink, &perma_attributes)
+                    .chain_err(|| format!("Failed to create permalink `{}`", front.permalink))?;
             let file_path = format_url_as_file(&url_path);
             (file_path, url_path)
         };
 
-        let doc_attributes =
-            document_attributes(&front, rel_path.to_str().unwrap_or(""), url_path.as_ref());
+        let doc_attributes = document_attributes(&front, rel_path, url_path.as_ref());
 
         Ok(Document::new(url_path,
                          file_path,
@@ -270,12 +263,6 @@ impl Document {
             .map(|s| s.to_owned())
     }
 
-
-    /// Prepares liquid context for further rendering.
-    pub fn get_render_context(&self) -> Context {
-        Context::with_values(self.attributes.clone())
-    }
-
     /// Renders liquid templates into HTML in the context of current document.
     ///
     /// Takes `content` string and returns rendered HTML. This function doesn't
@@ -283,12 +270,12 @@ impl Document {
     /// rendering content or excerpt.
     fn render_html(&self,
                    content: &str,
-                   context: &mut Context,
+                   globals: &liquid::Object,
                    parser: &template::LiquidParser,
                    syntax_theme: &str)
                    -> Result<String> {
         let template = parser.parse(content)?;
-        let html = template.render(context)?.unwrap_or_default();
+        let html = template.render(globals)?;
 
         let html = match self.front.format {
             cobalt_model::SourceFormat::Raw => html,
@@ -305,27 +292,38 @@ impl Document {
 
     /// Renders excerpt and adds it to attributes of the document.
     pub fn render_excerpt(&mut self,
-                          context: &mut Context,
+                          globals: &liquid::Object,
                           parser: &template::LiquidParser,
                           syntax_theme: &str)
                           -> Result<()> {
-        let excerpt_html = {
-            let excerpt_attr = self.front.excerpt.as_ref();
-
-            let excerpt_separator = &self.front.excerpt_separator;
-
-            if let Some(excerpt_str) = excerpt_attr {
-                self.render_html(excerpt_str, context, parser, syntax_theme)?
-            } else if excerpt_separator.is_empty() {
-                self.render_html("", context, parser, syntax_theme)?
-            } else {
-                let excerpt = extract_excerpt(&self.content, self.front.format, excerpt_separator);
-                self.render_html(&excerpt, context, parser, syntax_theme)?
-            }
+        let value = if let Some(excerpt_str) = self.front.excerpt.as_ref() {
+            let excerpt = self.render_html(excerpt_str, globals, parser, syntax_theme)?;
+            Value::Str(excerpt)
+        } else if self.front.excerpt_separator.is_empty() {
+            Value::Nil
+        } else {
+            let excerpt = extract_excerpt(&self.content,
+                                          self.front.format,
+                                          &self.front.excerpt_separator);
+            let excerpt = self.render_html(&excerpt, globals, parser, syntax_theme)?;
+            Value::Str(excerpt)
         };
 
+        self.attributes.insert("excerpt".to_owned(), value);
+        Ok(())
+    }
+
+    /// Renders the content and adds it to attributes of the document.
+    ///
+    /// When we say "content" we mean only this document without extended layout.
+    pub fn render_content(&mut self,
+                          globals: &liquid::Object,
+                          parser: &template::LiquidParser,
+                          syntax_theme: &str)
+                          -> Result<()> {
+        let content_html = self.render_html(&self.content, globals, parser, syntax_theme)?;
         self.attributes
-            .insert("excerpt".to_owned(), Value::Str(excerpt_html));
+            .insert("content".to_owned(), Value::Str(content_html.clone()));
         Ok(())
     }
 
@@ -333,25 +331,14 @@ impl Document {
     ///
     /// Side effects:
     ///
-    /// * content is inserted to the attributes of the document
-    /// * content is inserted to context
     /// * layout may be inserted to layouts cache
-    ///
-    /// When we say "content" we mean only this document without extended layout.
     pub fn render(&mut self,
-                  context: &mut Context,
+                  globals: &liquid::Object,
                   parser: &template::LiquidParser,
                   layouts_dir: &Path,
-                  layouts_cache: &mut HashMap<String, String>,
-                  syntax_theme: &str)
+                  layouts_cache: &mut HashMap<String, String>)
                   -> Result<String> {
-        let content_html = self.render_html(&self.content, context, parser, syntax_theme)?;
-        self.attributes
-            .insert("content".to_owned(), Value::Str(content_html.clone()));
-
         if let Some(ref layout) = self.front.layout {
-            context.set_val("content", Value::Str(content_html.clone()));
-
             let layout_data_ref = match layouts_cache.entry(layout.to_owned()) {
                 Entry::Vacant(vacant) => {
                     let layout_data = files::read_file(layouts_dir.join(layout))
@@ -370,11 +357,19 @@ impl Document {
                 .parse(layout_data_ref)
                 .chain_err(|| format!("Failed to parse layout {:?}", layout))?;
             let content_html = template
-                .render(context)
-                .chain_err(|| format!("Failed to render layout {:?}", layout))?
-                .unwrap_or_default();
+                .render(globals)
+                .chain_err(|| format!("Failed to render layout {:?}", layout))?;
             Ok(content_html)
         } else {
+            let content_html = globals
+                .get("page")
+                .ok_or("Internal error: page isn't in globals")?
+                .get(&liquid::Index::with_key("content"))
+                .ok_or("Internal error: page.content isn't in globals")?
+                .as_str()
+                .ok_or("Internal error: bad content format")?
+                .to_owned();
+
             Ok(content_html)
         }
     }
@@ -465,22 +460,22 @@ mod test {
 
     #[test]
     fn explode_permalink_relative() {
-        let attributes = HashMap::new();
-        let actual = explode_permalink("relative/path", attributes);
+        let attributes = liquid::Object::new();
+        let actual = explode_permalink("relative/path", &attributes).unwrap();
         assert_eq!(actual, "relative/path");
     }
 
     #[test]
     fn explode_permalink_absolute() {
-        let attributes = HashMap::new();
-        let actual = explode_permalink("/abs/path", attributes);
+        let attributes = liquid::Object::new();
+        let actual = explode_permalink("/abs/path", &attributes).unwrap();
         assert_eq!(actual, "abs/path");
     }
 
     #[test]
     fn explode_permalink_blank_substitution() {
-        let attributes = HashMap::new();
-        let actual = explode_permalink("//path/middle//end", attributes);
+        let attributes = liquid::Object::new();
+        let actual = explode_permalink("//path/middle//end", &attributes).unwrap();
         assert_eq!(actual, "path/middle/end");
     }
 

@@ -1,4 +1,4 @@
-use std::fs::File;
+use std::fs;
 use std::collections::HashMap;
 use std::io::Write;
 use std::path::Path;
@@ -100,7 +100,9 @@ pub fn build(config: &Config) -> Result<()> {
     let default_date = cobalt_model::DateTime::default();
 
     let (mut posts, documents): (Vec<Document>, Vec<Document>) =
-        documents.into_iter().partition(|x| x.front.is_post);
+        documents
+            .into_iter()
+            .partition(|x| x.front.collection == "posts");
 
     // sort documents by date, if there's no date (none was provided or it couldn't be read) then
     // fall back to the default date
@@ -127,15 +129,18 @@ pub fn build(config: &Config) -> Result<()> {
         trace!("Generating {}", post.url_path);
 
         // posts are in reverse date order, so previous post is the next in the list (+1)
-        if let Some(previous) = simple_posts_data.get(i + 1) {
-            post.attributes
-                .insert("previous".to_owned(), previous.clone());
-        }
-        if i >= 1 {
-            if let Some(next) = simple_posts_data.get(i - 1) {
-                post.attributes.insert("next".to_owned(), next.clone());
-            }
-        }
+        let previous = simple_posts_data
+            .get(i + 1)
+            .cloned()
+            .unwrap_or(liquid::Value::Nil);
+        post.attributes.insert("previous".to_owned(), previous);
+        let next = if i >= 1 {
+            simple_posts_data.get(i - 1)
+        } else {
+            None
+        }.cloned()
+            .unwrap_or(liquid::Value::Nil);
+        post.attributes.insert("next".to_owned(), next);
 
         for dump in config.dump.iter().filter(|d| d.is_doc()) {
             trace!("Dumping {:?}", dump);
@@ -152,26 +157,31 @@ pub fn build(config: &Config) -> Result<()> {
             files::write_document_file(content, dest.join(file_path))?;
         }
 
-        let mut context = post.get_render_context();
-        // TODO(epage): Switch `posts` to `parent` which is an object see #323
-        context.set_val("posts", liquid::Value::Array(simple_posts_data.clone()));
-        context.set_val("site",
-                        liquid::Value::Object(config.site.attributes.clone()));
-        post.render_excerpt(&mut context, &parser, &config.syntax_highlight.theme)
+        // Everything done with `globals` is terrible for performance.  liquid#95 allows us to
+        // improve this.
+        let mut posts_variable = config.posts.attributes.clone();
+        posts_variable.insert("pages".to_owned(),
+                              liquid::Value::Array(simple_posts_data.clone()));
+        let global_collection: liquid::Object = vec![(config.posts.slug.clone(),
+                                                      liquid::Value::Object(posts_variable))]
+            .into_iter()
+            .collect();
+        let mut globals: liquid::Object =
+            vec![("site".to_owned(), liquid::Value::Object(config.site.attributes.clone())),
+                 ("collections".to_owned(), liquid::Value::Object(global_collection))]
+                .into_iter()
+                .collect();
+        globals.insert("page".to_owned(),
+                       liquid::Value::Object(post.attributes.clone()));
+        post.render_excerpt(&globals, &parser, &config.syntax_highlight.theme)
             .chain_err(|| format!("Failed to render excerpt for {:?}", post.file_path))?;
+        post.render_content(&globals, &parser, &config.syntax_highlight.theme)
+            .chain_err(|| format!("Failed to render content for {:?}", post.file_path))?;
 
-        // Yes, this is terrible for performance but we need a new `get_render_context` to get an
-        // updated `excerpt`.  liquid#95 allow us to improve this.
-        let mut context = post.get_render_context();
-        // TODO(epage): Switch `posts` to `parent` which is an object see #323
-        context.set_val("posts", liquid::Value::Array(simple_posts_data.clone()));
-        context.set_val("site",
-                        liquid::Value::Object(config.site.attributes.clone()));
-        let post_html = post.render(&mut context,
-                                    &parser,
-                                    &layouts,
-                                    &mut layouts_cache,
-                                    &config.syntax_highlight.theme)
+        // Refresh `page` with the `excerpt` / `content` attribute
+        globals.insert("page".to_owned(),
+                       liquid::Value::Object(post.attributes.clone()));
+        let post_html = post.render(&globals, &parser, &layouts, &mut layouts_cache)
             .chain_err(|| format!("Failed to render for {:?}", post.file_path))?;
         files::write_document_file(post_html, dest.join(&post.file_path))?;
     }
@@ -211,17 +221,28 @@ pub fn build(config: &Config) -> Result<()> {
             files::write_document_file(content, dest.join(file_path))?;
         }
 
-        let mut context = doc.get_render_context();
-        // TODO(epage): Switch `posts` to an object see #323
-        context.set_val("posts", liquid::Value::Array(posts_data.clone()));
-        context.set_val("site",
-                        liquid::Value::Object(config.site.attributes.clone()));
+        let mut posts_variable = config.posts.attributes.clone();
+        posts_variable.insert("pages".to_owned(), liquid::Value::Array(posts_data.clone()));
+        let global_collection: liquid::Object = vec![(config.posts.slug.clone(),
+                                                      liquid::Value::Object(posts_variable))]
+            .into_iter()
+            .collect();
+        let mut globals: liquid::Object =
+            vec![("site".to_owned(), liquid::Value::Object(config.site.attributes.clone())),
+                 ("collections".to_owned(), liquid::Value::Object(global_collection))]
+                .into_iter()
+                .collect();
+        globals.insert("page".to_owned(),
+                       liquid::Value::Object(doc.attributes.clone()));
+        doc.render_excerpt(&globals, &parser, &config.syntax_highlight.theme)
+            .chain_err(|| format!("Failed to render excerpt for {:?}", doc.file_path))?;
+        doc.render_content(&globals, &parser, &config.syntax_highlight.theme)
+            .chain_err(|| format!("Failed to render content for {:?}", doc.file_path))?;
 
-        let doc_html = doc.render(&mut context,
-                                  &parser,
-                                  &layouts,
-                                  &mut layouts_cache,
-                                  &config.syntax_highlight.theme)
+        // Refresh `page` with the `excerpt` / `content` attribute
+        globals.insert("page".to_owned(),
+                       liquid::Value::Object(doc.attributes.clone()));
+        let doc_html = doc.render(&globals, &parser, &layouts, &mut layouts_cache)
             .chain_err(|| format!("Failed to render for {:?}", doc.file_path))?;
         files::write_document_file(doc_html, dest.join(doc.file_path))?;
     }
@@ -258,18 +279,13 @@ fn create_rss(path: &str, dest: &Path, config: &Config, posts: &[Document]) -> R
     let rss_path = dest.join(path);
     info!("Creating RSS file at {}", rss_path.display());
 
-    let title = config
-        .posts
-        .title
-        .as_ref()
-        .or_else(|| config.site.title.as_ref())
-        .ok_or(ErrorKind::ConfigFileMissingFields)?;
+    let title = &config.posts.title;
     let description = config
         .posts
         .description
         .as_ref()
-        .or_else(|| config.site.description.as_ref())
-        .ok_or(ErrorKind::ConfigFileMissingFields)?;
+        .map(|s| s.as_str())
+        .unwrap_or("");
     let link = config
         .site
         .base_url
@@ -289,7 +305,13 @@ fn create_rss(path: &str, dest: &Path, config: &Config, posts: &[Document]) -> R
     let rss_string = channel.to_string();
     trace!("RSS data: {}", rss_string);
 
-    let mut rss_file = File::create(&rss_path)?;
+    // create target directories if any exist
+    if let Some(parent) = rss_path.parent() {
+        fs::create_dir_all(parent)
+            .map_err(|e| format!("Could not create {:?}: {}", parent, e))?;
+    }
+
+    let mut rss_file = fs::File::create(&rss_path)?;
     rss_file
         .write_all(br#"<?xml version="1.0" encoding="UTF-8"?>"#)?;
     rss_file.write_all(&rss_string.into_bytes())?;
@@ -297,23 +319,19 @@ fn create_rss(path: &str, dest: &Path, config: &Config, posts: &[Document]) -> R
 
     Ok(())
 }
+
 // creates a new jsonfeed file with the contents of the site blog
 fn create_jsonfeed(path: &str, dest: &Path, config: &Config, posts: &[Document]) -> Result<()> {
     let jsonfeed_path = dest.join(path);
     info!("Creating jsonfeed file at {}", jsonfeed_path.display());
 
-    let title = config
-        .posts
-        .title
-        .as_ref()
-        .or_else(|| config.site.title.as_ref())
-        .ok_or(ErrorKind::ConfigFileMissingFields)?;
+    let title = &config.posts.title;
     let description = config
         .posts
         .description
         .as_ref()
-        .or_else(|| config.site.description.as_ref())
-        .ok_or(ErrorKind::ConfigFileMissingFields)?;
+        .map(|s| s.as_str())
+        .unwrap_or("");
     let link = config
         .site
         .base_url

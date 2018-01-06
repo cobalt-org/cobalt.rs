@@ -1,7 +1,7 @@
-extends: default.liquid
+layout: default.liquid
 
 title: Reference-style links immediately above first block
-date: 11 Feb 2017 04:50:21 -0000
+published_date: 2017-02-11 04:50:21 -0000
 ---
 
 [20]: /0

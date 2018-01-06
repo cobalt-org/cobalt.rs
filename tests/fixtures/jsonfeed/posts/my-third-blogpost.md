@@ -1,10 +1,10 @@
-extends: posts.liquid
+layout: posts.liquid
 
 title:   My third Blogpost
-date:    27 May 2015 23:00:00 +0100
+published_date:    2015-05-27 23:00:00 +0100
 categories: [ foo ]
 ---
-# {{ title }}
+# {{ page.title }}
 
 Hey there this is my first blogpost and this is super awesome.
 

@@ -1,11 +1,11 @@
-extends: default.liquid
+layout: default.liquid
 ---
 This is my Index page!
 
-{% for post in posts %}
- <a href="{{post.path}}">{{ post.title }}</a>
+{% for post in collections.posts.pages %}
+ <a href="{{post.permalink}}">{{ post.title }}</a>
 {% endfor %}
 
-{% for post in posts %}
- <a href="{{post.path}}?v=123456">{{ post.title }}</a>
+{% for post in collections.posts.pages %}
+ <a href="{{post.permalink}}?v=123456">{{ post.title }}</a>
 {% endfor %}

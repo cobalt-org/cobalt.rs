@@ -132,20 +132,17 @@ impl From<GlobalConfig> for cobalt_model::ConfigBuilder {
 
         let default = cobalt_model::FrontmatterBuilder::new()
             .set_excerpt_separator(excerpt_separator)
-            .set_draft(false)
-            .set_post(false);
+            .set_draft(false);
         let posts = cobalt_model::PostBuilder {
             title: None,
-            slug: None,
             description: None,
-            dir: posts,
+            dir: Some(posts),
             drafts_dir: Some(drafts),
             order: post_order,
             rss: rss,
             jsonfeed: jsonfeed,
             default: cobalt_model::FrontmatterBuilder::new()
-                .set_permalink(post_path.map(convert_permalink))
-                .set_post(true),
+                .set_permalink(post_path.map(convert_permalink)),
         };
 
         let site = cobalt_model::SiteBuilder {

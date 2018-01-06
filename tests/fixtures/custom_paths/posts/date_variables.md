@@ -1,10 +1,11 @@
-extends: posts.liquid
+layout: posts.liquid
 
 title:  Date variables
-thing: hello
-date:  3 May 2015 04:05:20 +0100
-path:  /:year/:thing/
+published_date:  2015-05-03 04:05:20 +0100
+permalink:  /{{year}}/{{data.thing}}/
+data:
+  thing: hello
 ---
-# {{ title }}
+# {{ page.title }}
 
 This asserts interpolation of date variables and other variables.

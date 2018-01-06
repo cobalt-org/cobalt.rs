@@ -1,9 +1,9 @@
-extends: posts.liquid
+layout: posts.liquid
 
 title: Another draft
-draft: true
+is_draft: true
 ---
-# {{ title }}
+# {{ page.title }}
 
 Hey there this is my first blogpost and this is super awesome.
 

@@ -1,7 +1,7 @@
-extends: default.liquid
+layout: default.liquid
 
 title: Reference-style links below first block and separated by blank line resolve
-date: 11 Feb 2017 04:48:11 -0000
+published_date: 2017-02-11 04:48:11 -0000
 ---
 
 References are placed below the first paragraph, and are separated from the

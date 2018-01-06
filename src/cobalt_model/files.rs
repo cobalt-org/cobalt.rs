@@ -515,22 +515,22 @@ mod tests {
 
     #[test]
     fn find_project_file_same_dir() {
-        let actual = find_project_file("tests/fixtures/config", ".cobalt.yml").unwrap();
-        let expected = path::Path::new("tests/fixtures/config/.cobalt.yml");
+        let actual = find_project_file("tests/fixtures/config", "_cobalt.yml").unwrap();
+        let expected = path::Path::new("tests/fixtures/config/_cobalt.yml");
         assert_eq!(actual, expected);
     }
 
     #[test]
     fn find_project_file_parent_dir() {
-        let actual = find_project_file("tests/fixtures/config/child", ".cobalt.yml").unwrap();
-        let expected = path::Path::new("tests/fixtures/config/.cobalt.yml");
+        let actual = find_project_file("tests/fixtures/config/child", "_cobalt.yml").unwrap();
+        let expected = path::Path::new("tests/fixtures/config/_cobalt.yml");
         assert_eq!(actual, expected);
     }
 
     #[test]
     fn find_project_file_doesnt_exist() {
         let expected = path::Path::new("<NOT FOUND>");
-        let actual = find_project_file("tests/fixtures/", ".cobalt.yml")
+        let actual = find_project_file("tests/fixtures/", "_cobalt.yml")
             .unwrap_or_else(|| expected.into());
         assert_eq!(actual, expected);
     }
