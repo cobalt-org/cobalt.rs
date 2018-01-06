@@ -99,7 +99,6 @@ fn run() -> Result<()> {
         .subcommand(build::build_command_args())
         .subcommand(build::clean_command_args())
         .subcommand(serve::serve_command_args())
-        .subcommand(serve::watch_command_args())
         .subcommand(build::import_command_args())
         .subcommand(SubCommand::with_name("list-syntax-themes").about("list available themes"))
         .subcommand(SubCommand::with_name("list-syntaxes").about("list supported syntaxes"))
@@ -123,7 +122,6 @@ fn run() -> Result<()> {
         "build" => build::build_command(matches),
         "clean" => build::clean_command(matches),
         "serve" => serve::serve_command(matches),
-        "watch" => serve::watch_command(matches),
         "import" => build::import_command(matches),
         "list-syntax-themes" => {
             for name in list_syntax_themes() {
