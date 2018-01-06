@@ -37,18 +37,21 @@ pub fn serve_command_args() -> clap::App<'static, 'static> {
 }
 
 pub fn serve_command(matches: &clap::ArgMatches) -> Result<()> {
-    let config = args::get_config(matches)?;
+    let port = matches.value_of("port").unwrap().to_string();
+    let ip = format!("127.0.0.1:{}", port);
+
+    let mut config = args::get_config(matches)?;
+    debug!("Overriding config `site.base_url` with `{}`", ip);
+    config.site.base_url = Some(ip.clone());
     let config = config.build()?;
+    let dest = path::Path::new(&config.destination).to_owned();
 
     build::build(&config)?;
 
-    let port = matches.value_of("port").unwrap().to_string();
-    let dest = path::Path::new(&config.destination).to_owned();
-
     if matches.is_present("no-watch") {
-        serve(&dest, &port)?;
+        serve(&dest, &ip)?;
     } else {
-        thread::spawn(move || if serve(&dest, &port).is_err() {
+        thread::spawn(move || if serve(&dest, &ip).is_err() {
                           process::exit(1)
                       });
 
@@ -114,10 +117,9 @@ fn static_file_handler(dest: &path::Path, req: Request, mut res: Response) -> Re
     Ok(())
 }
 
-fn serve(dest: &path::Path, port: &str) -> Result<()> {
+fn serve(dest: &path::Path, ip: &str) -> Result<()> {
     info!("Serving {:?} through static file server", dest);
 
-    let ip = format!("127.0.0.1:{}", port);
     info!("Server Listening on {}", &ip);
     info!("Ctrl-c to stop the server");
 
