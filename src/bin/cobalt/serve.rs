@@ -7,6 +7,7 @@ use std::thread;
 
 use clap;
 use cobalt::cobalt_model::files;
+use error_chain::ChainedError;
 use hyper;
 use hyper::server::{Server, Request, Response};
 use hyper::uri::RequestUri;
@@ -79,7 +80,10 @@ pub fn watch_command(matches: &clap::ArgMatches) -> Result<()> {
             true
         };
         if rebuild {
-            build::build(&config)?;
+            let result = build::build(&config);
+            if let Err(fail) = result {
+                error!("build failed\n{}", fail.display_chain());
+            }
         }
     }
 }
