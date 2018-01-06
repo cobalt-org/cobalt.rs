@@ -7,6 +7,8 @@ use std::thread;
 
 use clap;
 use cobalt::cobalt_model::files;
+use cobalt::cobalt_model;
+use error_chain::ChainedError;
 use hyper;
 use hyper::server::{Server, Request, Response};
 use hyper::uri::RequestUri;
@@ -16,8 +18,8 @@ use args;
 use build;
 use error::*;
 
-pub fn watch_command_args() -> clap::App<'static, 'static> {
-    clap::SubCommand::with_name("watch")
+pub fn serve_command_args() -> clap::App<'static, 'static> {
+    clap::SubCommand::with_name("serve")
         .about("build, serve, and watch the project at the source dir")
         .args(&args::get_config_args())
         .arg(clap::Arg::with_name("port")
@@ -27,88 +29,36 @@ pub fn watch_command_args() -> clap::App<'static, 'static> {
                  .help("Port to serve from")
                  .default_value("3000")
                  .takes_value(true))
-}
-
-pub fn watch_command(matches: &clap::ArgMatches) -> Result<()> {
-    let config = args::get_config(matches)?;
-    let config = config.build()?;
-
-    build::build(&config)?;
-
-    // canonicalize is to ensure there is no question that `watcher`s paths come back safe for
-    // Files::includes_file
-    let source = path::Path::new(&config.source)
-        .canonicalize()
-        .chain_err(|| "Failed in processing source")?;
-    let dest = path::Path::new(&config.destination).to_owned();
-
-    // Be as broad as possible in what can cause a rebuild to
-    // ensure we don't miss anything (normal file walks will miss
-    // `_layouts`, etc).
-    let mut site_files = files::FilesBuilder::new(&source)?;
-    site_files.ignore_hidden(false)?;
-    for line in &config.ignore {
-        site_files.add_ignore(line.as_str())?;
-    }
-    let site_files = site_files.build()?;
-
-    let port = matches.value_of("port").unwrap().to_string();
-    thread::spawn(move || if serve(&dest, &port).is_err() {
-                      process::exit(1)
-                  });
-
-    let (tx, rx) = channel();
-    let mut watcher = raw_watcher(tx).chain_err(|| "Notify error")?;
-    watcher
-        .watch(&source, RecursiveMode::Recursive)
-        .chain_err(|| "Notify error")?;
-    info!("Watching {:?} for changes", &config.source);
-
-    loop {
-        let event = rx.recv().chain_err(|| "Notify error")?;
-        let rebuild = if let Some(ref event_path) = event.path {
-            if site_files.includes_file(event_path) {
-                debug!("Page changed {:?}", event);
-                true
-            } else {
-                trace!("Ignored file changed {:?}", event);
-                false
-            }
-        } else {
-            trace!("Assuming change {:?} is relevant", event);
-            true
-        };
-        if rebuild {
-            build::build(&config)?;
-        }
-    }
-}
-
-pub fn serve_command_args() -> clap::App<'static, 'static> {
-    clap::SubCommand::with_name("serve")
-        .about("build and serve the cobalt project at the source dir")
-        .args(&args::get_config_args())
-        .arg(clap::Arg::with_name("port")
-                 .short("P")
-                 .long("port")
-                 .value_name("INT")
-                 .help("Port to serve from")
-                 .default_value("3000")
-                 .takes_value(true))
+        .arg(clap::Arg::with_name("no-watch")
+                 .long("no-watch")
+                 .help("Disable rebuilding on change")
+                 .conflicts_with("drafts")
+                 .takes_value(false))
 }
 
 pub fn serve_command(matches: &clap::ArgMatches) -> Result<()> {
-    let config = args::get_config(matches)?;
+    let port = matches.value_of("port").unwrap().to_string();
+    let ip = format!("127.0.0.1:{}", port);
+
+    let mut config = args::get_config(matches)?;
+    debug!("Overriding config `site.base_url` with `{}`", ip);
+    config.site.base_url = Some(ip.clone());
     let config = config.build()?;
+    let dest = path::Path::new(&config.destination).to_owned();
 
     build::build(&config)?;
-    let port = matches.value_of("port").unwrap().to_string();
-    let dest = path::Path::new(&config.destination);
-    serve(dest, &port)?;
 
+    if matches.is_present("no-watch") {
+        serve(&dest, &ip)?;
+    } else {
+        thread::spawn(move || if serve(&dest, &ip).is_err() {
+                          process::exit(1)
+                      });
+
+        watch(config)?;
+    }
     Ok(())
 }
-
 
 fn static_file_handler(dest: &path::Path, req: Request, mut res: Response) -> Result<()> {
     // grab the requested path
@@ -167,10 +117,9 @@ fn static_file_handler(dest: &path::Path, req: Request, mut res: Response) -> Re
     Ok(())
 }
 
-fn serve(dest: &path::Path, port: &str) -> Result<()> {
+fn serve(dest: &path::Path, ip: &str) -> Result<()> {
     info!("Serving {:?} through static file server", dest);
 
-    let ip = format!("127.0.0.1:{}", port);
     info!("Server Listening on {}", &ip);
     info!("Ctrl-c to stop the server");
 
@@ -197,4 +146,51 @@ fn serve(dest: &path::Path, port: &str) -> Result<()> {
     };
 
     Ok(())
+}
+
+fn watch(config: cobalt_model::Config) -> Result<()> {
+    // canonicalize is to ensure there is no question that `watcher`s paths come back safe for
+    // Files::includes_file
+    let source = path::Path::new(&config.source)
+        .canonicalize()
+        .chain_err(|| "Failed in processing source")?;
+
+    // Be as broad as possible in what can cause a rebuild to
+    // ensure we don't miss anything (normal file walks will miss
+    // `_layouts`, etc).
+    let mut site_files = files::FilesBuilder::new(&source)?;
+    site_files.ignore_hidden(false)?;
+    for line in &config.ignore {
+        site_files.add_ignore(line.as_str())?;
+    }
+    let site_files = site_files.build()?;
+
+    let (tx, rx) = channel();
+    let mut watcher = raw_watcher(tx).chain_err(|| "Notify error")?;
+    watcher
+        .watch(&source, RecursiveMode::Recursive)
+        .chain_err(|| "Notify error")?;
+    info!("Watching {:?} for changes", &config.source);
+
+    loop {
+        let event = rx.recv().chain_err(|| "Notify error")?;
+        let rebuild = if let Some(ref event_path) = event.path {
+            if site_files.includes_file(event_path) {
+                debug!("Page changed {:?}", event);
+                true
+            } else {
+                trace!("Ignored file changed {:?}", event);
+                false
+            }
+        } else {
+            trace!("Assuming change {:?} is relevant", event);
+            true
+        };
+        if rebuild {
+            let result = build::build(&config);
+            if let Err(fail) = result {
+                error!("build failed\n{}", fail.display_chain());
+            }
+        }
+    }
 }
