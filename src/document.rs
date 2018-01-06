@@ -137,10 +137,12 @@ fn document_attributes(front: &cobalt_model::Frontmatter,
     // Reason for `file`:
     // - Allow access to assets in the original location
     // - Ease linking back to page's source
-    let file: liquid::Object = vec![("permalink".to_owned(),
-                                     liquid::Value::str(source_file.to_str().unwrap_or("")))]
-        .into_iter()
-        .collect();
+    let file: liquid::Object =
+        vec![("permalink".to_owned(), liquid::Value::str(source_file.to_str().unwrap_or(""))),
+             ("parent".to_owned(),
+              liquid::Value::str(source_file.parent().and_then(Path::to_str).unwrap_or("")))]
+            .into_iter()
+            .collect();
     let attributes =
         vec![("permalink".to_owned(), liquid::Value::str(url_path)),
              ("title".to_owned(), liquid::Value::str(&front.title)),
