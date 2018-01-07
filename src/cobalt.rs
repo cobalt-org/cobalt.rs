@@ -250,7 +250,7 @@ pub fn build(config: &Config) -> Result<()> {
     // copy all remaining files in the source to the destination
     // compile SASS along the way
     {
-        info!("Copying remaining assets");
+        debug!("Copying remaining assets");
 
         let mut asset_files = files::FilesBuilder::new(source)?;
         for line in &config.ignore {
@@ -277,7 +277,7 @@ pub fn build(config: &Config) -> Result<()> {
 // creates a new RSS file with the contents of the site blog
 fn create_rss(path: &str, dest: &Path, config: &Config, posts: &[Document]) -> Result<()> {
     let rss_path = dest.join(path);
-    info!("Creating RSS file at {}", rss_path.display());
+    debug!("Creating RSS file at {}", rss_path.display());
 
     let title = &config.posts.title;
     let description = config
@@ -323,7 +323,7 @@ fn create_rss(path: &str, dest: &Path, config: &Config, posts: &[Document]) -> R
 // creates a new jsonfeed file with the contents of the site blog
 fn create_jsonfeed(path: &str, dest: &Path, config: &Config, posts: &[Document]) -> Result<()> {
     let jsonfeed_path = dest.join(path);
-    info!("Creating jsonfeed file at {}", jsonfeed_path.display());
+    debug!("Creating jsonfeed file at {}", jsonfeed_path.display());
 
     let title = &config.posts.title;
     let description = config

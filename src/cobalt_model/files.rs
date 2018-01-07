@@ -213,7 +213,7 @@ fn write_document_file_internal(content: &str, dest_file: &path::Path) -> Result
         .map_err(|e| format!("Could not create {:?}: {}", dest_file, e))?;
 
     file.write_all(content.as_bytes())?;
-    info!("Wrote {}", dest_file.display());
+    trace!("Wrote {}", dest_file.display());
     Ok(())
 }
 

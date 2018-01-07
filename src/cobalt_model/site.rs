@@ -155,7 +155,7 @@ fn load_data(data_path: &path::Path) -> Result<liquid::Value> {
 }
 
 fn insert_data_dir(data: &mut liquid::Object, data_root: &path::Path) -> Result<()> {
-    info!("Loading data from {:?}", data_root);
+    debug!("Loading data from {:?}", data_root);
 
     let data_files_builder = files::FilesBuilder::new(data_root)?;
     let data_files = data_files_builder.build()?;
