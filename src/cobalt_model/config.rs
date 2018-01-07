@@ -9,7 +9,7 @@ use syntax_highlight::has_syntax_theme;
 use super::collection;
 use super::files;
 use super::frontmatter;
-use super::sass;
+use super::assets;
 use super::site;
 
 arg_enum! {
@@ -121,26 +121,6 @@ impl From<PostBuilder> for collection::CollectionBuilder {
     }
 }
 
-#[derive(Debug, PartialEq, Default)]
-#[derive(Serialize, Deserialize)]
-#[serde(deny_unknown_fields, default)]
-pub struct AssetsBuilder {
-    pub sass: sass::SassBuilder,
-}
-
-impl AssetsBuilder {
-    pub fn build(self) -> Assets {
-        Assets { sass: self.sass.build() }
-    }
-}
-
-#[derive(Debug, PartialEq, Default)]
-#[derive(Serialize, Deserialize)]
-#[serde(deny_unknown_fields, default)]
-pub struct Assets {
-    pub sass: sass::SassCompiler,
-}
-
 const LAYOUTS_DIR: &'static str = "_layouts";
 const INCLUDES_DIR: &'static str = "_includes";
 
@@ -166,7 +146,7 @@ pub struct ConfigBuilder {
     pub layouts_dir: &'static str,
     #[serde(skip)]
     pub includes_dir: &'static str,
-    pub assets: AssetsBuilder,
+    pub assets: assets::AssetsBuilder,
     // This is a debug-only field and should be transient rather than persistently set.
     #[serde(skip)]
     pub dump: Vec<Dump>,
@@ -189,7 +169,7 @@ impl Default for ConfigBuilder {
             syntax_highlight: SyntaxHighlight::default(),
             layouts_dir: LAYOUTS_DIR,
             includes_dir: INCLUDES_DIR,
-            assets: AssetsBuilder::default(),
+            assets: assets::AssetsBuilder::default(),
             dump: Default::default(),
         }
     }
@@ -364,7 +344,7 @@ pub struct Config {
     pub syntax_highlight: SyntaxHighlight,
     pub layouts_dir: &'static str,
     pub includes_dir: &'static str,
-    pub assets: Assets,
+    pub assets: assets::Assets,
     pub dump: Vec<Dump>,
 }
 
