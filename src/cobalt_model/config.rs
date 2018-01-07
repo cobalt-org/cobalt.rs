@@ -224,7 +224,7 @@ impl ConfigBuilder {
         let file_path = files::find_project_file(&cwd, "_cobalt.yml");
         let config = file_path
             .map(|p| {
-                     info!("Using config file {:?}", &p);
+                     debug!("Using config file {:?}", &p);
                      Self::from_file(&p).chain_err(|| format!("Error reading config file {:?}", p))
                  })
             .unwrap_or_else(|| {
