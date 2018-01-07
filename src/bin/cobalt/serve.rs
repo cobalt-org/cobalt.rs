@@ -4,6 +4,7 @@ use std::path;
 use std::process;
 use std::sync::mpsc::channel;
 use std::thread;
+use std::time;
 
 use clap;
 use cobalt::cobalt_model::files;
@@ -12,7 +13,8 @@ use error_chain::ChainedError;
 use hyper;
 use hyper::server::{Server, Request, Response};
 use hyper::uri::RequestUri;
-use notify::{Watcher, RecursiveMode, raw_watcher};
+use notify;
+use notify::Watcher;
 
 use args;
 use build;
@@ -166,15 +168,25 @@ fn watch(config: cobalt_model::Config) -> Result<()> {
     let site_files = site_files.build()?;
 
     let (tx, rx) = channel();
-    let mut watcher = raw_watcher(tx).chain_err(|| "Notify error")?;
+    let mut watcher = notify::watcher(tx, time::Duration::from_secs(1))
+        .chain_err(|| "Notify error")?;
     watcher
-        .watch(&source, RecursiveMode::Recursive)
+        .watch(&source, notify::RecursiveMode::Recursive)
         .chain_err(|| "Notify error")?;
     info!("Watching {:?} for changes", &config.source);
 
     loop {
         let event = rx.recv().chain_err(|| "Notify error")?;
-        let rebuild = if let Some(ref event_path) = event.path {
+        let event_path = match event {
+            notify::DebouncedEvent::Create(ref path) |
+            notify::DebouncedEvent::NoticeWrite(ref path) |
+            notify::DebouncedEvent::Write(ref path) |
+            notify::DebouncedEvent::NoticeRemove(ref path) |
+            notify::DebouncedEvent::Remove(ref path) => Some(path),
+            notify::DebouncedEvent::Rename(_, ref to) => Some(to),
+            _ => None,
+        };
+        let rebuild = if let Some(event_path) = event_path {
             if site_files.includes_file(event_path) {
                 debug!("Page changed {:?}", event);
                 true
