@@ -299,7 +299,11 @@ impl ConfigBuilder {
 
         let site = site.build(&source)?;
 
-        let assets = assets.build();
+        let mut assets = assets;
+        assets.source = Some(source.clone());
+        assets.ignore = ignore.clone();
+        assets.template_extensions = template_extensions.clone();
+        let assets = assets.build()?;
 
         let config = Config {
             source,
@@ -329,9 +333,7 @@ impl fmt::Display for ConfigBuilder {
     }
 }
 
-#[derive(Debug, PartialEq)]
-#[derive(Serialize, Deserialize)]
-#[serde(deny_unknown_fields, default)]
+#[derive(Debug)]
 pub struct Config {
     pub source: path::PathBuf,
     pub destination: path::PathBuf,

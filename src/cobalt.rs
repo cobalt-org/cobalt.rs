@@ -252,23 +252,7 @@ pub fn build(config: &Config) -> Result<()> {
     {
         debug!("Copying remaining assets");
 
-        let mut asset_files = files::FilesBuilder::new(source)?;
-        for line in &config.ignore {
-            asset_files.add_ignore(line.as_str())?;
-        }
-        let asset_files = asset_files.build()?;
-        for file_path in asset_files.files().filter(|p| {
-            !template_extensions.contains(&p.extension().unwrap_or_else(|| OsStr::new("")))
-        }) {
-            if file_path.extension() == Some(OsStr::new("scss")) {
-                config.assets.sass.compile_file(source, dest, file_path)?;
-            } else {
-                let rel_src = file_path
-                    .strip_prefix(source)
-                    .expect("file was found under the root");
-                files::copy_file(&file_path, dest.join(rel_src).as_path())?;
-            }
-        }
+        config.assets.populate(dest)?;
     }
 
     Ok(())
