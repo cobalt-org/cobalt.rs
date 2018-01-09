@@ -149,6 +149,15 @@ impl Files {
     }
 }
 
+impl<'a> IntoIterator for &'a Files {
+    type Item = path::PathBuf;
+    type IntoIter = FilesIterator<'a>;
+
+    fn into_iter(self) -> FilesIterator<'a> {
+        self.files()
+    }
+}
+
 pub fn find_project_file<P: Into<path::PathBuf>>(dir: P, name: &str) -> Option<path::PathBuf> {
     find_project_file_internal(dir.into(), name)
 }

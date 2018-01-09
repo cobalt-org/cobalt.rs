@@ -1,3 +1,4 @@
+mod assets;
 mod collection;
 mod config;
 mod datetime;
@@ -9,10 +10,10 @@ mod site;
 pub mod files;
 pub mod slug;
 
+pub use self::assets::AssetsBuilder;
 pub use self::collection::Collection;
 pub use self::collection::CollectionBuilder;
 pub use self::collection::SortOrder;
-pub use self::config::AssetsBuilder;
 pub use self::config::Config;
 pub use self::config::ConfigBuilder;
 pub use self::config::Dump;

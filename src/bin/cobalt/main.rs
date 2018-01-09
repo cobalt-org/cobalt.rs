@@ -73,13 +73,13 @@ extern crate log;
 mod args;
 mod build;
 mod error;
+mod debug;
 mod jekyll;
 mod migrate;
 mod new;
 mod serve;
 
-use clap::{App, SubCommand, AppSettings};
-use cobalt::{list_syntaxes, list_syntax_themes};
+use clap::{App, AppSettings};
 
 use error::*;
 
@@ -100,10 +100,9 @@ fn run() -> Result<()> {
         .subcommand(build::clean_command_args())
         .subcommand(serve::serve_command_args())
         .subcommand(build::import_command_args())
-        .subcommand(SubCommand::with_name("list-syntax-themes").about("list available themes"))
-        .subcommand(SubCommand::with_name("list-syntaxes").about("list supported syntaxes"))
         .subcommand(migrate::migrate_command_args())
-        .subcommand(jekyll::convert_command_args());
+        .subcommand(jekyll::convert_command_args())
+        .subcommand(debug::debug_command_args());
 
     let global_matches = app_cli.get_matches();
 
@@ -123,18 +122,7 @@ fn run() -> Result<()> {
         "clean" => build::clean_command(matches),
         "serve" => serve::serve_command(matches),
         "import" => build::import_command(matches),
-        "list-syntax-themes" => {
-            for name in list_syntax_themes() {
-                println!("{}", name);
-            }
-            Ok(())
-        }
-        "list-syntaxes" => {
-            for name in list_syntaxes() {
-                println!("{}", name);
-            }
-            Ok(())
-        }
+        "debug" => debug::debug_command(matches),
         "migrate" => migrate::migrate_command(matches),
         "convert-jekyll" => jekyll::convert_command(matches),
         _ => {
