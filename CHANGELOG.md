@@ -1,3 +1,13 @@
+<a name="0.11.1"></a>
+## 0.11.1 (2018-01-10)
+
+
+#### Features
+
+* **liquid:**  Support contains operator ([668f4726](https://github.com/cobalt-org/cobalt.rs/commit/668f47260d1e7db7666a77d8c100997da2531dee))
+
+
+
 <a name="0.11.0"></a>
 ## 0.11.0 (2018-01-09)
 
