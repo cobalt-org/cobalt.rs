@@ -67,7 +67,7 @@ extern crate sass_rs;
 
 extern crate itertools;
 
-#[cfg(all(feature = "syntax-highlight", not(windows)))]
+#[cfg(all(feature = "syntax-highlight"))]
 extern crate syntect;
 
 #[macro_use]

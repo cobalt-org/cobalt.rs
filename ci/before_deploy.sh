@@ -13,7 +13,7 @@ main() {
             ;;
     esac
 
-    cargo rustc --target $TARGET --release --bin cobalt --features="syntax-highlight" -- -C lto
+    cargo rustc --target $TARGET --release --bin cobalt -- -C lto
 
     cp target/$TARGET/release/cobalt $stage/
 
