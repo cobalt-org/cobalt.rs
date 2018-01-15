@@ -1,37 +1,39 @@
 # Based on the "trust" template v0.1.1
 # https://github.com/japaric/trust/tree/v0.1.1
 
+os: Visual Studio 2017
+
 environment:
   global:
-    RUST_VERSION: stable
     CRATE_NAME: cobalt
     APPVEYOR_CACHE_SKIP_RESTORE: true
 
   matrix:
     # Stable channel
-    - TARGET: x86_64-pc-windows-gnu
-      CHANNEL: stable
-    - TARGET: i686-pc-windows-msvc
-      CHANNEL: stable
     - TARGET: x86_64-pc-windows-msvc
       CHANNEL: stable
+      TOOLCHAIN: msvc
+      
     # Beta channel
     - TARGET: x86_64-pc-windows-msvc
       CHANNEL: beta
+      TOOLCHAIN: msvc
 
 install:
-  - ps: >-
-      $Env:PATH += ';C:\msys64\usr\bin'
+  - if "%TOOLCHAIN%" == "msvc" call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars64.bat"
+  - if "%TOOLCHAIN%" == "msys" set PATH=C:\msys64\mingw%MSYS_BITS%\bin;C:\msys64\usr\bin;%PATH%
   - curl -sSf -o rustup-init.exe https://win.rustup.rs/
-  - rustup-init.exe -y --default-host %TARGET% --default-toolchain %RUST_VERSION%
+  - rustup-init.exe -y --default-host %TARGET% --default-toolchain %CHANNEL%
   - set PATH=%PATH%;C:\Users\appveyor\.cargo\bin
-
-test_script:
   - rustc -Vv
   - cargo -V
+
+test_script:
   # we don't run the "test phase" when doing deploys
-  - if [%APPVEYOR_REPO_TAG%]==[false] ( cargo check --verbose )
-  - if [%APPVEYOR_REPO_TAG%]==[false] ( cargo test --verbose )
+  - if [%APPVEYOR_REPO_TAG%]==[false] ( cargo +%CHANNEL%-%TARGET% build )
+  - if [%APPVEYOR_REPO_TAG%]==[false] ( cargo +%CHANNEL%-%TARGET% test )
+  - if [%APPVEYOR_REPO_TAG%]==[false] ( cargo +%CHANNEL%-%TARGET% build --no-default-features )
+  - if [%APPVEYOR_REPO_TAG%]==[false] ( cargo +%CHANNEL%-%TARGET% test --no-default-features )
 
 before_deploy:
   - cargo rustc --target %TARGET% --release --bin cobalt -- -C lto

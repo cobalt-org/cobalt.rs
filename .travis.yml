@@ -28,7 +28,7 @@ matrix:
         - if [[ `cargo +nightly-2017-10-09 clippy -- --version` != $CLIPPY_VERS* ]] ; then travis_wait cargo +nightly-2017-10-09 install clippy --vers "$CLIPPY_VERS" --force; fi
         - export PATH=$HOME/.cargo/bin:$PATH
       script:
-        - cargo +nightly-2017-10-09 clippy --features "syntax-highlight,sass" -- -D warnings
+        - cargo +nightly-2017-10-09 clippy --features "sass" -- -D warnings
     - rust: stable
       env: RUSTFMT=0.8.6
       install:
@@ -47,9 +47,11 @@ script:
   - rustc -Vv
   - cargo -V
   - cargo check --verbose
-  - cargo check --verbose --features "syntax-highlight,sass"
   - cargo test  --verbose
-  - cargo test  --verbose --features "syntax-highlight,sass"
+  - cargo check --no-default-features --verbose
+  - cargo test --no-default-features --verbose
+  - cargo check --verbose --features "sass"
+  - cargo test  --verbose --features "sass"
 
 before_deploy:
   - sh ci/before_deploy.sh

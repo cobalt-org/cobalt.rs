@@ -45,7 +45,7 @@ serde_json = "1.0"
 toml = "0.4.0"
 
 [dependencies.sass-rs]
-version = "0.2.0"
+version = "0.2"
 optional = true
 
 [dependencies.hyper]
@@ -53,7 +53,7 @@ version = "0.10"
 default-features = false
 
 [dependencies.syntect]
-version = "1.8.0"
+version = "1.8"
 optional = true
 default-features = false
 features =  ["parsing", "assets", "html", "static-onig", "dump-load"]
@@ -64,7 +64,7 @@ difference = "1.0"
 tempdir = "0.3"
 
 [features]
-default = []
+default = ["syntax-highlight"]
 unstable = []
 dev = []
 
