@@ -1,10 +1,11 @@
-extends: posts.liquid
+layout: posts.liquid
 
 title:  Variables
-thing: hello
-date:  3 May 2015 08:05:20 +0100
-path:  test/:thing/
+published_date:  2015-05-03 08:05:20 +0100
+permalink: /test/{{data.thing}}/
+data:
+  thing: hello
 ---
-# {{ title }}
+# {{ page.title }}
 
 This asserts that custom paths without a file extension get made into a folder with an index.html file.

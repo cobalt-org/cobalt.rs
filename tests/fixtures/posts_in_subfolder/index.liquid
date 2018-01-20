@@ -1,4 +1,4 @@
-extends: default.liquid
+layout: default.liquid
 ---
 
 <!-- start index.liquid -->
@@ -6,10 +6,10 @@ extends: default.liquid
   <h2>Blog!</h2>
   <!--<br />-->
   <div>
-    {% for post in posts %}
+    {% for post in collections.posts.pages %}
       <div>
         <h4>{{ post.title }}</h4>
-        <h4><a href="{{ post.path }}">{{ post.title }}</a></h4>
+        <h4><a href="{{ post.permalink }}">{{ post.title }}</a></h4>
       </div>
     {% endfor %}
   </div>

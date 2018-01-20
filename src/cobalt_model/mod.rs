@@ -1,3 +1,5 @@
+mod assets;
+mod collection;
 mod config;
 mod datetime;
 mod document;
@@ -8,13 +10,15 @@ mod site;
 pub mod files;
 pub mod slug;
 
-pub use self::config::AssetsBuilder;
+pub use self::assets::AssetsBuilder;
+pub use self::collection::Collection;
+pub use self::collection::CollectionBuilder;
+pub use self::collection::SortOrder;
 pub use self::config::Config;
 pub use self::config::ConfigBuilder;
 pub use self::config::Dump;
 pub use self::config::PageBuilder;
 pub use self::config::PostBuilder;
-pub use self::config::SortOrder;
 pub use self::config::SyntaxHighlight;
 pub use self::datetime::DateTime;
 pub use self::document::DocumentBuilder;

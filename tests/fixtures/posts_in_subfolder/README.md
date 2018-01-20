@@ -1,7 +1,7 @@
-extends: default.liquid
+layout: default.liquid
 
 title: README for different directory layouts
-date: 03 Feb 2017 21:00:00 -0000
+published_date: 2017-02-03 21:00:00 -0000
 ---
 
 # Test for different blog layouts

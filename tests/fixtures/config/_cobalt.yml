@@ -1,0 +1,4 @@
+source: "./"
+destination: "./dest"
+posts:
+  dir: _my_posts

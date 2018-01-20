@@ -13,7 +13,7 @@ pub fn get_config_args() -> Vec<clap::Arg<'static, 'static>> {
          .short("c")
          .long("config")
          .value_name("FILE")
-         .help("Config file to use [default: .cobalt.yml]")
+         .help("Config file to use [default: _cobalt.yml]")
          .takes_value(true),
      clap::Arg::with_name("destination")
          .short("d")
@@ -43,14 +43,13 @@ pub fn get_config(matches: &clap::ArgMatches) -> Result<cobalt::ConfigBuilder> {
     let config_path = matches.value_of("config");
 
     // Fetch config information if available
-    let config = if let Some(config_path) = config_path {
-        cobalt::legacy_model::GlobalConfig::from_file(config_path)
+    let mut config = if let Some(config_path) = config_path {
+        cobalt::ConfigBuilder::from_file(config_path)
             .chain_err(|| format!("Error reading config file {:?}", config_path))?
     } else {
         let cwd = env::current_dir().expect("How does this fail?");
-        cobalt::legacy_model::GlobalConfig::from_cwd(cwd)?
+        cobalt::ConfigBuilder::from_cwd(cwd)?
     };
-    let mut config: cobalt::ConfigBuilder = config.into();
 
     config.abs_dest = matches.value_of("destination").map(str::to_string);
 

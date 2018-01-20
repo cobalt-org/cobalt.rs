@@ -2,54 +2,40 @@ use std::path;
 use std::fs;
 use std::io::Write;
 
-use liquid;
-
 use error::*;
 use cobalt_model::Config;
 use cobalt_model::files;
 use cobalt_model::slug;
 use cobalt_model;
-use legacy_model;
 
-const COBALT_YML: &'static str = "name: cobalt blog
-source: \".\"
-dest: \"./_site\"
+const COBALT_YML: &'static str = "
+site:
+  title: cobalt blog
+  description: Blog Posts Go Here
+  base_url: http://example.com
+posts:
+  rss: rss.xml
 ";
 
 const DEFAULT_LAYOUT: &'static str = "<!DOCTYPE html>
 <html>
     <head>
         <meta charset=\"utf-8\">
-        {% if is_post %}
-          <title>{{ title }}</title>
-        {% else %}
-          <title>Cobalt.rs Blog</title>
-        {% endif %}
+        <title>{{ page.title }}</title>
     </head>
     <body>
     <div>
-      {% if is_post %}
-        {% include '_layouts/post.liquid' %}
-      {% else %}
-        {{ content }}
-      {% endif %}
+      <h2>{{ page.title }}</h2>
+      {{ page.content }}
     </div>
   </body>
 </html>
 ";
 
-const POST_LAYOUT: &'static str = "<div>
-  <h2>{{ title }}</h2>
-  <p>
-    {{content}}
-  </p>
-</div>
-";
-
-const POST_MD: &'static str = "extends: default.liquid
+const POST_MD: &'static str = "layout: default.liquid
 
 title: First Post
-draft: true
+is_draft: true
 ---
 
 # This is our first Post!
@@ -57,14 +43,14 @@ draft: true
 Welcome to the first post ever on cobalt.rs!
 ";
 
-const INDEX_MD: &'static str = "extends: default.liquid
+const INDEX_MD: &'static str = "layout: default.liquid
 ---
 ## Blog!
 
-{% for post in posts %}
+{% for post in collections.posts.pages %}
 #### {{post.title}}
 
-#### [{{ post.title }}]({{ post.path }})
+[{{ post.title }}]({{ post.permalink }})
 {% endfor %}
 ";
 
@@ -75,12 +61,11 @@ pub fn create_new_project<P: AsRef<path::Path>>(dest: P) -> Result<()> {
 pub fn create_new_project_for_path(dest: &path::Path) -> Result<()> {
     fs::create_dir_all(dest)?;
 
-    create_file(&dest.join(".cobalt.yml"), COBALT_YML)?;
+    create_file(&dest.join("_cobalt.yml"), COBALT_YML)?;
     create_file(&dest.join("index.md"), INDEX_MD)?;
 
     fs::create_dir_all(&dest.join("_layouts"))?;
     create_file(&dest.join("_layouts/default.liquid"), DEFAULT_LAYOUT)?;
-    create_file(&dest.join("_layouts/post.liquid"), POST_LAYOUT)?;
 
     fs::create_dir_all(&dest.join("posts"))?;
     create_file(&dest.join("posts/post-1.md"), POST_MD)?;
@@ -117,12 +102,11 @@ pub fn create_new_document(config: &Config, title: &str, file: path::PathBuf) ->
         ("page", INDEX_MD)
     };
 
-    let doc = legacy_model::DocumentBuilder::parse(doc)?;
+    let doc = cobalt_model::DocumentBuilder::<cobalt_model::FrontmatterBuilder>::parse(doc)?;
     let (front, content) = doc.parts();
-    let mut front = front.object();
-    front.insert("title".to_owned(), liquid::Value::str(title));
-    let front = legacy_model::FrontmatterBuilder::with_object(front);
-    let doc = legacy_model::DocumentBuilder::new(front, content);
+    let front = front.set_title(title.to_owned());
+    let doc = cobalt_model::DocumentBuilder::<cobalt_model::FrontmatterBuilder>::new(front,
+                                                                                     content);
     let doc = doc.to_string();
 
     create_file(&file, &doc)?;
@@ -151,18 +135,14 @@ fn create_file_for_path(path: &path::Path, content: &str) -> Result<()> {
 
 pub fn publish_document(file: &path::Path) -> Result<()> {
     let doc = files::read_file(file)?;
-    let doc = legacy_model::DocumentBuilder::parse(&doc)?;
+    let doc = cobalt_model::DocumentBuilder::<cobalt_model::FrontmatterBuilder>::parse(&doc)?;
     let (front, content) = doc.parts();
 
     let date = cobalt_model::DateTime::now();
-    let date = date.format();
+    let front = front.set_draft(false).set_published_date(date);
 
-    let mut front = front.object();
-    front.remove("draft");
-    front.insert("date".to_owned(), liquid::Value::Str(date));
-
-    let front = legacy_model::FrontmatterBuilder::with_object(front);
-    let doc = legacy_model::DocumentBuilder::new(front, content);
+    let doc = cobalt_model::DocumentBuilder::<cobalt_model::FrontmatterBuilder>::new(front,
+                                                                                     content);
     let doc = doc.to_string();
 
     files::write_document_file(doc, file)?;

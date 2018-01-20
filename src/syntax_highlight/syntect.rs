@@ -5,8 +5,10 @@ use std::borrow::Cow::Owned;
 use itertools::Itertools;
 
 use liquid;
-use liquid::Token::{self, Identifier};
-use liquid::lexer::Element::{self, Expression, Tag, Raw};
+use liquid::interpreter::{Context, Renderable};
+use liquid::compiler::LiquidOptions;
+use liquid::compiler::Token::{self, Identifier};
+use liquid::compiler::Element::{self, Expression, Tag, Raw};
 
 use syntect::parsing::{SyntaxDefinition, SyntaxSet};
 use syntect::highlighting::{ThemeSet, Theme};
@@ -61,14 +63,15 @@ pub fn list_syntaxes() -> Vec<String> {
     syntaxes
 }
 
+#[derive(Clone, Debug)]
 struct CodeBlock {
     lang: Option<String>,
     code: String,
     theme: Theme,
 }
 
-impl liquid::Renderable for CodeBlock {
-    fn render(&self, _: &mut liquid::Context) -> Result<Option<String>, liquid::Error> {
+impl Renderable for CodeBlock {
+    fn render(&self, _: &mut Context) -> Result<Option<String>, liquid::Error> {
         let syntax = match self.lang {
             Some(ref lang) => SETUP.syntax_set.find_syntax_by_token(lang),
             _ => None,
@@ -78,7 +81,7 @@ impl liquid::Renderable for CodeBlock {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct CodeBlockParser {
     syntax_theme: String,
 }
@@ -89,13 +92,13 @@ impl CodeBlockParser {
     }
 }
 
-impl liquid::ParseBlock for CodeBlockParser {
+impl liquid::compiler::ParseBlock for CodeBlockParser {
     fn parse(&self,
              _tag_name: &str,
              arguments: &[Token],
              tokens: &[Element],
-             _options: &liquid::LiquidOptions)
-             -> Result<Box<liquid::Renderable>, liquid::Error> {
+             _options: &LiquidOptions)
+             -> Result<Box<Renderable>, liquid::Error> {
         let content = tokens.iter().fold("".to_owned(), |a, b| {
             match *b {
                 Expression(_, ref text) |
@@ -181,10 +184,6 @@ pub fn decorate_markdown<'a>(parser: cmark::Parser<'a>, theme_name: &str) -> Dec
 
 #[cfg(test)]
 mod test {
-
-    use std::default::Default;
-    use liquid::{self, Renderable, LiquidOptions, Context};
-
     use super::*;
 
     const CODE_BLOCK: &'static str = "mod test {
@@ -251,16 +250,16 @@ mod test {
     fn codeblock_renders_rust() {
         // Syntect isn't thread safe, for now run everything in the same test.
         {
-            let mut options: LiquidOptions = Default::default();
-            options.blocks.insert("codeblock".to_string(),
-                                  Box::new(CodeBlockParser::new("base16-ocean.dark".to_owned())));
-            let template = liquid::parse(&format!("{{% codeblock rust %}}{}{{% endcodeblock %}}",
-                                                  CODE_BLOCK),
-                                         options)
+            let highlight: Box<liquid::compiler::ParseBlock> =
+                Box::new(CodeBlockParser::new("base16-ocean.dark".to_owned()));
+            let parser = liquid::ParserBuilder::new()
+                .block("highlight", highlight)
+                .build();
+            let template = parser
+                .parse(&format!("{{% highlight rust %}}{}{{% endhighlight %}}", CODE_BLOCK))
                 .unwrap();
-            let mut data = Context::new();
-            let output = template.render(&mut data);
-            assert_eq!(output.unwrap(), Some(CODEBLOCK_RENDERED.to_string()));
+            let output = template.render(&liquid::Object::new());
+            assert_eq!(output.unwrap(), CODEBLOCK_RENDERED.to_string());
         }
 
         {

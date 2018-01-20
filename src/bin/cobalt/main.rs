@@ -4,7 +4,7 @@
 // 1. Run `rustc -W help`
 // 2. Grab all `default=warn` warnings
 // 3. Paste them here, deleting `warnings`, and any with `deprecated` in the name
-#![deny(const_err,
+#![cfg_attr(not(feature="dev"), deny(const_err,
         dead_code,
         illegal_floating_point_literal_pattern,
         improper_ctypes,
@@ -39,7 +39,7 @@
         unused_parens,
         unused_unsafe,
         unused_variables,
-        while_true)]
+        while_true))]
 // This list is select `allow` warnings
 #![deny(trivial_casts,
        trivial_numeric_casts,
@@ -48,14 +48,14 @@
 #![cfg_attr(feature="cargo-clippy", allow(
         cyclomatic_complexity,
         needless_pass_by_value))]
-#![cfg_attr(feature="dev", warn(warnings))]
 
 extern crate cobalt;
 extern crate env_logger;
-extern crate notify;
 extern crate ghp;
-
 extern crate hyper;
+extern crate notify;
+extern crate regex;
+extern crate serde_yaml;
 
 #[macro_use]
 extern crate error_chain;
@@ -64,17 +64,21 @@ extern crate error_chain;
 extern crate clap;
 
 #[macro_use]
+extern crate lazy_static;
+
+#[macro_use]
 extern crate log;
 
 mod args;
 mod build;
 mod error;
+mod debug;
 mod jekyll;
+mod migrate;
 mod new;
 mod serve;
 
-use clap::{App, SubCommand, AppSettings};
-use cobalt::{list_syntaxes, list_syntax_themes};
+use clap::{App, AppSettings};
 
 use error::*;
 
@@ -94,11 +98,10 @@ fn run() -> Result<()> {
         .subcommand(build::build_command_args())
         .subcommand(build::clean_command_args())
         .subcommand(serve::serve_command_args())
-        .subcommand(serve::watch_command_args())
         .subcommand(build::import_command_args())
-        .subcommand(SubCommand::with_name("list-syntax-themes").about("list available themes"))
-        .subcommand(SubCommand::with_name("list-syntaxes").about("list supported syntaxes"))
-        .subcommand(jekyll::convert_command_args());
+        .subcommand(migrate::migrate_command_args())
+        .subcommand(jekyll::convert_command_args())
+        .subcommand(debug::debug_command_args());
 
     let global_matches = app_cli.get_matches();
 
@@ -117,20 +120,9 @@ fn run() -> Result<()> {
         "build" => build::build_command(matches),
         "clean" => build::clean_command(matches),
         "serve" => serve::serve_command(matches),
-        "watch" => serve::watch_command(matches),
         "import" => build::import_command(matches),
-        "list-syntax-themes" => {
-            for name in list_syntax_themes() {
-                println!("{}", name);
-            }
-            Ok(())
-        }
-        "list-syntaxes" => {
-            for name in list_syntaxes() {
-                println!("{}", name);
-            }
-            Ok(())
-        }
+        "debug" => debug::debug_command(matches),
+        "migrate" => migrate::migrate_command(matches),
         "convert-jekyll" => jekyll::convert_command(matches),
         _ => {
             bail!(global_matches.usage());

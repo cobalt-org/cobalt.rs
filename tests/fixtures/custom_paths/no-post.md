@@ -1,9 +1,9 @@
-extends: posts.liquid
+layout: posts.liquid
 
 title:  Custom paths are available to non-posts
-date:   22 Aug 2014 15:36:20 +0100
-path:  test/hello.html
+published_date:   2014-08-22 15:36:20 +0100
+permalink:  /test/hello.html
 ---
-# {{ title }}
+# {{ page.title }}
 
 This asserts that you can specify custom file paths

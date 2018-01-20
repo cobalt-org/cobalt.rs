@@ -1,11 +1,12 @@
-extends: posts.liquid
+layout: posts.liquid
 
 title:  Variables file name
-thing: hello
-thang: world
-date:  3 May 2015 09:05:20 +0100
-path:  test/:thing/:thang.abc
+published_date:  2015-05-03 09:05:20 +0100
+permalink: /test/{{data.thing}}/{{data.thang}}.abc
+data:
+  thing: hello
+  thang: world
 ---
-# {{ title }}
+# {{ page.title }}
 
 This asserts that you can substitute any part of the url with custom variables

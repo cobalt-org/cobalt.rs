@@ -149,6 +149,15 @@ impl Files {
     }
 }
 
+impl<'a> IntoIterator for &'a Files {
+    type Item = path::PathBuf;
+    type IntoIter = FilesIterator<'a>;
+
+    fn into_iter(self) -> FilesIterator<'a> {
+        self.files()
+    }
+}
+
 pub fn find_project_file<P: Into<path::PathBuf>>(dir: P, name: &str) -> Option<path::PathBuf> {
     find_project_file_internal(dir.into(), name)
 }
@@ -213,7 +222,7 @@ fn write_document_file_internal(content: &str, dest_file: &path::Path) -> Result
         .map_err(|e| format!("Could not create {:?}: {}", dest_file, e))?;
 
     file.write_all(content.as_bytes())?;
-    info!("Wrote {}", dest_file.display());
+    trace!("Wrote {}", dest_file.display());
     Ok(())
 }
 
@@ -515,22 +524,22 @@ mod tests {
 
     #[test]
     fn find_project_file_same_dir() {
-        let actual = find_project_file("tests/fixtures/config", ".cobalt.yml").unwrap();
-        let expected = path::Path::new("tests/fixtures/config/.cobalt.yml");
+        let actual = find_project_file("tests/fixtures/config", "_cobalt.yml").unwrap();
+        let expected = path::Path::new("tests/fixtures/config/_cobalt.yml");
         assert_eq!(actual, expected);
     }
 
     #[test]
     fn find_project_file_parent_dir() {
-        let actual = find_project_file("tests/fixtures/config/child", ".cobalt.yml").unwrap();
-        let expected = path::Path::new("tests/fixtures/config/.cobalt.yml");
+        let actual = find_project_file("tests/fixtures/config/child", "_cobalt.yml").unwrap();
+        let expected = path::Path::new("tests/fixtures/config/_cobalt.yml");
         assert_eq!(actual, expected);
     }
 
     #[test]
     fn find_project_file_doesnt_exist() {
         let expected = path::Path::new("<NOT FOUND>");
-        let actual = find_project_file("tests/fixtures/", ".cobalt.yml")
+        let actual = find_project_file("tests/fixtures/", "_cobalt.yml")
             .unwrap_or_else(|| expected.into());
         assert_eq!(actual, expected);
     }

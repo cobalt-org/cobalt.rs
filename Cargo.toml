@@ -1,7 +1,7 @@
 [package]
 
 name = "cobalt-bin"
-version = "0.9.0"
+version = "0.11.1"
 authors = ["Benny Klotz <r3qnbenni@gmail.com>", "Johann Hofmann <mail@johann-hofmann.com>"]
 description = "Static site generator written in Rust"
 repository = "https://github.com/cobalt-org/cobalt.rs"
@@ -23,10 +23,10 @@ doc = false
 
 [dependencies]
 clap = "2.24"
-liquid = {version = "0.12", features=["serde"]}
+liquid = {version = "0.13", features=["serde"]}
 walkdir = "2.0"
 chrono = "0.4"
-log = "0.3"
+log = "0.3.9"
 env_logger = "0.4"
 rss = "1.1"
 jsonfeed = "0.2"
@@ -36,16 +36,17 @@ ghp = "0.1"
 regex = "0.2"
 clippy = {version = "0.0", optional = true}
 error-chain = "0.11"
-lazy_static = "0.2"
+lazy_static = "1.0"
 itertools = "0.7"
 ignore = "0.3"
 serde = "1.0"
 serde_yaml = "0.7"
 serde_json = "1.0"
 toml = "0.4.0"
+normalize-line-endings = "0.2.2"
 
 [dependencies.sass-rs]
-version = "0.2.0"
+version = "0.2"
 optional = true
 
 [dependencies.hyper]
@@ -53,7 +54,7 @@ version = "0.10"
 default-features = false
 
 [dependencies.syntect]
-version = "1.8.0"
+version = "1.8"
 optional = true
 default-features = false
 features =  ["parsing", "assets", "html", "static-onig", "dump-load"]
@@ -64,7 +65,7 @@ difference = "1.0"
 tempdir = "0.3"
 
 [features]
-default = []
+default = ["syntax-highlight"]
 unstable = []
 dev = []
 

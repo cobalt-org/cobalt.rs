@@ -1,7 +1,7 @@
-extends: default.liquid
+layout: default.liquid
 
 title: a post inside posts/20170103/
-date: 03 Jan 2017 21:00:00 -0000
+published_date: 2017-01-03 21:00:00 -0000
 ---
 
 # a post inside posts/20170103/

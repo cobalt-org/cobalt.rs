@@ -1,4 +1,4 @@
-extends: default.liquid
+layout: default.liquid
 ---
 
 test | test

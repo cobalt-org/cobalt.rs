@@ -1,8 +1,8 @@
-extends: posts.liquid
+layout: posts.liquid
 
 title:  Querystrings
-date:  9 May 2017 07:05:20 +0100
+published_date:  2017-05-09 07:05:20 +0100
 ---
-# {{ title }}
+# {{ page.title }}
 
 This asserts that files can be loaded with and without querystrings

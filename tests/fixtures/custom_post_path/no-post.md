@@ -1,7 +1,7 @@
-extends: posts.liquid
+layout: posts.liquid
 
 title:  Not a post
 ---
-# {{ title }}
+# {{ page.title }}
 
 This asserts that post_path does not apply to non-posts

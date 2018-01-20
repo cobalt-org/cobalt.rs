@@ -3,6 +3,10 @@ use std::fmt;
 use liquid;
 
 use cobalt_model;
+use super::DateTime;
+use super::Permalink;
+use super::Part;
+use super::VARIABLES;
 
 #[derive(Debug, Eq, PartialEq, Default, Clone)]
 #[derive(Serialize, Deserialize)]
@@ -51,7 +55,7 @@ impl From<FrontmatterBuilder> for cobalt_model::FrontmatterBuilder {
                             .and_then(|v| v.as_str().map(|s| s.to_owned())))
             .merge_permalink(unprocessed_attributes
                                  .remove("path")
-                                 .and_then(|v| v.as_str().map(|s| convert_permalink(s.to_owned()))))
+                                 .and_then(|v| v.as_str().map(convert_permalink)))
             .merge_draft(unprocessed_attributes
                              .remove("draft")
                              .and_then(|v| v.as_bool()))
@@ -62,71 +66,9 @@ impl From<FrontmatterBuilder> for cobalt_model::FrontmatterBuilder {
                               .remove("extends")
                               .and_then(|v| v.as_str().map(|s| s.to_owned())))
             .merge_published_date(unprocessed_attributes.remove("date").and_then(|d| {
-                d.as_str().and_then(cobalt_model::DateTime::parse)
+                d.as_str().and_then(DateTime::parse).map(|d| d.into())
             }))
             .merge_data(unprocessed_attributes)
-    }
-}
-
-impl From<cobalt_model::FrontmatterBuilder> for FrontmatterBuilder {
-    fn from(internal: cobalt_model::FrontmatterBuilder) -> Self {
-        let mut legacy = liquid::Object::new();
-
-        let cobalt_model::FrontmatterBuilder {
-            permalink,
-            slug,
-            title,
-            description,
-            excerpt,
-            categories,
-            excerpt_separator,
-            published_date,
-            format: _format,
-            layout,
-            is_draft,
-            is_post: _is_post,
-            data,
-        } = internal;
-        if let Some(path) = permalink {
-            legacy.insert("path".to_owned(), liquid::Value::Str(path));
-        }
-        if let Some(slug) = slug {
-            legacy.insert("slug".to_owned(), liquid::Value::Str(slug));
-        }
-        if let Some(title) = title {
-            legacy.insert("title".to_owned(), liquid::Value::Str(title));
-        }
-        if let Some(description) = description {
-            legacy.insert("description".to_owned(), liquid::Value::Str(description));
-        }
-        if let Some(excerpt) = excerpt {
-            legacy.insert("excerpt".to_owned(), liquid::Value::Str(excerpt));
-        }
-        if let Some(categories) = categories {
-            legacy.insert("categories".to_owned(),
-                          liquid::Value::Array(categories
-                                                   .into_iter()
-                                                   .map(liquid::Value::Str)
-                                                   .collect()));
-        }
-        if let Some(excerpt_separator) = excerpt_separator {
-            legacy.insert("excerpt_separator".to_owned(),
-                          liquid::Value::Str(excerpt_separator));
-        }
-        if let Some(date) = published_date {
-            legacy.insert("date".to_owned(), liquid::Value::Str(date.format()));
-        }
-        if let Some(extends) = layout {
-            legacy.insert("extends".to_owned(), liquid::Value::Str(extends));
-        }
-        if let Some(draft) = is_draft {
-            legacy.insert("draft".to_owned(), liquid::Value::Bool(draft));
-        }
-        for (key, value) in data {
-            legacy.insert(key, value);
-        }
-
-        FrontmatterBuilder(legacy)
     }
 }
 
@@ -140,13 +82,30 @@ impl fmt::Display for FrontmatterBuilder {
 
 impl cobalt_model::Front for FrontmatterBuilder {}
 
-fn convert_permalink(mut perma: String) -> String {
-    if perma.starts_with('/') {
-        perma
+fn migrate_variable(var: String) -> Part {
+    let native_variable = {
+        let name: &str = &var;
+        VARIABLES.contains(&name)
+    };
+    let var = match var.as_str() {
+        "path" => "parent".to_owned(),
+        "filename" => "name".to_owned(),
+        "output_ext" => "ext".to_owned(),
+        x => x.to_owned(),
+    };
+    let variable = if native_variable {
+        format!("{{{{ {} }}}}", var)
     } else {
-        perma.insert(0, '/');
-        perma
-    }
+        format!("{{{{ data.{} }}}}", var)
+    };
+
+    Part::Constant(variable)
+}
+
+fn convert_permalink(perma: &str) -> String {
+    let perma = Permalink::parse(perma);
+    let perma = perma.resolve(&migrate_variable);
+    perma.to_string()
 }
 
 #[cfg(test)]
@@ -154,17 +113,45 @@ mod tests {
     use super::*;
 
     #[test]
+    fn migrate_variable_known() {
+        let fixture = "path".to_owned();
+        let expected = Part::Constant("{{ parent }}".to_owned());
+        let actual = migrate_variable(fixture);
+        assert_eq!(actual, expected);
+    }
+
+    #[test]
+    fn migrate_variable_unknown() {
+        let fixture = "gobbly/gook".to_owned();
+        let expected = Part::Constant("{{ data.gobbly/gook }}".to_owned());
+        let actual = migrate_variable(fixture);
+        assert_eq!(actual, expected);
+    }
+
+    #[test]
     fn convert_permalink_empty() {
-        assert_eq!(convert_permalink("".into()), "/");
+        assert_eq!(convert_permalink(""), "/".to_owned());
     }
 
     #[test]
     fn convert_permalink_abs() {
-        assert_eq!(convert_permalink("/root".into()), "/root");
+        assert_eq!(convert_permalink("/root"), "/root".to_owned());
     }
 
     #[test]
     fn convert_permalink_rel() {
-        assert_eq!(convert_permalink("rel".into()), "/rel");
+        assert_eq!(convert_permalink("rel"), "/rel".to_owned());
+    }
+
+    #[test]
+    fn convert_permalink_known_variable() {
+        assert_eq!(convert_permalink("hello/:path/world/:i_day/"),
+                   "/hello/{{ parent }}/world/{{ i_day }}/".to_owned());
+    }
+
+    #[test]
+    fn convert_permalink_unknown_variable() {
+        assert_eq!(convert_permalink("hello/:party/world/:i_day/"),
+                   "/hello/{{ data.party/world/ }}{{ i_day }}/".to_owned());
     }
 }

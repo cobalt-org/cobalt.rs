@@ -1,6 +1,0 @@
-name: cobalt blog
-source: "."
-dest: "build"
-ignore:
-  - .git/*
-  - build/*

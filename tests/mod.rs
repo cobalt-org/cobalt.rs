@@ -5,15 +5,18 @@ extern crate cobalt;
 extern crate error_chain;
 extern crate tempdir;
 extern crate walkdir;
+extern crate normalize_line_endings;
 
 use std::error::Error;
 use std::fs::{self, File};
 use std::io::Read;
 use std::path::{Path, PathBuf};
+use std::iter::FromIterator;
 
 use error_chain::ChainedError;
 use tempdir::TempDir;
 use walkdir::WalkDir;
+use normalize_line_endings::normalized;
 
 macro_rules! assert_contains {
     ($haystack: expr, $needle: expr) => {
@@ -50,6 +53,9 @@ fn assert_dirs_eq(expected: &Path, actual: &Path) {
             .read_to_string(&mut created)
             .expect("Could not read to string");
 
+        let original = String::from_iter(normalized(original.chars()));
+        let created = String::from_iter(normalized(created.chars()));
+
         assert_diff!(&original, &created, " ", 0);
     }
 
@@ -74,8 +80,7 @@ fn assert_dirs_eq(expected: &Path, actual: &Path) {
 fn run_test(name: &str) -> Result<(), cobalt::Error> {
     let target = format!("tests/target/{}/", name);
     let target: PathBuf = target.into();
-    let config = cobalt::legacy_model::GlobalConfig::from_cwd(format!("tests/fixtures/{}", name))?;
-    let mut config: cobalt::ConfigBuilder = config.into();
+    let mut config = cobalt::ConfigBuilder::from_cwd(format!("tests/fixtures/{}", name))?;
     let destdir = TempDir::new(name).expect("Tempdir not created");
 
     config.source = "./".to_owned();
@@ -240,6 +245,11 @@ pub fn excerpts() {
 }
 
 #[test]
+pub fn excerpts_crlf() {
+    run_test("excerpts_CRLF").unwrap();
+}
+
+#[test]
 pub fn posts_in_subfolder() {
     run_test("posts_in_subfolder").unwrap();
 }
@@ -274,4 +284,9 @@ pub fn sass_custom_config() {
 #[test]
 pub fn data_files() {
     run_test("data_files").expect("Build error");
+}
+
+#[test]
+pub fn published_date() {
+    run_test("published_date").expect("Build error");
 }

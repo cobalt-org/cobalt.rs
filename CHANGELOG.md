@@ -1,3 +1,102 @@
+<a name="0.11.1"></a>
+## 0.11.1 (2018-01-10)
+
+
+#### Features
+
+* **liquid:**  Support contains operator ([668f4726](https://github.com/cobalt-org/cobalt.rs/commit/668f47260d1e7db7666a77d8c100997da2531dee))
+
+
+
+<a name="0.11.0"></a>
+## 0.11.0 (2018-01-09)
+
+This release focused on unleashing a lot of breaking changes that have been
+stacking up for a while which also expose a lot of features that have been
+inaccessible.  The hope is that from now on, breaking changes will be minor
+(like small changes to config) rather than sweeping changes to every file like
+this.
+
+#### Bug Fixes
+
+*   Reducing logging noise ([a7acd2c8](https://github.com/cobalt-org/cobalt.rs/commit/a7acd2c858a12e92ae80d8c8ed0bbbd64aa84824))
+* **rss:**  Don't error if the RSS folder doesn't exist. ([357cb4b8](https://github.com/cobalt-org/cobalt.rs/commit/357cb4b8e97c7b37af84164ca4380faf4de8c3ab))
+* **watch:**  Don't stop on error ([3c4d086b](https://github.com/cobalt-org/cobalt.rs/commit/3c4d086bfa39dd3ce5d9c446c5602d53e5ffa2c9), closes [#347](https://github.com/cobalt-org/cobalt.rs/issues/347))
+
+#### Features
+
+*   Migrate support for changing _layouts to _includes ([28ae870d](https://github.com/cobalt-org/cobalt.rs/commit/28ae870dab175264a87d1b1020bcbf23c85a60c1))
+* **config:**
+  *  Change .cobalt.yml to _cobalt.yml ([c4ee83b3](https://github.com/cobalt-org/cobalt.rs/commit/c4ee83b3f5f60410c3e53cc8d14271d9e8c0f42f), closes [#348](https://github.com/cobalt-org/cobalt.rs/issues/348))
+  *  Stablize the format ([34e9d545](https://github.com/cobalt-org/cobalt.rs/commit/34e9d545b03e5696afd05a5922fcee49eacf5ec2), closes [#199](https://github.com/cobalt-org/cobalt.rs/issues/199), breaks [#](https://github.com/cobalt-org/cobalt.rs/issues/), [#](https://github.com/cobalt-org/cobalt.rs/issues/))
+* **front:**
+  *  Stablize fronmatter format ([9089c721](https://github.com/cobalt-org/cobalt.rs/commit/9089c721a2910152b6685b497da8af26a37b64e8), closes [#257](https://github.com/cobalt-org/cobalt.rs/issues/257), breaks [#](https://github.com/cobalt-org/cobalt.rs/issues/))
+  *  Change date to YYYY-MM-DD ([1e19ae07](https://github.com/cobalt-org/cobalt.rs/commit/1e19ae070dcde429c86212cb6c39e5298c841c92), closes [#349](https://github.com/cobalt-org/cobalt.rs/issues/349), breaks [#](https://github.com/cobalt-org/cobalt.rs/issues/))
+  *  Change permalink variable names ([e78b806c](https://github.com/cobalt-org/cobalt.rs/commit/e78b806c9561d8ad9bd3b31b5ab161ea2e79faa8), breaks [#](https://github.com/cobalt-org/cobalt.rs/issues/))
+  *  Change permalink to well-defined format ([c6c4d7ac](https://github.com/cobalt-org/cobalt.rs/commit/c6c4d7aca4e25820a7bf670a38d8c6023c902d5a), breaks [#](https://github.com/cobalt-org/cobalt.rs/issues/))
+  *  Standardize permalink behavior ([6730eb68](https://github.com/cobalt-org/cobalt.rs/commit/6730eb686d083b12c4307a25875ed0a9b7034236), breaks [#](https://github.com/cobalt-org/cobalt.rs/issues/))
+* **excerpt:**  Better define non-existent behavior ([129c5747](https://github.com/cobalt-org/cobalt.rs/commit/129c5747352c9aada646d738754f2d7477d5d2c8))
+* **page:**
+  *  Upgrade liquid ([2ec3f24b](https://github.com/cobalt-org/cobalt.rs/commit/2ec3f24bb8eb3e7b09eb68209fa39430760d1d18))
+  *  Generalize is_post / posts ([d280a353](https://github.com/cobalt-org/cobalt.rs/commit/d280a3532958fd1c973c1f7e6bd0b725eca9e102), closes [#323](https://github.com/cobalt-org/cobalt.rs/issues/323), breaks [#](https://github.com/cobalt-org/cobalt.rs/issues/))
+  *  Make page variables future-proof ([6f62dea8](https://github.com/cobalt-org/cobalt.rs/commit/6f62dea85679a23b7179f26573e8f26132fc32c6), breaks [#](https://github.com/cobalt-org/cobalt.rs/issues/))
+  *  page.file.parent variable ([dce1d59c](https://github.com/cobalt-org/cobalt.rs/commit/dce1d59c31d99e249db9b0b9334049905600a64a), closes [#338](https://github.com/cobalt-org/cobalt.rs/issues/338))
+* **serve:**
+  *  Adjust base_url for localhost ([e75e1398](https://github.com/cobalt-org/cobalt.rs/commit/e75e139880964c0abc1668c7c70e2da71004ff55), breaks [#](https://github.com/cobalt-org/cobalt.rs/issues/))
+  *  Merge `serve` and `watch` ([d2f22d51](https://github.com/cobalt-org/cobalt.rs/commit/d2f22d51fe2f7e3dbe729069f8eaa2719880d86f), breaks [#](https://github.com/cobalt-org/cobalt.rs/issues/))
+* **debug:**
+  *  Report asset files ([5d77b7fc](https://github.com/cobalt-org/cobalt.rs/commit/5d77b7fc1a08bf2994a599e852d0cf6462a7431d))
+  *  Generalize debug commands ([087d9919](https://github.com/cobalt-org/cobalt.rs/commit/087d99195ae66525445e5ce91246e0757e945214), breaks [#](https://github.com/cobalt-org/cobalt.rs/issues/))
+
+#### Breaking Changes
+
+`cobalt migrate` was created to help mitigate the cost of most of these breaking changes.
+
+* **config:**  Stablize the format ([34e9d545](https://github.com/cobalt-org/cobalt.rs/commit/34e9d545b03e5696afd05a5922fcee49eacf5ec2), closes [#199](https://github.com/cobalt-org/cobalt.rs/issues/199), breaks [#](https://github.com/cobalt-org/cobalt.rs/issues/), [#](https://github.com/cobalt-org/cobalt.rs/issues/))
+* **debug:**  Generalize debug commands ([087d9919](https://github.com/cobalt-org/cobalt.rs/commit/087d99195ae66525445e5ce91246e0757e945214), breaks [#](https://github.com/cobalt-org/cobalt.rs/issues/))
+* **front:**
+  *  Change date to YYYY-MM-DD ([1e19ae07](https://github.com/cobalt-org/cobalt.rs/commit/1e19ae070dcde429c86212cb6c39e5298c841c92), closes [#349](https://github.com/cobalt-org/cobalt.rs/issues/349), breaks [#](https://github.com/cobalt-org/cobalt.rs/issues/))
+  *  Change permalink variable names ([e78b806c](https://github.com/cobalt-org/cobalt.rs/commit/e78b806c9561d8ad9bd3b31b5ab161ea2e79faa8), breaks [#](https://github.com/cobalt-org/cobalt.rs/issues/))
+  *  Change permalink to well-defined format ([c6c4d7ac](https://github.com/cobalt-org/cobalt.rs/commit/c6c4d7aca4e25820a7bf670a38d8c6023c902d5a), breaks [#](https://github.com/cobalt-org/cobalt.rs/issues/))
+  *  Standardize permalink behavior ([6730eb68](https://github.com/cobalt-org/cobalt.rs/commit/6730eb686d083b12c4307a25875ed0a9b7034236), breaks [#](https://github.com/cobalt-org/cobalt.rs/issues/))
+  *  Stablize fronmatter format ([9089c721](https://github.com/cobalt-org/cobalt.rs/commit/9089c721a2910152b6685b497da8af26a37b64e8), closes [#257](https://github.com/cobalt-org/cobalt.rs/issues/257), breaks [#](https://github.com/cobalt-org/cobalt.rs/issues/))
+* **page:**
+  *  Liquid errors on undefined variables ([2ec3f24b](https://github.com/cobalt-org/cobalt.rs/commit/2ec3f24bb8eb3e7b09eb68209fa39430760d1d18))
+    * This was done to help catch migration problems and to move us in the direction of easier debugging of problems
+    * The restriction might be loosened in some cases (like `{% if var %}`).
+  *  Generalize is_post / posts ([d280a353](https://github.com/cobalt-org/cobalt.rs/commit/d280a3532958fd1c973c1f7e6bd0b725eca9e102), closes [#323](https://github.com/cobalt-org/cobalt.rs/issues/323), breaks [#](https://github.com/cobalt-org/cobalt.rs/issues/))
+  *  Make page variables future-proof ([6f62dea8](https://github.com/cobalt-org/cobalt.rs/commit/6f62dea85679a23b7179f26573e8f26132fc32c6), breaks [#](https://github.com/cobalt-org/cobalt.rs/issues/))
+* **serve:**
+  *  Adjust base_url for localhost ([e75e1398](https://github.com/cobalt-org/cobalt.rs/commit/e75e139880964c0abc1668c7c70e2da71004ff55), breaks [#](https://github.com/cobalt-org/cobalt.rs/issues/))
+  *  Merge `serve` and `watch` ([d2f22d51](https://github.com/cobalt-org/cobalt.rs/commit/d2f22d51fe2f7e3dbe729069f8eaa2719880d86f), breaks [#](https://github.com/cobalt-org/cobalt.rs/issues/))
+
+#### Performance
+
+* **serve:**  Reduce duplicate rebuilds ([8f2679ce](https://github.com/cobalt-org/cobalt.rs/commit/8f2679ced60013c9cabd40bd04f5123e4132764e))
+
+
+
+<a name="0.10.0"></a>
+## 0.10.0 (2018-01-04)
+
+
+#### Features
+
+* **error:**  Identify layout errors ([0ec3a3d0](https://github.com/cobalt-org/cobalt.rs/commit/0ec3a3d0fbab0d51e20304d3e1a5726e987e36da))
+
+#### Bug Fixes
+
+*   Correctly copy scss files when sass is disabled ([f04bd9d2](https://github.com/cobalt-org/cobalt.rs/commit/f04bd9d2f38daf988c3bf244c56fe3ff97c3a420))
+*   Log context for failures ([be258bfb](https://github.com/cobalt-org/cobalt.rs/commit/be258bfb31bb5a0d7131469eba27b13b82a5256f))
+* **config:**  On empty file, use right root ([a99ca197](https://github.com/cobalt-org/cobalt.rs/commit/a99ca197564cead19c247ca91429077b163cd794))
+* **drafts:**  Config can enable again ([729e0b18](https://github.com/cobalt-org/cobalt.rs/commit/729e0b18fdc9ad5ec173c73d015ff8cb0364a675))
+* **front:**  Ensure exceprt is rendered before used ([9e714697](https://github.com/cobalt-org/cobalt.rs/commit/9e7146979e8df4afaa9bdc1890fe725b0b551bf7))
+* **includes:**  Support including hidden files ([cb577c42](https://github.com/cobalt-org/cobalt.rs/commit/cb577c42624720740e382c9336510807f67ca0ca))
+
+#### Breaking Changes
+
+* **error:**  Identify layout errors ([0ec3a3d0](https://github.com/cobalt-org/cobalt.rs/commit/0ec3a3d0fbab0d51e20304d3e1a5726e987e36da))
+
 <a name="0.9.0"></a>
 ## 0.9.0 (2017-11-30)
 
