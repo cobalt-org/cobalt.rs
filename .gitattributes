@@ -1,2 +1,2 @@
 * text eol=lf
-**/*_CRLF/** text eol=crlf
+**/tests/fixtures/*_CRLF/** text eol=crlf

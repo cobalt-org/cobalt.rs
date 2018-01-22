@@ -53,7 +53,6 @@ fn assert_dirs_eq(expected: &Path, actual: &Path) {
             .read_to_string(&mut created)
             .expect("Could not read to string");
 
-        let original = String::from_iter(normalized(original.chars()));
         let created = String::from_iter(normalized(created.chars()));
 
         assert_diff!(&original, &created, " ", 0);
