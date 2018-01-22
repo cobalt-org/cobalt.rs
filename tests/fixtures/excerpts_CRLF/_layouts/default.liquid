@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>{{ page.title }}</title>
+    </head>
+    <body>
+    <div>
+      {% if page.collection == "posts" %}
+        {% include 'post.liquid' %}
+      {% else %}
+        {{ page.content }}
+      {% endif %}
+    </div>
+  </body>
+</html>

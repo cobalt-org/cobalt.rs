@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::collections::hash_map::Entry;
 use std::default::Default;
 use std::path::{Path, PathBuf};
+use std::iter::FromIterator;
 
 use chrono::{Datelike, Timelike};
 use itertools;
@@ -12,6 +13,7 @@ use pulldown_cmark as cmark;
 use regex::Regex;
 use rss;
 use serde_yaml;
+use normalize_line_endings::normalized;
 
 use error::*;
 use cobalt_model::files;
@@ -194,6 +196,7 @@ impl Document {
                  -> Result<Document> {
         trace!("Parsing {:?}", rel_path);
         let content = files::read_file(src_path)?;
+        let content = String::from_iter(normalized(content.chars()));
         let builder =
             cobalt_model::DocumentBuilder::<cobalt_model::FrontmatterBuilder>::parse(&content)?;
         let (front, content) = builder.parts();
