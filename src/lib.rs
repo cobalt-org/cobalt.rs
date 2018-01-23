@@ -4,7 +4,7 @@
 // 1. Run `rustc -W help`
 // 2. Grab all `default=warn` warnings
 // 3. Paste them here, deleting `warnings`, and any with `deprecated` in the name
-#![deny(const_err,
+#![cfg_attr(not(feature="dev"), deny(const_err,
         dead_code,
         illegal_floating_point_literal_pattern,
         improper_ctypes,
@@ -39,7 +39,7 @@
         unused_parens,
         unused_unsafe,
         unused_variables,
-        while_true)]
+        while_true))]
 // This list is select `allow` warnings
 #![deny(trivial_casts,
        trivial_numeric_casts,
@@ -48,7 +48,6 @@
 #![cfg_attr(feature="cargo-clippy", allow(
         cyclomatic_complexity,
         needless_pass_by_value))]
-#![cfg_attr(feature="dev", warn(warnings))]
 
 extern crate chrono;
 extern crate ignore;
