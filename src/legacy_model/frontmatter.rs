@@ -3,7 +3,6 @@ use std::fmt;
 use liquid;
 
 use cobalt_model;
-use super::DateTime;
 use super::Permalink;
 use super::Part;
 use super::VARIABLES;
@@ -39,35 +38,34 @@ impl From<FrontmatterBuilder> for cobalt_model::FrontmatterBuilder {
         cobalt_model::FrontmatterBuilder::new()
             .merge_title(unprocessed_attributes
                              .remove("title")
-                             .and_then(|v| v.as_str().map(|s| s.to_owned())))
+                             .map(|v| v.to_string()))
             .merge_description(unprocessed_attributes
                                    .remove("description")
-                                   .and_then(|v| v.as_str().map(|s| s.to_owned())))
+                                   .map(|v| v.to_string()))
             .merge_excerpt(unprocessed_attributes
                                .remove("excerpt")
-                               .and_then(|v| v.as_str().map(|s| s.to_owned())))
+                               .map(|v| v.to_string()))
             .merge_categories(unprocessed_attributes.remove("categories").and_then(|v| {
                 v.as_array()
                     .map(|v| v.iter().map(|v| v.to_string()).collect())
             }))
-            .merge_slug(unprocessed_attributes
-                            .remove("slug")
-                            .and_then(|v| v.as_str().map(|s| s.to_owned())))
+            .merge_slug(unprocessed_attributes.remove("slug").map(|v| v.to_string()))
             .merge_permalink(unprocessed_attributes
                                  .remove("path")
-                                 .and_then(|v| v.as_str().map(convert_permalink)))
+                                 .map(|v| convert_permalink(v.to_str().as_ref())))
             .merge_draft(unprocessed_attributes
                              .remove("draft")
-                             .and_then(|v| v.as_bool()))
+                             .and_then(|v| v.as_scalar().and_then(|v| v.to_bool())))
             .merge_excerpt_separator(unprocessed_attributes
                                          .remove("excerpt_separator")
-                                         .and_then(|v| v.as_str().map(|s| s.to_owned())))
+                                         .map(|v| v.to_string()))
             .merge_layout(unprocessed_attributes
                               .remove("extends")
-                              .and_then(|v| v.as_str().map(|s| s.to_owned())))
-            .merge_published_date(unprocessed_attributes.remove("date").and_then(|d| {
-                d.as_str().and_then(DateTime::parse).map(|d| d.into())
-            }))
+                              .map(|v| v.to_string()))
+            .merge_published_date(unprocessed_attributes
+                                      .remove("date")
+                                      .and_then(|d| d.as_scalar().and_then(|d| d.to_date()))
+                                      .map(|d| d.into()))
             .merge_data(unprocessed_attributes)
     }
 }

@@ -72,17 +72,17 @@ impl CollectionBuilder {
         }
 
         let mut attributes: liquid::Object =
-            vec![("title".to_owned(), liquid::Value::str(&title)),
-                 ("slug".to_owned(), liquid::Value::str(&slug)),
+            vec![("title".to_owned(), liquid::Value::scalar(&title)),
+                 ("slug".to_owned(), liquid::Value::scalar(&slug)),
                  ("description".to_owned(),
-                  liquid::Value::Str(description.clone().unwrap_or_else(|| "".to_owned())))]
+                  liquid::Value::scalar(description.clone().unwrap_or_else(|| "".to_owned())))]
                 .into_iter()
                 .collect();
         if let Some(ref rss) = rss {
-            attributes.insert("rss".to_owned(), liquid::Value::str(rss));
+            attributes.insert("rss".to_owned(), liquid::Value::scalar(rss));
         }
         if let Some(ref jsonfeed) = jsonfeed {
-            attributes.insert("jsonfeed".to_owned(), liquid::Value::str(jsonfeed));
+            attributes.insert("jsonfeed".to_owned(), liquid::Value::scalar(jsonfeed));
         }
 
         let default = default.set_collection(slug.clone());

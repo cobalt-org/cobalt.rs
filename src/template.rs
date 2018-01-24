@@ -58,7 +58,7 @@ impl liquid::compiler::Include for InMemoryInclude {
             .unwrap_or_else(|| {
                 let content = self.legacy
                     .as_ref()
-                    .ok_or_else(|| liquid::Error::from(&*format!("{:?} does not exist", path)))?
+                    .ok_or_else(|| liquid::Error::with_msg("No legacy path specified"))?
                     .include(path)?;
                 warn!("Loading `include`s relative to `source` is deprecated, see {}.",
                       path);

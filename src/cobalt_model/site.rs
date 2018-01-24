@@ -59,13 +59,13 @@ impl SiteBuilder {
 
         let mut attributes = liquid::Object::new();
         if let Some(ref title) = title {
-            attributes.insert("title".to_owned(), liquid::Value::str(title));
+            attributes.insert("title".to_owned(), liquid::Value::scalar(title));
         }
         if let Some(ref description) = description {
-            attributes.insert("description".to_owned(), liquid::Value::str(description));
+            attributes.insert("description".to_owned(), liquid::Value::scalar(description));
         }
         if let Some(ref base_url) = base_url {
-            attributes.insert("base_url".to_owned(), liquid::Value::str(base_url));
+            attributes.insert("base_url".to_owned(), liquid::Value::scalar(base_url));
         }
         let mut data = data.unwrap_or_default();
         insert_data_dir(&mut data, &root.join(data_dir))?;
