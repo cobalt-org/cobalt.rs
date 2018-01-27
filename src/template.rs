@@ -3,7 +3,6 @@ use std::path;
 use std::result;
 
 use liquid;
-
 use error::*;
 use cobalt_model;
 use cobalt_model::files;

@@ -2,11 +2,12 @@ use std::fs;
 use std::io::Read;
 use std::io::Write;
 use std::path;
+use std::iter::FromIterator;
 
 use ignore::Match;
 use ignore::gitignore::{Gitignore, GitignoreBuilder};
 use walkdir::{WalkDir, DirEntry};
-
+use normalize_line_endings::normalized;
 use error::Result;
 
 pub struct FilesBuilder {
@@ -189,6 +190,7 @@ pub fn read_file<P: AsRef<path::Path>>(path: P) -> Result<String> {
     let mut file = fs::File::open(path.as_ref())?;
     let mut text = String::new();
     file.read_to_string(&mut text)?;
+    let text = String::from_iter(normalized(text.chars()));
     Ok(text)
 }
 

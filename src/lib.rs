@@ -84,6 +84,8 @@ extern crate lazy_static;
 #[macro_use]
 extern crate serde;
 
+extern crate normalize_line_endings;
+
 pub use cobalt::build;
 pub use error::Error;
 pub use cobalt_model::Config;
