@@ -239,6 +239,11 @@ pub fn excerpts() {
 }
 
 #[test]
+pub fn excerpts_crlf() {
+    run_test("excerpts_CRLF").unwrap();
+}
+
+#[test]
 pub fn posts_in_subfolder() {
     run_test("posts_in_subfolder").unwrap();
 }
