@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::collections::hash_map::Entry;
 use std::default::Default;
 use std::path::{Path, PathBuf};
+use std::clone::Clone;
 
 use chrono::{Datelike, Timelike};
 use itertools;
@@ -163,7 +164,7 @@ fn document_attributes(front: &cobalt_model::Frontmatter,
     attributes
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Document {
     pub url_path: String,
     pub file_path: PathBuf,
