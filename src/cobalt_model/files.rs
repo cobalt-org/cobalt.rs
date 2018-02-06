@@ -47,14 +47,14 @@ impl FilesBuilder {
         Ok(self)
     }
 
-    pub fn add_extension(&mut self, ext: &str) -> Result<&mut FilesBuilder> {
-        trace!("{:?}: adding '{}' extension", self.root_dir, ext);
-        self.extensions.push(ext.into());
+    pub fn limit(&mut self, subtree: path::PathBuf) -> Result<&mut Self> {
+        self.subtree = Some(subtree);
         Ok(self)
     }
 
-    pub fn limit(&mut self, subtree: path::PathBuf) -> Result<&mut Self> {
-        self.subtree = Some(subtree);
+    pub fn add_extension(&mut self, ext: &str) -> Result<&mut FilesBuilder> {
+        trace!("{:?}: adding '{}' extension", self.root_dir, ext);
+        self.extensions.push(ext.into());
         Ok(self)
     }
 

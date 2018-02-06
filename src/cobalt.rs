@@ -8,6 +8,7 @@ use jsonfeed::Feed;
 use jsonfeed;
 
 use cobalt_model::{Config, SortOrder};
+use cobalt_model::FrontmatterBuilder;
 use cobalt_model::files;
 use cobalt_model;
 use document::Document;
@@ -30,14 +31,12 @@ pub fn build(config: &Config) -> Result<()> {
     debug!("Posts directory: {:?}", posts_path);
     debug!("Draft mode enabled: {}", config.include_drafts);
 
-    let page_files = find_pages(source, config)?;
-    let mut documents = parse_pages(&page_files, source, config)?;
-    process_included_drafts(config, source, &mut documents)?;
+    let post_files = find_post_files(source, config)?;
+    let mut posts = parse_pages(&post_files, &config.posts.default, source, config)?;
+    process_included_drafts(config, source, &mut posts)?;
 
-    let (mut posts, documents): (Vec<Document>, Vec<Document>) =
-        documents
-            .into_iter()
-            .partition(|x| x.front.collection == "posts");
+    let page_files = find_page_files(source, config)?;
+    let documents = parse_pages(&page_files, &config.pages.default, source, config)?;
 
     sort_pages(&mut posts, config)?;
     generate_posts(&mut posts,
@@ -223,17 +222,6 @@ fn sort_pages(posts: &mut Vec<Document>, config: &Config) -> Result<()> {
     Ok(())
 }
 
-fn find_drafts_files(drafts_root: &Path, config: &Config) -> Result<files::Files> {
-    let mut draft_files = files::FilesBuilder::new(drafts_root)?;
-    for line in &config.ignore {
-        draft_files.add_ignore(line.as_str())?;
-    }
-    for ext in config.template_extensions.iter() {
-        draft_files.add_extension(ext)?;
-    }
-    Ok(draft_files.build()?)
-}
-
 fn parse_drafts(drafts_root: &PathBuf,
                 draft_files: &files::Files,
                 documents: &mut Vec<Document>,
@@ -263,7 +251,7 @@ fn process_included_drafts(config: &Config,
         if let Some(ref drafts_dir) = config.posts.drafts_dir {
             debug!("Draft directory: {:?}", drafts_dir);
             let drafts_root = source.join(&drafts_dir);
-            let draft_files = find_drafts_files(drafts_root.as_path(), config)?;
+            let draft_files = find_post_draft_files(&drafts_root, config)?;
 
             parse_drafts(&drafts_root, &draft_files, documents, config)?;
         }
@@ -271,13 +259,25 @@ fn process_included_drafts(config: &Config,
     Ok(())
 }
 
-fn find_pages(source: &Path, config: &Config) -> Result<files::Files> {
+fn find_post_files(source: &Path, config: &Config) -> Result<files::Files> {
     let mut page_files = files::FilesBuilder::new(source)?;
     page_files
-        .add_ignore(&format!("!{}", config.posts.dir))?
-        .add_ignore(&format!("!{}/**", config.posts.dir))?
-        .add_ignore(&format!("{}/**/_*", config.posts.dir))?
-        .add_ignore(&format!("{}/**/_*/**", config.posts.dir))?;
+        .add_ignore(&format!("!/{}", config.posts.dir))?
+        .add_ignore(&format!("!/{}/**", config.posts.dir))?
+        .add_ignore(&format!("/{}/**/_*", config.posts.dir))?
+        .add_ignore(&format!("/{}/**/_*/**", config.posts.dir))?;
+    for line in &config.ignore {
+        page_files.add_ignore(line.as_str())?;
+    }
+    for ext in config.template_extensions.iter() {
+        page_files.add_extension(ext)?;
+    }
+    page_files.limit(PathBuf::from(&config.posts.dir))?;
+    page_files.build()
+}
+
+fn find_post_draft_files(drafts_root: &Path, config: &Config) -> Result<files::Files> {
+    let mut page_files = files::FilesBuilder::new(drafts_root)?;
     for line in &config.ignore {
         page_files.add_ignore(line.as_str())?;
     }
@@ -287,7 +287,26 @@ fn find_pages(source: &Path, config: &Config) -> Result<files::Files> {
     page_files.build()
 }
 
-fn parse_pages(page_files: &files::Files, source: &Path, config: &Config) -> Result<Vec<Document>> {
+fn find_page_files(source: &Path, config: &Config) -> Result<files::Files> {
+    let mut page_files = files::FilesBuilder::new(source)?;
+    for line in &config.ignore {
+        page_files.add_ignore(line.as_str())?;
+    }
+    for ext in config.template_extensions.iter() {
+        page_files.add_extension(ext)?;
+    }
+    page_files.add_ignore(&format!("/{}", config.posts.dir))?;
+    if let Some(ref drafts_dir) = config.posts.drafts_dir {
+        page_files.add_ignore(&format!("/{}", drafts_dir))?;
+    }
+    page_files.build()
+}
+
+fn parse_pages(page_files: &files::Files,
+               default_front: &FrontmatterBuilder,
+               source: &Path,
+               config: &Config)
+               -> Result<Vec<Document>> {
     let posts_path = source.join(&config.posts.dir);
     debug!("Posts directory: {:?}", posts_path);
 
@@ -297,13 +316,7 @@ fn parse_pages(page_files: &files::Files, source: &Path, config: &Config) -> Res
             .strip_prefix(source)
             .expect("file was found under the root");
 
-        // if the document is in the posts folder it's considered a post
-        let is_post = file_path.starts_with(posts_path.as_path());
-        let default_front = if is_post {
-            config.posts.default.clone()
-        } else {
-            config.pages.default.clone()
-        };
+        let default_front = default_front.clone();
 
         let doc = Document::parse(&file_path, rel_src, default_front)
             .chain_err(|| format!("Failed to parse {:?}", rel_src))?;
