@@ -2,7 +2,6 @@ use std::fs;
 use std::collections::HashMap;
 use std::io::Write;
 use std::path::{PathBuf, Path};
-use std::ffi::OsStr;
 use liquid;
 use rss;
 use jsonfeed::Feed;
@@ -22,9 +21,6 @@ pub fn build(config: &Config) -> Result<()> {
     let source = config.source.as_path();
     let dest = config.destination.as_path();
 
-    let template_extensions: Vec<&OsStr> =
-        config.template_extensions.iter().map(OsStr::new).collect();
-
     let parser = template::LiquidParser::with_config(config)?;
     let layouts = source.join(&config.layouts_dir);
     let mut layouts_cache = HashMap::new();
@@ -35,8 +31,8 @@ pub fn build(config: &Config) -> Result<()> {
     debug!("Draft mode enabled: {}", config.include_drafts);
 
     let page_files = find_pages(source, config)?;
-    let mut documents = parse_pages(&page_files, source, config, &template_extensions)?;
-    process_included_drafts(config, source, &template_extensions, &mut documents)?;
+    let mut documents = parse_pages(&page_files, source, config)?;
+    process_included_drafts(config, source, &mut documents)?;
 
     let (mut posts, documents): (Vec<Document>, Vec<Document>) =
         documents
@@ -232,18 +228,18 @@ fn find_drafts_files(drafts_root: &Path, config: &Config) -> Result<files::Files
     for line in &config.ignore {
         draft_files.add_ignore(line.as_str())?;
     }
+    for ext in config.template_extensions.iter() {
+        draft_files.add_extension(ext)?;
+    }
     Ok(draft_files.build()?)
 }
 
 fn parse_drafts(drafts_root: &PathBuf,
                 draft_files: &files::Files,
-                template_extensions: &[&OsStr],
                 documents: &mut Vec<Document>,
                 config: &Config)
                 -> Result<()> {
-    for file_path in draft_files.files().filter(|p| {
-        template_extensions.contains(&p.extension().unwrap_or_else(|| OsStr::new("")))
-    }) {
+    for file_path in draft_files.files() {
         // Provide a fake path as if it was not a draft
         let rel_src = file_path
             .strip_prefix(&drafts_root)
@@ -261,7 +257,6 @@ fn parse_drafts(drafts_root: &PathBuf,
 
 fn process_included_drafts(config: &Config,
                            source: &Path,
-                           template_extensions: &[&OsStr],
                            documents: &mut Vec<Document>)
                            -> Result<()> {
     if config.include_drafts {
@@ -270,11 +265,7 @@ fn process_included_drafts(config: &Config,
             let drafts_root = source.join(&drafts_dir);
             let draft_files = find_drafts_files(drafts_root.as_path(), config)?;
 
-            parse_drafts(&drafts_root,
-                         &draft_files,
-                         template_extensions,
-                         documents,
-                         config)?;
+            parse_drafts(&drafts_root, &draft_files, documents, config)?;
         }
     }
     Ok(())
@@ -290,21 +281,18 @@ fn find_pages(source: &Path, config: &Config) -> Result<files::Files> {
     for line in &config.ignore {
         page_files.add_ignore(line.as_str())?;
     }
+    for ext in config.template_extensions.iter() {
+        page_files.add_extension(ext)?;
+    }
     page_files.build()
 }
 
-fn parse_pages(page_files: &files::Files,
-               source: &Path,
-               config: &Config,
-               template_extensions: &[&OsStr])
-               -> Result<Vec<Document>> {
+fn parse_pages(page_files: &files::Files, source: &Path, config: &Config) -> Result<Vec<Document>> {
     let posts_path = source.join(&config.posts.dir);
     debug!("Posts directory: {:?}", posts_path);
 
     let mut documents = vec![];
-    for file_path in page_files.files().filter(|p| {
-        template_extensions.contains(&p.extension().unwrap_or_else(|| OsStr::new("")))
-    }) {
+    for file_path in page_files.files() {
         let rel_src = file_path
             .strip_prefix(source)
             .expect("file was found under the root");

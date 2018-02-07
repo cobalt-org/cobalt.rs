@@ -1,3 +1,4 @@
+use std::ffi;
 use std::fs;
 use std::io::Read;
 use std::io::Write;
@@ -14,6 +15,7 @@ pub struct FilesBuilder {
     root_dir: path::PathBuf,
     ignore: Vec<String>,
     ignore_hidden: bool,
+    extensions: Vec<ffi::OsString>,
 }
 
 impl FilesBuilder {
@@ -26,6 +28,7 @@ impl FilesBuilder {
             root_dir: root_dir,
             ignore: Default::default(),
             ignore_hidden: true,
+            extensions: Default::default(),
         };
 
         Ok(builder)
@@ -42,6 +45,12 @@ impl FilesBuilder {
         Ok(self)
     }
 
+    pub fn add_extension(&mut self, ext: &str) -> Result<&mut FilesBuilder> {
+        trace!("{:?}: adding '{}' extension", self.root_dir, ext);
+        self.extensions.push(ext.into());
+        Ok(self)
+    }
+
     pub fn build(&self) -> Result<Files> {
         let mut ignore = GitignoreBuilder::new(&self.root_dir);
         if self.ignore_hidden {
@@ -51,8 +60,13 @@ impl FilesBuilder {
         for line in &self.ignore {
             ignore.add_line(None, line)?;
         }
+        let ignore = ignore.build()?;
 
-        let files = Files::new(self.root_dir.as_path(), ignore.build()?);
+        let files = Files {
+            root_dir: self.root_dir.clone(),
+            ignore,
+            extensions: self.extensions.clone(),
+        };
         Ok(files)
     }
 }
@@ -87,17 +101,14 @@ impl<'a> Iterator for FilesIterator<'a> {
 pub struct Files {
     root_dir: path::PathBuf,
     ignore: Gitignore,
+    extensions: Vec<ffi::OsString>,
 }
 
 impl Files {
-    fn new(root_dir: &path::Path, ignore: Gitignore) -> Files {
-        Files {
-            root_dir: root_dir.to_path_buf(),
-            ignore: ignore,
-        }
-    }
-
     pub fn includes_file(&self, file: &path::Path) -> bool {
+        if !self.ext_contains(file) {
+            return false;
+        }
         let is_dir = false;
         self.includes_path(file, is_dir)
     }
@@ -112,9 +123,24 @@ impl Files {
         FilesIterator::new(self)
     }
 
+    fn ext_contains(&self, file: &path::Path) -> bool {
+        if self.extensions.is_empty() {
+            return true;
+        }
+
+        file.extension()
+            .map(|ext| self.extensions.iter().any(|e| e == ext))
+            .unwrap_or(false)
+    }
+
     fn includes_entry(&self, entry: &DirEntry) -> bool {
+        let file = entry.path();
+        let is_dir = entry.file_type().is_dir();
+        if !is_dir && !self.ext_contains(file) {
+            return false;
+        }
         // Assumption: The parent paths will have been checked before we even get to this point.
-        self.includes_path_leaf(entry.path(), entry.file_type().is_dir())
+        self.includes_path_leaf(file, is_dir)
     }
 
     fn includes_path(&self, path: &path::Path, is_dir: bool) -> bool {
