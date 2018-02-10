@@ -75,10 +75,7 @@ impl LiquidParser {
         let repo = InMemoryInclude::new()
             .load_from_path(config.source.join(&config.includes_dir))?
             .set_legacy_path(Some(config.source.clone()));
-        let highlight: Box<liquid::compiler::ParseBlock> = {
-            let syntax_theme = config.syntax_highlight.theme.clone();
-            Box::new(syntax_highlight::CodeBlockParser::new(syntax_theme))
-        };
+        let highlight = Self::highlight_with_config(config)?;
         let parser = liquid::ParserBuilder::with_liquid()
             .extra_filters()
             .include_source(Box::new(repo))
@@ -90,5 +87,23 @@ impl LiquidParser {
     pub fn parse(&self, template: &str) -> Result<liquid::Template> {
         let template = self.parser.parse(template)?;
         Ok(template)
+    }
+
+    fn highlight_with_config(config: &cobalt_model::Config)
+                             -> Result<Box<liquid::compiler::ParseBlock>> {
+        let syntax_theme = &config.syntax_highlight.theme;
+        let result: Result<()> = match syntax_highlight::has_syntax_theme(syntax_theme) {
+            Ok(true) => Ok(()),
+            Ok(false) => Err(format!("Syntax theme '{}' is unsupported", syntax_theme).into()),
+            Err(err) => {
+                warn!("Syntax theme named '{}' ignored. Reason: {}",
+                      syntax_theme,
+                      err);
+                Ok(())
+            }
+        };
+        result?;
+        let block = syntax_highlight::CodeBlockParser::new(syntax_theme.clone());
+        Ok(Box::new(block))
     }
 }

@@ -4,7 +4,6 @@ use std::path;
 use serde_yaml;
 
 use error::*;
-use syntax_highlight::has_syntax_theme;
 
 use super::collection;
 use super::files;
@@ -237,20 +236,6 @@ impl ConfigBuilder {
             assets,
             dump,
         } = self;
-
-        let result: Result<()> = match has_syntax_theme(&syntax_highlight.theme) {
-            Ok(true) => Ok(()),
-            Ok(false) => {
-                Err(format!("Syntax theme '{}' is unsupported", syntax_highlight.theme).into())
-            }
-            Err(err) => {
-                warn!("Syntax theme named '{}' ignored. Reason: {}",
-                      syntax_highlight.theme,
-                      err);
-                Ok(())
-            }
-        };
-        result?;
 
         let pages: collection::CollectionBuilder = pages.into();
         let mut pages = pages.merge_frontmatter(default.clone());
