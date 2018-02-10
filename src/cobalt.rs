@@ -217,6 +217,7 @@ fn sort_pages(posts: &mut Vec<Document>, config: &Config) -> Result<()> {
     match config.posts.order {
         SortOrder::Asc => posts.reverse(),
         SortOrder::Desc => (),
+        SortOrder::None => (),
     }
 
     Ok(())

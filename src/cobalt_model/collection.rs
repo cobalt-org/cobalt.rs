@@ -8,6 +8,7 @@ use super::slug;
 #[derive(Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub enum SortOrder {
+    None,
     Asc,
     Desc,
 }
