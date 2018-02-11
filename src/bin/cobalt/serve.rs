@@ -7,7 +7,6 @@ use std::thread;
 use std::time;
 
 use clap;
-use cobalt::cobalt_model::files;
 use cobalt::cobalt_model;
 use error_chain::ChainedError;
 use hyper;
@@ -157,16 +156,6 @@ fn watch(config: cobalt_model::Config) -> Result<()> {
         .canonicalize()
         .chain_err(|| "Failed in processing source")?;
 
-    // Be as broad as possible in what can cause a rebuild to
-    // ensure we don't miss anything (normal file walks will miss
-    // `_layouts`, etc).
-    let mut site_files = files::FilesBuilder::new(&source)?;
-    site_files.ignore_hidden(false)?;
-    for line in &config.ignore {
-        site_files.add_ignore(line.as_str())?;
-    }
-    let site_files = site_files.build()?;
-
     let (tx, rx) = channel();
     let mut watcher = notify::watcher(tx, time::Duration::from_secs(1))
         .chain_err(|| "Notify error")?;
@@ -187,12 +176,15 @@ fn watch(config: cobalt_model::Config) -> Result<()> {
             _ => None,
         };
         let rebuild = if let Some(event_path) = event_path {
-            if site_files.includes_file(event_path) {
-                debug!("Page changed {:?}", event);
-                true
-            } else {
+            // Be as broad as possible in what can cause a rebuild to
+            // ensure we don't miss anything (normal file walks will miss
+            // `_layouts`, etc).
+            if event_path.starts_with(&config.destination) {
                 trace!("Ignored file changed {:?}", event);
                 false
+            } else {
+                debug!("Page changed {:?}", event);
+                true
             }
         } else {
             trace!("Assuming change {:?} is relevant", event);

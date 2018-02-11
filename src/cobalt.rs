@@ -8,8 +8,8 @@ use jsonfeed::Feed;
 use jsonfeed;
 
 use cobalt_model::{Config, SortOrder};
-use cobalt_model::FrontmatterBuilder;
 use cobalt_model::files;
+use cobalt_model::Collection;
 use cobalt_model;
 use document::Document;
 use error::*;
@@ -32,11 +32,11 @@ pub fn build(config: &Config) -> Result<()> {
     debug!("Draft mode enabled: {}", config.include_drafts);
 
     let post_files = find_post_files(source, config)?;
-    let mut posts = parse_pages(&post_files, &config.posts.default, source, config)?;
+    let mut posts = parse_pages(&post_files, &config.posts, source)?;
     process_included_drafts(config, source, &mut posts)?;
 
     let page_files = find_page_files(source, config)?;
-    let documents = parse_pages(&page_files, &config.pages.default, source, config)?;
+    let documents = parse_pages(&page_files, &config.pages, source)?;
 
     sort_pages(&mut posts, config)?;
     generate_posts(&mut posts,
@@ -267,10 +267,10 @@ fn find_post_files(source: &Path, config: &Config) -> Result<files::Files> {
         .add_ignore(&format!("!/{}/**", config.posts.dir))?
         .add_ignore(&format!("/{}/**/_*", config.posts.dir))?
         .add_ignore(&format!("/{}/**/_*/**", config.posts.dir))?;
-    for line in &config.ignore {
+    for line in &config.posts.ignore {
         page_files.add_ignore(line.as_str())?;
     }
-    for ext in config.template_extensions.iter() {
+    for ext in config.posts.template_extensions.iter() {
         page_files.add_extension(ext)?;
     }
     page_files.limit(PathBuf::from(&config.posts.dir))?;
@@ -279,10 +279,10 @@ fn find_post_files(source: &Path, config: &Config) -> Result<files::Files> {
 
 fn find_post_draft_files(drafts_root: &Path, config: &Config) -> Result<files::Files> {
     let mut page_files = files::FilesBuilder::new(drafts_root)?;
-    for line in &config.ignore {
+    for line in &config.posts.ignore {
         page_files.add_ignore(line.as_str())?;
     }
-    for ext in config.template_extensions.iter() {
+    for ext in config.posts.template_extensions.iter() {
         page_files.add_extension(ext)?;
     }
     page_files.build()
@@ -290,10 +290,10 @@ fn find_post_draft_files(drafts_root: &Path, config: &Config) -> Result<files::F
 
 fn find_page_files(source: &Path, config: &Config) -> Result<files::Files> {
     let mut page_files = files::FilesBuilder::new(source)?;
-    for line in &config.ignore {
+    for line in &config.pages.ignore {
         page_files.add_ignore(line.as_str())?;
     }
-    for ext in config.template_extensions.iter() {
+    for ext in config.pages.template_extensions.iter() {
         page_files.add_extension(ext)?;
     }
     page_files.add_ignore(&format!("/{}", config.posts.dir))?;
@@ -304,24 +304,20 @@ fn find_page_files(source: &Path, config: &Config) -> Result<files::Files> {
 }
 
 fn parse_pages(page_files: &files::Files,
-               default_front: &FrontmatterBuilder,
-               source: &Path,
-               config: &Config)
+               collection: &Collection,
+               source: &Path)
                -> Result<Vec<Document>> {
-    let posts_path = source.join(&config.posts.dir);
-    debug!("Posts directory: {:?}", posts_path);
-
     let mut documents = vec![];
     for file_path in page_files.files() {
         let rel_src = file_path
             .strip_prefix(source)
             .expect("file was found under the root");
 
-        let default_front = default_front.clone();
+        let default_front = collection.default.clone();
 
         let doc = Document::parse(&file_path, rel_src, default_front)
             .chain_err(|| format!("Failed to parse {:?}", rel_src))?;
-        if !doc.front.is_draft || config.include_drafts {
+        if !doc.front.is_draft || collection.include_drafts {
             documents.push(doc);
         }
     }

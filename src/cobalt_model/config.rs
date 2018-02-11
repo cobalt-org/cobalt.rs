@@ -116,6 +116,7 @@ impl From<PostBuilder> for collection::CollectionBuilder {
             rss,
             jsonfeed,
             default,
+            ..Default::default()
         }
     }
 }
@@ -237,31 +238,6 @@ impl ConfigBuilder {
             dump,
         } = self;
 
-        let pages: collection::CollectionBuilder = pages.into();
-        let mut pages = pages.merge_frontmatter(default.clone());
-        // Default with `site` because the pages are effectively the site
-        pages.title = Some(site.title
-                               .clone()
-                               .unwrap_or_else(|| "".to_owned())
-                               .to_owned());
-        pages.description = site.description.clone();
-        let pages = pages.build()?;
-
-        let posts: collection::CollectionBuilder = posts.into();
-        let mut posts = posts.merge_frontmatter(default);
-        // Default with `site` for people quickly bootstrapping a blog, the blog and site are
-        // effectively equivalent.
-        if posts.title.is_none() {
-            posts.title = Some(site.title
-                                   .clone()
-                                   .unwrap_or_else(|| "".to_owned())
-                                   .to_owned());
-        }
-        if posts.description.is_none() {
-            posts.description = site.description.clone();
-        }
-        let posts = posts.build()?;
-
         let source = files::cleanup_path(source);
         let destination = files::cleanup_path(destination);
 
@@ -284,6 +260,37 @@ impl ConfigBuilder {
 
         let site = site.build(&source)?;
 
+        let pages: collection::CollectionBuilder = pages.into();
+        let mut pages = pages.merge_frontmatter(default.clone());
+        // Use `site` because the pages are effectively the site
+        pages.title = Some(site.title
+                               .clone()
+                               .unwrap_or_else(|| "".to_owned())
+                               .to_owned());
+        pages.description = site.description.clone();
+        pages.include_drafts = false;
+        pages.template_extensions = template_extensions.clone();
+        pages.ignore = ignore.clone();
+        let pages = pages.build()?;
+
+        let posts: collection::CollectionBuilder = posts.into();
+        let mut posts = posts.merge_frontmatter(default);
+        // Default with `site` for people quickly bootstrapping a blog, the blog and site are
+        // effectively equivalent.
+        if posts.title.is_none() {
+            posts.title = Some(site.title
+                                   .clone()
+                                   .unwrap_or_else(|| "".to_owned())
+                                   .to_owned());
+        }
+        if posts.description.is_none() {
+            posts.description = site.description.clone();
+        }
+        posts.include_drafts = include_drafts;
+        posts.template_extensions = template_extensions.clone();
+        posts.ignore = ignore.clone();
+        let posts = posts.build()?;
+
         let mut assets = assets;
         assets.source = Some(source.clone());
         assets.ignore = ignore.clone();
@@ -298,7 +305,6 @@ impl ConfigBuilder {
             posts,
             site,
             ignore,
-            template_extensions,
             syntax_highlight,
             layouts_dir,
             includes_dir,
@@ -326,8 +332,7 @@ pub struct Config {
     pub pages: collection::Collection,
     pub posts: collection::Collection,
     pub site: site::Site,
-    pub template_extensions: Vec<String>,
-    pub ignore: Vec<String>,
+    pub ignore: Vec<String>, // HACK: Here until migrate doesn't need it
     pub syntax_highlight: SyntaxHighlight,
     pub layouts_dir: &'static str,
     pub includes_dir: &'static str,

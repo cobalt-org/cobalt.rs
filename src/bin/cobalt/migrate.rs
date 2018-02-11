@@ -175,6 +175,7 @@ fn migrate_content(config: &cobalt::Config) -> Result<()> {
     }
 
     let template_extensions: Vec<&ffi::OsStr> = config
+        .pages  // HACK: Just pick one
         .template_extensions
         .iter()
         .map(ffi::OsStr::new)
@@ -206,6 +207,7 @@ fn migrate_front(config: &cobalt::Config) -> Result<()> {
     info!("Migrating frontmatter");
 
     let template_extensions: Vec<&ffi::OsStr> = config
+        .pages  // HACK: Just pick one
         .template_extensions
         .iter()
         .map(ffi::OsStr::new)
