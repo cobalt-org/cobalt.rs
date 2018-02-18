@@ -28,7 +28,7 @@ impl Dump {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 #[derive(Serialize, Deserialize)]
 #[serde(deny_unknown_fields, default)]
 pub struct SyntaxHighlight {
@@ -41,15 +41,15 @@ impl Default for SyntaxHighlight {
     }
 }
 
-#[derive(Debug, PartialEq, Default)]
+#[derive(Debug, Clone, PartialEq, Default)]
 #[derive(Serialize, Deserialize)]
 #[serde(deny_unknown_fields, default)]
-pub struct PageBuilder {
+pub struct PageConfig {
     pub default: frontmatter::FrontmatterBuilder,
 }
 
-impl From<PageBuilder> for collection::CollectionBuilder {
-    fn from(config: PageBuilder) -> Self {
+impl From<PageConfig> for collection::CollectionBuilder {
+    fn from(config: PageConfig) -> Self {
         // Pages aren't publicly exposed as a collection
         let slug = Some("".to_owned());
         let dir = Some(".".to_owned());
@@ -63,10 +63,10 @@ impl From<PageBuilder> for collection::CollectionBuilder {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 #[derive(Serialize, Deserialize)]
 #[serde(deny_unknown_fields, default)]
-pub struct PostBuilder {
+pub struct PostConfig {
     pub title: Option<String>,
     pub description: Option<String>,
     pub dir: Option<String>,
@@ -77,7 +77,7 @@ pub struct PostBuilder {
     pub default: frontmatter::FrontmatterBuilder,
 }
 
-impl Default for PostBuilder {
+impl Default for PostConfig {
     fn default() -> Self {
         Self {
             title: Default::default(),
@@ -92,9 +92,9 @@ impl Default for PostBuilder {
     }
 }
 
-impl From<PostBuilder> for collection::CollectionBuilder {
-    fn from(config: PostBuilder) -> Self {
-        let PostBuilder {
+impl From<PostConfig> for collection::CollectionBuilder {
+    fn from(config: PostConfig) -> Self {
+        let PostConfig {
             title,
             description,
             dir,
@@ -121,10 +121,7 @@ impl From<PostBuilder> for collection::CollectionBuilder {
     }
 }
 
-const LAYOUTS_DIR: &'static str = "_layouts";
-const INCLUDES_DIR: &'static str = "_includes";
-
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 #[derive(Serialize, Deserialize)]
 #[serde(deny_unknown_fields, default)]
 pub struct ConfigBuilder {
@@ -136,8 +133,8 @@ pub struct ConfigBuilder {
     pub abs_dest: Option<String>,
     pub include_drafts: bool,
     pub default: frontmatter::FrontmatterBuilder,
-    pub pages: PageBuilder,
-    pub posts: PostBuilder,
+    pub pages: PageConfig,
+    pub posts: PostConfig,
     pub site: site::SiteBuilder,
     pub template_extensions: Vec<String>,
     pub ignore: Vec<String>,
@@ -167,8 +164,8 @@ impl Default for ConfigBuilder {
             template_extensions: vec!["md".to_owned(), "liquid".to_owned()],
             ignore: Default::default(),
             syntax_highlight: SyntaxHighlight::default(),
-            layouts_dir: LAYOUTS_DIR,
-            includes_dir: INCLUDES_DIR,
+            layouts_dir: "_layouts",
+            includes_dir: "_includes",
             assets: assets::AssetsBuilder::default(),
             dump: Default::default(),
         }
@@ -232,8 +229,8 @@ impl ConfigBuilder {
             template_extensions,
             ignore,
             syntax_highlight,
-            layouts_dir: _layouts_dir,
-            includes_dir: _includes_dir,
+            layouts_dir,
+            includes_dir,
             assets,
             dump,
         } = self;
@@ -253,10 +250,6 @@ impl ConfigBuilder {
         let destination = abs_dest
             .map(|s| s.into())
             .unwrap_or_else(|| root.join(destination));
-
-        // HACK for serde #1105
-        let layouts_dir = LAYOUTS_DIR;
-        let includes_dir = INCLUDES_DIR;
 
         let site = site.build(&source)?;
 

@@ -133,7 +133,7 @@ impl From<GlobalConfig> for cobalt_model::ConfigBuilder {
         let default = cobalt_model::FrontmatterBuilder::new()
             .set_excerpt_separator(excerpt_separator)
             .set_draft(false);
-        let posts = cobalt_model::PostBuilder {
+        let posts = cobalt_model::PostConfig {
             title: None,
             description: None,
             dir: Some(posts),
@@ -158,7 +158,7 @@ impl From<GlobalConfig> for cobalt_model::ConfigBuilder {
             destination: dest,
             include_drafts: include_drafts,
             default,
-            pages: cobalt_model::PageBuilder::default(),
+            pages: cobalt_model::PageConfig::default(),
             posts,
             site: site,
             template_extensions: template_extensions,

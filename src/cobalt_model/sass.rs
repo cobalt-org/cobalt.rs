@@ -18,7 +18,7 @@ pub enum SassOutputStyle {
 
 const SASS_IMPORT_DIR: &'static str = "_sass";
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 #[derive(Serialize, Deserialize)]
 #[serde(deny_unknown_fields, default)]
 pub struct SassBuilder {
