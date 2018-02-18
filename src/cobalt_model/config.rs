@@ -9,6 +9,7 @@ use super::collection;
 use super::files;
 use super::frontmatter;
 use super::assets;
+use super::sass;
 use super::site;
 
 arg_enum! {
@@ -121,6 +122,20 @@ impl From<PostConfig> for collection::CollectionBuilder {
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Default)]
+#[derive(Serialize, Deserialize)]
+#[serde(deny_unknown_fields, default)]
+pub struct SassConfig {
+    pub style: sass::SassOutputStyle,
+}
+
+#[derive(Debug, Clone, PartialEq, Default)]
+#[derive(Serialize, Deserialize)]
+#[serde(deny_unknown_fields, default)]
+pub struct AssetsConfig {
+    pub sass: SassConfig,
+}
+
 #[derive(Debug, Clone, PartialEq)]
 #[derive(Serialize, Deserialize)]
 #[serde(deny_unknown_fields, default)]
@@ -143,7 +158,7 @@ pub struct ConfigBuilder {
     pub layouts_dir: &'static str,
     #[serde(skip)]
     pub includes_dir: &'static str,
-    pub assets: assets::AssetsBuilder,
+    pub assets: AssetsConfig,
     // This is a debug-only field and should be transient rather than persistently set.
     #[serde(skip)]
     pub dump: Vec<Dump>,
@@ -166,7 +181,7 @@ impl Default for ConfigBuilder {
             syntax_highlight: SyntaxHighlight::default(),
             layouts_dir: "_layouts",
             includes_dir: "_includes",
-            assets: assets::AssetsBuilder::default(),
+            assets: AssetsConfig::default(),
             dump: Default::default(),
         }
     }
@@ -284,10 +299,16 @@ impl ConfigBuilder {
         posts.ignore = ignore.clone();
         let posts = posts.build()?;
 
-        let mut assets = assets;
-        assets.source = Some(source.clone());
-        assets.ignore = ignore.clone();
-        assets.template_extensions = template_extensions.clone();
+        let assets = {
+            let mut sass = sass::SassBuilder::new();
+            sass.style = assets.sass.style;
+            let mut assets = assets::AssetsBuilder::default();
+            assets.sass = sass;
+            assets.source = Some(source.clone());
+            assets.ignore = ignore.clone();
+            assets.template_extensions = template_extensions.clone();
+            assets
+        };
         let assets = assets.build()?;
 
         let config = Config {

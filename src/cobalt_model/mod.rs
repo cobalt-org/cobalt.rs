@@ -14,6 +14,8 @@ pub use self::assets::AssetsBuilder;
 pub use self::collection::Collection;
 pub use self::collection::CollectionBuilder;
 pub use self::collection::SortOrder;
+pub use self::config::AssetsConfig;
+pub use self::config::SassConfig;
 pub use self::config::Config;
 pub use self::config::ConfigBuilder;
 pub use self::config::Dump;

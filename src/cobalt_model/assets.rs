@@ -11,11 +11,8 @@ use error::*;
 #[serde(deny_unknown_fields, default)]
 pub struct AssetsBuilder {
     pub sass: sass::SassBuilder,
-    #[serde(skip)]
     pub source: Option<path::PathBuf>,
-    #[serde(skip)]
     pub ignore: Vec<String>,
-    #[serde(skip)]
     pub template_extensions: Vec<String>,
 }
 

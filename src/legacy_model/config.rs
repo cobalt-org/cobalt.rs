@@ -29,7 +29,7 @@ pub struct GlobalConfig {
     pub ignore: Vec<String>,
     pub excerpt_separator: String,
     pub syntax_highlight: cobalt_model::SyntaxHighlight,
-    pub sass: cobalt_model::SassBuilder,
+    pub sass: cobalt_model::SassConfig,
 }
 
 impl GlobalConfig {
@@ -97,7 +97,7 @@ impl Default for GlobalConfig {
             ignore: vec![],
             excerpt_separator: "\n\n".to_owned(),
             syntax_highlight: cobalt_model::SyntaxHighlight::default(),
-            sass: cobalt_model::SassBuilder::default(),
+            sass: cobalt_model::SassConfig::default(),
         }
     }
 }
@@ -164,10 +164,7 @@ impl From<GlobalConfig> for cobalt_model::ConfigBuilder {
             template_extensions: template_extensions,
             ignore: ignore,
             syntax_highlight: syntax_highlight,
-            assets: cobalt_model::AssetsBuilder {
-                sass,
-                ..Default::default()
-            },
+            assets: cobalt_model::AssetsConfig { sass },
             dump: vec![],
             ..Default::default()
         }

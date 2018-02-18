@@ -6,7 +6,7 @@ use sass_rs;
 use error::*;
 use super::files;
 
-#[derive(Debug, Eq, PartialEq, Hash, Copy, Clone)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
 #[derive(Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub enum SassOutputStyle {
@@ -16,7 +16,11 @@ pub enum SassOutputStyle {
     Compressed,
 }
 
-const SASS_IMPORT_DIR: &'static str = "_sass";
+impl Default for SassOutputStyle {
+    fn default() -> Self {
+        SassOutputStyle::Nested
+    }
+}
 
 #[derive(Debug, Clone, PartialEq)]
 #[derive(Serialize, Deserialize)]
@@ -28,26 +32,21 @@ pub struct SassBuilder {
 }
 
 impl SassBuilder {
-    pub fn new() -> SassBuilder {
+    pub fn new() -> Self {
         Default::default()
     }
 
     pub fn build(self) -> SassCompiler {
-        let Self {
-            import_dir: _import_dir,
-            style,
-        } = self;
-        // HACK for serde #1105
-        let import_dir = SASS_IMPORT_DIR;
+        let Self { import_dir, style } = self;
         SassCompiler { import_dir, style }
     }
 }
 
 impl Default for SassBuilder {
-    fn default() -> SassBuilder {
+    fn default() -> Self {
         SassBuilder {
-            import_dir: SASS_IMPORT_DIR,
-            style: SassOutputStyle::Nested,
+            import_dir: "_sass",
+            style: Default::default(),
         }
     }
 }
