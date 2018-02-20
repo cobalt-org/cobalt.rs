@@ -29,7 +29,6 @@ pub fn build(config: &Config) -> Result<()> {
 
     debug!("Layouts directory: {:?}", layouts);
     debug!("Posts directory: {:?}", posts_path);
-    debug!("Draft mode enabled: {}", config.include_drafts);
 
     let post_files = find_post_files(source, config)?;
     let mut posts = parse_pages(&post_files, &config.posts, source)?;
@@ -248,7 +247,7 @@ fn process_included_drafts(config: &Config,
                            source: &Path,
                            documents: &mut Vec<Document>)
                            -> Result<()> {
-    if config.include_drafts {
+    if config.posts.include_drafts {
         if let Some(ref drafts_dir) = config.posts.drafts_dir {
             debug!("Draft directory: {:?}", drafts_dir);
             let drafts_root = source.join(&drafts_dir);

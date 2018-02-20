@@ -261,6 +261,10 @@ impl ConfigBuilder {
             dump,
         } = self;
 
+        if include_drafts {
+            debug!("Draft mode enabled");
+        }
+
         let source = files::cleanup_path(source);
         let destination = files::cleanup_path(destination);
 
@@ -332,7 +336,6 @@ impl ConfigBuilder {
         let config = Config {
             source,
             destination,
-            include_drafts,
             pages,
             posts,
             site,
@@ -360,7 +363,6 @@ impl fmt::Display for ConfigBuilder {
 pub struct Config {
     pub source: path::PathBuf,
     pub destination: path::PathBuf,
-    pub include_drafts: bool,
     pub pages: collection::Collection,
     pub posts: collection::Collection,
     pub site: site::Site,
