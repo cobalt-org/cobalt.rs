@@ -1,6 +1,7 @@
 use std::fmt;
 use std::path;
 
+use liquid;
 use serde_yaml;
 
 use error::*;
@@ -125,6 +126,16 @@ impl From<PostConfig> for collection::CollectionBuilder {
 #[derive(Debug, Clone, PartialEq, Default)]
 #[derive(Serialize, Deserialize)]
 #[serde(deny_unknown_fields, default)]
+pub struct SiteConfig {
+    pub title: Option<String>,
+    pub description: Option<String>,
+    pub base_url: Option<String>,
+    pub data: Option<liquid::Object>,
+}
+
+#[derive(Debug, Clone, PartialEq, Default)]
+#[derive(Serialize, Deserialize)]
+#[serde(deny_unknown_fields, default)]
 pub struct SassConfig {
     pub style: sass::SassOutputStyle,
 }
@@ -150,7 +161,7 @@ pub struct ConfigBuilder {
     pub default: frontmatter::FrontmatterBuilder,
     pub pages: PageConfig,
     pub posts: PostConfig,
-    pub site: site::SiteBuilder,
+    pub site: SiteConfig,
     pub template_extensions: Vec<String>,
     pub ignore: Vec<String>,
     pub syntax_highlight: SyntaxHighlight,
@@ -266,6 +277,13 @@ impl ConfigBuilder {
             .map(|s| s.into())
             .unwrap_or_else(|| root.join(destination));
 
+        let site = site::SiteBuilder {
+            title: site.title,
+            description: site.description,
+            base_url: site.base_url,
+            data: site.data,
+            ..Default::default()
+        };
         let site = site.build(&source)?;
 
         let pages: collection::CollectionBuilder = pages.into();

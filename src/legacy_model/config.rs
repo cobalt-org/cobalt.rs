@@ -145,7 +145,7 @@ impl From<GlobalConfig> for cobalt_model::ConfigBuilder {
                 .set_permalink(post_path.map(convert_permalink)),
         };
 
-        let site = cobalt_model::SiteBuilder {
+        let site = cobalt_model::SiteConfig {
             title: name,
             description: description,
             base_url: link,

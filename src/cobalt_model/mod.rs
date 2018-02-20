@@ -21,6 +21,7 @@ pub use self::config::ConfigBuilder;
 pub use self::config::Dump;
 pub use self::config::PageConfig;
 pub use self::config::PostConfig;
+pub use self::config::SiteConfig;
 pub use self::config::SyntaxHighlight;
 pub use self::datetime::DateTime;
 pub use self::document::DocumentBuilder;

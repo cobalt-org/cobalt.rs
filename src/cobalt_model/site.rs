@@ -12,8 +12,6 @@ use error::*;
 
 use super::files;
 
-const DATA_DIR: &'static str = "_data";
-
 #[derive(Debug, PartialEq, Clone)]
 #[derive(Serialize, Deserialize)]
 #[serde(deny_unknown_fields, default)]
@@ -33,7 +31,7 @@ impl Default for SiteBuilder {
             description: None,
             base_url: None,
             data: None,
-            data_dir: DATA_DIR,
+            data_dir: "_data",
         }
     }
 }
@@ -45,10 +43,8 @@ impl SiteBuilder {
             description,
             base_url,
             data,
-            data_dir: _data_dir,
+            data_dir,
         } = self;
-        // HACK for serde #1105
-        let data_dir = DATA_DIR;
 
         let base_url = base_url.map(|mut l| {
                                         if l.ends_with('/') {
