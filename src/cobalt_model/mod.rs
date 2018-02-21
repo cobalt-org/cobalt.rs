@@ -32,5 +32,4 @@ pub use self::frontmatter::SourceFormat;
 pub use self::sass::SassBuilder;
 pub use self::sass::SassCompiler;
 pub use self::sass::SassOutputStyle;
-pub use self::site::Site;
 pub use self::site::SiteBuilder;

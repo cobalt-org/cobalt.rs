@@ -105,7 +105,7 @@ fn generate_doc(dest: &Path,
         .into_iter()
         .collect();
     let mut globals: liquid::Object =
-        vec![("site".to_owned(), liquid::Value::Object(config.site.attributes.clone())),
+        vec![("site".to_owned(), liquid::Value::Object(config.site.clone())),
              ("collections".to_owned(), liquid::Value::Object(global_collection))]
             .into_iter()
             .collect();
@@ -336,7 +336,7 @@ fn create_rss(path: &str, dest: &Path, config: &Config, posts: &[Document]) -> R
         .map(|s| s.as_str())
         .unwrap_or("");
     let link = config
-        .site
+        .posts
         .base_url
         .as_ref()
         .ok_or(ErrorKind::ConfigFileMissingFields)?;
@@ -382,7 +382,7 @@ fn create_jsonfeed(path: &str, dest: &Path, config: &Config, posts: &[Document])
         .map(|s| s.as_str())
         .unwrap_or("");
     let link = config
-        .site
+        .posts
         .base_url
         .as_ref()
         .ok_or(ErrorKind::ConfigFileMissingFields)?;

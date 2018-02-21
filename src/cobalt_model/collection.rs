@@ -34,6 +34,7 @@ pub struct CollectionBuilder {
     pub order: SortOrder,
     pub rss: Option<String>,
     pub jsonfeed: Option<String>,
+    pub base_url: Option<String>,
     pub default: FrontmatterBuilder,
 }
 
@@ -60,6 +61,7 @@ impl CollectionBuilder {
             order,
             rss,
             jsonfeed,
+            base_url,
             default,
         } = self;
 
@@ -106,6 +108,7 @@ impl CollectionBuilder {
             order,
             rss,
             jsonfeed,
+            base_url,
             default,
             attributes,
         };
@@ -128,6 +131,7 @@ pub struct Collection {
     pub order: SortOrder,
     pub rss: Option<String>,
     pub jsonfeed: Option<String>,
+    pub base_url: Option<String>,
     pub default: FrontmatterBuilder,
     pub attributes: liquid::Object,
 }

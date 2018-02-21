@@ -306,15 +306,6 @@ impl ConfigBuilder {
             .map(|s| s.into())
             .unwrap_or_else(|| root.join(destination));
 
-        let site = site::SiteBuilder {
-            title: site.title,
-            description: site.description,
-            base_url: site.base_url,
-            data: site.data,
-            data_dir: Some(source.join(site.data_dir)),
-        };
-        let site = site.build()?;
-
         let pages: collection::CollectionBuilder = pages.into();
         let mut pages = pages.merge_frontmatter(default.clone());
         // Use `site` because the pages are effectively the site
@@ -326,6 +317,7 @@ impl ConfigBuilder {
         pages.include_drafts = false;
         pages.template_extensions = template_extensions.clone();
         pages.ignore = ignore.clone();
+        pages.base_url = site.base_url.clone();
         let pages = pages.build()?;
 
         let posts: collection::CollectionBuilder = posts.into();
@@ -344,7 +336,17 @@ impl ConfigBuilder {
         posts.include_drafts = include_drafts;
         posts.template_extensions = template_extensions.clone();
         posts.ignore = ignore.clone();
+        posts.base_url = site.base_url.clone();
         let posts = posts.build()?;
+
+        let site = site::SiteBuilder {
+            title: site.title,
+            description: site.description,
+            base_url: site.base_url,
+            data: site.data,
+            data_dir: Some(source.join(site.data_dir)),
+        };
+        let site = site.build()?;
 
         let assets = {
             let mut sass = sass::SassBuilder::new();
@@ -396,7 +398,7 @@ pub struct Config {
     pub destination: path::PathBuf,
     pub pages: collection::Collection,
     pub posts: collection::Collection,
-    pub site: site::Site,
+    pub site: liquid::Object,
     pub ignore: Vec<String>, // HACK: Here until migrate doesn't need it
     pub syntax_highlight: SyntaxHighlight,
     pub layouts_dir: &'static str,

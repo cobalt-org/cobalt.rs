@@ -23,7 +23,7 @@ pub struct SiteBuilder {
 }
 
 impl SiteBuilder {
-    pub fn build(self) -> Result<Site> {
+    pub fn build(self) -> Result<liquid::Object> {
         let SiteBuilder {
             title,
             description,
@@ -40,13 +40,13 @@ impl SiteBuilder {
                                     });
 
         let mut attributes = liquid::Object::new();
-        if let Some(ref title) = title {
+        if let Some(title) = title {
             attributes.insert("title".to_owned(), liquid::Value::scalar(title));
         }
-        if let Some(ref description) = description {
+        if let Some(description) = description {
             attributes.insert("description".to_owned(), liquid::Value::scalar(description));
         }
-        if let Some(ref base_url) = base_url {
+        if let Some(base_url) = base_url {
             attributes.insert("base_url".to_owned(), liquid::Value::scalar(base_url));
         }
         let mut data = data.unwrap_or_default();
@@ -57,23 +57,8 @@ impl SiteBuilder {
             attributes.insert("data".to_owned(), liquid::Value::Object(data));
         }
 
-        Ok(Site {
-               title,
-               description,
-               base_url,
-               attributes,
-           })
+        Ok(attributes)
     }
-}
-
-#[derive(Debug, PartialEq, Default, Clone)]
-#[derive(Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct Site {
-    pub title: Option<String>,
-    pub description: Option<String>,
-    pub base_url: Option<String>,
-    pub attributes: liquid::Object,
 }
 
 fn deep_insert(data_map: &mut liquid::Object,
@@ -113,7 +98,6 @@ fn deep_insert(data_map: &mut liquid::Object,
         }
     }
 }
-
 fn load_data(data_path: &path::Path) -> Result<liquid::Value> {
     let ext = data_path.extension().unwrap_or_else(|| OsStr::new(""));
 
