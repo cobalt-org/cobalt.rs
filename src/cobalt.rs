@@ -23,7 +23,7 @@ pub fn build(config: &Config) -> Result<()> {
     let dest = config.destination.as_path();
 
     let parser = template::LiquidParser::with_config(config)?;
-    let layouts = source.join(&config.layouts_dir);
+    let layouts = &config.layouts_dir;
     let mut layouts_cache = HashMap::new();
     let posts_path = source.join(&config.posts.dir);
 

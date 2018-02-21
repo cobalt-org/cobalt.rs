@@ -366,6 +366,9 @@ impl ConfigBuilder {
         };
         let assets = assets.build()?;
 
+        let includes_dir = source.join(includes_dir);
+        let layouts_dir = source.join(layouts_dir);
+
         let config = Config {
             source,
             destination,
@@ -401,8 +404,8 @@ pub struct Config {
     pub site: liquid::Object,
     pub ignore: Vec<String>, // HACK: Here until migrate doesn't need it
     pub syntax_highlight: SyntaxHighlight,
-    pub layouts_dir: &'static str,
-    pub includes_dir: &'static str,
+    pub layouts_dir: path::PathBuf,
+    pub includes_dir: path::PathBuf,
     pub assets: assets::Assets,
     pub dump: Vec<Dump>,
 }

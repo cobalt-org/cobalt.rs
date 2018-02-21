@@ -160,8 +160,8 @@ fn migrate_variables(content: String) -> Result<String> {
 }
 
 fn migrate_content(config: &cobalt::Config) -> Result<()> {
-    let layouts_dir = config.source.join(config.layouts_dir);
-    let includes_dir = config.source.join(config.includes_dir);
+    let layouts_dir = &config.layouts_dir;
+    let includes_dir = &config.includes_dir;
     info!("Migrating (potential) snippets to {:?}", includes_dir);
 
     let files = cobalt_model::files::FilesBuilder::new(&layouts_dir)?

@@ -19,19 +19,19 @@ impl InMemoryInclude {
         Default::default()
     }
 
-    pub fn load_from_path<R: Into<path::PathBuf>>(self, root: R) -> Result<Self> {
-        self.load_from_pathbuf(root.into())
+    pub fn load_from_path<R: AsRef<path::Path>>(self, root: R) -> Result<Self> {
+        self.load_from_pathbuf(root.as_ref())
     }
 
     /// Overwrites previous, conflicting snippets
-    fn load_from_pathbuf(mut self, root: path::PathBuf) -> Result<Self> {
+    fn load_from_pathbuf(mut self, root: &path::Path) -> Result<Self> {
         debug!("Loading snippets from {:?}", root);
-        let template_files = files::FilesBuilder::new(&root)?
+        let template_files = files::FilesBuilder::new(root)?
             .ignore_hidden(false)?
             .build()?;
         for file_path in template_files.files() {
             let rel_path = file_path
-                .strip_prefix(root.as_path())
+                .strip_prefix(root)
                 .expect("file was found under the root")
                 .to_str()
                 .expect("only UTF-8 characters supported in paths")
@@ -73,7 +73,7 @@ pub struct LiquidParser {
 impl LiquidParser {
     pub fn with_config(config: &cobalt_model::Config) -> Result<Self> {
         let repo = InMemoryInclude::new()
-            .load_from_path(config.source.join(&config.includes_dir))?
+            .load_from_path(&config.includes_dir)?
             .set_legacy_path(Some(config.source.clone()));
         let highlight = Self::highlight_with_config(config)?;
         let parser = liquid::ParserBuilder::with_liquid()
