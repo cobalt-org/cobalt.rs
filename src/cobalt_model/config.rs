@@ -123,7 +123,7 @@ impl From<PostConfig> for collection::CollectionBuilder {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Default)]
+#[derive(Debug, Clone, PartialEq)]
 #[derive(Serialize, Deserialize)]
 #[serde(deny_unknown_fields, default)]
 pub struct SiteConfig {
@@ -131,13 +131,38 @@ pub struct SiteConfig {
     pub description: Option<String>,
     pub base_url: Option<String>,
     pub data: Option<liquid::Object>,
+    #[serde(skip)]
+    pub data_dir: &'static str,
 }
 
-#[derive(Debug, Clone, PartialEq, Default)]
+impl Default for SiteConfig {
+    fn default() -> Self {
+        Self {
+            title: Default::default(),
+            description: Default::default(),
+            base_url: Default::default(),
+            data: Default::default(),
+            data_dir: "_data",
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
 #[derive(Serialize, Deserialize)]
 #[serde(deny_unknown_fields, default)]
 pub struct SassConfig {
+    #[serde(skip)]
+    pub import_dir: &'static str,
     pub style: sass::SassOutputStyle,
+}
+
+impl Default for SassConfig {
+    fn default() -> Self {
+        Self {
+            import_dir: "_sass",
+            style: Default::default(),
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Default)]
@@ -286,9 +311,9 @@ impl ConfigBuilder {
             description: site.description,
             base_url: site.base_url,
             data: site.data,
-            ..Default::default()
+            data_dir: Some(source.join(site.data_dir)),
         };
-        let site = site.build(&source)?;
+        let site = site.build()?;
 
         let pages: collection::CollectionBuilder = pages.into();
         let mut pages = pages.merge_frontmatter(default.clone());
@@ -324,11 +349,17 @@ impl ConfigBuilder {
         let assets = {
             let mut sass = sass::SassBuilder::new();
             sass.style = assets.sass.style;
-            let mut assets = assets::AssetsBuilder::default();
-            assets.sass = sass;
-            assets.source = Some(source.clone());
-            assets.ignore = ignore.clone();
-            assets.template_extensions = template_extensions.clone();
+            sass.import_dir = source
+                .join(assets.sass.import_dir)
+                .into_os_string()
+                .into_string()
+                .ok();
+            let assets = assets::AssetsBuilder {
+                sass,
+                source: Some(source.clone()),
+                ignore: ignore.clone(),
+                template_extensions: template_extensions.clone(),
+            };
             assets
         };
         let assets = assets.build()?;

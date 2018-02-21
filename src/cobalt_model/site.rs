@@ -1,4 +1,3 @@
-use std::default::Default;
 use std::ffi::OsStr;
 use std::fs;
 use std::path;
@@ -12,7 +11,7 @@ use error::*;
 
 use super::files;
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, Clone, PartialEq, Default)]
 #[derive(Serialize, Deserialize)]
 #[serde(deny_unknown_fields, default)]
 pub struct SiteBuilder {
@@ -20,24 +19,11 @@ pub struct SiteBuilder {
     pub description: Option<String>,
     pub base_url: Option<String>,
     pub data: Option<liquid::Object>,
-    #[serde(skip)]
-    pub data_dir: &'static str,
-}
-
-impl Default for SiteBuilder {
-    fn default() -> SiteBuilder {
-        SiteBuilder {
-            title: None,
-            description: None,
-            base_url: None,
-            data: None,
-            data_dir: "_data",
-        }
-    }
+    pub data_dir: Option<path::PathBuf>,
 }
 
 impl SiteBuilder {
-    pub fn build(self, root: &path::Path) -> Result<Site> {
+    pub fn build(self) -> Result<Site> {
         let SiteBuilder {
             title,
             description,
@@ -64,7 +50,9 @@ impl SiteBuilder {
             attributes.insert("base_url".to_owned(), liquid::Value::scalar(base_url));
         }
         let mut data = data.unwrap_or_default();
-        insert_data_dir(&mut data, &root.join(data_dir))?;
+        if let Some(ref data_dir) = data_dir {
+            insert_data_dir(&mut data, &data_dir)?;
+        }
         if !data.is_empty() {
             attributes.insert("data".to_owned(), liquid::Value::Object(data));
         }

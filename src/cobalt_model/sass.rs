@@ -22,12 +22,11 @@ impl Default for SassOutputStyle {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Default)]
 #[derive(Serialize, Deserialize)]
 #[serde(deny_unknown_fields, default)]
 pub struct SassBuilder {
-    #[serde(skip)]
-    pub import_dir: &'static str,
+    pub import_dir: Option<String>,
     pub style: SassOutputStyle,
 }
 
@@ -42,21 +41,11 @@ impl SassBuilder {
     }
 }
 
-impl Default for SassBuilder {
-    fn default() -> Self {
-        SassBuilder {
-            import_dir: "_sass",
-            style: Default::default(),
-        }
-    }
-}
-
 #[derive(Debug, PartialEq)]
 #[derive(Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct SassCompiler {
-    #[serde(skip)]
-    pub import_dir: &'static str,
+    pub import_dir: Option<String>,
     pub style: SassOutputStyle,
 }
 
@@ -83,11 +72,7 @@ impl SassCompiler {
                              file_path: &path::Path)
                              -> Result<()> {
         let mut sass_opts = sass_rs::Options::default();
-        sass_opts.include_paths = vec![source
-                                           .join(&self.import_dir)
-                                           .into_os_string()
-                                           .into_string()
-                                           .unwrap()];
+        sass_opts.include_paths = self.import_dir.iter().cloned().collect();
         sass_opts.output_style = match self.style {
             SassOutputStyle::Nested => sass_rs::OutputStyle::Nested,
             SassOutputStyle::Expanded => sass_rs::OutputStyle::Expanded,
