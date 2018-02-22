@@ -50,17 +50,31 @@ pub struct PageConfig {
     pub default: frontmatter::FrontmatterBuilder,
 }
 
-impl From<PageConfig> for collection::CollectionBuilder {
-    fn from(config: PageConfig) -> Self {
-        // Pages aren't publicly exposed as a collection
-        let slug = Some("".to_owned());
-        let dir = Some(".".to_owned());
-        let default = config.default.merge_excerpt_separator("".to_owned());
+impl PageConfig {
+    pub fn builder(self,
+                   site: &SiteConfig,
+                   common_default: &frontmatter::FrontmatterBuilder,
+                   ignore: &[String],
+                   template_extensions: &[String])
+                   -> collection::CollectionBuilder {
+        // Use `site` because the pages are effectively the site
         collection::CollectionBuilder {
-            slug,
-            dir,
-            default: default,
-            ..Default::default()
+            title: Some(site.title.clone().unwrap_or_else(|| "".to_owned())),
+            // Pages aren't publicly exposed as a collection
+            slug: Some("".to_owned()),
+            description: site.description.clone(),
+            dir: Some(".".to_owned()),
+            drafts_dir: None,
+            include_drafts: false,
+            template_extensions: template_extensions.to_vec(),
+            ignore: ignore.to_vec(),
+            order: collection::SortOrder::None,
+            rss: None,
+            jsonfeed: None,
+            base_url: None,
+            default: self.default
+                .merge_excerpt_separator("".to_owned())
+                .merge(common_default.clone()),
         }
     }
 }
@@ -79,6 +93,46 @@ pub struct PostConfig {
     pub default: frontmatter::FrontmatterBuilder,
 }
 
+impl PostConfig {
+    pub fn builder(self,
+                   site: &SiteConfig,
+                   include_drafts: bool,
+                   common_default: &frontmatter::FrontmatterBuilder,
+                   ignore: &[String],
+                   template_extensions: &[String])
+                   -> collection::CollectionBuilder {
+        let PostConfig {
+            title,
+            description,
+            dir,
+            drafts_dir,
+            order,
+            rss,
+            jsonfeed,
+            default,
+        } = self;
+        // Default with `site` for people quickly bootstrapping a blog, the blog and site are
+        // effectively equivalent.
+        collection::CollectionBuilder {
+            title: Some(title
+                            .or_else(|| site.title.clone())
+                            .unwrap_or_else(|| "".to_owned())),
+            slug: Some("posts".to_owned()),
+            description: description.or_else(|| site.description.clone()),
+            dir,
+            drafts_dir,
+            include_drafts: include_drafts,
+            template_extensions: template_extensions.to_vec(),
+            ignore: ignore.to_vec(),
+            order,
+            rss,
+            jsonfeed,
+            base_url: site.base_url.clone(),
+            default: default.merge(common_default.clone()),
+        }
+    }
+}
+
 impl Default for PostConfig {
     fn default() -> Self {
         Self {
@@ -94,35 +148,6 @@ impl Default for PostConfig {
     }
 }
 
-impl From<PostConfig> for collection::CollectionBuilder {
-    fn from(config: PostConfig) -> Self {
-        let PostConfig {
-            title,
-            description,
-            dir,
-            drafts_dir,
-            order,
-            rss,
-            jsonfeed,
-            default,
-        } = config;
-
-        let slug = Some("posts".to_owned());
-        collection::CollectionBuilder {
-            title,
-            slug,
-            description,
-            dir,
-            drafts_dir,
-            order,
-            rss,
-            jsonfeed,
-            default,
-            ..Default::default()
-        }
-    }
-}
-
 #[derive(Debug, Clone, PartialEq)]
 #[derive(Serialize, Deserialize)]
 #[serde(deny_unknown_fields, default)]
@@ -133,6 +158,19 @@ pub struct SiteConfig {
     pub data: Option<liquid::Object>,
     #[serde(skip)]
     pub data_dir: &'static str,
+}
+
+impl SiteConfig {
+    pub fn builder(self, source: &path::Path) -> site::SiteBuilder {
+        let site = site::SiteBuilder {
+            title: self.title,
+            description: self.description,
+            base_url: self.base_url,
+            data: self.data,
+            data_dir: Some(source.join(self.data_dir)),
+        };
+        site
+    }
 }
 
 impl Default for SiteConfig {
@@ -156,6 +194,19 @@ pub struct SassConfig {
     pub style: sass::SassOutputStyle,
 }
 
+impl SassConfig {
+    pub fn builder(self, source: &path::Path) -> sass::SassBuilder {
+        let mut sass = sass::SassBuilder::new();
+        sass.style = self.style;
+        sass.import_dir = source
+            .join(self.import_dir)
+            .into_os_string()
+            .into_string()
+            .ok();
+        sass
+    }
+}
+
 impl Default for SassConfig {
     fn default() -> Self {
         Self {
@@ -170,6 +221,22 @@ impl Default for SassConfig {
 #[serde(deny_unknown_fields, default)]
 pub struct AssetsConfig {
     pub sass: SassConfig,
+}
+
+impl AssetsConfig {
+    pub fn builder(self,
+                   source: &path::Path,
+                   ignore: &[String],
+                   template_extensions: &[String])
+                   -> assets::AssetsBuilder {
+        let assets = assets::AssetsBuilder {
+            sass: self.sass.builder(source),
+            source: Some(source.to_owned()),
+            ignore: ignore.to_vec(),
+            template_extensions: template_extensions.to_vec(),
+        };
+        assets
+    }
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -304,64 +371,20 @@ impl ConfigBuilder {
         let source = root.join(source);
         let destination = abs_dest.unwrap_or_else(|| root.join(destination));
 
-        let pages: collection::CollectionBuilder = pages.into();
-        let mut pages = pages.merge_frontmatter(default.clone());
-        // Use `site` because the pages are effectively the site
-        pages.title = Some(site.title
-                               .clone()
-                               .unwrap_or_else(|| "".to_owned())
-                               .to_owned());
-        pages.description = site.description.clone();
-        pages.include_drafts = false;
-        pages.template_extensions = template_extensions.clone();
-        pages.ignore = ignore.clone();
-        pages.base_url = site.base_url.clone();
+        let pages = pages.builder(&site, &default, &ignore, &template_extensions);
         let pages = pages.build()?;
 
-        let posts: collection::CollectionBuilder = posts.into();
-        let mut posts = posts.merge_frontmatter(default);
-        // Default with `site` for people quickly bootstrapping a blog, the blog and site are
-        // effectively equivalent.
-        if posts.title.is_none() {
-            posts.title = Some(site.title
-                                   .clone()
-                                   .unwrap_or_else(|| "".to_owned())
-                                   .to_owned());
-        }
-        if posts.description.is_none() {
-            posts.description = site.description.clone();
-        }
-        posts.include_drafts = include_drafts;
-        posts.template_extensions = template_extensions.clone();
-        posts.ignore = ignore.clone();
-        posts.base_url = site.base_url.clone();
+        let posts = posts.builder(&site,
+                                  include_drafts,
+                                  &default,
+                                  &ignore,
+                                  &template_extensions);
         let posts = posts.build()?;
 
-        let site = site::SiteBuilder {
-            title: site.title,
-            description: site.description,
-            base_url: site.base_url,
-            data: site.data,
-            data_dir: Some(source.join(site.data_dir)),
-        };
+        let site = site.builder(&source);
         let site = site.build()?;
 
-        let assets = {
-            let mut sass = sass::SassBuilder::new();
-            sass.style = assets.sass.style;
-            sass.import_dir = source
-                .join(assets.sass.import_dir)
-                .into_os_string()
-                .into_string()
-                .ok();
-            let assets = assets::AssetsBuilder {
-                sass,
-                source: Some(source.clone()),
-                ignore: ignore.clone(),
-                template_extensions: template_extensions.clone(),
-            };
-            assets
-        };
+        let assets = assets.builder(&source, &ignore, &template_extensions);
         let assets = assets.build()?;
 
         let includes_dir = source.join(includes_dir);
