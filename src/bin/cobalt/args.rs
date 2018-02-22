@@ -1,4 +1,5 @@
 use std::env;
+use std::path;
 
 use clap;
 use env_logger;
@@ -51,7 +52,7 @@ pub fn get_config(matches: &clap::ArgMatches) -> Result<cobalt::ConfigBuilder> {
         cobalt::ConfigBuilder::from_cwd(cwd)?
     };
 
-    config.abs_dest = matches.value_of("destination").map(str::to_string);
+    config.abs_dest = matches.value_of("destination").map(path::PathBuf::from);
 
     if matches.is_present("drafts") {
         config.include_drafts = true;

@@ -181,7 +181,7 @@ pub struct ConfigBuilder {
     pub source: String,
     pub destination: String,
     #[serde(skip)]
-    pub abs_dest: Option<String>,
+    pub abs_dest: Option<path::PathBuf>,
     pub include_drafts: bool,
     pub default: frontmatter::FrontmatterBuilder,
     pub pages: PageConfig,
@@ -302,9 +302,7 @@ impl ConfigBuilder {
         }
 
         let source = root.join(source);
-        let destination = abs_dest
-            .map(|s| s.into())
-            .unwrap_or_else(|| root.join(destination));
+        let destination = abs_dest.unwrap_or_else(|| root.join(destination));
 
         let pages: collection::CollectionBuilder = pages.into();
         let mut pages = pages.merge_frontmatter(default.clone());
@@ -483,7 +481,7 @@ fn test_build_dest() {
 #[test]
 fn test_build_abs_dest() {
     let mut result = ConfigBuilder::from_file("tests/fixtures/config/_cobalt.yml").unwrap();
-    result.abs_dest = Some("hello/world".to_owned());
+    result.abs_dest = Some(path::PathBuf::from("hello/world"));
     let result = result.build().unwrap();
     assert_eq!(result.source,
                path::Path::new("tests/fixtures/config").to_path_buf());

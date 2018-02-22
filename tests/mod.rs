@@ -78,11 +78,7 @@ fn run_test(name: &str) -> Result<(), cobalt::Error> {
     let destdir = TempDir::new(name).expect("Tempdir not created");
 
     config.source = "./".to_owned();
-    config.abs_dest = Some(destdir
-                               .path()
-                               .to_str()
-                               .expect("Can't convert destdir to str")
-                               .to_owned());
+    config.abs_dest = Some(destdir.path().to_owned());
 
     let config = config.build()?;
 
