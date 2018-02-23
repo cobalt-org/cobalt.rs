@@ -24,10 +24,8 @@ pub fn build(config: &Config) -> Result<()> {
     let parser = &config.liquid;
     let layouts = &config.layouts_dir;
     let mut layouts_cache = HashMap::new();
-    let posts_path = source.join(&config.posts.dir);
 
     debug!("Layouts directory: {:?}", layouts);
-    debug!("Posts directory: {:?}", posts_path);
 
     let post_files = find_post_files(source, &config.posts)?;
     let mut posts = parse_pages(&post_files, &config.posts, source)?;
