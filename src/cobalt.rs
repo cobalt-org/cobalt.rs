@@ -111,9 +111,9 @@ fn generate_doc(dest: &Path,
     globals.insert("page".to_owned(),
                    liquid::Value::Object(doc.attributes.clone()));
 
-    doc.render_excerpt(&globals, parser, &config.syntax_highlight.theme)
+    doc.render_excerpt(&globals, parser, &config.markdown)
         .chain_err(|| format!("Failed to render excerpt for {:?}", doc.file_path))?;
-    doc.render_content(&globals, parser, &config.syntax_highlight.theme)
+    doc.render_content(&globals, parser, &config.markdown)
         .chain_err(|| format!("Failed to render content for {:?}", doc.file_path))?;
 
     // Refresh `page` with the `excerpt` / `content` attribute

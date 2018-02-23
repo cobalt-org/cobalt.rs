@@ -9,7 +9,6 @@ use itertools;
 use jsonfeed;
 use liquid;
 use liquid::Value;
-use pulldown_cmark as cmark;
 use regex::Regex;
 use rss;
 use serde_yaml;
@@ -18,7 +17,6 @@ use error::*;
 use cobalt_model::files;
 use cobalt_model::slug;
 use cobalt_model;
-use syntax_highlight::decorate_markdown;
 
 /// Convert the source file's relative path into a format useful for generating permalinks that
 /// mirror the source directory hierarchy.
@@ -272,20 +270,14 @@ impl Document {
                    content: &str,
                    globals: &liquid::Object,
                    parser: &cobalt_model::Liquid,
-                   syntax_theme: &str)
+                   markdown: &cobalt_model::Markdown)
                    -> Result<String> {
         let template = parser.parse(content)?;
         let html = template.render(globals)?;
 
         let html = match self.front.format {
             cobalt_model::SourceFormat::Raw => html,
-            cobalt_model::SourceFormat::Markdown => {
-                let mut buf = String::new();
-                let options = cmark::OPTION_ENABLE_FOOTNOTES | cmark::OPTION_ENABLE_TABLES;
-                let parser = cmark::Parser::new_ext(&html, options);
-                cmark::html::push_html(&mut buf, decorate_markdown(parser, syntax_theme));
-                buf
-            }
+            cobalt_model::SourceFormat::Markdown => markdown.parse(&html)?,
         };
         Ok(html.to_owned())
     }
@@ -294,10 +286,10 @@ impl Document {
     pub fn render_excerpt(&mut self,
                           globals: &liquid::Object,
                           parser: &cobalt_model::Liquid,
-                          syntax_theme: &str)
+                          markdown: &cobalt_model::Markdown)
                           -> Result<()> {
         let value = if let Some(excerpt_str) = self.front.excerpt.as_ref() {
-            let excerpt = self.render_html(excerpt_str, globals, parser, syntax_theme)?;
+            let excerpt = self.render_html(excerpt_str, globals, parser, markdown)?;
             Value::scalar(excerpt)
         } else if self.front.excerpt_separator.is_empty() {
             Value::Nil
@@ -305,7 +297,7 @@ impl Document {
             let excerpt = extract_excerpt(&self.content,
                                           self.front.format,
                                           &self.front.excerpt_separator);
-            let excerpt = self.render_html(&excerpt, globals, parser, syntax_theme)?;
+            let excerpt = self.render_html(&excerpt, globals, parser, markdown)?;
             Value::scalar(excerpt)
         };
 
@@ -319,9 +311,9 @@ impl Document {
     pub fn render_content(&mut self,
                           globals: &liquid::Object,
                           parser: &cobalt_model::Liquid,
-                          syntax_theme: &str)
+                          markdown: &cobalt_model::Markdown)
                           -> Result<()> {
-        let content_html = self.render_html(&self.content, globals, parser, syntax_theme)?;
+        let content_html = self.render_html(&self.content, globals, parser, markdown)?;
         self.attributes
             .insert("content".to_owned(), Value::scalar(content_html.clone()));
         Ok(())

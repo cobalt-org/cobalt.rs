@@ -6,13 +6,14 @@ use serde_yaml;
 
 use error::*;
 
-use super::template;
+use super::assets;
 use super::collection;
 use super::files;
 use super::frontmatter;
-use super::assets;
+use super::mark;
 use super::sass;
 use super::site;
+use super::template;
 
 arg_enum! {
     #[derive(Serialize, Deserialize)]
@@ -397,6 +398,8 @@ impl ConfigBuilder {
             theme: syntax_highlight.theme.clone(),
         };
         let liquid = liquid.build()?;
+        let markdown = mark::MarkdownBuilder { theme: syntax_highlight.theme };
+        let markdown = markdown.build();
 
         let config = Config {
             source,
@@ -405,10 +408,10 @@ impl ConfigBuilder {
             posts,
             site,
             ignore,
-            syntax_highlight,
             layouts_dir,
             includes_dir,
             liquid,
+            markdown,
             assets,
             dump,
         };
@@ -433,10 +436,10 @@ pub struct Config {
     pub posts: collection::Collection,
     pub site: liquid::Object,
     pub ignore: Vec<String>, // HACK: Here until migrate doesn't need it
-    pub syntax_highlight: SyntaxHighlight,
     pub layouts_dir: path::PathBuf,
     pub includes_dir: path::PathBuf, // HACK: Here until migrate doesn't need it
     pub liquid: template::Liquid,
+    pub markdown: mark::Markdown,
     pub assets: assets::Assets,
     pub dump: Vec<Dump>,
 }
