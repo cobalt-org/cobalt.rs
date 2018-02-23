@@ -55,10 +55,16 @@ pub struct PageConfig {
 impl PageConfig {
     pub fn builder(self,
                    site: &SiteConfig,
+                   posts: &PostConfig,
                    common_default: &frontmatter::FrontmatterBuilder,
                    ignore: &[String],
                    template_extensions: &[String])
                    -> collection::CollectionBuilder {
+        let mut ignore = ignore.to_vec();
+        ignore.push(format!("/{}", posts.dir));
+        if let Some(ref drafts_dir) = posts.drafts_dir {
+            ignore.push(format!("/{}", drafts_dir));
+        }
         // Use `site` because the pages are effectively the site
         collection::CollectionBuilder {
             title: Some(site.title.clone().unwrap_or_else(|| "".to_owned())),
@@ -69,7 +75,7 @@ impl PageConfig {
             drafts_dir: None,
             include_drafts: false,
             template_extensions: template_extensions.to_vec(),
-            ignore: ignore.to_vec(),
+            ignore: ignore,
             order: collection::SortOrder::None,
             rss: None,
             jsonfeed: None,
@@ -87,7 +93,7 @@ impl PageConfig {
 pub struct PostConfig {
     pub title: Option<String>,
     pub description: Option<String>,
-    pub dir: Option<String>,
+    pub dir: String,
     pub drafts_dir: Option<String>,
     pub order: collection::SortOrder,
     pub rss: Option<String>,
@@ -121,7 +127,7 @@ impl PostConfig {
                             .unwrap_or_else(|| "".to_owned())),
             slug: Some("posts".to_owned()),
             description: description.or_else(|| site.description.clone()),
-            dir,
+            dir: Some(dir),
             drafts_dir,
             include_drafts: include_drafts,
             template_extensions: template_extensions.to_vec(),
@@ -140,7 +146,7 @@ impl Default for PostConfig {
         Self {
             title: Default::default(),
             description: Default::default(),
-            dir: Some("posts".to_owned()),
+            dir: "posts".to_owned(),
             drafts_dir: Default::default(),
             order: Default::default(),
             rss: Default::default(),
@@ -373,7 +379,7 @@ impl ConfigBuilder {
         let source = root.join(source);
         let destination = abs_dest.unwrap_or_else(|| root.join(destination));
 
-        let pages = pages.builder(&site, &default, &ignore, &template_extensions);
+        let pages = pages.builder(&site, &posts, &default, &ignore, &template_extensions);
         let pages = pages.build()?;
 
         let posts = posts.builder(&site,
@@ -528,7 +534,7 @@ fn test_build_abs_dest() {
 #[test]
 fn test_build_posts_rel() {
     let mut config = ConfigBuilder::default();
-    config.posts.dir = Some("rel".to_owned());
+    config.posts.dir = "rel".to_owned();
     let config = config.build().unwrap();
     assert_eq!(config.posts.dir, "rel");
 }
@@ -536,7 +542,7 @@ fn test_build_posts_rel() {
 #[test]
 fn test_build_posts_abs() {
     let mut config = ConfigBuilder::default();
-    config.posts.dir = Some("/root".to_owned());
+    config.posts.dir = "/root".to_owned();
     assert!(config.build().is_err());
 }
 

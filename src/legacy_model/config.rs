@@ -136,7 +136,7 @@ impl From<GlobalConfig> for cobalt_model::ConfigBuilder {
         let posts = cobalt_model::PostConfig {
             title: None,
             description: None,
-            dir: Some(posts),
+            dir: posts,
             drafts_dir: Some(drafts),
             order: post_order,
             rss: rss,

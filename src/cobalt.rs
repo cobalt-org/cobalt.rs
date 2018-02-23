@@ -31,7 +31,7 @@ pub fn build(config: &Config) -> Result<()> {
     let mut posts = parse_pages(&post_files, &config.posts, source)?;
     process_included_drafts(&config.posts, source, &mut posts)?;
 
-    let page_files = find_page_files(source, config)?;
+    let page_files = find_page_files(source, &config.pages)?;
     let documents = parse_pages(&page_files, &config.pages, source)?;
 
     sort_pages(&mut posts, &config.posts)?;
@@ -284,17 +284,13 @@ fn find_post_draft_files(drafts_root: &Path, collection: &Collection) -> Result<
     page_files.build()
 }
 
-fn find_page_files(source: &Path, config: &Config) -> Result<files::Files> {
+fn find_page_files(source: &Path, collection: &Collection) -> Result<files::Files> {
     let mut page_files = files::FilesBuilder::new(source)?;
-    for line in &config.pages.ignore {
+    for line in &collection.ignore {
         page_files.add_ignore(line.as_str())?;
     }
-    for ext in config.pages.template_extensions.iter() {
+    for ext in collection.template_extensions.iter() {
         page_files.add_extension(ext)?;
-    }
-    page_files.add_ignore(&format!("/{}", config.posts.dir))?;
-    if let Some(ref drafts_dir) = config.posts.drafts_dir {
-        page_files.add_ignore(&format!("/{}", drafts_dir))?;
     }
     page_files.build()
 }
