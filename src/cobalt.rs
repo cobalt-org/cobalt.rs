@@ -29,14 +29,14 @@ pub fn build(config: &Config) -> Result<()> {
     debug!("Layouts directory: {:?}", layouts);
     debug!("Posts directory: {:?}", posts_path);
 
-    let post_files = find_post_files(source, config)?;
+    let post_files = find_post_files(source, &config.posts)?;
     let mut posts = parse_pages(&post_files, &config.posts, source)?;
-    process_included_drafts(config, source, &mut posts)?;
+    process_included_drafts(&config.posts, source, &mut posts)?;
 
     let page_files = find_page_files(source, config)?;
     let documents = parse_pages(&page_files, &config.pages, source)?;
 
-    sort_pages(&mut posts, config)?;
+    sort_pages(&mut posts, &config.posts)?;
     generate_posts(&mut posts,
                    config,
                    &parser,
@@ -46,11 +46,11 @@ pub fn build(config: &Config) -> Result<()> {
 
     // check if we should create an RSS file and create it!
     if let Some(ref path) = config.posts.rss {
-        create_rss(path, dest, config, &posts)?;
+        create_rss(path, dest, &config.posts, &posts)?;
     }
     // check if we should create an jsonfeed file and create it!
     if let Some(ref path) = config.posts.jsonfeed {
-        create_jsonfeed(path, dest, config, &posts)?;
+        create_jsonfeed(path, dest, &config.posts, &posts)?;
     }
 
     generate_pages(posts,
@@ -199,7 +199,7 @@ fn generate_posts(posts: &mut Vec<Document>,
     Ok(())
 }
 
-fn sort_pages(posts: &mut Vec<Document>, config: &Config) -> Result<()> {
+fn sort_pages(posts: &mut Vec<Document>, collection: &Collection) -> Result<()> {
     // January 1, 1970 0:00:00 UTC, the beginning of time
     let default_date = cobalt_model::DateTime::default();
 
@@ -212,7 +212,7 @@ fn sort_pages(posts: &mut Vec<Document>, config: &Config) -> Result<()> {
                           .cmp(&a.front.published_date.unwrap_or(default_date))
                   });
 
-    match config.posts.order {
+    match collection.order {
         SortOrder::Asc => posts.reverse(),
         SortOrder::Desc => (),
         SortOrder::None => (),
@@ -224,16 +224,16 @@ fn sort_pages(posts: &mut Vec<Document>, config: &Config) -> Result<()> {
 fn parse_drafts(drafts_root: &PathBuf,
                 draft_files: &files::Files,
                 documents: &mut Vec<Document>,
-                config: &Config)
+                collection: &Collection)
                 -> Result<()> {
     for file_path in draft_files.files() {
         // Provide a fake path as if it was not a draft
         let rel_src = file_path
             .strip_prefix(&drafts_root)
             .expect("file was found under the root");
-        let new_path = Path::new(&config.posts.dir).join(rel_src);
+        let new_path = Path::new(&collection.dir).join(rel_src);
 
-        let default_front = config.posts.default.clone().set_draft(true);
+        let default_front = collection.default.clone().set_draft(true);
 
         let doc = Document::parse(&file_path, &new_path, default_front)
             .chain_err(|| format!("Failed to parse {:?}", rel_src))?;
@@ -242,45 +242,45 @@ fn parse_drafts(drafts_root: &PathBuf,
     Ok(())
 }
 
-fn process_included_drafts(config: &Config,
+fn process_included_drafts(collection: &Collection,
                            source: &Path,
                            documents: &mut Vec<Document>)
                            -> Result<()> {
-    if config.posts.include_drafts {
-        if let Some(ref drafts_dir) = config.posts.drafts_dir {
+    if collection.include_drafts {
+        if let Some(ref drafts_dir) = collection.drafts_dir {
             debug!("Draft directory: {:?}", drafts_dir);
             let drafts_root = source.join(&drafts_dir);
-            let draft_files = find_post_draft_files(&drafts_root, config)?;
+            let draft_files = find_post_draft_files(&drafts_root, collection)?;
 
-            parse_drafts(&drafts_root, &draft_files, documents, config)?;
+            parse_drafts(&drafts_root, &draft_files, documents, collection)?;
         }
     }
     Ok(())
 }
 
-fn find_post_files(source: &Path, config: &Config) -> Result<files::Files> {
+fn find_post_files(source: &Path, collection: &Collection) -> Result<files::Files> {
     let mut page_files = files::FilesBuilder::new(source)?;
     page_files
-        .add_ignore(&format!("!/{}", config.posts.dir))?
-        .add_ignore(&format!("!/{}/**", config.posts.dir))?
-        .add_ignore(&format!("/{}/**/_*", config.posts.dir))?
-        .add_ignore(&format!("/{}/**/_*/**", config.posts.dir))?;
-    for line in &config.posts.ignore {
+        .add_ignore(&format!("!/{}", collection.dir))?
+        .add_ignore(&format!("!/{}/**", collection.dir))?
+        .add_ignore(&format!("/{}/**/_*", collection.dir))?
+        .add_ignore(&format!("/{}/**/_*/**", collection.dir))?;
+    for line in &collection.ignore {
         page_files.add_ignore(line.as_str())?;
     }
-    for ext in config.posts.template_extensions.iter() {
+    for ext in collection.template_extensions.iter() {
         page_files.add_extension(ext)?;
     }
-    page_files.limit(PathBuf::from(&config.posts.dir))?;
+    page_files.limit(PathBuf::from(&collection.dir))?;
     page_files.build()
 }
 
-fn find_post_draft_files(drafts_root: &Path, config: &Config) -> Result<files::Files> {
+fn find_post_draft_files(drafts_root: &Path, collection: &Collection) -> Result<files::Files> {
     let mut page_files = files::FilesBuilder::new(drafts_root)?;
-    for line in &config.posts.ignore {
+    for line in &collection.ignore {
         page_files.add_ignore(line.as_str())?;
     }
-    for ext in config.posts.template_extensions.iter() {
+    for ext in collection.template_extensions.iter() {
         page_files.add_extension(ext)?;
     }
     page_files.build()
@@ -323,24 +323,26 @@ fn parse_pages(page_files: &files::Files,
 }
 
 // creates a new RSS file with the contents of the site blog
-fn create_rss(path: &str, dest: &Path, config: &Config, posts: &[Document]) -> Result<()> {
+fn create_rss(path: &str,
+              dest: &Path,
+              collection: &Collection,
+              documents: &[Document])
+              -> Result<()> {
     let rss_path = dest.join(path);
     debug!("Creating RSS file at {}", rss_path.display());
 
-    let title = &config.posts.title;
-    let description = config
-        .posts
+    let title = &collection.title;
+    let description = collection
         .description
         .as_ref()
         .map(|s| s.as_str())
         .unwrap_or("");
-    let link = config
-        .posts
+    let link = collection
         .base_url
         .as_ref()
         .ok_or(ErrorKind::ConfigFileMissingFields)?;
 
-    let items: Result<Vec<rss::Item>> = posts.iter().map(|doc| doc.to_rss(link)).collect();
+    let items: Result<Vec<rss::Item>> = documents.iter().map(|doc| doc.to_rss(link)).collect();
     let items = items?;
 
     let channel = rss::ChannelBuilder::default()
@@ -369,24 +371,26 @@ fn create_rss(path: &str, dest: &Path, config: &Config, posts: &[Document]) -> R
 }
 
 // creates a new jsonfeed file with the contents of the site blog
-fn create_jsonfeed(path: &str, dest: &Path, config: &Config, posts: &[Document]) -> Result<()> {
+fn create_jsonfeed(path: &str,
+                   dest: &Path,
+                   collection: &Collection,
+                   documents: &[Document])
+                   -> Result<()> {
     let jsonfeed_path = dest.join(path);
     debug!("Creating jsonfeed file at {}", jsonfeed_path.display());
 
-    let title = &config.posts.title;
-    let description = config
-        .posts
+    let title = &collection.title;
+    let description = collection
         .description
         .as_ref()
         .map(|s| s.as_str())
         .unwrap_or("");
-    let link = config
-        .posts
+    let link = collection
         .base_url
         .as_ref()
         .ok_or(ErrorKind::ConfigFileMissingFields)?;
 
-    let jsonitems = posts.iter().map(|doc| doc.to_jsonfeed(link)).collect();
+    let jsonitems = documents.iter().map(|doc| doc.to_jsonfeed(link)).collect();
 
     let feed = Feed {
         title: title.to_string(),
