@@ -272,7 +272,7 @@ impl Document {
     fn render_html(&self,
                    content: &str,
                    globals: &liquid::Object,
-                   parser: &template::LiquidParser,
+                   parser: &template::Liquid,
                    syntax_theme: &str)
                    -> Result<String> {
         let template = parser.parse(content)?;
@@ -294,7 +294,7 @@ impl Document {
     /// Renders excerpt and adds it to attributes of the document.
     pub fn render_excerpt(&mut self,
                           globals: &liquid::Object,
-                          parser: &template::LiquidParser,
+                          parser: &template::Liquid,
                           syntax_theme: &str)
                           -> Result<()> {
         let value = if let Some(excerpt_str) = self.front.excerpt.as_ref() {
@@ -319,7 +319,7 @@ impl Document {
     /// When we say "content" we mean only this document without extended layout.
     pub fn render_content(&mut self,
                           globals: &liquid::Object,
-                          parser: &template::LiquidParser,
+                          parser: &template::Liquid,
                           syntax_theme: &str)
                           -> Result<()> {
         let content_html = self.render_html(&self.content, globals, parser, syntax_theme)?;
@@ -335,7 +335,7 @@ impl Document {
     /// * layout may be inserted to layouts cache
     pub fn render(&mut self,
                   globals: &liquid::Object,
-                  parser: &template::LiquidParser,
+                  parser: &template::Liquid,
                   layouts_dir: &Path,
                   layouts_cache: &mut HashMap<String, String>)
                   -> Result<String> {

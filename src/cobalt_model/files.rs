@@ -116,6 +116,10 @@ pub struct Files {
 }
 
 impl Files {
+    pub fn root(&self) -> &path::Path {
+        &self.root_dir
+    }
+
     pub fn includes_file(&self, file: &path::Path) -> bool {
         if !self.ext_contains(file) {
             return false;

@@ -22,7 +22,7 @@ pub fn build(config: &Config) -> Result<()> {
     let source = config.source.as_path();
     let dest = config.destination.as_path();
 
-    let parser = template::LiquidParser::with_config(config)?;
+    let parser = &config.liquid;
     let layouts = &config.layouts_dir;
     let mut layouts_cache = HashMap::new();
     let posts_path = source.join(&config.posts.dir);
@@ -75,7 +75,7 @@ pub fn build(config: &Config) -> Result<()> {
 fn generate_doc(dest: &Path,
                 layouts: &Path,
                 mut layouts_cache: &mut HashMap<String, String>,
-                parser: &template::LiquidParser,
+                parser: &template::Liquid,
                 posts_data: &[liquid::Value],
                 doc: &mut Document,
                 config: &Config)
@@ -129,7 +129,7 @@ fn generate_doc(dest: &Path,
 fn generate_pages(posts: Vec<Document>,
                   documents: Vec<Document>,
                   config: &Config,
-                  parser: &template::LiquidParser,
+                  parser: &template::Liquid,
                   dest: &Path,
                   layouts: &Path,
                   mut layouts_cache: &mut HashMap<String, String>)
@@ -158,7 +158,7 @@ fn generate_pages(posts: Vec<Document>,
 
 fn generate_posts(posts: &mut Vec<Document>,
                   config: &Config,
-                  parser: &template::LiquidParser,
+                  parser: &template::Liquid,
                   dest: &Path,
                   layouts: &Path,
                   mut layouts_cache: &mut HashMap<String, String>)
