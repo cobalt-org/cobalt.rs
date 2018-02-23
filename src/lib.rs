@@ -99,7 +99,6 @@ pub mod cobalt_model;
 mod cobalt;
 mod document;
 mod new;
-mod template;
 
 pub mod jekyll_model;
 pub mod legacy_model;

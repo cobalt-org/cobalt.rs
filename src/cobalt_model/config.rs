@@ -6,7 +6,7 @@ use serde_yaml;
 
 use error::*;
 
-use super::super::template::{LiquidBuilder, Liquid};
+use super::template;
 use super::collection;
 use super::files;
 use super::frontmatter;
@@ -391,7 +391,7 @@ impl ConfigBuilder {
         let includes_dir = source.join(includes_dir);
         let layouts_dir = source.join(layouts_dir);
 
-        let liquid = LiquidBuilder {
+        let liquid = template::LiquidBuilder {
             includes_dir: includes_dir.clone(),
             legacy_path: source.clone(),
             theme: syntax_highlight.theme.clone(),
@@ -436,7 +436,7 @@ pub struct Config {
     pub syntax_highlight: SyntaxHighlight,
     pub layouts_dir: path::PathBuf,
     pub includes_dir: path::PathBuf, // HACK: Here until migrate doesn't need it
-    pub liquid: Liquid,
+    pub liquid: template::Liquid,
     pub assets: assets::Assets,
     pub dump: Vec<Dump>,
 }

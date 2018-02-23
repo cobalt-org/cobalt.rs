@@ -4,9 +4,9 @@ use std::path;
 use std::result;
 
 use liquid;
-use error::*;
-use cobalt_model::files;
 use syntax_highlight;
+use error::*;
+use super::files;
 
 #[derive(Clone, Debug, Default)]
 struct InMemoryInclude {

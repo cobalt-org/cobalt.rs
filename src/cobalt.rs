@@ -13,7 +13,6 @@ use cobalt_model::Collection;
 use cobalt_model;
 use document::Document;
 use error::*;
-use template;
 
 /// The primary build function that transforms a directory into a site
 pub fn build(config: &Config) -> Result<()> {
@@ -75,7 +74,7 @@ pub fn build(config: &Config) -> Result<()> {
 fn generate_doc(dest: &Path,
                 layouts: &Path,
                 mut layouts_cache: &mut HashMap<String, String>,
-                parser: &template::Liquid,
+                parser: &cobalt_model::Liquid,
                 posts_data: &[liquid::Value],
                 doc: &mut Document,
                 config: &Config)
@@ -129,7 +128,7 @@ fn generate_doc(dest: &Path,
 fn generate_pages(posts: Vec<Document>,
                   documents: Vec<Document>,
                   config: &Config,
-                  parser: &template::Liquid,
+                  parser: &cobalt_model::Liquid,
                   dest: &Path,
                   layouts: &Path,
                   mut layouts_cache: &mut HashMap<String, String>)
@@ -158,7 +157,7 @@ fn generate_pages(posts: Vec<Document>,
 
 fn generate_posts(posts: &mut Vec<Document>,
                   config: &Config,
-                  parser: &template::Liquid,
+                  parser: &cobalt_model::Liquid,
                   dest: &Path,
                   layouts: &Path,
                   mut layouts_cache: &mut HashMap<String, String>)

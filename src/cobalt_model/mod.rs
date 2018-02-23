@@ -6,6 +6,7 @@ mod document;
 mod frontmatter;
 mod sass;
 mod site;
+mod template;
 
 pub mod files;
 pub mod slug;
@@ -33,3 +34,5 @@ pub use self::sass::SassBuilder;
 pub use self::sass::SassCompiler;
 pub use self::sass::SassOutputStyle;
 pub use self::site::SiteBuilder;
+pub use self::template::LiquidBuilder;
+pub use self::template::Liquid;
