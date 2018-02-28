@@ -77,21 +77,6 @@ fn generate_doc(dest: &Path,
                 doc: &mut Document,
                 config: &Config)
                 -> Result<()> {
-    for dump in config.dump.iter().filter(|d| d.is_doc()) {
-        trace!("Dumping {:?}", dump);
-        let (content, ext) = doc.render_dump(*dump)?;
-        let mut file_path = doc.file_path.clone();
-        let file_name = file_path
-            .file_stem()
-            .and_then(|p| p.to_str())
-            .expect("page must have file name")
-            .to_owned();
-        let file_name = format!("_{}.{}.{}", file_name, dump, ext);
-        file_path.set_file_name(file_name);
-        trace!("Generating {:?}", file_path);
-        files::write_document_file(content, dest.join(file_path))?;
-    }
-
     // Everything done with `globals` is terrible for performance.  liquid#95 allows us to
     // improve this.
     let mut posts_variable = config.posts.attributes.clone();

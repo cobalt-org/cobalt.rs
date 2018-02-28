@@ -15,23 +15,6 @@ use super::sass;
 use super::site;
 use super::template;
 
-arg_enum! {
-    #[derive(Serialize, Deserialize)]
-    #[derive(Debug, PartialEq, Copy, Clone)]
-    pub enum Dump {
-        DocObject,
-        DocTemplate,
-        DocLinkObject,
-        Document
-    }
-}
-
-impl Dump {
-    pub fn is_doc(&self) -> bool {
-        true
-    }
-}
-
 #[derive(Debug, Clone, PartialEq)]
 #[derive(Serialize, Deserialize)]
 #[serde(deny_unknown_fields, default)]
@@ -270,9 +253,6 @@ pub struct ConfigBuilder {
     #[serde(skip)]
     pub includes_dir: &'static str,
     pub assets: AssetsConfig,
-    // This is a debug-only field and should be transient rather than persistently set.
-    #[serde(skip)]
-    pub dump: Vec<Dump>,
 }
 
 impl Default for ConfigBuilder {
@@ -293,7 +273,6 @@ impl Default for ConfigBuilder {
             layouts_dir: "_layouts",
             includes_dir: "_includes",
             assets: AssetsConfig::default(),
-            dump: Default::default(),
         }
     }
 }
@@ -358,7 +337,6 @@ impl ConfigBuilder {
             layouts_dir,
             includes_dir,
             assets,
-            dump,
         } = self;
 
         if include_drafts {
@@ -419,7 +397,6 @@ impl ConfigBuilder {
             liquid,
             markdown,
             assets,
-            dump,
         };
 
         Ok(config)
@@ -447,7 +424,6 @@ pub struct Config {
     pub liquid: template::Liquid,
     pub markdown: mark::Markdown,
     pub assets: assets::Assets,
-    pub dump: Vec<Dump>,
 }
 
 impl Default for Config {

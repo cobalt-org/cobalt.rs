@@ -165,7 +165,6 @@ impl From<GlobalConfig> for cobalt_model::ConfigBuilder {
             ignore: ignore,
             syntax_highlight: syntax_highlight,
             assets: cobalt_model::AssetsConfig { sass },
-            dump: vec![],
             ..Default::default()
         }
     }

@@ -11,7 +11,6 @@ use liquid;
 use liquid::Value;
 use regex::Regex;
 use rss;
-use serde_yaml;
 
 use error::*;
 use cobalt_model::files;
@@ -361,31 +360,6 @@ impl Document {
                 .to_string();
 
             Ok(content_html)
-        }
-    }
-
-    pub fn render_dump(&self, dump: cobalt_model::Dump) -> Result<(String, String)> {
-        match dump {
-            cobalt_model::Dump::DocObject => {
-                let content = serde_yaml::to_string(&self.attributes)?;
-                Ok((content, "yml".to_owned()))
-            }
-            cobalt_model::Dump::DocTemplate => Ok((self.content.clone(), "liquid".to_owned())),
-            cobalt_model::Dump::DocLinkObject => {
-                let perma_attributes = permalink_attributes(&self.front, Path::new("<null>"));
-                let content = serde_yaml::to_string(&perma_attributes)?;
-                Ok((content, "yml".to_owned()))
-            }
-            cobalt_model::Dump::Document => {
-                let cobalt_model = serde_yaml::to_string(&self.front)?;
-                let content = self.content.clone();
-                let ext = match self.front.format {
-                    cobalt_model::SourceFormat::Raw => "liquid",
-                    cobalt_model::SourceFormat::Markdown => "md",
-                }.to_owned();
-                let content = itertools::join(&[cobalt_model, "---".to_owned(), content], "\n");
-                Ok((content, ext))
-            }
         }
     }
 }

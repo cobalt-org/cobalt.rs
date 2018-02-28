@@ -20,7 +20,6 @@ pub use self::config::AssetsConfig;
 pub use self::config::SassConfig;
 pub use self::config::Config;
 pub use self::config::ConfigBuilder;
-pub use self::config::Dump;
 pub use self::config::PageConfig;
 pub use self::config::PostConfig;
 pub use self::config::SiteConfig;
