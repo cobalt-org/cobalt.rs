@@ -185,7 +185,7 @@ pub fn no_extends_error() {
     let err = run_test("no_extends_error");
     assert!(err.is_err());
     assert_contains!(format!("{}", err.unwrap_err().display_chain()),
-                     "Layout default_nonexistent.liquid can not be read (defined in \
+                     "Layout default_nonexistent.liquid does not exist (referenced in \
                       \"index.html\")");
 }
 

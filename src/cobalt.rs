@@ -22,8 +22,8 @@ pub fn build(config: &Config) -> Result<()> {
     let dest = config.destination.as_path();
 
     let parser = &config.liquid;
-    let layouts = &config.layouts_dir;
-    let mut layouts_cache = HashMap::new();
+    let layouts = find_layouts(&config.layouts_dir)?;
+    let layouts = parse_layouts(layouts);
 
     debug!("Layouts directory: {:?}", layouts);
 
@@ -35,12 +35,7 @@ pub fn build(config: &Config) -> Result<()> {
     let documents = parse_pages(&page_files, &config.pages, source)?;
 
     sort_pages(&mut posts, &config.posts)?;
-    generate_posts(&mut posts,
-                   config,
-                   &parser,
-                   dest,
-                   &layouts,
-                   &mut layouts_cache)?;
+    generate_posts(&mut posts, config, &parser, dest, &layouts)?;
 
     // check if we should create an RSS file and create it!
     if let Some(ref path) = config.posts.rss {
@@ -51,13 +46,7 @@ pub fn build(config: &Config) -> Result<()> {
         create_jsonfeed(path, dest, &config.posts, &posts)?;
     }
 
-    generate_pages(posts,
-                   documents,
-                   config,
-                   &parser,
-                   dest,
-                   &layouts,
-                   &mut layouts_cache)?;
+    generate_pages(posts, documents, config, &parser, dest, &layouts)?;
 
     // copy all remaining files in the source to the destination
     // compile SASS along the way
@@ -70,8 +59,7 @@ pub fn build(config: &Config) -> Result<()> {
 }
 
 fn generate_doc(dest: &Path,
-                layouts: &Path,
-                mut layouts_cache: &mut HashMap<String, String>,
+                layouts: &HashMap<String, String>,
                 parser: &cobalt_model::Liquid,
                 posts_data: &[liquid::Value],
                 doc: &mut Document,
@@ -102,7 +90,7 @@ fn generate_doc(dest: &Path,
     // Refresh `page` with the `excerpt` / `content` attribute
     globals.insert("page".to_owned(),
                    liquid::Value::Object(doc.attributes.clone()));
-    let doc_html = doc.render(&globals, parser, layouts, &mut layouts_cache)
+    let doc_html = doc.render(&globals, parser, &layouts)
         .chain_err(|| format!("Failed to render for {:?}", doc.file_path))?;
     files::write_document_file(doc_html, dest.join(&doc.file_path))?;
     Ok(())
@@ -113,8 +101,7 @@ fn generate_pages(posts: Vec<Document>,
                   config: &Config,
                   parser: &cobalt_model::Liquid,
                   dest: &Path,
-                  layouts: &Path,
-                  mut layouts_cache: &mut HashMap<String, String>)
+                  layouts: &HashMap<String, String>)
                   -> Result<()> {
     // during post rendering additional attributes such as content were
     // added to posts. collect them so that non-post documents can access them
@@ -126,13 +113,7 @@ fn generate_pages(posts: Vec<Document>,
     trace!("Generating other documents");
     for mut doc in documents {
         trace!("Generating {}", doc.url_path);
-        generate_doc(dest,
-                     layouts,
-                     &mut layouts_cache,
-                     parser,
-                     &posts_data,
-                     &mut doc,
-                     config)?;
+        generate_doc(dest, &layouts, parser, &posts_data, &mut doc, config)?;
     }
 
     Ok(())
@@ -142,8 +123,7 @@ fn generate_posts(posts: &mut Vec<Document>,
                   config: &Config,
                   parser: &cobalt_model::Liquid,
                   dest: &Path,
-                  layouts: &Path,
-                  mut layouts_cache: &mut HashMap<String, String>)
+                  layouts: &HashMap<String, String>)
                   -> Result<()> {
     // collect all posts attributes to pass them to other posts for rendering
     let simple_posts_data: Vec<liquid::Value> = posts
@@ -170,13 +150,7 @@ fn generate_posts(posts: &mut Vec<Document>,
             .unwrap_or(liquid::Value::Nil);
         post.attributes.insert("next".to_owned(), next);
 
-        generate_doc(dest,
-                     layouts,
-                     &mut layouts_cache,
-                     parser,
-                     &simple_posts_data,
-                     post,
-                     config)?;
+        generate_doc(dest, &layouts, parser, &simple_posts_data, post, config)?;
     }
 
     Ok(())
@@ -278,6 +252,43 @@ fn find_page_files(source: &Path, collection: &Collection) -> Result<files::File
         page_files.add_extension(ext)?;
     }
     page_files.build()
+}
+
+fn find_layouts(layouts: &Path) -> Result<files::Files> {
+    let mut files = files::FilesBuilder::new(layouts)?;
+    files.ignore_hidden(false)?;
+    files.build()
+}
+
+fn parse_layouts(files: files::Files) -> HashMap<String, String> {
+    let (entries, errors): (Vec<_>, Vec<_>) = files
+        .files()
+        .map(|file_path| {
+            let rel_src = file_path
+                .strip_prefix(files.root())
+                .expect("file was found under the root");
+
+            let layout_data =
+                files::read_file(&file_path)
+                    .map_err(|e| format!("Failed to load layout {:?}: {}", rel_src, e))?;
+
+            let path = rel_src
+                .to_str()
+                .ok_or_else(|| format!("File name not valid liquid path: {:?}", rel_src))?
+                .to_owned();
+
+            Ok((path, layout_data))
+        })
+        .partition(Result::is_ok);
+
+    for error in errors {
+        warn!("{}", error.expect_err("partition to filter out oks"));
+    }
+
+    entries
+        .into_iter()
+        .map(|entry| entry.expect("partition to filter out errors"))
+        .collect()
 }
 
 fn parse_pages(page_files: &files::Files,

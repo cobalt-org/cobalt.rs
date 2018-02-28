@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::collections::hash_map::Entry;
 use std::default::Default;
 use std::path::{Path, PathBuf};
 use std::clone::Clone;
@@ -326,23 +325,16 @@ impl Document {
     pub fn render(&mut self,
                   globals: &liquid::Object,
                   parser: &cobalt_model::Liquid,
-                  layouts_dir: &Path,
-                  layouts_cache: &mut HashMap<String, String>)
+                  layouts: &HashMap<String, String>)
                   -> Result<String> {
         if let Some(ref layout) = self.front.layout {
-            let layout_data_ref = match layouts_cache.entry(layout.to_owned()) {
-                Entry::Vacant(vacant) => {
-                    let layout_data = files::read_file(layouts_dir.join(layout))
-                        .map_err(|e| {
-                                     format!("Layout {} can not be read (defined in {:?}): {}",
-                                             layout,
-                                             self.file_path,
-                                             e)
-                                 })?;
-                    vacant.insert(layout_data)
-                }
-                Entry::Occupied(occupied) => occupied.into_mut(),
-            };
+            let layout_data_ref = layouts
+                .get(layout)
+                .ok_or_else(|| {
+                                format!("Layout {} does not exist (referenced in {:?}).",
+                                        layout,
+                                        self.file_path)
+                            })?;
 
             let template = parser
                 .parse(layout_data_ref)
