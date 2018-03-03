@@ -51,7 +51,7 @@ impl SiteBuilder {
         }
         let mut data = data.unwrap_or_default();
         if let Some(ref data_dir) = data_dir {
-            insert_data_dir(&mut data, &data_dir)?;
+            insert_data_dir(&mut data, data_dir)?;
         }
         if !data.is_empty() {
             attributes.insert("data".to_owned(), liquid::Value::Object(data));

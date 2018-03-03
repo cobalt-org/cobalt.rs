@@ -70,14 +70,14 @@ pub fn build(config: Config) -> Result<()> {
     let context = Context::with_config(config)?;
 
     let post_files = &context.posts.pages;
-    let mut posts = parse_pages(&post_files, &context.posts, &context.source)?;
+    let mut posts = parse_pages(post_files, &context.posts, &context.source)?;
     if let Some(ref drafts) = context.posts.drafts {
         let drafts_root = drafts.subtree();
-        parse_drafts(drafts_root, &drafts, &mut posts, &context.posts)?;
+        parse_drafts(drafts_root, drafts, &mut posts, &context.posts)?;
     }
 
     let page_files = &context.pages.pages;
-    let documents = parse_pages(&page_files, &context.pages, &context.source)?;
+    let documents = parse_pages(page_files, &context.pages, &context.source)?;
 
     sort_pages(&mut posts, &context.posts)?;
     generate_posts(&mut posts, &context)?;
@@ -196,8 +196,7 @@ fn sort_pages(posts: &mut Vec<Document>, collection: &Collection) -> Result<()> 
 
     match collection.order {
         SortOrder::Asc => posts.reverse(),
-        SortOrder::Desc => (),
-        SortOrder::None => (),
+        SortOrder::Desc | SortOrder::None => (),
     }
 
     Ok(())

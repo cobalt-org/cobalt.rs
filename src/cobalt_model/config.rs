@@ -156,14 +156,13 @@ pub struct SiteConfig {
 
 impl SiteConfig {
     fn builder(self, source: &path::Path) -> site::SiteBuilder {
-        let site = site::SiteBuilder {
+        site::SiteBuilder {
             title: self.title,
             description: self.description,
             base_url: self.base_url,
             data: self.data,
             data_dir: Some(source.join(self.data_dir)),
-        };
-        site
+        }
     }
 }
 
@@ -223,13 +222,12 @@ impl AssetsConfig {
                ignore: &[String],
                template_extensions: &[String])
                -> assets::AssetsBuilder {
-        let assets = assets::AssetsBuilder {
+        assets::AssetsBuilder {
             sass: self.sass.builder(source),
             source: Some(source.to_owned()),
             ignore: ignore.to_vec(),
             template_extensions: template_extensions.to_vec(),
-        };
-        assets
+        }
     }
 }
 
