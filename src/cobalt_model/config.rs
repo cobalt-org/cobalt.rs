@@ -37,12 +37,12 @@ pub struct PageConfig {
 
 impl PageConfig {
     fn builder(self,
-                   site: &SiteConfig,
-                   posts: &PostConfig,
-                   common_default: &frontmatter::FrontmatterBuilder,
-                   ignore: &[String],
-                   template_extensions: &[String])
-                   -> collection::CollectionBuilder {
+               site: &SiteConfig,
+               posts: &PostConfig,
+               common_default: &frontmatter::FrontmatterBuilder,
+               ignore: &[String],
+               template_extensions: &[String])
+               -> collection::CollectionBuilder {
         let mut ignore = ignore.to_vec();
         ignore.push(format!("/{}", posts.dir));
         if let Some(ref drafts_dir) = posts.drafts_dir {
@@ -51,8 +51,7 @@ impl PageConfig {
         // Use `site` because the pages are effectively the site
         collection::CollectionBuilder {
             title: Some(site.title.clone().unwrap_or_else(|| "".to_owned())),
-            // Pages aren't publicly exposed as a collection
-            slug: Some("".to_owned()),
+            slug: Some("pages".to_owned()),
             description: site.description.clone(),
             dir: Some(".".to_owned()),
             drafts_dir: None,
@@ -86,12 +85,12 @@ pub struct PostConfig {
 
 impl PostConfig {
     fn builder(self,
-                   site: &SiteConfig,
-                   include_drafts: bool,
-                   common_default: &frontmatter::FrontmatterBuilder,
-                   ignore: &[String],
-                   template_extensions: &[String])
-                   -> collection::CollectionBuilder {
+               site: &SiteConfig,
+               include_drafts: bool,
+               common_default: &frontmatter::FrontmatterBuilder,
+               ignore: &[String],
+               template_extensions: &[String])
+               -> collection::CollectionBuilder {
         let PostConfig {
             title,
             description,
@@ -216,10 +215,10 @@ pub struct AssetsConfig {
 
 impl AssetsConfig {
     fn builder(self,
-                   source: &path::Path,
-                   ignore: &[String],
-                   template_extensions: &[String])
-                   -> assets::AssetsBuilder {
+               source: &path::Path,
+               ignore: &[String],
+               template_extensions: &[String])
+               -> assets::AssetsBuilder {
         let assets = assets::AssetsBuilder {
             sass: self.sass.builder(source),
             source: Some(source.to_owned()),
@@ -405,7 +404,9 @@ impl fmt::Display for ConfigBuilder {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
+#[derive(Serialize, Deserialize)]
+#[serde(deny_unknown_fields, default)]
 pub struct Config {
     pub source: path::PathBuf,
     pub destination: path::PathBuf,
@@ -425,6 +426,14 @@ impl Default for Config {
         ConfigBuilder::default()
             .build()
             .expect("default config should not fail")
+    }
+}
+
+impl fmt::Display for Config {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let mut converted = serde_yaml::to_string(self).map_err(|_| fmt::Error)?;
+        converted.drain(..4);
+        write!(f, "{}", converted)
     }
 }
 
