@@ -98,6 +98,7 @@ fn deep_insert(data_map: &mut liquid::Object,
         }
     }
 }
+
 fn load_data(data_path: &path::Path) -> Result<liquid::Value> {
     let ext = data_path.extension().unwrap_or_else(|| OsStr::new(""));
 
