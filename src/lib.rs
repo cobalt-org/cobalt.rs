@@ -85,14 +85,12 @@ pub use cobalt::build;
 pub use error::Error;
 pub use cobalt_model::Config;
 pub use cobalt_model::ConfigBuilder;
-pub use new::{create_new_project, create_new_document, publish_document};
 
 pub mod error;
 pub mod cobalt_model;
 
 mod cobalt;
 mod document;
-mod new;
 
 pub mod jekyll_model;
 pub mod legacy_model;

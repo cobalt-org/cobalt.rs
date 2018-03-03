@@ -1,11 +1,14 @@
 use std::env;
+use std::fs;
+use std::io::Write;
 use std::path;
 
 use clap;
-use cobalt;
+use cobalt::cobalt_model;
 
 use args;
 use error::*;
+
 
 pub fn init_command_args() -> clap::App<'static, 'static> {
     clap::SubCommand::with_name("init")
@@ -19,7 +22,7 @@ pub fn init_command_args() -> clap::App<'static, 'static> {
 pub fn init_command(matches: &clap::ArgMatches) -> Result<()> {
     let directory = matches.value_of("DIRECTORY").unwrap();
 
-    cobalt::create_new_project(&directory.to_string())
+    create_new_project(&directory.to_string())
         .chain_err(|| "Could not create a new cobalt project")?;
     info!("Created new project at {}", directory);
 
@@ -53,7 +56,7 @@ pub fn new_command(matches: &clap::ArgMatches) -> Result<()> {
         file.push(path::Path::new(rel_file))
     }
 
-    cobalt::create_new_document(&config, title, file)
+    create_new_document(&config, title, file)
         .chain_err(|| format!("Could not create `{}`", title))?;
 
     Ok(())
@@ -74,8 +77,150 @@ pub fn publish_command(matches: &clap::ArgMatches) -> Result<()> {
         .expect("required parameters are present");
     let file = path::Path::new(file);
 
-    cobalt::publish_document(file)
+    publish_document(file)
         .chain_err(|| format!("Could not publish `{:?}`", file))?;
+
+    Ok(())
+}
+
+const COBALT_YML: &'static str = "
+site:
+  title: cobalt blog
+  description: Blog Posts Go Here
+  base_url: http://example.com
+posts:
+  rss: rss.xml
+";
+
+const DEFAULT_LAYOUT: &'static str = "<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset=\"utf-8\">
+        <title>{{ page.title }}</title>
+    </head>
+    <body>
+    <div>
+      <h2>{{ page.title }}</h2>
+      {{ page.content }}
+    </div>
+  </body>
+</html>
+";
+
+const POST_MD: &'static str = "layout: default.liquid
+
+title: First Post
+is_draft: true
+---
+
+# This is our first Post!
+
+Welcome to the first post ever on cobalt.rs!
+";
+
+const INDEX_MD: &'static str = "layout: default.liquid
+---
+## Blog!
+
+{% for post in collections.posts.pages %}
+#### {{post.title}}
+
+[{{ post.title }}]({{ post.permalink }})
+{% endfor %}
+";
+
+pub fn create_new_project<P: AsRef<path::Path>>(dest: P) -> Result<()> {
+    create_new_project_for_path(dest.as_ref())
+}
+
+pub fn create_new_project_for_path(dest: &path::Path) -> Result<()> {
+    fs::create_dir_all(dest)?;
+
+    create_file(&dest.join("_cobalt.yml"), COBALT_YML)?;
+    create_file(&dest.join("index.md"), INDEX_MD)?;
+
+    fs::create_dir_all(&dest.join("_layouts"))?;
+    create_file(&dest.join("_layouts/default.liquid"), DEFAULT_LAYOUT)?;
+
+    fs::create_dir_all(&dest.join("posts"))?;
+    create_file(&dest.join("posts/post-1.md"), POST_MD)?;
+
+    Ok(())
+}
+
+pub fn create_new_document(config: &cobalt_model::Config, title: &str, file: path::PathBuf) -> Result<()> {
+    let file = if file.extension().is_none() {
+        let file_name = format!("{}.md", cobalt_model::slug::slugify(title));
+        let mut file = file;
+        file.push(path::Path::new(&file_name));
+        file
+    } else {
+        file
+    };
+
+    let rel_file = file.strip_prefix(&config.source)
+        .map_err(|_| {
+                     format!("New file {:?} not project directory ({:?})",
+                             file,
+                             config.source)
+                 })?;
+
+    let (file_type, doc) = if rel_file.starts_with(path::Path::new(&config.posts.dir)) ||
+                              config
+                                  .posts
+                                  .drafts_dir
+                                  .as_ref()
+                                  .map(|dir| rel_file.starts_with(path::Path::new(dir)))
+                                  .unwrap_or(false) {
+        ("post", POST_MD)
+    } else {
+        ("page", INDEX_MD)
+    };
+
+    let doc = cobalt_model::DocumentBuilder::<cobalt_model::FrontmatterBuilder>::parse(doc)?;
+    let (front, content) = doc.parts();
+    let front = front.set_title(title.to_owned());
+    let doc = cobalt_model::DocumentBuilder::<cobalt_model::FrontmatterBuilder>::new(front,
+                                                                                     content);
+    let doc = doc.to_string();
+
+    create_file(&file, &doc)?;
+    info!("Created new {} {:?}", file_type, rel_file);
+
+    Ok(())
+}
+
+fn create_file<P: AsRef<path::Path>>(path: P, content: &str) -> Result<()> {
+    create_file_for_path(path.as_ref(), content)
+}
+
+fn create_file_for_path(path: &path::Path, content: &str) -> Result<()> {
+    trace!("Creating file {:?}", path);
+
+    let mut file = fs::OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .open(path)
+        .chain_err(|| format!("Failed to create file {:?}", path))?;
+
+    file.write_all(content.as_bytes())?;
+
+    Ok(())
+}
+
+pub fn publish_document(file: &path::Path) -> Result<()> {
+    let doc = cobalt_model::files::read_file(file)?;
+    let doc = cobalt_model::DocumentBuilder::<cobalt_model::FrontmatterBuilder>::parse(&doc)?;
+    let (front, content) = doc.parts();
+
+    let date = cobalt_model::DateTime::now();
+    let front = front.set_draft(false).set_published_date(date);
+
+    let doc = cobalt_model::DocumentBuilder::<cobalt_model::FrontmatterBuilder>::new(front,
+                                                                                     content);
+    let doc = doc.to_string();
+
+    cobalt_model::files::write_document_file(doc, file)?;
 
     Ok(())
 }
