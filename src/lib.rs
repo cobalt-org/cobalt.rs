@@ -93,7 +93,6 @@ mod cobalt;
 mod document;
 
 pub mod jekyll_model;
-pub mod legacy_model;
 mod syntax_highlight;
 
 pub use syntax_highlight::{list_syntax_themes, list_syntaxes};

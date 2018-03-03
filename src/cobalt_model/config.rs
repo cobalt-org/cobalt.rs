@@ -384,9 +384,7 @@ impl ConfigBuilder {
             pages,
             posts,
             site,
-            ignore,
             layouts_dir,
-            includes_dir,
             liquid,
             markdown,
             assets,
@@ -413,9 +411,7 @@ pub struct Config {
     pub pages: collection::CollectionBuilder,
     pub posts: collection::CollectionBuilder,
     pub site: site::SiteBuilder,
-    pub ignore: Vec<String>, // HACK: Here until migrate doesn't need it
     pub layouts_dir: path::PathBuf,
-    pub includes_dir: path::PathBuf, // HACK: Here until migrate doesn't need it
     pub liquid: template::LiquidBuilder,
     pub markdown: mark::MarkdownBuilder,
     pub assets: assets::AssetsBuilder,
