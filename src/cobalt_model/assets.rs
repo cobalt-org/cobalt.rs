@@ -37,10 +37,7 @@ impl AssetsBuilder {
             files.add_ignore(&format!("*.{}", ext))?;
         }
         let files = files.build()?;
-        let assets = Assets {
-            sass,
-            files,
-        };
+        let assets = Assets { sass, files };
         Ok(assets)
     }
 }

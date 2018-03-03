@@ -120,6 +120,13 @@ impl Files {
         &self.root_dir
     }
 
+    pub fn subtree(&self) -> &path::Path {
+        self.subtree
+            .as_ref()
+            .map(path::PathBuf::as_path)
+            .unwrap_or_else(|| self.root_dir.as_path())
+    }
+
     pub fn includes_file(&self, file: &path::Path) -> bool {
         if !self.ext_contains(file) {
             return false;

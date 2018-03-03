@@ -37,6 +37,7 @@ pub struct PageConfig {
 
 impl PageConfig {
     fn builder(self,
+               source: &path::Path,
                site: &SiteConfig,
                posts: &PostConfig,
                common_default: &frontmatter::FrontmatterBuilder,
@@ -53,6 +54,7 @@ impl PageConfig {
             title: Some(site.title.clone().unwrap_or_else(|| "".to_owned())),
             slug: Some("pages".to_owned()),
             description: site.description.clone(),
+            source: Some(source.to_owned()),
             dir: Some(".".to_owned()),
             drafts_dir: None,
             include_drafts: false,
@@ -85,6 +87,7 @@ pub struct PostConfig {
 
 impl PostConfig {
     fn builder(self,
+               source: &path::Path,
                site: &SiteConfig,
                include_drafts: bool,
                common_default: &frontmatter::FrontmatterBuilder,
@@ -109,6 +112,7 @@ impl PostConfig {
                             .unwrap_or_else(|| "".to_owned())),
             slug: Some("posts".to_owned()),
             description: description.or_else(|| site.description.clone()),
+            source: Some(source.to_owned()),
             dir: Some(dir),
             drafts_dir,
             include_drafts: include_drafts,
@@ -356,9 +360,15 @@ impl ConfigBuilder {
         let source = root.join(source);
         let destination = abs_dest.unwrap_or_else(|| root.join(destination));
 
-        let pages = pages.builder(&site, &posts, &default, &ignore, &template_extensions);
+        let pages = pages.builder(&source,
+                                  &site,
+                                  &posts,
+                                  &default,
+                                  &ignore,
+                                  &template_extensions);
 
-        let posts = posts.builder(&site,
+        let posts = posts.builder(&source,
+                                  &site,
                                   include_drafts,
                                   &default,
                                   &ignore,

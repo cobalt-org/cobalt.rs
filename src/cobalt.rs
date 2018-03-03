@@ -69,11 +69,14 @@ impl Context {
 pub fn build(config: Config) -> Result<()> {
     let context = Context::with_config(config)?;
 
-    let post_files = find_post_files(&context.source, &context.posts)?;
+    let post_files = &context.posts.pages;
     let mut posts = parse_pages(&post_files, &context.posts, &context.source)?;
-    process_included_drafts(&context.posts, &context.source, &mut posts)?;
+    if let Some(ref drafts) = context.posts.drafts {
+        let drafts_root = drafts.subtree();
+        parse_drafts(drafts_root, &drafts, &mut posts, &context.posts)?;
+    }
 
-    let page_files = find_page_files(&context.source, &context.pages)?;
+    let page_files = &context.pages.pages;
     let documents = parse_pages(&page_files, &context.pages, &context.source)?;
 
     sort_pages(&mut posts, &context.posts)?;
@@ -200,17 +203,22 @@ fn sort_pages(posts: &mut Vec<Document>, collection: &Collection) -> Result<()> 
     Ok(())
 }
 
-fn parse_drafts(drafts_root: &path::PathBuf,
+fn parse_drafts(drafts_root: &path::Path,
                 draft_files: &files::Files,
                 documents: &mut Vec<Document>,
                 collection: &Collection)
                 -> Result<()> {
+    let rel_real = collection
+        .pages
+        .subtree()
+        .strip_prefix(collection.pages.root())
+        .expect("subtree is under root");
     for file_path in draft_files.files() {
         // Provide a fake path as if it was not a draft
         let rel_src = file_path
             .strip_prefix(&drafts_root)
             .expect("file was found under the root");
-        let new_path = path::Path::new(&collection.dir).join(rel_src);
+        let new_path = rel_real.join(rel_src);
 
         let default_front = collection.default.clone().set_draft(true);
 
@@ -219,63 +227,6 @@ fn parse_drafts(drafts_root: &path::PathBuf,
         documents.push(doc);
     }
     Ok(())
-}
-
-fn process_included_drafts(collection: &Collection,
-                           source: &path::Path,
-                           documents: &mut Vec<Document>)
-                           -> Result<()> {
-    if collection.include_drafts {
-        if let Some(ref drafts_dir) = collection.drafts_dir {
-            debug!("Draft directory: {:?}", drafts_dir);
-            let drafts_root = source.join(&drafts_dir);
-            let draft_files = find_post_draft_files(&drafts_root, collection)?;
-
-            parse_drafts(&drafts_root, &draft_files, documents, collection)?;
-        }
-    }
-    Ok(())
-}
-
-fn find_post_files(source: &path::Path, collection: &Collection) -> Result<files::Files> {
-    let mut page_files = files::FilesBuilder::new(source)?;
-    page_files
-        .add_ignore(&format!("!/{}", collection.dir))?
-        .add_ignore(&format!("!/{}/**", collection.dir))?
-        .add_ignore(&format!("/{}/**/_*", collection.dir))?
-        .add_ignore(&format!("/{}/**/_*/**", collection.dir))?;
-    for line in &collection.ignore {
-        page_files.add_ignore(line.as_str())?;
-    }
-    for ext in collection.template_extensions.iter() {
-        page_files.add_extension(ext)?;
-    }
-    page_files.limit(path::PathBuf::from(&collection.dir))?;
-    page_files.build()
-}
-
-fn find_post_draft_files(drafts_root: &path::Path,
-                         collection: &Collection)
-                         -> Result<files::Files> {
-    let mut page_files = files::FilesBuilder::new(drafts_root)?;
-    for line in &collection.ignore {
-        page_files.add_ignore(line.as_str())?;
-    }
-    for ext in collection.template_extensions.iter() {
-        page_files.add_extension(ext)?;
-    }
-    page_files.build()
-}
-
-fn find_page_files(source: &path::Path, collection: &Collection) -> Result<files::Files> {
-    let mut page_files = files::FilesBuilder::new(source)?;
-    for line in &collection.ignore {
-        page_files.add_ignore(line.as_str())?;
-    }
-    for ext in collection.template_extensions.iter() {
-        page_files.add_extension(ext)?;
-    }
-    page_files.build()
 }
 
 fn find_layouts(layouts: &path::Path) -> Result<files::Files> {

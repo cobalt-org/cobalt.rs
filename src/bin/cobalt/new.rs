@@ -169,11 +169,11 @@ pub fn create_new_document(config: &cobalt_model::Config,
                  })?;
 
     let posts = config.posts.clone().build()?;
-    let (file_type, doc) = if rel_file.starts_with(path::Path::new(&posts.dir)) ||
+    let (file_type, doc) = if file.starts_with(posts.pages.subtree()) ||
                               posts
-                                  .drafts_dir
+                                  .drafts
                                   .as_ref()
-                                  .map(|dir| rel_file.starts_with(path::Path::new(dir)))
+                                  .map(|d| file.starts_with(d.subtree()))
                                   .unwrap_or(false) {
         ("post", POST_MD)
     } else {
