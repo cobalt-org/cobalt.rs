@@ -79,6 +79,7 @@ impl CollectionBuilder {
                       drafts_dir)
             }
         }
+        let drafts_dir = if include_drafts { drafts_dir } else { None };
 
         let mut attributes: liquid::Object =
             vec![("title".to_owned(), liquid::Value::scalar(&title)),
@@ -163,6 +164,7 @@ mod test {
         let mut collection = CollectionBuilder::default();
         collection.title = Some("title".to_owned());
         collection.drafts_dir = Some("rel".to_owned());
+        collection.include_drafts = true;
         let collection = collection.build().unwrap();
         assert_eq!(collection.drafts_dir, Some("rel".to_owned()));
     }
@@ -172,6 +174,7 @@ mod test {
         let mut collection = CollectionBuilder::default();
         collection.title = Some("title".to_owned());
         collection.drafts_dir = Some("/root".to_owned());
+        collection.include_drafts = true;
         let collection = collection.build();
         assert!(collection.is_err());
     }
