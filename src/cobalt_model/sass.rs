@@ -42,11 +42,9 @@ impl SassBuilder {
 }
 
 #[derive(Debug, PartialEq)]
-#[derive(Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
 pub struct SassCompiler {
-    pub import_dir: Option<String>,
-    pub style: SassOutputStyle,
+    import_dir: Option<String>,
+    style: SassOutputStyle,
 }
 
 impl Default for SassCompiler {
