@@ -213,12 +213,13 @@ fn migrate_front(config: &cobalt::Config) -> Result<()> {
         .map(ffi::OsStr::new)
         .collect();
 
+    let posts = config.posts.clone().build()?;
     let mut page_files = cobalt_model::files::FilesBuilder::new(&config.source)?;
     page_files
-        .add_ignore(&format!("!{}", config.posts.dir))?
-        .add_ignore(&format!("!{}/**", config.posts.dir))?
-        .add_ignore(&format!("{}/**/_*", config.posts.dir))?
-        .add_ignore(&format!("{}/**/_*/**", config.posts.dir))?;
+        .add_ignore(&format!("!{}", posts.dir))?
+        .add_ignore(&format!("!{}/**", posts.dir))?
+        .add_ignore(&format!("{}/**/_*", posts.dir))?
+        .add_ignore(&format!("{}/**/_*/**", posts.dir))?;
     for line in &config.ignore {
         page_files.add_ignore(line.as_str())?;
     }

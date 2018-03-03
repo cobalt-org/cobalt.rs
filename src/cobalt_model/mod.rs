@@ -13,6 +13,7 @@ pub mod files;
 pub mod slug;
 
 pub use self::assets::AssetsBuilder;
+pub use self::assets::Assets;
 pub use self::collection::Collection;
 pub use self::collection::CollectionBuilder;
 pub use self::collection::SortOrder;

@@ -148,7 +148,10 @@ pub fn create_new_project_for_path(dest: &path::Path) -> Result<()> {
     Ok(())
 }
 
-pub fn create_new_document(config: &cobalt_model::Config, title: &str, file: path::PathBuf) -> Result<()> {
+pub fn create_new_document(config: &cobalt_model::Config,
+                           title: &str,
+                           file: path::PathBuf)
+                           -> Result<()> {
     let file = if file.extension().is_none() {
         let file_name = format!("{}.md", cobalt_model::slug::slugify(title));
         let mut file = file;
@@ -165,9 +168,9 @@ pub fn create_new_document(config: &cobalt_model::Config, title: &str, file: pat
                              config.source)
                  })?;
 
-    let (file_type, doc) = if rel_file.starts_with(path::Path::new(&config.posts.dir)) ||
-                              config
-                                  .posts
+    let posts = config.posts.clone().build()?;
+    let (file_type, doc) = if rel_file.starts_with(path::Path::new(&posts.dir)) ||
+                              posts
                                   .drafts_dir
                                   .as_ref()
                                   .map(|dir| rel_file.starts_with(path::Path::new(dir)))

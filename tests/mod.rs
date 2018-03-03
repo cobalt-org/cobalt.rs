@@ -81,14 +81,15 @@ fn run_test(name: &str) -> Result<(), cobalt::Error> {
     config.abs_dest = Some(destdir.path().to_owned());
 
     let config = config.build()?;
+    let destination = config.destination.clone();
 
     // try to create the target directory, ignore errors
-    fs::create_dir_all(&config.destination).is_ok();
+    fs::create_dir_all(&destination).is_ok();
 
-    let result = cobalt::build(&config);
+    let result = cobalt::build(config);
 
     if result.is_ok() {
-        assert_dirs_eq(&config.destination, &target);
+        assert_dirs_eq(&destination, &target);
     }
 
     // clean up

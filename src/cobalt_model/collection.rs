@@ -135,3 +135,44 @@ pub struct Collection {
     pub default: FrontmatterBuilder,
     pub attributes: liquid::Object,
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_build_dir_rel() {
+        let mut collection = CollectionBuilder::default();
+        collection.title = Some("title".to_owned());
+        collection.dir = Some("rel".to_owned());
+        let collection = collection.build().unwrap();
+        assert_eq!(collection.dir, "rel".to_owned());
+    }
+
+    #[test]
+    fn test_build_dir_abs() {
+        let mut collection = CollectionBuilder::default();
+        collection.title = Some("title".to_owned());
+        collection.dir = Some("/root".to_owned());
+        let collection = collection.build();
+        assert!(collection.is_err());
+    }
+
+    #[test]
+    fn test_build_drafts_rel() {
+        let mut collection = CollectionBuilder::default();
+        collection.title = Some("title".to_owned());
+        collection.drafts_dir = Some("rel".to_owned());
+        let collection = collection.build().unwrap();
+        assert_eq!(collection.drafts_dir, Some("rel".to_owned()));
+    }
+
+    #[test]
+    fn test_build_drafts_abs() {
+        let mut collection = CollectionBuilder::default();
+        collection.title = Some("title".to_owned());
+        collection.drafts_dir = Some("/root".to_owned());
+        let collection = collection.build();
+        assert!(collection.is_err());
+    }
+}

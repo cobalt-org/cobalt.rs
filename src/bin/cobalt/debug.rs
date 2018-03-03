@@ -42,7 +42,8 @@ pub fn debug_command(matches: &clap::ArgMatches) -> Result<()> {
             let collection = matches.value_of("COLLECTION");
             match collection {
                 Some("assets") => {
-                    for file_path in config.assets.files() {
+                    let assets = config.assets.build()?;
+                    for file_path in assets.files() {
                         println!("{:?}", file_path);
                     }
                 }

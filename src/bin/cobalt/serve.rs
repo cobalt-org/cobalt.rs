@@ -47,7 +47,7 @@ pub fn serve_command(matches: &clap::ArgMatches) -> Result<()> {
     let config = config.build()?;
     let dest = path::Path::new(&config.destination).to_owned();
 
-    build::build(&config)?;
+    build::build(config.clone())?;
 
     if matches.is_present("no-watch") {
         serve(&dest, &ip)?;
@@ -191,7 +191,7 @@ fn watch(config: cobalt_model::Config) -> Result<()> {
             true
         };
         if rebuild {
-            let result = build::build(&config);
+            let result = build::build(config.clone());
             if let Err(fail) = result {
                 error!("build failed\n{}", fail.display_chain());
             }

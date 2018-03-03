@@ -36,7 +36,7 @@ pub struct PageConfig {
 }
 
 impl PageConfig {
-    pub fn builder(self,
+    fn builder(self,
                    site: &SiteConfig,
                    posts: &PostConfig,
                    common_default: &frontmatter::FrontmatterBuilder,
@@ -85,7 +85,7 @@ pub struct PostConfig {
 }
 
 impl PostConfig {
-    pub fn builder(self,
+    fn builder(self,
                    site: &SiteConfig,
                    include_drafts: bool,
                    common_default: &frontmatter::FrontmatterBuilder,
@@ -152,7 +152,7 @@ pub struct SiteConfig {
 }
 
 impl SiteConfig {
-    pub fn builder(self, source: &path::Path) -> site::SiteBuilder {
+    fn builder(self, source: &path::Path) -> site::SiteBuilder {
         let site = site::SiteBuilder {
             title: self.title,
             description: self.description,
@@ -186,7 +186,7 @@ pub struct SassConfig {
 }
 
 impl SassConfig {
-    pub fn builder(self, source: &path::Path) -> sass::SassBuilder {
+    fn builder(self, source: &path::Path) -> sass::SassBuilder {
         let mut sass = sass::SassBuilder::new();
         sass.style = self.style;
         sass.import_dir = source
@@ -215,7 +215,7 @@ pub struct AssetsConfig {
 }
 
 impl AssetsConfig {
-    pub fn builder(self,
+    fn builder(self,
                    source: &path::Path,
                    ignore: &[String],
                    template_extensions: &[String])
@@ -358,20 +358,16 @@ impl ConfigBuilder {
         let destination = abs_dest.unwrap_or_else(|| root.join(destination));
 
         let pages = pages.builder(&site, &posts, &default, &ignore, &template_extensions);
-        let pages = pages.build()?;
 
         let posts = posts.builder(&site,
                                   include_drafts,
                                   &default,
                                   &ignore,
                                   &template_extensions);
-        let posts = posts.build()?;
 
         let site = site.builder(&source);
-        let site = site.build()?;
 
         let assets = assets.builder(&source, &ignore, &template_extensions);
-        let assets = assets.build()?;
 
         let includes_dir = source.join(includes_dir);
         let layouts_dir = source.join(layouts_dir);
@@ -381,9 +377,7 @@ impl ConfigBuilder {
             legacy_path: source.clone(),
             theme: syntax_highlight.theme.clone(),
         };
-        let liquid = liquid.build()?;
         let markdown = mark::MarkdownBuilder { theme: syntax_highlight.theme };
-        let markdown = markdown.build();
 
         let config = Config {
             source,
@@ -411,19 +405,19 @@ impl fmt::Display for ConfigBuilder {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Config {
     pub source: path::PathBuf,
     pub destination: path::PathBuf,
-    pub pages: collection::Collection,
-    pub posts: collection::Collection,
-    pub site: liquid::Object,
+    pub pages: collection::CollectionBuilder,
+    pub posts: collection::CollectionBuilder,
+    pub site: site::SiteBuilder,
     pub ignore: Vec<String>, // HACK: Here until migrate doesn't need it
     pub layouts_dir: path::PathBuf,
     pub includes_dir: path::PathBuf, // HACK: Here until migrate doesn't need it
-    pub liquid: template::Liquid,
-    pub markdown: mark::Markdown,
-    pub assets: assets::Assets,
+    pub liquid: template::LiquidBuilder,
+    pub markdown: mark::MarkdownBuilder,
+    pub assets: assets::AssetsBuilder,
 }
 
 impl Default for Config {
@@ -505,34 +499,4 @@ fn test_build_abs_dest() {
                path::Path::new("tests/fixtures/config").to_path_buf());
     assert_eq!(result.destination,
                path::Path::new("hello/world").to_path_buf());
-}
-
-#[test]
-fn test_build_posts_rel() {
-    let mut config = ConfigBuilder::default();
-    config.posts.dir = "rel".to_owned();
-    let config = config.build().unwrap();
-    assert_eq!(config.posts.dir, "rel");
-}
-
-#[test]
-fn test_build_posts_abs() {
-    let mut config = ConfigBuilder::default();
-    config.posts.dir = "/root".to_owned();
-    assert!(config.build().is_err());
-}
-
-#[test]
-fn test_build_drafts_rel() {
-    let mut config = ConfigBuilder::default();
-    config.posts.drafts_dir = Some("rel".into());
-    let config = config.build().unwrap();
-    assert_eq!(config.posts.drafts_dir, Some("rel".into()));
-}
-
-#[test]
-fn test_build_drafts_abs() {
-    let mut config = ConfigBuilder::default();
-    config.posts.drafts_dir = Some("/root".into());
-    assert!(config.build().is_err());
 }

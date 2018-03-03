@@ -1,7 +1,7 @@
 use std::fs;
 use std::collections::HashMap;
 use std::io::Write;
-use std::path::{PathBuf, Path};
+use std::path;
 use liquid;
 use rss;
 use jsonfeed::Feed;
@@ -14,95 +14,124 @@ use cobalt_model;
 use document::Document;
 use error::*;
 
+struct Context {
+    pub source: path::PathBuf,
+    pub destination: path::PathBuf,
+    pub pages: cobalt_model::Collection,
+    pub posts: cobalt_model::Collection,
+    pub site: liquid::Object,
+    pub layouts: HashMap<String, String>,
+    pub liquid: cobalt_model::Liquid,
+    pub markdown: cobalt_model::Markdown,
+    pub assets: cobalt_model::Assets,
+}
+
+impl Context {
+    fn with_config(config: Config) -> Result<Self> {
+        let Config {
+            source,
+            destination,
+            pages,
+            posts,
+            site,
+            ignore: _ignore,
+            layouts_dir,
+            includes_dir: _includes_dir,
+            liquid,
+            markdown,
+            assets,
+        } = config;
+
+        let pages = pages.build()?;
+        let posts = posts.build()?;
+        let site = site.build()?;
+        let liquid = liquid.build()?;
+        let markdown = markdown.build();
+        let assets = assets.build()?;
+
+        let layouts = find_layouts(&layouts_dir)?;
+        let layouts = parse_layouts(layouts);
+
+        let context = Context {
+            source,
+            destination,
+            pages,
+            posts,
+            site,
+            layouts,
+            liquid,
+            markdown,
+            assets,
+        };
+        Ok(context)
+    }
+}
+
 /// The primary build function that transforms a directory into a site
-pub fn build(config: &Config) -> Result<()> {
-    trace!("Build configuration: {:?}", config);
+pub fn build(config: Config) -> Result<()> {
+    let context = Context::with_config(config)?;
 
-    let source = config.source.as_path();
-    let dest = config.destination.as_path();
+    let post_files = find_post_files(&context.source, &context.posts)?;
+    let mut posts = parse_pages(&post_files, &context.posts, &context.source)?;
+    process_included_drafts(&context.posts, &context.source, &mut posts)?;
 
-    let parser = &config.liquid;
-    let layouts = find_layouts(&config.layouts_dir)?;
-    let layouts = parse_layouts(layouts);
+    let page_files = find_page_files(&context.source, &context.pages)?;
+    let documents = parse_pages(&page_files, &context.pages, &context.source)?;
 
-    debug!("Layouts directory: {:?}", layouts);
-
-    let post_files = find_post_files(source, &config.posts)?;
-    let mut posts = parse_pages(&post_files, &config.posts, source)?;
-    process_included_drafts(&config.posts, source, &mut posts)?;
-
-    let page_files = find_page_files(source, &config.pages)?;
-    let documents = parse_pages(&page_files, &config.pages, source)?;
-
-    sort_pages(&mut posts, &config.posts)?;
-    generate_posts(&mut posts, config, &parser, dest, &layouts)?;
+    sort_pages(&mut posts, &context.posts)?;
+    generate_posts(&mut posts, &context)?;
 
     // check if we should create an RSS file and create it!
-    if let Some(ref path) = config.posts.rss {
-        create_rss(path, dest, &config.posts, &posts)?;
+    if let Some(ref path) = context.posts.rss {
+        create_rss(path, &context.destination, &context.posts, &posts)?;
     }
     // check if we should create an jsonfeed file and create it!
-    if let Some(ref path) = config.posts.jsonfeed {
-        create_jsonfeed(path, dest, &config.posts, &posts)?;
+    if let Some(ref path) = context.posts.jsonfeed {
+        create_jsonfeed(path, &context.destination, &context.posts, &posts)?;
     }
 
-    generate_pages(posts, documents, config, &parser, dest, &layouts)?;
+    generate_pages(posts, documents, &context)?;
 
     // copy all remaining files in the source to the destination
     // compile SASS along the way
-    {
-        debug!("Copying remaining assets");
-        config.assets.populate(dest)?;
-    }
+    context.assets.populate(&context.destination)?;
 
     Ok(())
 }
 
-fn generate_doc(dest: &Path,
-                layouts: &HashMap<String, String>,
-                parser: &cobalt_model::Liquid,
-                posts_data: &[liquid::Value],
-                doc: &mut Document,
-                config: &Config)
-                -> Result<()> {
+fn generate_doc(posts_data: &[liquid::Value], doc: &mut Document, context: &Context) -> Result<()> {
     // Everything done with `globals` is terrible for performance.  liquid#95 allows us to
     // improve this.
-    let mut posts_variable = config.posts.attributes.clone();
+    let mut posts_variable = context.posts.attributes.clone();
     posts_variable.insert("pages".to_owned(),
                           liquid::Value::Array(posts_data.to_vec()));
-    let global_collection: liquid::Object = vec![(config.posts.slug.clone(),
+    let global_collection: liquid::Object = vec![(context.posts.slug.clone(),
                                                   liquid::Value::Object(posts_variable))]
         .into_iter()
         .collect();
     let mut globals: liquid::Object =
-        vec![("site".to_owned(), liquid::Value::Object(config.site.clone())),
+        vec![("site".to_owned(), liquid::Value::Object(context.site.clone())),
              ("collections".to_owned(), liquid::Value::Object(global_collection))]
             .into_iter()
             .collect();
     globals.insert("page".to_owned(),
                    liquid::Value::Object(doc.attributes.clone()));
 
-    doc.render_excerpt(&globals, parser, &config.markdown)
+    doc.render_excerpt(&globals, &context.liquid, &context.markdown)
         .chain_err(|| format!("Failed to render excerpt for {:?}", doc.file_path))?;
-    doc.render_content(&globals, parser, &config.markdown)
+    doc.render_content(&globals, &context.liquid, &context.markdown)
         .chain_err(|| format!("Failed to render content for {:?}", doc.file_path))?;
 
     // Refresh `page` with the `excerpt` / `content` attribute
     globals.insert("page".to_owned(),
                    liquid::Value::Object(doc.attributes.clone()));
-    let doc_html = doc.render(&globals, parser, &layouts)
+    let doc_html = doc.render(&globals, &context.liquid, &context.layouts)
         .chain_err(|| format!("Failed to render for {:?}", doc.file_path))?;
-    files::write_document_file(doc_html, dest.join(&doc.file_path))?;
+    files::write_document_file(doc_html, context.destination.join(&doc.file_path))?;
     Ok(())
 }
 
-fn generate_pages(posts: Vec<Document>,
-                  documents: Vec<Document>,
-                  config: &Config,
-                  parser: &cobalt_model::Liquid,
-                  dest: &Path,
-                  layouts: &HashMap<String, String>)
-                  -> Result<()> {
+fn generate_pages(posts: Vec<Document>, documents: Vec<Document>, context: &Context) -> Result<()> {
     // during post rendering additional attributes such as content were
     // added to posts. collect them so that non-post documents can access them
     let posts_data: Vec<liquid::Value> = posts
@@ -113,18 +142,13 @@ fn generate_pages(posts: Vec<Document>,
     trace!("Generating other documents");
     for mut doc in documents {
         trace!("Generating {}", doc.url_path);
-        generate_doc(dest, &layouts, parser, &posts_data, &mut doc, config)?;
+        generate_doc(&posts_data, &mut doc, context)?;
     }
 
     Ok(())
 }
 
-fn generate_posts(posts: &mut Vec<Document>,
-                  config: &Config,
-                  parser: &cobalt_model::Liquid,
-                  dest: &Path,
-                  layouts: &HashMap<String, String>)
-                  -> Result<()> {
+fn generate_posts(posts: &mut Vec<Document>, context: &Context) -> Result<()> {
     // collect all posts attributes to pass them to other posts for rendering
     let simple_posts_data: Vec<liquid::Value> = posts
         .iter()
@@ -150,7 +174,7 @@ fn generate_posts(posts: &mut Vec<Document>,
             .unwrap_or(liquid::Value::Nil);
         post.attributes.insert("next".to_owned(), next);
 
-        generate_doc(dest, &layouts, parser, &simple_posts_data, post, config)?;
+        generate_doc(&simple_posts_data, post, context)?;
     }
 
     Ok(())
@@ -178,7 +202,7 @@ fn sort_pages(posts: &mut Vec<Document>, collection: &Collection) -> Result<()> 
     Ok(())
 }
 
-fn parse_drafts(drafts_root: &PathBuf,
+fn parse_drafts(drafts_root: &path::PathBuf,
                 draft_files: &files::Files,
                 documents: &mut Vec<Document>,
                 collection: &Collection)
@@ -188,7 +212,7 @@ fn parse_drafts(drafts_root: &PathBuf,
         let rel_src = file_path
             .strip_prefix(&drafts_root)
             .expect("file was found under the root");
-        let new_path = Path::new(&collection.dir).join(rel_src);
+        let new_path = path::Path::new(&collection.dir).join(rel_src);
 
         let default_front = collection.default.clone().set_draft(true);
 
@@ -200,7 +224,7 @@ fn parse_drafts(drafts_root: &PathBuf,
 }
 
 fn process_included_drafts(collection: &Collection,
-                           source: &Path,
+                           source: &path::Path,
                            documents: &mut Vec<Document>)
                            -> Result<()> {
     if collection.include_drafts {
@@ -215,7 +239,7 @@ fn process_included_drafts(collection: &Collection,
     Ok(())
 }
 
-fn find_post_files(source: &Path, collection: &Collection) -> Result<files::Files> {
+fn find_post_files(source: &path::Path, collection: &Collection) -> Result<files::Files> {
     let mut page_files = files::FilesBuilder::new(source)?;
     page_files
         .add_ignore(&format!("!/{}", collection.dir))?
@@ -228,11 +252,13 @@ fn find_post_files(source: &Path, collection: &Collection) -> Result<files::File
     for ext in collection.template_extensions.iter() {
         page_files.add_extension(ext)?;
     }
-    page_files.limit(PathBuf::from(&collection.dir))?;
+    page_files.limit(path::PathBuf::from(&collection.dir))?;
     page_files.build()
 }
 
-fn find_post_draft_files(drafts_root: &Path, collection: &Collection) -> Result<files::Files> {
+fn find_post_draft_files(drafts_root: &path::Path,
+                         collection: &Collection)
+                         -> Result<files::Files> {
     let mut page_files = files::FilesBuilder::new(drafts_root)?;
     for line in &collection.ignore {
         page_files.add_ignore(line.as_str())?;
@@ -243,7 +269,7 @@ fn find_post_draft_files(drafts_root: &Path, collection: &Collection) -> Result<
     page_files.build()
 }
 
-fn find_page_files(source: &Path, collection: &Collection) -> Result<files::Files> {
+fn find_page_files(source: &path::Path, collection: &Collection) -> Result<files::Files> {
     let mut page_files = files::FilesBuilder::new(source)?;
     for line in &collection.ignore {
         page_files.add_ignore(line.as_str())?;
@@ -254,7 +280,7 @@ fn find_page_files(source: &Path, collection: &Collection) -> Result<files::File
     page_files.build()
 }
 
-fn find_layouts(layouts: &Path) -> Result<files::Files> {
+fn find_layouts(layouts: &path::Path) -> Result<files::Files> {
     let mut files = files::FilesBuilder::new(layouts)?;
     files.ignore_hidden(false)?;
     files.build()
@@ -293,7 +319,7 @@ fn parse_layouts(files: files::Files) -> HashMap<String, String> {
 
 fn parse_pages(page_files: &files::Files,
                collection: &Collection,
-               source: &Path)
+               source: &path::Path)
                -> Result<Vec<Document>> {
     let mut documents = vec![];
     for file_path in page_files.files() {
@@ -314,7 +340,7 @@ fn parse_pages(page_files: &files::Files,
 
 // creates a new RSS file with the contents of the site blog
 fn create_rss(path: &str,
-              dest: &Path,
+              dest: &path::Path,
               collection: &Collection,
               documents: &[Document])
               -> Result<()> {
@@ -362,7 +388,7 @@ fn create_rss(path: &str,
 
 // creates a new jsonfeed file with the contents of the site blog
 fn create_jsonfeed(path: &str,
-                   dest: &Path,
+                   dest: &path::Path,
                    collection: &Collection,
                    documents: &[Document])
                    -> Result<()> {
