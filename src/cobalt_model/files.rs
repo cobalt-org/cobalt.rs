@@ -7,7 +7,7 @@ use std::iter::FromIterator;
 
 use ignore::Match;
 use ignore::gitignore::{Gitignore, GitignoreBuilder};
-use walkdir::{WalkDir, DirEntry};
+use walkdir::{DirEntry, WalkDir};
 use normalize_line_endings::normalized;
 use error::Result;
 
@@ -95,7 +95,9 @@ impl<'a> FilesIterator<'a> {
             .filter_map(|e| e.ok())
             .filter(|e| e.file_type().is_file())
             .map(move |e| e.path().to_path_buf());
-        FilesIterator { inner: Box::new(walker) }
+        FilesIterator {
+            inner: Box::new(walker),
+        }
     }
 }
 
@@ -176,7 +178,6 @@ impl Files {
             if !file.starts_with(subtree) {
                 return false;
             }
-
         }
 
         // Assumption: The parent paths will have been checked before we even get to this point.
@@ -263,8 +264,7 @@ pub fn read_file<P: AsRef<path::Path>>(path: P) -> Result<String> {
 pub fn copy_file(src_file: &path::Path, dest_file: &path::Path) -> Result<()> {
     // create target directories if any exist
     if let Some(parent) = dest_file.parent() {
-        fs::create_dir_all(parent)
-            .map_err(|e| format!("Could not create {:?}: {}", parent, e))?;
+        fs::create_dir_all(parent).map_err(|e| format!("Could not create {:?}: {}", parent, e))?;
     }
 
     debug!("Copying {:?} to {:?}", src_file, dest_file);
@@ -273,17 +273,17 @@ pub fn copy_file(src_file: &path::Path, dest_file: &path::Path) -> Result<()> {
     Ok(())
 }
 
-pub fn write_document_file<S: AsRef<str>, P: AsRef<path::Path>>(content: S,
-                                                                dest_file: P)
-                                                                -> Result<()> {
+pub fn write_document_file<S: AsRef<str>, P: AsRef<path::Path>>(
+    content: S,
+    dest_file: P,
+) -> Result<()> {
     write_document_file_internal(content.as_ref(), dest_file.as_ref())
 }
 
 fn write_document_file_internal(content: &str, dest_file: &path::Path) -> Result<()> {
     // create target directories if any exist
     if let Some(parent) = dest_file.parent() {
-        fs::create_dir_all(parent)
-            .map_err(|e| format!("Could not create {:?}: {}", parent, e))?;
+        fs::create_dir_all(parent).map_err(|e| format!("Could not create {:?}: {}", parent, e))?;
     }
 
     let mut file = fs::File::create(dest_file)
@@ -338,14 +338,18 @@ mod tests {
     #[test]
     fn files_excludes_hidden_dir() {
         assert_includes_dir!("/usr/cobalt/site", &[], "/usr/cobalt/site/_child", false);
-        assert_includes_dir!("/usr/cobalt/site",
-                             &[],
-                             "/usr/cobalt/site/child/_child",
-                             false);
-        assert_includes_dir!("/usr/cobalt/site",
-                             &[],
-                             "/usr/cobalt/site/_child/child",
-                             false);
+        assert_includes_dir!(
+            "/usr/cobalt/site",
+            &[],
+            "/usr/cobalt/site/child/_child",
+            false
+        );
+        assert_includes_dir!(
+            "/usr/cobalt/site",
+            &[],
+            "/usr/cobalt/site/_child/child",
+            false
+        );
 
         assert_includes_dir!("./", &[], "./_child", false);
         assert_includes_dir!("./", &[], "./child/_child", false);
@@ -355,14 +359,18 @@ mod tests {
     #[test]
     fn files_excludes_dot_dir() {
         assert_includes_dir!("/usr/cobalt/site", &[], "/usr/cobalt/site/.child", false);
-        assert_includes_dir!("/usr/cobalt/site",
-                             &[],
-                             "/usr/cobalt/site/child/.child",
-                             false);
-        assert_includes_dir!("/usr/cobalt/site",
-                             &[],
-                             "/usr/cobalt/site/.child/child",
-                             false);
+        assert_includes_dir!(
+            "/usr/cobalt/site",
+            &[],
+            "/usr/cobalt/site/child/.child",
+            false
+        );
+        assert_includes_dir!(
+            "/usr/cobalt/site",
+            &[],
+            "/usr/cobalt/site/.child/child",
+            false
+        );
 
         assert_includes_dir!("./", &[], "./.child", false);
         assert_includes_dir!("./", &[], "./child/.child", false);
@@ -378,24 +386,30 @@ mod tests {
 
     #[test]
     fn files_includes_child_dir_file() {
-        assert_includes_file!("/usr/cobalt/site",
-                              &[],
-                              "/usr/cobalt/site/child/child.txt",
-                              true);
+        assert_includes_file!(
+            "/usr/cobalt/site",
+            &[],
+            "/usr/cobalt/site/child/child.txt",
+            true
+        );
 
         assert_includes_file!("./", &[], "./child/child.txt", true);
     }
 
     #[test]
     fn files_excludes_hidden_file() {
-        assert_includes_file!("/usr/cobalt/site",
-                              &[],
-                              "/usr/cobalt/site/_child.txt",
-                              false);
-        assert_includes_file!("/usr/cobalt/site",
-                              &[],
-                              "/usr/cobalt/site/child/_child.txt",
-                              false);
+        assert_includes_file!(
+            "/usr/cobalt/site",
+            &[],
+            "/usr/cobalt/site/_child.txt",
+            false
+        );
+        assert_includes_file!(
+            "/usr/cobalt/site",
+            &[],
+            "/usr/cobalt/site/child/_child.txt",
+            false
+        );
 
         assert_includes_file!("./", &[], "./_child.txt", false);
         assert_includes_file!("./", &[], "./child/_child.txt", false);
@@ -403,14 +417,18 @@ mod tests {
 
     #[test]
     fn files_excludes_hidden_dir_file() {
-        assert_includes_file!("/usr/cobalt/site",
-                              &[],
-                              "/usr/cobalt/site/_child/child.txt",
-                              false);
-        assert_includes_file!("/usr/cobalt/site",
-                              &[],
-                              "/usr/cobalt/site/child/_child/child.txt",
-                              false);
+        assert_includes_file!(
+            "/usr/cobalt/site",
+            &[],
+            "/usr/cobalt/site/_child/child.txt",
+            false
+        );
+        assert_includes_file!(
+            "/usr/cobalt/site",
+            &[],
+            "/usr/cobalt/site/child/_child/child.txt",
+            false
+        );
 
         assert_includes_file!("./", &[], "./_child/child.txt", false);
         assert_includes_file!("./", &[], "./child/_child/child.txt", false);
@@ -418,14 +436,18 @@ mod tests {
 
     #[test]
     fn files_excludes_dot_file() {
-        assert_includes_file!("/usr/cobalt/site",
-                              &[],
-                              "/usr/cobalt/site/.child.txt",
-                              false);
-        assert_includes_file!("/usr/cobalt/site",
-                              &[],
-                              "/usr/cobalt/site/child/.child.txt",
-                              false);
+        assert_includes_file!(
+            "/usr/cobalt/site",
+            &[],
+            "/usr/cobalt/site/.child.txt",
+            false
+        );
+        assert_includes_file!(
+            "/usr/cobalt/site",
+            &[],
+            "/usr/cobalt/site/child/.child.txt",
+            false
+        );
 
         assert_includes_file!("./", &[], "./.child.txt", false);
         assert_includes_file!("./", &[], "./child/.child.txt", false);
@@ -433,14 +455,18 @@ mod tests {
 
     #[test]
     fn files_excludes_dot_dir_file() {
-        assert_includes_file!("/usr/cobalt/site",
-                              &[],
-                              "/usr/cobalt/site/.child/child.txt",
-                              false);
-        assert_includes_file!("/usr/cobalt/site",
-                              &[],
-                              "/usr/cobalt/site/child/.child/child.txt",
-                              false);
+        assert_includes_file!(
+            "/usr/cobalt/site",
+            &[],
+            "/usr/cobalt/site/.child/child.txt",
+            false
+        );
+        assert_includes_file!(
+            "/usr/cobalt/site",
+            &[],
+            "/usr/cobalt/site/child/.child/child.txt",
+            false
+        );
 
         assert_includes_file!("./", &[], "./.child/child.txt", false);
         assert_includes_file!("./", &[], "./child/.child/child.txt", false);
@@ -450,22 +476,30 @@ mod tests {
     fn files_excludes_ignored_file() {
         let ignores = &["README", "**/*.scss"];
 
-        assert_includes_file!("/usr/cobalt/site",
-                              ignores,
-                              "/usr/cobalt/site/README",
-                              false);
-        assert_includes_file!("/usr/cobalt/site",
-                              ignores,
-                              "/usr/cobalt/site/child/README",
-                              false);
-        assert_includes_file!("/usr/cobalt/site",
-                              ignores,
-                              "/usr/cobalt/site/blog.scss",
-                              false);
-        assert_includes_file!("/usr/cobalt/site",
-                              ignores,
-                              "/usr/cobalt/site/child/blog.scss",
-                              false);
+        assert_includes_file!(
+            "/usr/cobalt/site",
+            ignores,
+            "/usr/cobalt/site/README",
+            false
+        );
+        assert_includes_file!(
+            "/usr/cobalt/site",
+            ignores,
+            "/usr/cobalt/site/child/README",
+            false
+        );
+        assert_includes_file!(
+            "/usr/cobalt/site",
+            ignores,
+            "/usr/cobalt/site/blog.scss",
+            false
+        );
+        assert_includes_file!(
+            "/usr/cobalt/site",
+            ignores,
+            "/usr/cobalt/site/child/blog.scss",
+            false
+        );
 
         assert_includes_file!("./", ignores, "./README", false);
         assert_includes_file!("./", ignores, "./child/README", false);
@@ -477,14 +511,18 @@ mod tests {
     fn files_includes_overriden_file() {
         let ignores = &["!.htaccess"];
 
-        assert_includes_file!("/usr/cobalt/site",
-                              ignores,
-                              "/usr/cobalt/site/.htaccess",
-                              true);
-        assert_includes_file!("/usr/cobalt/site",
-                              ignores,
-                              "/usr/cobalt/site/child/.htaccess",
-                              true);
+        assert_includes_file!(
+            "/usr/cobalt/site",
+            ignores,
+            "/usr/cobalt/site/.htaccess",
+            true
+        );
+        assert_includes_file!(
+            "/usr/cobalt/site",
+            ignores,
+            "/usr/cobalt/site/child/.htaccess",
+            true
+        );
 
         assert_includes_file!("./", ignores, "./.htaccess", true);
         assert_includes_file!("./", ignores, "./child/.htaccess", true);
@@ -495,29 +533,39 @@ mod tests {
         let ignores = &["!_posts", "!_posts/**", "_posts/**/_*", "_posts/**/_*/**"];
 
         assert_includes_dir!("/usr/cobalt/site", ignores, "/usr/cobalt/site/_posts", true);
-        assert_includes_dir!("/usr/cobalt/site",
-                             ignores,
-                             "/usr/cobalt/site/_posts/child",
-                             true);
+        assert_includes_dir!(
+            "/usr/cobalt/site",
+            ignores,
+            "/usr/cobalt/site/_posts/child",
+            true
+        );
 
         // TODO These two cases should instead fail
-        assert_includes_dir!("/usr/cobalt/site",
-                             ignores,
-                             "/usr/cobalt/site/child/_posts",
-                             true);
-        assert_includes_dir!("/usr/cobalt/site",
-                             ignores,
-                             "/usr/cobalt/site/child/_posts/child",
-                             true);
+        assert_includes_dir!(
+            "/usr/cobalt/site",
+            ignores,
+            "/usr/cobalt/site/child/_posts",
+            true
+        );
+        assert_includes_dir!(
+            "/usr/cobalt/site",
+            ignores,
+            "/usr/cobalt/site/child/_posts/child",
+            true
+        );
 
-        assert_includes_dir!("/usr/cobalt/site",
-                             ignores,
-                             "/usr/cobalt/site/_posts/child/_child",
-                             false);
-        assert_includes_dir!("/usr/cobalt/site",
-                             ignores,
-                             "/usr/cobalt/site/_posts/child/_child/child",
-                             false);
+        assert_includes_dir!(
+            "/usr/cobalt/site",
+            ignores,
+            "/usr/cobalt/site/_posts/child/_child",
+            false
+        );
+        assert_includes_dir!(
+            "/usr/cobalt/site",
+            ignores,
+            "/usr/cobalt/site/_posts/child/_child/child",
+            false
+        );
 
         assert_includes_dir!("./", ignores, "./_posts", true);
         assert_includes_dir!("./", ignores, "./_posts/child", true);
@@ -534,33 +582,45 @@ mod tests {
     fn files_includes_overriden_dir_file() {
         let ignores = &["!_posts", "!_posts/**", "_posts/**/_*", "_posts/**/_*/**"];
 
-        assert_includes_file!("/usr/cobalt/site",
-                              ignores,
-                              "/usr/cobalt/site/_posts/child.txt",
-                              true);
-        assert_includes_file!("/usr/cobalt/site",
-                              ignores,
-                              "/usr/cobalt/site/_posts/child/child.txt",
-                              true);
+        assert_includes_file!(
+            "/usr/cobalt/site",
+            ignores,
+            "/usr/cobalt/site/_posts/child.txt",
+            true
+        );
+        assert_includes_file!(
+            "/usr/cobalt/site",
+            ignores,
+            "/usr/cobalt/site/_posts/child/child.txt",
+            true
+        );
 
         // TODO These two cases should instead fail
-        assert_includes_file!("/usr/cobalt/site",
-                              ignores,
-                              "/usr/cobalt/site/child/_posts/child.txt",
-                              true);
-        assert_includes_file!("/usr/cobalt/site",
-                              ignores,
-                              "/usr/cobalt/site/child/_posts/child/child.txt",
-                              true);
+        assert_includes_file!(
+            "/usr/cobalt/site",
+            ignores,
+            "/usr/cobalt/site/child/_posts/child.txt",
+            true
+        );
+        assert_includes_file!(
+            "/usr/cobalt/site",
+            ignores,
+            "/usr/cobalt/site/child/_posts/child/child.txt",
+            true
+        );
 
-        assert_includes_file!("/usr/cobalt/site",
-                              ignores,
-                              "/usr/cobalt/site/_posts/child/_child.txt",
-                              false);
-        assert_includes_file!("/usr/cobalt/site",
-                              ignores,
-                              "/usr/cobalt/site/_posts/child/_child/child.txt",
-                              false);
+        assert_includes_file!(
+            "/usr/cobalt/site",
+            ignores,
+            "/usr/cobalt/site/_posts/child/_child.txt",
+            false
+        );
+        assert_includes_file!(
+            "/usr/cobalt/site",
+            ignores,
+            "/usr/cobalt/site/_posts/child/_child/child.txt",
+            false
+        );
 
         assert_includes_file!("./", ignores, "./_posts/child.txt", true);
         assert_includes_file!("./", ignores, "./_posts/child/child.txt", true);
@@ -621,8 +681,10 @@ mod tests {
             .collect();
         actual.sort();
 
-        let expected = vec![path::Path::new("child/child.txt").to_path_buf(),
-                            path::Path::new("child.txt").to_path_buf()];
+        let expected = vec![
+            path::Path::new("child/child.txt").to_path_buf(),
+            path::Path::new("child.txt").to_path_buf(),
+        ];
 
         assert_eq!(expected, actual);
     }
@@ -644,8 +706,8 @@ mod tests {
     #[test]
     fn find_project_file_doesnt_exist() {
         let expected = path::Path::new("<NOT FOUND>");
-        let actual = find_project_file("tests/fixtures/", "_cobalt.yml")
-            .unwrap_or_else(|| expected.into());
+        let actual =
+            find_project_file("tests/fixtures/", "_cobalt.yml").unwrap_or_else(|| expected.into());
         assert_eq!(actual, expected);
     }
 
@@ -671,8 +733,10 @@ mod tests {
 
     #[test]
     fn cleanup_path_current_dir_child() {
-        assert_eq!(cleanup_path("./build/file.txt".to_owned()),
-                   "build/file.txt".to_owned());
+        assert_eq!(
+            cleanup_path("./build/file.txt".to_owned()),
+            "build/file.txt".to_owned()
+        );
     }
 
 }

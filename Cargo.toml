@@ -67,7 +67,6 @@ tempdir = "0.3"
 [features]
 default = ["syntax-highlight"]
 unstable = []
-dev = []
 
 syntax-highlight = ["syntect"]
 sass = ['sass-rs']

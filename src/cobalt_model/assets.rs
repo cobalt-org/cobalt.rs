@@ -6,8 +6,7 @@ use super::files;
 
 use error::*;
 
-#[derive(Debug, Clone, PartialEq, Default)]
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
 #[serde(deny_unknown_fields, default)]
 pub struct AssetsBuilder {
     pub sass: sass::SassBuilder,

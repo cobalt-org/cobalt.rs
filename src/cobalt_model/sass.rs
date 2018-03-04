@@ -6,8 +6,7 @@ use sass_rs;
 use error::*;
 use super::files;
 
-#[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Hash, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub enum SassOutputStyle {
     Nested,
@@ -22,8 +21,7 @@ impl Default for SassOutputStyle {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Default)]
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
 #[serde(deny_unknown_fields, default)]
 pub struct SassBuilder {
     pub import_dir: Option<String>,
@@ -54,21 +52,22 @@ impl Default for SassCompiler {
 }
 
 impl SassCompiler {
-    pub fn compile_file<S: AsRef<path::Path>, D: AsRef<path::Path>, F: AsRef<path::Path>>
-        (&self,
-         source: S,
-         dest: D,
-         file_path: F)
-         -> Result<()> {
+    pub fn compile_file<S: AsRef<path::Path>, D: AsRef<path::Path>, F: AsRef<path::Path>>(
+        &self,
+        source: S,
+        dest: D,
+        file_path: F,
+    ) -> Result<()> {
         self.compile_sass_internal(source.as_ref(), dest.as_ref(), file_path.as_ref())
     }
 
     #[cfg(feature = "sass")]
-    fn compile_sass_internal(&self,
-                             source: &path::Path,
-                             dest: &path::Path,
-                             file_path: &path::Path)
-                             -> Result<()> {
+    fn compile_sass_internal(
+        &self,
+        source: &path::Path,
+        dest: &path::Path,
+        file_path: &path::Path,
+    ) -> Result<()> {
         let mut sass_opts = sass_rs::Options::default();
         sass_opts.include_paths = self.import_dir.iter().cloned().collect();
         sass_opts.output_style = match self.style {
@@ -89,11 +88,12 @@ impl SassCompiler {
     }
 
     #[cfg(not(feature = "sass"))]
-    fn compile_sass_internal(&self,
-                             source: &path::Path,
-                             dest: &path::Path,
-                             file_path: &path::Path)
-                             -> Result<()> {
+    fn compile_sass_internal(
+        &self,
+        source: &path::Path,
+        dest: &path::Path,
+        file_path: &path::Path,
+    ) -> Result<()> {
         let rel_src = file_path
             .strip_prefix(source)
             .expect("file was found under the root");

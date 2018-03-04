@@ -15,8 +15,7 @@ use super::sass;
 use super::site;
 use super::template;
 
-#[derive(Debug, Clone, PartialEq)]
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields, default)]
 pub struct SyntaxHighlight {
     pub theme: String,
@@ -24,26 +23,28 @@ pub struct SyntaxHighlight {
 
 impl Default for SyntaxHighlight {
     fn default() -> Self {
-        Self { theme: "base16-ocean.dark".to_owned() }
+        Self {
+            theme: "base16-ocean.dark".to_owned(),
+        }
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Default)]
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
 #[serde(deny_unknown_fields, default)]
 pub struct PageConfig {
     pub default: frontmatter::FrontmatterBuilder,
 }
 
 impl PageConfig {
-    fn builder(self,
-               source: &path::Path,
-               site: &SiteConfig,
-               posts: &PostConfig,
-               common_default: &frontmatter::FrontmatterBuilder,
-               ignore: &[String],
-               template_extensions: &[String])
-               -> collection::CollectionBuilder {
+    fn builder(
+        self,
+        source: &path::Path,
+        site: &SiteConfig,
+        posts: &PostConfig,
+        common_default: &frontmatter::FrontmatterBuilder,
+        ignore: &[String],
+        template_extensions: &[String],
+    ) -> collection::CollectionBuilder {
         let mut ignore = ignore.to_vec();
         ignore.push(format!("/{}", posts.dir));
         if let Some(ref drafts_dir) = posts.drafts_dir {
@@ -71,8 +72,7 @@ impl PageConfig {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields, default)]
 pub struct PostConfig {
     pub title: Option<String>,
@@ -86,14 +86,15 @@ pub struct PostConfig {
 }
 
 impl PostConfig {
-    fn builder(self,
-               source: &path::Path,
-               site: &SiteConfig,
-               include_drafts: bool,
-               common_default: &frontmatter::FrontmatterBuilder,
-               ignore: &[String],
-               template_extensions: &[String])
-               -> collection::CollectionBuilder {
+    fn builder(
+        self,
+        source: &path::Path,
+        site: &SiteConfig,
+        include_drafts: bool,
+        common_default: &frontmatter::FrontmatterBuilder,
+        ignore: &[String],
+        template_extensions: &[String],
+    ) -> collection::CollectionBuilder {
         let PostConfig {
             title,
             description,
@@ -107,9 +108,11 @@ impl PostConfig {
         // Default with `site` for people quickly bootstrapping a blog, the blog and site are
         // effectively equivalent.
         collection::CollectionBuilder {
-            title: Some(title
-                            .or_else(|| site.title.clone())
-                            .unwrap_or_else(|| "".to_owned())),
+            title: Some(
+                title
+                    .or_else(|| site.title.clone())
+                    .unwrap_or_else(|| "".to_owned()),
+            ),
             slug: Some("posts".to_owned()),
             description: description.or_else(|| site.description.clone()),
             source: Some(source.to_owned()),
@@ -142,16 +145,14 @@ impl Default for PostConfig {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields, default)]
 pub struct SiteConfig {
     pub title: Option<String>,
     pub description: Option<String>,
     pub base_url: Option<String>,
     pub data: Option<liquid::Object>,
-    #[serde(skip)]
-    pub data_dir: &'static str,
+    #[serde(skip)] pub data_dir: &'static str,
 }
 
 impl SiteConfig {
@@ -178,12 +179,10 @@ impl Default for SiteConfig {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields, default)]
 pub struct SassConfig {
-    #[serde(skip)]
-    pub import_dir: &'static str,
+    #[serde(skip)] pub import_dir: &'static str,
     pub style: sass::SassOutputStyle,
 }
 
@@ -209,19 +208,19 @@ impl Default for SassConfig {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Default)]
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
 #[serde(deny_unknown_fields, default)]
 pub struct AssetsConfig {
     pub sass: SassConfig,
 }
 
 impl AssetsConfig {
-    fn builder(self,
-               source: &path::Path,
-               ignore: &[String],
-               template_extensions: &[String])
-               -> assets::AssetsBuilder {
+    fn builder(
+        self,
+        source: &path::Path,
+        ignore: &[String],
+        template_extensions: &[String],
+    ) -> assets::AssetsBuilder {
         assets::AssetsBuilder {
             sass: self.sass.builder(source),
             source: Some(source.to_owned()),
@@ -231,16 +230,13 @@ impl AssetsConfig {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields, default)]
 pub struct ConfigBuilder {
-    #[serde(skip)]
-    pub root: path::PathBuf,
+    #[serde(skip)] pub root: path::PathBuf,
     pub source: String,
     pub destination: String,
-    #[serde(skip)]
-    pub abs_dest: Option<path::PathBuf>,
+    #[serde(skip)] pub abs_dest: Option<path::PathBuf>,
     pub include_drafts: bool,
     pub default: frontmatter::FrontmatterBuilder,
     pub pages: PageConfig,
@@ -249,10 +245,8 @@ pub struct ConfigBuilder {
     pub template_extensions: Vec<String>,
     pub ignore: Vec<String>,
     pub syntax_highlight: SyntaxHighlight,
-    #[serde(skip)]
-    pub layouts_dir: &'static str,
-    #[serde(skip)]
-    pub includes_dir: &'static str,
+    #[serde(skip)] pub layouts_dir: &'static str,
+    #[serde(skip)] pub includes_dir: &'static str,
     pub assets: AssetsConfig,
 }
 
@@ -307,9 +301,9 @@ impl ConfigBuilder {
         let file_path = files::find_project_file(&cwd, "_cobalt.yml");
         let config = file_path
             .map(|p| {
-                     debug!("Using config file {:?}", &p);
-                     Self::from_file(&p).chain_err(|| format!("Error reading config file {:?}", p))
-                 })
+                debug!("Using config file {:?}", &p);
+                Self::from_file(&p).chain_err(|| format!("Error reading config file {:?}", p))
+            })
             .unwrap_or_else(|| {
                 warn!("No _cobalt.yml file found in current directory, using default config.");
                 let config = ConfigBuilder {
@@ -358,19 +352,23 @@ impl ConfigBuilder {
         let source = root.join(source);
         let destination = abs_dest.unwrap_or_else(|| root.join(destination));
 
-        let pages = pages.builder(&source,
-                                  &site,
-                                  &posts,
-                                  &default,
-                                  &ignore,
-                                  &template_extensions);
+        let pages = pages.builder(
+            &source,
+            &site,
+            &posts,
+            &default,
+            &ignore,
+            &template_extensions,
+        );
 
-        let posts = posts.builder(&source,
-                                  &site,
-                                  include_drafts,
-                                  &default,
-                                  &ignore,
-                                  &template_extensions);
+        let posts = posts.builder(
+            &source,
+            &site,
+            include_drafts,
+            &default,
+            &ignore,
+            &template_extensions,
+        );
 
         let site = site.builder(&source);
 
@@ -384,7 +382,9 @@ impl ConfigBuilder {
             legacy_path: source.clone(),
             theme: syntax_highlight.theme.clone(),
         };
-        let markdown = mark::MarkdownBuilder { theme: syntax_highlight.theme };
+        let markdown = mark::MarkdownBuilder {
+            theme: syntax_highlight.theme,
+        };
 
         let config = Config {
             source,
@@ -410,8 +410,7 @@ impl fmt::Display for ConfigBuilder {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields, default)]
 pub struct Config {
     pub source: path::PathBuf,
@@ -444,22 +443,28 @@ impl fmt::Display for Config {
 #[test]
 fn test_from_file_ok() {
     let result = ConfigBuilder::from_file("tests/fixtures/config/_cobalt.yml").unwrap();
-    assert_eq!(result.root,
-               path::Path::new("tests/fixtures/config").to_path_buf());
+    assert_eq!(
+        result.root,
+        path::Path::new("tests/fixtures/config").to_path_buf()
+    );
 }
 
 #[test]
 fn test_from_file_alternate_name() {
     let result = ConfigBuilder::from_file("tests/fixtures/config/rss.yml").unwrap();
-    assert_eq!(result.root,
-               path::Path::new("tests/fixtures/config").to_path_buf());
+    assert_eq!(
+        result.root,
+        path::Path::new("tests/fixtures/config").to_path_buf()
+    );
 }
 
 #[test]
 fn test_from_file_empty() {
     let result = ConfigBuilder::from_file("tests/fixtures/config/empty.yml").unwrap();
-    assert_eq!(result.root,
-               path::Path::new("tests/fixtures/config").to_path_buf());
+    assert_eq!(
+        result.root,
+        path::Path::new("tests/fixtures/config").to_path_buf()
+    );
 }
 
 #[test]
@@ -477,8 +482,10 @@ fn test_from_file_not_found() {
 #[test]
 fn test_from_cwd_ok() {
     let result = ConfigBuilder::from_cwd("tests/fixtures/config/child").unwrap();
-    assert_eq!(result.root,
-               path::Path::new("tests/fixtures/config").to_path_buf());
+    assert_eq!(
+        result.root,
+        path::Path::new("tests/fixtures/config").to_path_buf()
+    );
 }
 
 #[test]
@@ -497,10 +504,14 @@ fn test_build_default() {
 fn test_build_dest() {
     let result = ConfigBuilder::from_file("tests/fixtures/config/_cobalt.yml").unwrap();
     let result = result.build().unwrap();
-    assert_eq!(result.source,
-               path::Path::new("tests/fixtures/config").to_path_buf());
-    assert_eq!(result.destination,
-               path::Path::new("tests/fixtures/config/dest").to_path_buf());
+    assert_eq!(
+        result.source,
+        path::Path::new("tests/fixtures/config").to_path_buf()
+    );
+    assert_eq!(
+        result.destination,
+        path::Path::new("tests/fixtures/config/dest").to_path_buf()
+    );
 }
 
 #[test]
@@ -508,8 +519,12 @@ fn test_build_abs_dest() {
     let mut result = ConfigBuilder::from_file("tests/fixtures/config/_cobalt.yml").unwrap();
     result.abs_dest = Some(path::PathBuf::from("hello/world"));
     let result = result.build().unwrap();
-    assert_eq!(result.source,
-               path::Path::new("tests/fixtures/config").to_path_buf());
-    assert_eq!(result.destination,
-               path::Path::new("hello/world").to_path_buf());
+    assert_eq!(
+        result.source,
+        path::Path::new("tests/fixtures/config").to_path_buf()
+    );
+    assert_eq!(
+        result.destination,
+        path::Path::new("hello/world").to_path_buf()
+    );
 }

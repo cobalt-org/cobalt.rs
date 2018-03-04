@@ -70,7 +70,6 @@ fn split_document(content: &str) -> Result<(Option<&str>, &str)> {
     }
 }
 
-
 #[cfg(test)]
 mod test {
     use super::*;

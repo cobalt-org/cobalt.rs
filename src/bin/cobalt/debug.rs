@@ -8,16 +8,22 @@ pub fn debug_command_args() -> clap::App<'static, 'static> {
     clap::SubCommand::with_name("debug")
         .about("Print site debug information")
         .subcommand(clap::SubCommand::with_name("config").about("Prints post-processed config"))
-        .subcommand(clap::SubCommand::with_name("highlight")
-                        .about("Print syntax-highlight information")
-                        .subcommand(clap::SubCommand::with_name("themes"))
-                        .subcommand(clap::SubCommand::with_name("syntaxes")))
-        .subcommand(clap::SubCommand::with_name("files")
-                        .about("Print files associated with a collection")
-                        .args(&args::get_config_args())
-                        .arg(clap::Arg::with_name("COLLECTION")
-                                 .help("Collection name")
-                                 .index(1)))
+        .subcommand(
+            clap::SubCommand::with_name("highlight")
+                .about("Print syntax-highlight information")
+                .subcommand(clap::SubCommand::with_name("themes"))
+                .subcommand(clap::SubCommand::with_name("syntaxes")),
+        )
+        .subcommand(
+            clap::SubCommand::with_name("files")
+                .about("Print files associated with a collection")
+                .args(&args::get_config_args())
+                .arg(
+                    clap::Arg::with_name("COLLECTION")
+                        .help("Collection name")
+                        .index(1),
+                ),
+        )
 }
 
 pub fn debug_command(matches: &clap::ArgMatches) -> Result<()> {
@@ -27,21 +33,15 @@ pub fn debug_command(matches: &clap::ArgMatches) -> Result<()> {
             let config = config.build()?;
             println!("{}", config);
         }
-        ("highlight", Some(matches)) => {
-            match matches.subcommand() {
-                ("themes", _) => {
-                    for name in cobalt::list_syntax_themes() {
-                        println!("{}", name);
-                    }
-                }
-                ("syntaxes", _) => {
-                    for name in cobalt::list_syntaxes() {
-                        println!("{}", name);
-                    }
-                }
-                _ => bail!(matches.usage()),
-            }
-        }
+        ("highlight", Some(matches)) => match matches.subcommand() {
+            ("themes", _) => for name in cobalt::list_syntax_themes() {
+                println!("{}", name);
+            },
+            ("syntaxes", _) => for name in cobalt::list_syntaxes() {
+                println!("{}", name);
+            },
+            _ => bail!(matches.usage()),
+        },
         ("files", Some(matches)) => {
             let config = args::get_config(matches)?;
             let config = config.build()?;

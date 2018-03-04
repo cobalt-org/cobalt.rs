@@ -104,19 +104,32 @@ fn generate_doc(posts_data: &[liquid::Value], doc: &mut Document, context: &Cont
     // Everything done with `globals` is terrible for performance.  liquid#95 allows us to
     // improve this.
     let mut posts_variable = context.posts.attributes.clone();
-    posts_variable.insert("pages".to_owned(),
-                          liquid::Value::Array(posts_data.to_vec()));
-    let global_collection: liquid::Object = vec![(context.posts.slug.clone(),
-                                                  liquid::Value::Object(posts_variable))]
-        .into_iter()
+    posts_variable.insert(
+        "pages".to_owned(),
+        liquid::Value::Array(posts_data.to_vec()),
+    );
+    let global_collection: liquid::Object = vec![
+        (
+            context.posts.slug.clone(),
+            liquid::Value::Object(posts_variable),
+        ),
+    ].into_iter()
         .collect();
-    let mut globals: liquid::Object =
-        vec![("site".to_owned(), liquid::Value::Object(context.site.clone())),
-             ("collections".to_owned(), liquid::Value::Object(global_collection))]
-            .into_iter()
-            .collect();
-    globals.insert("page".to_owned(),
-                   liquid::Value::Object(doc.attributes.clone()));
+    let mut globals: liquid::Object = vec![
+        (
+            "site".to_owned(),
+            liquid::Value::Object(context.site.clone()),
+        ),
+        (
+            "collections".to_owned(),
+            liquid::Value::Object(global_collection),
+        ),
+    ].into_iter()
+        .collect();
+    globals.insert(
+        "page".to_owned(),
+        liquid::Value::Object(doc.attributes.clone()),
+    );
 
     doc.render_excerpt(&globals, &context.liquid, &context.markdown)
         .chain_err(|| format!("Failed to render excerpt for {:?}", doc.file_path))?;
@@ -124,8 +137,10 @@ fn generate_doc(posts_data: &[liquid::Value], doc: &mut Document, context: &Cont
         .chain_err(|| format!("Failed to render content for {:?}", doc.file_path))?;
 
     // Refresh `page` with the `excerpt` / `content` attribute
-    globals.insert("page".to_owned(),
-                   liquid::Value::Object(doc.attributes.clone()));
+    globals.insert(
+        "page".to_owned(),
+        liquid::Value::Object(doc.attributes.clone()),
+    );
     let doc_html = doc.render(&globals, &context.liquid, &context.layouts)
         .chain_err(|| format!("Failed to render for {:?}", doc.file_path))?;
     files::write_document_file(doc_html, context.destination.join(&doc.file_path))?;
@@ -188,11 +203,11 @@ fn sort_pages(posts: &mut Vec<Document>, collection: &Collection) -> Result<()> 
     // sort documents by date, if there's no date (none was provided or it couldn't be read) then
     // fall back to the default date
     posts.sort_by(|a, b| {
-                      b.front
-                          .published_date
-                          .unwrap_or(default_date)
-                          .cmp(&a.front.published_date.unwrap_or(default_date))
-                  });
+        b.front
+            .published_date
+            .unwrap_or(default_date)
+            .cmp(&a.front.published_date.unwrap_or(default_date))
+    });
 
     match collection.order {
         SortOrder::Asc => posts.reverse(),
@@ -202,11 +217,12 @@ fn sort_pages(posts: &mut Vec<Document>, collection: &Collection) -> Result<()> 
     Ok(())
 }
 
-fn parse_drafts(drafts_root: &path::Path,
-                draft_files: &files::Files,
-                documents: &mut Vec<Document>,
-                collection: &Collection)
-                -> Result<()> {
+fn parse_drafts(
+    drafts_root: &path::Path,
+    draft_files: &files::Files,
+    documents: &mut Vec<Document>,
+    collection: &Collection,
+) -> Result<()> {
     let rel_real = collection
         .pages
         .subtree()
@@ -242,9 +258,8 @@ fn parse_layouts(files: files::Files) -> HashMap<String, String> {
                 .strip_prefix(files.root())
                 .expect("file was found under the root");
 
-            let layout_data =
-                files::read_file(&file_path)
-                    .map_err(|e| format!("Failed to load layout {:?}: {}", rel_src, e))?;
+            let layout_data = files::read_file(&file_path)
+                .map_err(|e| format!("Failed to load layout {:?}: {}", rel_src, e))?;
 
             let path = rel_src
                 .to_str()
@@ -265,10 +280,11 @@ fn parse_layouts(files: files::Files) -> HashMap<String, String> {
         .collect()
 }
 
-fn parse_pages(page_files: &files::Files,
-               collection: &Collection,
-               source: &path::Path)
-               -> Result<Vec<Document>> {
+fn parse_pages(
+    page_files: &files::Files,
+    collection: &Collection,
+    source: &path::Path,
+) -> Result<Vec<Document>> {
     let mut documents = vec![];
     for file_path in page_files.files() {
         let rel_src = file_path
@@ -287,11 +303,12 @@ fn parse_pages(page_files: &files::Files,
 }
 
 // creates a new RSS file with the contents of the site blog
-fn create_rss(path: &str,
-              dest: &path::Path,
-              collection: &Collection,
-              documents: &[Document])
-              -> Result<()> {
+fn create_rss(
+    path: &str,
+    dest: &path::Path,
+    collection: &Collection,
+    documents: &[Document],
+) -> Result<()> {
     let rss_path = dest.join(path);
     debug!("Creating RSS file at {}", rss_path.display());
 
@@ -321,13 +338,11 @@ fn create_rss(path: &str,
 
     // create target directories if any exist
     if let Some(parent) = rss_path.parent() {
-        fs::create_dir_all(parent)
-            .map_err(|e| format!("Could not create {:?}: {}", parent, e))?;
+        fs::create_dir_all(parent).map_err(|e| format!("Could not create {:?}: {}", parent, e))?;
     }
 
     let mut rss_file = fs::File::create(&rss_path)?;
-    rss_file
-        .write_all(br#"<?xml version="1.0" encoding="UTF-8"?>"#)?;
+    rss_file.write_all(br#"<?xml version="1.0" encoding="UTF-8"?>"#)?;
     rss_file.write_all(&rss_string.into_bytes())?;
     rss_file.write_all(b"\n")?;
 
@@ -335,11 +350,12 @@ fn create_rss(path: &str,
 }
 
 // creates a new jsonfeed file with the contents of the site blog
-fn create_jsonfeed(path: &str,
-                   dest: &path::Path,
-                   collection: &Collection,
-                   documents: &[Document])
-                   -> Result<()> {
+fn create_jsonfeed(
+    path: &str,
+    dest: &path::Path,
+    collection: &Collection,
+    documents: &[Document],
+) -> Result<()> {
     let jsonfeed_path = dest.join(path);
     debug!("Creating jsonfeed file at {}", jsonfeed_path.display());
 

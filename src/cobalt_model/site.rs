@@ -11,8 +11,7 @@ use error::*;
 
 use super::files;
 
-#[derive(Debug, Clone, PartialEq, Default)]
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
 #[serde(deny_unknown_fields, default)]
 pub struct SiteBuilder {
     pub title: Option<String>,
@@ -33,11 +32,11 @@ impl SiteBuilder {
         } = self;
 
         let base_url = base_url.map(|mut l| {
-                                        if l.ends_with('/') {
-                                            l.pop();
-                                        }
-                                        l
-                                    });
+            if l.ends_with('/') {
+                l.pop();
+            }
+            l
+        });
 
         let mut attributes = liquid::Object::new();
         if let Some(title) = title {
@@ -61,18 +60,21 @@ impl SiteBuilder {
     }
 }
 
-fn deep_insert(data_map: &mut liquid::Object,
-               file_path: &path::Path,
-               target_key: String,
-               data: liquid::Value)
-               -> Result<()> {
+fn deep_insert(
+    data_map: &mut liquid::Object,
+    file_path: &path::Path,
+    target_key: String,
+    data: liquid::Value,
+) -> Result<()> {
     // now find the nested map it is supposed to be in
     let target_map = if let Some(path) = file_path.parent() {
         let mut map = data_map;
         for part in path.iter() {
             let key = part.to_str().ok_or_else(|| {
-                format!("The data from {:?} can't be loaded as it contains non utf-8 characters",
-                        path)
+                format!(
+                    "The data from {:?} can't be loaded as it contains non utf-8 characters",
+                    path
+                )
             })?;
             let cur_map = map;
             map = cur_map
@@ -80,9 +82,11 @@ fn deep_insert(data_map: &mut liquid::Object,
                 .or_insert_with(|| liquid::Value::Object(liquid::Object::new()))
                 .as_object_mut()
                 .ok_or_else(|| {
-                                format!("Aborting: Duplicate in data tree. Would overwrite {:?} ",
-                                        path)
-                            })?;
+                    format!(
+                        "Aborting: Duplicate in data tree. Would overwrite {:?} ",
+                        path
+                    )
+                })?;
         }
         map
     } else {
@@ -91,11 +95,10 @@ fn deep_insert(data_map: &mut liquid::Object,
 
     match target_map.insert(target_key, data) {
         None => Ok(()),
-        _ => {
-            Err(format!("The data from {:?} can't be loaded: the key already exists",
-                        file_path)
-                    .into())
-        }
+        _ => Err(format!(
+            "The data from {:?} can't be loaded: the key already exists",
+            file_path
+        ).into()),
     }
 }
 
@@ -114,10 +117,12 @@ fn load_data(data_path: &path::Path) -> Result<liquid::Value> {
         let text = files::read_file(data_path)?;
         data = toml::from_str(&text)?;
     } else {
-        bail!("Failed to load of data {:?}: unknown file type '{:?}'.\n\
-              Supported data files extensions are: yml, yaml, json and toml.",
-              data_path,
-              ext);
+        bail!(
+            "Failed to load of data {:?}: unknown file type '{:?}'.\n\
+             Supported data files extensions are: yml, yaml, json and toml.",
+            data_path,
+            ext
+        );
     }
 
     Ok(data)

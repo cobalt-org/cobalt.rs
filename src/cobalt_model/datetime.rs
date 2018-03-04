@@ -184,7 +184,8 @@ impl chrono::Timelike for DateTime {
 
 impl serde::Serialize for DateTime {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-        where S: serde::Serializer
+    where
+        S: serde::Serializer,
     {
         serializer.collect_str(&self.format())
     }
@@ -200,18 +201,22 @@ impl<'de> serde::de::Visitor<'de> for DateTimeVisitor {
     }
 
     fn visit_str<E>(self, value: &str) -> Result<DateTime, E>
-        where E: serde::de::Error
+    where
+        E: serde::de::Error,
     {
         DateTime::parse(value).ok_or_else(|| {
-            E::custom(format!("Invalid datetime '{}', must be `YYYY-MM-DD HH:MM:SS +/-TTTT",
-                              value))
+            E::custom(format!(
+                "Invalid datetime '{}', must be `YYYY-MM-DD HH:MM:SS +/-TTTT",
+                value
+            ))
         })
     }
 }
 
 impl<'de> serde::de::Deserialize<'de> for DateTime {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-        where D: serde::de::Deserializer<'de>
+    where
+        D: serde::de::Deserializer<'de>,
     {
         deserializer.deserialize_str(DateTimeVisitor)
     }
@@ -255,7 +260,9 @@ mod tests {
             .and_then(|d| d.with_hour(3))
             .and_then(|d| d.with_offset(1 * 60 * 60))
             .unwrap();
-        assert_eq!(DateTime::parse("2016-01-01 04:00:00 +0100").unwrap(),
-                   expected);
+        assert_eq!(
+            DateTime::parse("2016-01-01 04:00:00 +0100").unwrap(),
+            expected
+        );
     }
 }

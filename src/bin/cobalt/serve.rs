@@ -10,7 +10,7 @@ use clap;
 use cobalt::cobalt_model;
 use error_chain::ChainedError;
 use hyper;
-use hyper::server::{Server, Request, Response};
+use hyper::server::{Request, Response, Server};
 use hyper::uri::RequestUri;
 use notify;
 use notify::Watcher;
@@ -23,18 +23,22 @@ pub fn serve_command_args() -> clap::App<'static, 'static> {
     clap::SubCommand::with_name("serve")
         .about("build, serve, and watch the project at the source dir")
         .args(&args::get_config_args())
-        .arg(clap::Arg::with_name("port")
-                 .short("P")
-                 .long("port")
-                 .value_name("INT")
-                 .help("Port to serve from")
-                 .default_value("3000")
-                 .takes_value(true))
-        .arg(clap::Arg::with_name("no-watch")
-                 .long("no-watch")
-                 .help("Disable rebuilding on change")
-                 .conflicts_with("drafts")
-                 .takes_value(false))
+        .arg(
+            clap::Arg::with_name("port")
+                .short("P")
+                .long("port")
+                .value_name("INT")
+                .help("Port to serve from")
+                .default_value("3000")
+                .takes_value(true),
+        )
+        .arg(
+            clap::Arg::with_name("no-watch")
+                .long("no-watch")
+                .help("Disable rebuilding on change")
+                .conflicts_with("drafts")
+                .takes_value(false),
+        )
 }
 
 pub fn serve_command(matches: &clap::ArgMatches) -> Result<()> {
@@ -52,9 +56,11 @@ pub fn serve_command(matches: &clap::ArgMatches) -> Result<()> {
     if matches.is_present("no-watch") {
         serve(&dest, &ip)?;
     } else {
-        thread::spawn(move || if serve(&dest, &ip).is_err() {
-                          process::exit(1)
-                      });
+        thread::spawn(move || {
+            if serve(&dest, &ip).is_err() {
+                process::exit(1)
+            }
+        });
 
         watch(config)?;
     }
@@ -137,10 +143,11 @@ fn serve(dest: &path::Path, ip: &str) -> Result<()> {
     let dest_clone = dest.to_owned();
 
     // bind the handle function and start serving
-    if let Err(e) = http_server.handle(move |req: Request, res: Response| if let Err(e) =
-        static_file_handler(&dest_clone, req, res) {
-        error!("{}", e);
-        process::exit(1);
+    if let Err(e) = http_server.handle(move |req: Request, res: Response| {
+        if let Err(e) = static_file_handler(&dest_clone, req, res) {
+            error!("{}", e);
+            process::exit(1);
+        }
     }) {
         error!("{}", e);
         return Err(e.into());
@@ -157,8 +164,8 @@ fn watch(config: cobalt_model::Config) -> Result<()> {
         .chain_err(|| "Failed in processing source")?;
 
     let (tx, rx) = channel();
-    let mut watcher = notify::watcher(tx, time::Duration::from_secs(1))
-        .chain_err(|| "Notify error")?;
+    let mut watcher =
+        notify::watcher(tx, time::Duration::from_secs(1)).chain_err(|| "Notify error")?;
     watcher
         .watch(&source, notify::RecursiveMode::Recursive)
         .chain_err(|| "Notify error")?;
@@ -167,11 +174,11 @@ fn watch(config: cobalt_model::Config) -> Result<()> {
     loop {
         let event = rx.recv().chain_err(|| "Notify error")?;
         let event_path = match event {
-            notify::DebouncedEvent::Create(ref path) |
-            notify::DebouncedEvent::NoticeWrite(ref path) |
-            notify::DebouncedEvent::Write(ref path) |
-            notify::DebouncedEvent::NoticeRemove(ref path) |
-            notify::DebouncedEvent::Remove(ref path) => Some(path),
+            notify::DebouncedEvent::Create(ref path)
+            | notify::DebouncedEvent::NoticeWrite(ref path)
+            | notify::DebouncedEvent::Write(ref path)
+            | notify::DebouncedEvent::NoticeRemove(ref path)
+            | notify::DebouncedEvent::Remove(ref path) => Some(path),
             notify::DebouncedEvent::Rename(_, ref to) => Some(to),
             _ => None,
         };
