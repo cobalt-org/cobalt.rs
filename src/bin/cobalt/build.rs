@@ -38,7 +38,7 @@ pub fn build_command(matches: &clap::ArgMatches) -> Result<()> {
     let config = args::get_config(matches)?;
     let config = config.build()?;
 
-    build(&config)?;
+    build(config.clone())?;
     info!("Build successful");
 
     if matches.is_present("import") {
@@ -50,7 +50,7 @@ pub fn build_command(matches: &clap::ArgMatches) -> Result<()> {
     Ok(())
 }
 
-pub fn build(config: &cobalt::Config) -> Result<()> {
+pub fn build(config: cobalt::Config) -> Result<()> {
     info!("Building from {:?} into {:?}",
           config.source,
           config.destination);

@@ -7,6 +7,7 @@ use error::*;
 pub fn debug_command_args() -> clap::App<'static, 'static> {
     clap::SubCommand::with_name("debug")
         .about("Print site debug information")
+        .subcommand(clap::SubCommand::with_name("config").about("Prints post-processed config"))
         .subcommand(clap::SubCommand::with_name("highlight")
                         .about("Print syntax-highlight information")
                         .subcommand(clap::SubCommand::with_name("themes"))
@@ -21,6 +22,11 @@ pub fn debug_command_args() -> clap::App<'static, 'static> {
 
 pub fn debug_command(matches: &clap::ArgMatches) -> Result<()> {
     match matches.subcommand() {
+        ("config", _) => {
+            let config = args::get_config(matches)?;
+            let config = config.build()?;
+            println!("{}", config);
+        }
         ("highlight", Some(matches)) => {
             match matches.subcommand() {
                 ("themes", _) => {
@@ -42,8 +48,31 @@ pub fn debug_command(matches: &clap::ArgMatches) -> Result<()> {
             let collection = matches.value_of("COLLECTION");
             match collection {
                 Some("assets") => {
-                    for file_path in config.assets.files() {
+                    let assets = config.assets.build()?;
+                    for file_path in assets.files() {
                         println!("{:?}", file_path);
+                    }
+                }
+                Some("pages") => {
+                    let pages = config.pages.build()?;
+                    for file_path in pages.pages.files() {
+                        println!("{:?}", file_path);
+                    }
+                    if let Some(ref drafts) = pages.drafts {
+                        for file_path in drafts.files() {
+                            println!("{:?}", file_path);
+                        }
+                    }
+                }
+                Some("posts") => {
+                    let posts = config.posts.build()?;
+                    for file_path in posts.pages.files() {
+                        println!("{:?}", file_path);
+                    }
+                    if let Some(ref drafts) = posts.drafts {
+                        for file_path in drafts.files() {
+                            println!("{:?}", file_path);
+                        }
                     }
                 }
                 None => {

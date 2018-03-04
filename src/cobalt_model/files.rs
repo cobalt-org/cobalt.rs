@@ -1,3 +1,4 @@
+use std::ffi;
 use std::fs;
 use std::io::Read;
 use std::io::Write;
@@ -12,33 +13,48 @@ use error::Result;
 
 pub struct FilesBuilder {
     root_dir: path::PathBuf,
+    subtree: Option<path::PathBuf>,
     ignore: Vec<String>,
     ignore_hidden: bool,
+    extensions: Vec<ffi::OsString>,
 }
 
 impl FilesBuilder {
-    pub fn new<R: Into<path::PathBuf>>(root_dir: R) -> Result<FilesBuilder> {
+    pub fn new<R: Into<path::PathBuf>>(root_dir: R) -> Result<Self> {
         Self::new_from_path(root_dir.into())
     }
 
-    fn new_from_path(root_dir: path::PathBuf) -> Result<FilesBuilder> {
+    fn new_from_path(root_dir: path::PathBuf) -> Result<Self> {
         let builder = FilesBuilder {
             root_dir: root_dir,
+            subtree: Default::default(),
             ignore: Default::default(),
             ignore_hidden: true,
+            extensions: Default::default(),
         };
 
         Ok(builder)
     }
 
-    pub fn add_ignore(&mut self, line: &str) -> Result<&mut FilesBuilder> {
+    pub fn add_ignore(&mut self, line: &str) -> Result<&mut Self> {
         trace!("{:?}: adding '{}' ignore pattern", self.root_dir, line);
         self.ignore.push(line.to_owned());
         Ok(self)
     }
 
-    pub fn ignore_hidden(&mut self, ignore: bool) -> Result<&mut FilesBuilder> {
+    pub fn ignore_hidden(&mut self, ignore: bool) -> Result<&mut Self> {
         self.ignore_hidden = ignore;
+        Ok(self)
+    }
+
+    pub fn limit(&mut self, subtree: path::PathBuf) -> Result<&mut Self> {
+        self.subtree = Some(subtree);
+        Ok(self)
+    }
+
+    pub fn add_extension(&mut self, ext: &str) -> Result<&mut FilesBuilder> {
+        trace!("{:?}: adding '{}' extension", self.root_dir, ext);
+        self.extensions.push(ext.into());
         Ok(self)
     }
 
@@ -51,8 +67,16 @@ impl FilesBuilder {
         for line in &self.ignore {
             ignore.add_line(None, line)?;
         }
+        let ignore = ignore.build()?;
 
-        let files = Files::new(self.root_dir.as_path(), ignore.build()?);
+        let files = Files {
+            root_dir: self.root_dir.clone(),
+            subtree: self.subtree
+                .as_ref()
+                .map(|subtree| self.root_dir.join(subtree)),
+            ignore,
+            extensions: self.extensions.clone(),
+        };
         Ok(files)
     }
 }
@@ -86,25 +110,44 @@ impl<'a> Iterator for FilesIterator<'a> {
 #[derive(Debug, Clone)]
 pub struct Files {
     root_dir: path::PathBuf,
+    subtree: Option<path::PathBuf>,
     ignore: Gitignore,
+    extensions: Vec<ffi::OsString>,
 }
 
 impl Files {
-    fn new(root_dir: &path::Path, ignore: Gitignore) -> Files {
-        Files {
-            root_dir: root_dir.to_path_buf(),
-            ignore: ignore,
-        }
+    pub fn root(&self) -> &path::Path {
+        &self.root_dir
+    }
+
+    pub fn subtree(&self) -> &path::Path {
+        self.subtree
+            .as_ref()
+            .map(path::PathBuf::as_path)
+            .unwrap_or_else(|| self.root_dir.as_path())
     }
 
     pub fn includes_file(&self, file: &path::Path) -> bool {
+        if !self.ext_contains(file) {
+            return false;
+        }
         let is_dir = false;
+        if let Some(ref subtree) = self.subtree {
+            if !file.starts_with(subtree) {
+                return false;
+            }
+        }
         self.includes_path(file, is_dir)
     }
 
     #[cfg(test)]
     pub fn includes_dir(&self, dir: &path::Path) -> bool {
         let is_dir = true;
+        if let Some(ref subtree) = self.subtree {
+            if !dir.starts_with(subtree) {
+                return false;
+            }
+        }
         self.includes_path(dir, is_dir)
     }
 
@@ -112,9 +155,32 @@ impl Files {
         FilesIterator::new(self)
     }
 
+    fn ext_contains(&self, file: &path::Path) -> bool {
+        if self.extensions.is_empty() {
+            return true;
+        }
+
+        file.extension()
+            .map(|ext| self.extensions.iter().any(|e| e == ext))
+            .unwrap_or(false)
+    }
+
     fn includes_entry(&self, entry: &DirEntry) -> bool {
+        let file = entry.path();
+        let is_dir = entry.file_type().is_dir();
+        if !is_dir && !self.ext_contains(file) {
+            return false;
+        }
+
+        if let Some(ref subtree) = self.subtree {
+            if !file.starts_with(subtree) {
+                return false;
+            }
+
+        }
+
         // Assumption: The parent paths will have been checked before we even get to this point.
-        self.includes_path_leaf(entry.path(), entry.file_type().is_dir())
+        self.includes_path_leaf(file, is_dir)
     }
 
     fn includes_path(&self, path: &path::Path, is_dir: bool) -> bool {
@@ -464,7 +530,6 @@ mod tests {
         assert_includes_dir!("./", ignores, "./_posts/child/_child/child", false);
     }
 
-
     #[test]
     fn files_includes_overriden_dir_file() {
         let ignores = &["!_posts", "!_posts/**", "_posts/**/_*", "_posts/**/_*/**"];
@@ -506,6 +571,44 @@ mod tests {
 
         assert_includes_file!("./", ignores, "./_posts/child/_child.txt", false);
         assert_includes_file!("./", ignores, "./_posts/child/_child/child.txt", false);
+    }
+
+    #[test]
+    fn files_includes_limit() {
+        let root = "/usr/cobalt/site";
+        let limit = "limit";
+        let files = FilesBuilder::new(path::Path::new(root))
+            .unwrap()
+            .limit(limit.into())
+            .unwrap()
+            .build()
+            .unwrap();
+        assert!(files.includes_file(path::Path::new("/usr/cobalt/site/limit")));
+        assert!(files.includes_dir(path::Path::new("/usr/cobalt/site/limit")));
+
+        assert!(files.includes_file(path::Path::new("/usr/cobalt/site/limit/child")));
+        assert!(files.includes_dir(path::Path::new("/usr/cobalt/site/limit/child")));
+    }
+
+    #[test]
+    fn files_includes_limit_outside() {
+        let root = "/usr/cobalt/site";
+        let limit = "limit";
+        let files = FilesBuilder::new(path::Path::new(root))
+            .unwrap()
+            .limit(limit.into())
+            .unwrap()
+            .build()
+            .unwrap();
+
+        assert!(!files.includes_dir(path::Path::new("/usr/cobalt/site/limit_foo")));
+        assert!(!files.includes_file(path::Path::new("/usr/cobalt/site/limit_foo")));
+
+        assert!(!files.includes_dir(path::Path::new("/usr/cobalt/site/bird")));
+        assert!(!files.includes_file(path::Path::new("/usr/cobalt/site/bird")));
+
+        assert!(!files.includes_dir(path::Path::new("/usr/cobalt/site/bird/limit")));
+        assert!(!files.includes_file(path::Path::new("/usr/cobalt/site/bird/limit")));
     }
 
     #[test]

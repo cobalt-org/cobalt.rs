@@ -6,16 +6,13 @@ use super::files;
 
 use error::*;
 
-#[derive(Debug, PartialEq, Default)]
+#[derive(Debug, Clone, PartialEq, Default)]
 #[derive(Serialize, Deserialize)]
 #[serde(deny_unknown_fields, default)]
 pub struct AssetsBuilder {
     pub sass: sass::SassBuilder,
-    #[serde(skip)]
     pub source: Option<path::PathBuf>,
-    #[serde(skip)]
     pub ignore: Vec<String>,
-    #[serde(skip)]
     pub template_extensions: Vec<String>,
 }
 
@@ -32,7 +29,7 @@ impl AssetsBuilder {
 
         let source = source.ok_or_else(|| "No asset source provided")?;
 
-        let mut files = files::FilesBuilder::new(&source)?;
+        let mut files = files::FilesBuilder::new(source)?;
         for line in ignore {
             files.add_ignore(&line)?;
         }
@@ -40,25 +37,20 @@ impl AssetsBuilder {
             files.add_ignore(&format!("*.{}", ext))?;
         }
         let files = files.build()?;
-        let assets = Assets {
-            sass,
-            files,
-            source,
-        };
+        let assets = Assets { sass, files };
         Ok(assets)
     }
 }
 
 #[derive(Debug)]
 pub struct Assets {
-    pub sass: sass::SassCompiler,
-    pub files: files::Files,
-    pub source: path::PathBuf,
+    sass: sass::SassCompiler,
+    files: files::Files,
 }
 
 impl Assets {
     pub fn source(&self) -> &path::Path {
-        self.source.as_path()
+        self.files.root()
     }
 
     pub fn files(&self) -> &files::Files {
@@ -72,10 +64,10 @@ impl Assets {
     fn populate_path(&self, dest: &path::Path) -> Result<()> {
         for file_path in self.files() {
             if file_path.extension() == Some(ffi::OsStr::new("scss")) {
-                self.sass.compile_file(&self.source, dest, file_path)?;
+                self.sass.compile_file(self.source(), dest, file_path)?;
             } else {
                 let rel_src = file_path
-                    .strip_prefix(&self.source)
+                    .strip_prefix(self.source())
                     .expect("file was found under the root");
                 files::copy_file(&file_path, dest.join(rel_src).as_path())?;
             }

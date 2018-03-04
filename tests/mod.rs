@@ -78,21 +78,18 @@ fn run_test(name: &str) -> Result<(), cobalt::Error> {
     let destdir = TempDir::new(name).expect("Tempdir not created");
 
     config.source = "./".to_owned();
-    config.abs_dest = Some(destdir
-                               .path()
-                               .to_str()
-                               .expect("Can't convert destdir to str")
-                               .to_owned());
+    config.abs_dest = Some(destdir.path().to_owned());
 
     let config = config.build()?;
+    let destination = config.destination.clone();
 
     // try to create the target directory, ignore errors
-    fs::create_dir_all(&config.destination).is_ok();
+    fs::create_dir_all(&destination).is_ok();
 
-    let result = cobalt::build(&config);
+    let result = cobalt::build(config);
 
     if result.is_ok() {
-        assert_dirs_eq(&config.destination, &target);
+        assert_dirs_eq(&destination, &target);
     }
 
     // clean up
@@ -189,7 +186,7 @@ pub fn no_extends_error() {
     let err = run_test("no_extends_error");
     assert!(err.is_err());
     assert_contains!(format!("{}", err.unwrap_err().display_chain()),
-                     "Layout default_nonexistent.liquid can not be read (defined in \
+                     "Layout default_nonexistent.liquid does not exist (referenced in \
                       \"index.html\")");
 }
 

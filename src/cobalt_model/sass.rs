@@ -6,7 +6,7 @@ use sass_rs;
 use error::*;
 use super::files;
 
-#[derive(Debug, Eq, PartialEq, Hash, Copy, Clone)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
 #[derive(Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub enum SassOutputStyle {
@@ -16,49 +16,35 @@ pub enum SassOutputStyle {
     Compressed,
 }
 
-const SASS_IMPORT_DIR: &'static str = "_sass";
+impl Default for SassOutputStyle {
+    fn default() -> Self {
+        SassOutputStyle::Nested
+    }
+}
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Default)]
 #[derive(Serialize, Deserialize)]
 #[serde(deny_unknown_fields, default)]
 pub struct SassBuilder {
-    #[serde(skip)]
-    pub import_dir: &'static str,
+    pub import_dir: Option<String>,
     pub style: SassOutputStyle,
 }
 
 impl SassBuilder {
-    pub fn new() -> SassBuilder {
+    pub fn new() -> Self {
         Default::default()
     }
 
     pub fn build(self) -> SassCompiler {
-        let Self {
-            import_dir: _import_dir,
-            style,
-        } = self;
-        // HACK for serde #1105
-        let import_dir = SASS_IMPORT_DIR;
+        let Self { import_dir, style } = self;
         SassCompiler { import_dir, style }
     }
 }
 
-impl Default for SassBuilder {
-    fn default() -> SassBuilder {
-        SassBuilder {
-            import_dir: SASS_IMPORT_DIR,
-            style: SassOutputStyle::Nested,
-        }
-    }
-}
-
 #[derive(Debug, PartialEq)]
-#[derive(Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
 pub struct SassCompiler {
-    #[serde(skip)]
-    pub import_dir: &'static str,
-    pub style: SassOutputStyle,
+    import_dir: Option<String>,
+    style: SassOutputStyle,
 }
 
 impl Default for SassCompiler {
@@ -84,11 +70,7 @@ impl SassCompiler {
                              file_path: &path::Path)
                              -> Result<()> {
         let mut sass_opts = sass_rs::Options::default();
-        sass_opts.include_paths = vec![source
-                                           .join(&self.import_dir)
-                                           .into_os_string()
-                                           .into_string()
-                                           .unwrap()];
+        sass_opts.include_paths = self.import_dir.iter().cloned().collect();
         sass_opts.output_style = match self.style {
             SassOutputStyle::Nested => sass_rs::OutputStyle::Nested,
             SassOutputStyle::Expanded => sass_rs::OutputStyle::Expanded,

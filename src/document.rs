@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::collections::hash_map::Entry;
 use std::default::Default;
 use std::path::{Path, PathBuf};
 use std::clone::Clone;
@@ -9,17 +8,13 @@ use itertools;
 use jsonfeed;
 use liquid;
 use liquid::Value;
-use pulldown_cmark as cmark;
 use regex::Regex;
 use rss;
-use serde_yaml;
 
 use error::*;
 use cobalt_model::files;
 use cobalt_model::slug;
 use cobalt_model;
-use syntax_highlight::decorate_markdown;
-use template;
 
 /// Convert the source file's relative path into a format useful for generating permalinks that
 /// mirror the source directory hierarchy.
@@ -272,21 +267,15 @@ impl Document {
     fn render_html(&self,
                    content: &str,
                    globals: &liquid::Object,
-                   parser: &template::LiquidParser,
-                   syntax_theme: &str)
+                   parser: &cobalt_model::Liquid,
+                   markdown: &cobalt_model::Markdown)
                    -> Result<String> {
         let template = parser.parse(content)?;
         let html = template.render(globals)?;
 
         let html = match self.front.format {
             cobalt_model::SourceFormat::Raw => html,
-            cobalt_model::SourceFormat::Markdown => {
-                let mut buf = String::new();
-                let options = cmark::OPTION_ENABLE_FOOTNOTES | cmark::OPTION_ENABLE_TABLES;
-                let parser = cmark::Parser::new_ext(&html, options);
-                cmark::html::push_html(&mut buf, decorate_markdown(parser, syntax_theme));
-                buf
-            }
+            cobalt_model::SourceFormat::Markdown => markdown.parse(&html)?,
         };
         Ok(html.to_owned())
     }
@@ -294,11 +283,11 @@ impl Document {
     /// Renders excerpt and adds it to attributes of the document.
     pub fn render_excerpt(&mut self,
                           globals: &liquid::Object,
-                          parser: &template::LiquidParser,
-                          syntax_theme: &str)
+                          parser: &cobalt_model::Liquid,
+                          markdown: &cobalt_model::Markdown)
                           -> Result<()> {
         let value = if let Some(excerpt_str) = self.front.excerpt.as_ref() {
-            let excerpt = self.render_html(excerpt_str, globals, parser, syntax_theme)?;
+            let excerpt = self.render_html(excerpt_str, globals, parser, markdown)?;
             Value::scalar(excerpt)
         } else if self.front.excerpt_separator.is_empty() {
             Value::Nil
@@ -306,7 +295,7 @@ impl Document {
             let excerpt = extract_excerpt(&self.content,
                                           self.front.format,
                                           &self.front.excerpt_separator);
-            let excerpt = self.render_html(&excerpt, globals, parser, syntax_theme)?;
+            let excerpt = self.render_html(&excerpt, globals, parser, markdown)?;
             Value::scalar(excerpt)
         };
 
@@ -319,10 +308,10 @@ impl Document {
     /// When we say "content" we mean only this document without extended layout.
     pub fn render_content(&mut self,
                           globals: &liquid::Object,
-                          parser: &template::LiquidParser,
-                          syntax_theme: &str)
+                          parser: &cobalt_model::Liquid,
+                          markdown: &cobalt_model::Markdown)
                           -> Result<()> {
-        let content_html = self.render_html(&self.content, globals, parser, syntax_theme)?;
+        let content_html = self.render_html(&self.content, globals, parser, markdown)?;
         self.attributes
             .insert("content".to_owned(), Value::scalar(content_html.clone()));
         Ok(())
@@ -335,24 +324,17 @@ impl Document {
     /// * layout may be inserted to layouts cache
     pub fn render(&mut self,
                   globals: &liquid::Object,
-                  parser: &template::LiquidParser,
-                  layouts_dir: &Path,
-                  layouts_cache: &mut HashMap<String, String>)
+                  parser: &cobalt_model::Liquid,
+                  layouts: &HashMap<String, String>)
                   -> Result<String> {
         if let Some(ref layout) = self.front.layout {
-            let layout_data_ref = match layouts_cache.entry(layout.to_owned()) {
-                Entry::Vacant(vacant) => {
-                    let layout_data = files::read_file(layouts_dir.join(layout))
-                        .map_err(|e| {
-                                     format!("Layout {} can not be read (defined in {:?}): {}",
-                                             layout,
-                                             self.file_path,
-                                             e)
-                                 })?;
-                    vacant.insert(layout_data)
-                }
-                Entry::Occupied(occupied) => occupied.into_mut(),
-            };
+            let layout_data_ref = layouts
+                .get(layout)
+                .ok_or_else(|| {
+                                format!("Layout {} does not exist (referenced in {:?}).",
+                                        layout,
+                                        self.file_path)
+                            })?;
 
             let template = parser
                 .parse(layout_data_ref)
@@ -370,31 +352,6 @@ impl Document {
                 .to_string();
 
             Ok(content_html)
-        }
-    }
-
-    pub fn render_dump(&self, dump: cobalt_model::Dump) -> Result<(String, String)> {
-        match dump {
-            cobalt_model::Dump::DocObject => {
-                let content = serde_yaml::to_string(&self.attributes)?;
-                Ok((content, "yml".to_owned()))
-            }
-            cobalt_model::Dump::DocTemplate => Ok((self.content.clone(), "liquid".to_owned())),
-            cobalt_model::Dump::DocLinkObject => {
-                let perma_attributes = permalink_attributes(&self.front, Path::new("<null>"));
-                let content = serde_yaml::to_string(&perma_attributes)?;
-                Ok((content, "yml".to_owned()))
-            }
-            cobalt_model::Dump::Document => {
-                let cobalt_model = serde_yaml::to_string(&self.front)?;
-                let content = self.content.clone();
-                let ext = match self.front.format {
-                    cobalt_model::SourceFormat::Raw => "liquid",
-                    cobalt_model::SourceFormat::Markdown => "md",
-                }.to_owned();
-                let content = itertools::join(&[cobalt_model, "---".to_owned(), content], "\n");
-                Ok((content, ext))
-            }
         }
     }
 }

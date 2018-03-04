@@ -51,7 +51,9 @@
 
 extern crate chrono;
 extern crate ignore;
+extern crate itertools;
 extern crate liquid;
+extern crate normalize_line_endings;
 extern crate pulldown_cmark;
 extern crate regex;
 extern crate rss;
@@ -64,16 +66,11 @@ extern crate toml;
 #[cfg(feature = "sass")]
 extern crate sass_rs;
 
-extern crate itertools;
-
 #[cfg(all(feature = "syntax-highlight"))]
 extern crate syntect;
 
 #[macro_use]
 extern crate log;
-
-#[macro_use]
-extern crate clap;
 
 #[macro_use]
 extern crate error_chain;
@@ -84,25 +81,18 @@ extern crate lazy_static;
 #[macro_use]
 extern crate serde;
 
-extern crate normalize_line_endings;
-
 pub use cobalt::build;
 pub use error::Error;
 pub use cobalt_model::Config;
 pub use cobalt_model::ConfigBuilder;
-pub use cobalt_model::Dump;
-pub use new::{create_new_project, create_new_document, publish_document};
 
 pub mod error;
 pub mod cobalt_model;
 
 mod cobalt;
 mod document;
-mod new;
-mod template;
 
 pub mod jekyll_model;
-pub mod legacy_model;
 mod syntax_highlight;
 
 pub use syntax_highlight::{list_syntax_themes, list_syntaxes};

@@ -54,7 +54,6 @@ extern crate env_logger;
 extern crate ghp;
 extern crate hyper;
 extern crate notify;
-extern crate regex;
 extern crate serde_yaml;
 
 #[macro_use]
@@ -64,9 +63,6 @@ extern crate error_chain;
 extern crate clap;
 
 #[macro_use]
-extern crate lazy_static;
-
-#[macro_use]
 extern crate log;
 
 mod args;
@@ -74,7 +70,6 @@ mod build;
 mod error;
 mod debug;
 mod jekyll;
-mod migrate;
 mod new;
 mod serve;
 
@@ -99,7 +94,6 @@ fn run() -> Result<()> {
         .subcommand(build::clean_command_args())
         .subcommand(serve::serve_command_args())
         .subcommand(build::import_command_args())
-        .subcommand(migrate::migrate_command_args())
         .subcommand(jekyll::convert_command_args())
         .subcommand(debug::debug_command_args());
 
@@ -122,7 +116,6 @@ fn run() -> Result<()> {
         "serve" => serve::serve_command(matches),
         "import" => build::import_command(matches),
         "debug" => debug::debug_command(matches),
-        "migrate" => migrate::migrate_command(matches),
         "convert-jekyll" => jekyll::convert_command(matches),
         _ => {
             bail!(global_matches.usage());
