@@ -48,7 +48,7 @@ impl Context {
         let assets = assets.build()?;
 
         let layouts = find_layouts(&layouts_dir)?;
-        let layouts = parse_layouts(layouts);
+        let layouts = parse_layouts(&layouts);
 
         let context = Context {
             source,
@@ -250,7 +250,7 @@ fn find_layouts(layouts: &path::Path) -> Result<files::Files> {
     files.build()
 }
 
-fn parse_layouts(files: files::Files) -> HashMap<String, String> {
+fn parse_layouts(files: &files::Files) -> HashMap<String, String> {
     let (entries, errors): (Vec<_>, Vec<_>) = files
         .files()
         .map(|file_path| {

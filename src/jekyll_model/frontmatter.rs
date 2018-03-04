@@ -81,12 +81,12 @@ impl From<FrontmatterBuilder> for cobalt_model::FrontmatterBuilder {
     }
 }
 
-fn migrate_variable(var: String) -> Part {
+fn migrate_variable(var: &str) -> Part {
     let native_variable = {
-        let name: &str = &var;
+        let name: &str = var;
         VARIABLES.contains(&name)
     };
-    let var = match var.as_str() {
+    let var = match var {
         "path" => "parent".to_owned(),
         "filename" => "name".to_owned(),
         "output_ext" => "ext".to_owned(),
@@ -121,7 +121,7 @@ mod test {
 
     #[test]
     fn migrate_variable_known() {
-        let fixture = "path".to_owned();
+        let fixture = "path";
         let expected = Part::Constant("{{ parent }}".to_owned());
         let actual = migrate_variable(fixture);
         assert_eq!(actual, expected);
@@ -129,7 +129,7 @@ mod test {
 
     #[test]
     fn migrate_variable_unknown() {
-        let fixture = "gobbly/gook".to_owned();
+        let fixture = "gobbly/gook";
         let expected = Part::Constant("{{ data.gobbly/gook }}".to_owned());
         let actual = migrate_variable(fixture);
         assert_eq!(actual, expected);

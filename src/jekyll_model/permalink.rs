@@ -11,11 +11,11 @@ pub enum Part {
 impl Part {
     pub fn resolve<R>(self, resolver: &R) -> Self
     where
-        R: Fn(String) -> Part,
+        R: Fn(&str) -> Part,
     {
         match self {
             Part::Constant(constant) => Part::Constant(constant),
-            Part::Variable(var) => resolver(var),
+            Part::Variable(var) => resolver(&var),
         }
     }
 }
@@ -39,7 +39,7 @@ impl Permalink {
 
     pub fn resolve<R>(self, resolver: &R) -> Self
     where
-        R: Fn(String) -> Part,
+        R: Fn(&str) -> Part,
     {
         let v: Vec<Part> = self.0.into_iter().map(|p| p.resolve(resolver)).collect();
         Permalink(v)

@@ -338,8 +338,8 @@ impl ConfigBuilder {
             debug!("Draft mode enabled");
         }
 
-        let source = files::cleanup_path(source);
-        let destination = files::cleanup_path(destination);
+        let source = files::cleanup_path(&source);
+        let destination = files::cleanup_path(&destination);
 
         let mut ignore = ignore;
         if let Ok(rel_dest) = path::Path::new(&destination).strip_prefix(&source) {

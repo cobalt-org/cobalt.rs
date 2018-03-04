@@ -13,7 +13,7 @@ use error::Result;
 use super::datetime;
 use super::slug;
 
-const PATH_ALIAS: &'static str = "/{{parent}}/{{name}}{{ext}}";
+const PATH_ALIAS: &str = "/{{parent}}/{{name}}{{ext}}";
 lazy_static!{
     static ref PERMALINK_ALIASES: HashMap<&'static str, &'static str> = [
         ("path", PATH_ALIAS),

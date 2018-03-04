@@ -62,7 +62,7 @@ pub fn serve_command(matches: &clap::ArgMatches) -> Result<()> {
             }
         });
 
-        watch(config)?;
+        watch(&config)?;
     }
     Ok(())
 }
@@ -156,7 +156,7 @@ fn serve(dest: &path::Path, ip: &str) -> Result<()> {
     Ok(())
 }
 
-fn watch(config: cobalt_model::Config) -> Result<()> {
+fn watch(config: &cobalt_model::Config) -> Result<()> {
     // canonicalize is to ensure there is no question that `watcher`s paths come back safe for
     // Files::includes_file
     let source = path::Path::new(&config.source)

@@ -244,7 +244,7 @@ fn find_project_file_internal(dir: path::PathBuf, name: &str) -> Option<path::Pa
     Some(file_path)
 }
 
-pub fn cleanup_path(path: String) -> String {
+pub fn cleanup_path(path: &str) -> String {
     let stripped = path.trim_left_matches("./");
     if stripped == "." {
         String::new()
@@ -713,30 +713,27 @@ mod tests {
 
     #[test]
     fn cleanup_path_empty() {
-        assert_eq!(cleanup_path("".to_owned()), "".to_owned());
+        assert_eq!(cleanup_path(""), "");
     }
 
     #[test]
     fn cleanup_path_dot() {
-        assert_eq!(cleanup_path(".".to_owned()), "".to_owned());
+        assert_eq!(cleanup_path("."), "");
     }
 
     #[test]
     fn cleanup_path_current_dir() {
-        assert_eq!(cleanup_path("./".to_owned()), "".to_owned());
+        assert_eq!(cleanup_path("./"), "");
     }
 
     #[test]
     fn cleanup_path_current_dir_extreme() {
-        assert_eq!(cleanup_path("././././.".to_owned()), "".to_owned());
+        assert_eq!(cleanup_path("././././."), "");
     }
 
     #[test]
     fn cleanup_path_current_dir_child() {
-        assert_eq!(
-            cleanup_path("./build/file.txt".to_owned()),
-            "build/file.txt".to_owned()
-        );
+        assert_eq!(cleanup_path("./build/file.txt"), "build/file.txt");
     }
 
 }

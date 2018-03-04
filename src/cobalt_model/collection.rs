@@ -74,11 +74,11 @@ impl CollectionBuilder {
         let source = source.ok_or_else(|| "No asset source provided")?;
 
         let dir = dir.unwrap_or_else(|| slug.clone());
-        let pages = Self::build_files(&source, dir, &template_extensions, &ignore)?;
+        let pages = Self::build_files(&source, &dir, &template_extensions, &ignore)?;
 
         let drafts_dir = if include_drafts { drafts_dir } else { None };
         let drafts = drafts_dir
-            .map(|dir| Self::build_files(&source, dir, &template_extensions, &ignore))
+            .map(|dir| Self::build_files(&source, &dir, &template_extensions, &ignore))
             .map_or(Ok(None), |r| r.map(Some))?;
 
         let mut attributes: liquid::Object = vec![
@@ -118,7 +118,7 @@ impl CollectionBuilder {
 
     fn build_files(
         source: &path::Path,
-        dir: String,
+        dir: &str,
         template_extensions: &[String],
         ignore: &[String],
     ) -> Result<files::Files> {

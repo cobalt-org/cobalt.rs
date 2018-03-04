@@ -89,7 +89,7 @@ pub fn publish_command(matches: &clap::ArgMatches) -> Result<()> {
     Ok(())
 }
 
-const COBALT_YML: &'static str = "
+const COBALT_YML: &str = "
 site:
   title: cobalt blog
   description: Blog Posts Go Here
@@ -98,7 +98,7 @@ posts:
   rss: rss.xml
 ";
 
-const DEFAULT_LAYOUT: &'static str = "<!DOCTYPE html>
+const DEFAULT_LAYOUT: &str = "<!DOCTYPE html>
 <html>
     <head>
         <meta charset=\"utf-8\">
@@ -113,7 +113,7 @@ const DEFAULT_LAYOUT: &'static str = "<!DOCTYPE html>
 </html>
 ";
 
-const POST_MD: &'static str = "layout: default.liquid
+const POST_MD: &str = "layout: default.liquid
 
 title: First Post
 is_draft: true
@@ -124,7 +124,7 @@ is_draft: true
 Welcome to the first post ever on cobalt.rs!
 ";
 
-const INDEX_MD: &'static str = "layout: default.liquid
+const INDEX_MD: &str = "layout: default.liquid
 ---
 ## Blog!
 

@@ -121,7 +121,7 @@ pub fn decorate_markdown<'a>(parser: cmark::Parser<'a>, _theme_name: &str) -> De
 mod test {
     use super::*;
 
-    const CODE_BLOCK: &'static str = "mod test {
+    const CODE_BLOCK: &str = "mod test {
         fn hello(arg: int) -> bool {
             \
                                       true
@@ -129,7 +129,7 @@ mod test {
     }
 ";
 
-    const CODEBLOCK_RENDERED: &'static str = r#"<pre><code class="language-rust">mod test {
+    const CODEBLOCK_RENDERED: &str = r#"<pre><code class="language-rust">mod test {
         fn hello(arg: int) -&gt; bool {
             true
         }
@@ -153,7 +153,7 @@ mod test {
         assert_eq!(output.unwrap(), CODEBLOCK_RENDERED.to_string());
     }
 
-    const MARKDOWN_RENDERED: &'static str = r#"<pre><code class="language-rust">mod test {
+    const MARKDOWN_RENDERED: &str = r#"<pre><code class="language-rust">mod test {
         fn hello(arg: int) -&gt; bool {
             true
         }

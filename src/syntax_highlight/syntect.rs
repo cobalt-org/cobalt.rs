@@ -188,7 +188,7 @@ pub fn decorate_markdown<'a>(parser: cmark::Parser<'a>, theme_name: &str) -> Dec
 mod test {
     use super::*;
 
-    const CODE_BLOCK: &'static str = "mod test {
+    const CODE_BLOCK: &str = "mod test {
         fn hello(arg: int) -> bool {
             \
                                       true
@@ -196,7 +196,7 @@ mod test {
     }
     ";
 
-    const CODEBLOCK_RENDERED: &'static str =
+    const CODEBLOCK_RENDERED: &str =
         "<pre style=\"background-color:#2b303b;\">\n<span \
          style=\"color:#b48ead;\">mod</span><span style=\"color:#c0c5ce;\"> </span><span \
          style=\"color:#c0c5ce;\">test</span><span style=\"color:#c0c5ce;\"> </span><span \
@@ -214,7 +214,7 @@ mod test {
          </span><span style=\"color:#c0c5ce;\">}</span>\n<span style=\"color:#c0c5ce;\">    \
          </span>\n</pre>\n";
 
-    const MARKDOWN_RENDERED: &'static str =
+    const MARKDOWN_RENDERED: &str =
         "<pre style=\"background-color:#2b303b\">\n<span \
          style=\"background-color:#2b303b;color:#b48ead;\">mod</span><span \
          style=\"background-color:#2b303b;color:#c0c5ce;\"> </span><span \
