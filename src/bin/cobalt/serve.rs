@@ -33,6 +33,14 @@ pub fn serve_command_args() -> clap::App<'static, 'static> {
                 .takes_value(true),
         )
         .arg(
+            clap::Arg::with_name("host")
+                .long("host")
+                .value_name("host-name/IP")
+                .help("Host to serve from")
+                .default_value("localhost")
+                .takes_value(true),
+        )
+        .arg(
             clap::Arg::with_name("no-watch")
                 .long("no-watch")
                 .help("Disable rebuilding on change")
@@ -42,8 +50,9 @@ pub fn serve_command_args() -> clap::App<'static, 'static> {
 }
 
 pub fn serve_command(matches: &clap::ArgMatches) -> Result<()> {
+    let host = matches.value_of("host").unwrap().to_string();
     let port = matches.value_of("port").unwrap().to_string();
-    let ip = format!("127.0.0.1:{}", port);
+    let ip = format!("{}:{}", host, port);
 
     let mut config = args::get_config(matches)?;
     debug!("Overriding config `site.base_url` with `{}`", ip);
