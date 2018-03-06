@@ -10,11 +10,12 @@ pub enum Part {
 
 impl Part {
     pub fn resolve<R>(self, resolver: &R) -> Self
-        where R: Fn(String) -> Part
+    where
+        R: Fn(&str) -> Part,
     {
         match self {
             Part::Constant(constant) => Part::Constant(constant),
-            Part::Variable(var) => resolver(var),
+            Part::Variable(var) => resolver(&var),
         }
     }
 }
@@ -37,7 +38,8 @@ impl Permalink {
     }
 
     pub fn resolve<R>(self, resolver: &R) -> Self
-        where R: Fn(String) -> Part
+    where
+        R: Fn(&str) -> Part,
     {
         let v: Vec<Part> = self.0.into_iter().map(|p| p.resolve(resolver)).collect();
         Permalink(v)
@@ -62,19 +64,21 @@ impl fmt::Display for Permalink {
     }
 }
 
-pub const VARIABLES: &[&str] = &["path",
-                                 "filename",
-                                 "slug",
-                                 "categories",
-                                 "output_ext",
-                                 "year",
-                                 "month",
-                                 "i_month",
-                                 "day",
-                                 "i_day",
-                                 "hour",
-                                 "minute",
-                                 "second"];
+pub const VARIABLES: &[&str] = &[
+    "path",
+    "filename",
+    "slug",
+    "categories",
+    "output_ext",
+    "year",
+    "month",
+    "i_month",
+    "day",
+    "i_day",
+    "hour",
+    "minute",
+    "second",
+];
 
 fn split_variable(var: &str, variables: &[&str]) -> Vec<Part> {
     for supported in variables {
@@ -144,37 +148,45 @@ mod test {
     #[test]
     fn parse_leading_constant() {
         let actual = &Permalink::parse("hello/world/:path").0;
-        let expected = &[Part::Constant("hello/world/".to_owned()),
-                         Part::Variable("path".to_owned())];
+        let expected = &[
+            Part::Constant("hello/world/".to_owned()),
+            Part::Variable("path".to_owned()),
+        ];
         assert_eq!(actual, expected);
     }
 
     #[test]
     fn parse_trailing_constant() {
         let actual = &Permalink::parse(":path/hello/world").0;
-        let expected = &[Part::Variable("path".to_owned()),
-                         Part::Constant("/hello/world".to_owned())];
+        let expected = &[
+            Part::Variable("path".to_owned()),
+            Part::Constant("/hello/world".to_owned()),
+        ];
         assert_eq!(actual, expected);
     }
 
     #[test]
     fn parse_mixed() {
         let actual = &Permalink::parse("hello/:path/world/:i_day/").0;
-        let expected = &[Part::Constant("hello/".to_owned()),
-                         Part::Variable("path".to_owned()),
-                         Part::Constant("/world/".to_owned()),
-                         Part::Variable("i_day".to_owned()),
-                         Part::Constant("/".to_owned())];
+        let expected = &[
+            Part::Constant("hello/".to_owned()),
+            Part::Variable("path".to_owned()),
+            Part::Constant("/world/".to_owned()),
+            Part::Variable("i_day".to_owned()),
+            Part::Constant("/".to_owned()),
+        ];
         assert_eq!(actual, expected);
     }
 
     #[test]
     fn parse_invalid_variable() {
         let actual = &Permalink::parse("hello/:party/world/:i_day/").0;
-        let expected = &[Part::Constant("hello/".to_owned()),
-                         Part::Variable("party/world/".to_owned()),
-                         Part::Variable("i_day".to_owned()),
-                         Part::Constant("/".to_owned())];
+        let expected = &[
+            Part::Constant("hello/".to_owned()),
+            Part::Variable("party/world/".to_owned()),
+            Part::Variable("i_day".to_owned()),
+            Part::Constant("/".to_owned()),
+        ];
         assert_eq!(actual, expected);
     }
 }

@@ -9,14 +9,15 @@ use cobalt::cobalt_model;
 use args;
 use error::*;
 
-
 pub fn init_command_args() -> clap::App<'static, 'static> {
     clap::SubCommand::with_name("init")
         .about("create a new cobalt project")
-        .arg(clap::Arg::with_name("DIRECTORY")
-                 .help("Target directory")
-                 .default_value("./")
-                 .index(1))
+        .arg(
+            clap::Arg::with_name("DIRECTORY")
+                .help("Target directory")
+                .default_value("./")
+                .index(1),
+        )
 }
 
 pub fn init_command(matches: &clap::ArgMatches) -> Result<()> {
@@ -33,16 +34,20 @@ pub fn new_command_args() -> clap::App<'static, 'static> {
     clap::SubCommand::with_name("new")
         .about("Create a document")
         .args(&args::get_config_args())
-        .arg(clap::Arg::with_name("TITLE")
-                 .required(true)
-                 .help("Title of the post")
-                 .takes_value(true))
-        .arg(clap::Arg::with_name("file")
-                 .short("f")
-                 .long("file")
-                 .value_name("DIR_OR_FILE")
-                 .help("New document's parent directory or file (default: `<CWD>/title.ext`)")
-                 .takes_value(true))
+        .arg(
+            clap::Arg::with_name("TITLE")
+                .required(true)
+                .help("Title of the post")
+                .takes_value(true),
+        )
+        .arg(
+            clap::Arg::with_name("file")
+                .short("f")
+                .long("file")
+                .value_name("DIR_OR_FILE")
+                .help("New document's parent directory or file (default: `<CWD>/title.ext`)")
+                .takes_value(true),
+        )
 }
 
 pub fn new_command(matches: &clap::ArgMatches) -> Result<()> {
@@ -65,10 +70,12 @@ pub fn new_command(matches: &clap::ArgMatches) -> Result<()> {
 pub fn publish_command_args() -> clap::App<'static, 'static> {
     clap::SubCommand::with_name("publish")
         .about("Publish a document")
-        .arg(clap::Arg::with_name("FILENAME")
-                 .required(true)
-                 .help("Document path to publish")
-                 .takes_value(true))
+        .arg(
+            clap::Arg::with_name("FILENAME")
+                .required(true)
+                .help("Document path to publish")
+                .takes_value(true),
+        )
 }
 
 pub fn publish_command(matches: &clap::ArgMatches) -> Result<()> {
@@ -77,13 +84,12 @@ pub fn publish_command(matches: &clap::ArgMatches) -> Result<()> {
         .expect("required parameters are present");
     let file = path::Path::new(file);
 
-    publish_document(file)
-        .chain_err(|| format!("Could not publish `{:?}`", file))?;
+    publish_document(file).chain_err(|| format!("Could not publish `{:?}`", file))?;
 
     Ok(())
 }
 
-const COBALT_YML: &'static str = "
+const COBALT_YML: &str = "
 site:
   title: cobalt blog
   description: Blog Posts Go Here
@@ -92,7 +98,7 @@ posts:
   rss: rss.xml
 ";
 
-const DEFAULT_LAYOUT: &'static str = "<!DOCTYPE html>
+const DEFAULT_LAYOUT: &str = "<!DOCTYPE html>
 <html>
     <head>
         <meta charset=\"utf-8\">
@@ -107,7 +113,7 @@ const DEFAULT_LAYOUT: &'static str = "<!DOCTYPE html>
 </html>
 ";
 
-const POST_MD: &'static str = "layout: default.liquid
+const POST_MD: &str = "layout: default.liquid
 
 title: First Post
 is_draft: true
@@ -118,7 +124,7 @@ is_draft: true
 Welcome to the first post ever on cobalt.rs!
 ";
 
-const INDEX_MD: &'static str = "layout: default.liquid
+const INDEX_MD: &str = "layout: default.liquid
 ---
 ## Blog!
 
@@ -148,10 +154,11 @@ pub fn create_new_project_for_path(dest: &path::Path) -> Result<()> {
     Ok(())
 }
 
-pub fn create_new_document(config: &cobalt_model::Config,
-                           title: &str,
-                           file: path::PathBuf)
-                           -> Result<()> {
+pub fn create_new_document(
+    config: &cobalt_model::Config,
+    title: &str,
+    file: path::PathBuf,
+) -> Result<()> {
     let file = if file.extension().is_none() {
         let file_name = format!("{}.md", cobalt_model::slug::slugify(title));
         let mut file = file;
@@ -161,20 +168,21 @@ pub fn create_new_document(config: &cobalt_model::Config,
         file
     };
 
-    let rel_file = file.strip_prefix(&config.source)
-        .map_err(|_| {
-                     format!("New file {:?} not project directory ({:?})",
-                             file,
-                             config.source)
-                 })?;
+    let rel_file = file.strip_prefix(&config.source).map_err(|_| {
+        format!(
+            "New file {:?} not project directory ({:?})",
+            file, config.source
+        )
+    })?;
 
     let posts = config.posts.clone().build()?;
-    let (file_type, doc) = if file.starts_with(posts.pages.subtree()) ||
-                              posts
-                                  .drafts
-                                  .as_ref()
-                                  .map(|d| file.starts_with(d.subtree()))
-                                  .unwrap_or(false) {
+    let (file_type, doc) = if file.starts_with(posts.pages.subtree())
+        || posts
+            .drafts
+            .as_ref()
+            .map(|d| file.starts_with(d.subtree()))
+            .unwrap_or(false)
+    {
         ("post", POST_MD)
     } else {
         ("page", INDEX_MD)
@@ -183,8 +191,8 @@ pub fn create_new_document(config: &cobalt_model::Config,
     let doc = cobalt_model::DocumentBuilder::<cobalt_model::FrontmatterBuilder>::parse(doc)?;
     let (front, content) = doc.parts();
     let front = front.set_title(title.to_owned());
-    let doc = cobalt_model::DocumentBuilder::<cobalt_model::FrontmatterBuilder>::new(front,
-                                                                                     content);
+    let doc =
+        cobalt_model::DocumentBuilder::<cobalt_model::FrontmatterBuilder>::new(front, content);
     let doc = doc.to_string();
 
     create_file(&file, &doc)?;
@@ -219,8 +227,8 @@ pub fn publish_document(file: &path::Path) -> Result<()> {
     let date = cobalt_model::DateTime::now();
     let front = front.set_draft(false).set_published_date(date);
 
-    let doc = cobalt_model::DocumentBuilder::<cobalt_model::FrontmatterBuilder>::new(front,
-                                                                                     content);
+    let doc =
+        cobalt_model::DocumentBuilder::<cobalt_model::FrontmatterBuilder>::new(front, content);
     let doc = doc.to_string();
 
     cobalt_model::files::write_document_file(doc, file)?;

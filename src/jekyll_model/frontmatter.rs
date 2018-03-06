@@ -42,39 +42,51 @@ impl From<FrontmatterBuilder> for cobalt_model::FrontmatterBuilder {
         let mut unprocessed_attributes = jk_front.0;
         cobalt_model::FrontmatterBuilder::new()
             .merge_slug(unprocessed_attributes.remove("slug").map(|v| v.to_string()))
-            .merge_title(unprocessed_attributes
-                             .remove("title")
-                             .map(|v| v.to_string()))
-            .merge_description(unprocessed_attributes
-                                   .remove("excerpt")
-                                   .map(|v| v.to_string()))
+            .merge_title(
+                unprocessed_attributes
+                    .remove("title")
+                    .map(|v| v.to_string()),
+            )
+            .merge_description(
+                unprocessed_attributes
+                    .remove("excerpt")
+                    .map(|v| v.to_string()),
+            )
             .merge_categories(unprocessed_attributes.remove("categories").and_then(|v| {
                 v.as_array()
                     .map(|v| v.iter().map(|v| v.to_string()).collect())
             }))
-            .merge_permalink(unprocessed_attributes
-                                 .remove("permalink")
-                                 .map(|v| convert_permalink(v.to_str().as_ref())))
-            .merge_draft(unprocessed_attributes
-                             .remove("published")
-                             .and_then(|v| v.as_scalar().and_then(|v| v.to_bool())))
-            .merge_layout(unprocessed_attributes
-                              .remove("layout")
-                              .map(|v| v.to_string()))
-            .merge_published_date(unprocessed_attributes
-                                      .remove("date")
-                                      .and_then(|d| d.as_scalar().and_then(|d| d.to_date()))
-                                      .map(|d| d.into()))
+            .merge_permalink(
+                unprocessed_attributes
+                    .remove("permalink")
+                    .map(|v| convert_permalink(v.to_str().as_ref())),
+            )
+            .merge_draft(
+                unprocessed_attributes
+                    .remove("published")
+                    .and_then(|v| v.as_scalar().and_then(|v| v.to_bool())),
+            )
+            .merge_layout(
+                unprocessed_attributes
+                    .remove("layout")
+                    .map(|v| v.to_string()),
+            )
+            .merge_published_date(
+                unprocessed_attributes
+                    .remove("date")
+                    .and_then(|d| d.as_scalar().and_then(|d| d.to_date()))
+                    .map(|d| d.into()),
+            )
             .merge_data(unprocessed_attributes)
     }
 }
 
-fn migrate_variable(var: String) -> Part {
+fn migrate_variable(var: &str) -> Part {
     let native_variable = {
-        let name: &str = &var;
+        let name: &str = var;
         VARIABLES.contains(&name)
     };
-    let var = match var.as_str() {
+    let var = match var {
         "path" => "parent".to_owned(),
         "filename" => "name".to_owned(),
         "output_ext" => "ext".to_owned(),
@@ -109,7 +121,7 @@ mod test {
 
     #[test]
     fn migrate_variable_known() {
-        let fixture = "path".to_owned();
+        let fixture = "path";
         let expected = Part::Constant("{{ parent }}".to_owned());
         let actual = migrate_variable(fixture);
         assert_eq!(actual, expected);
@@ -117,7 +129,7 @@ mod test {
 
     #[test]
     fn migrate_variable_unknown() {
-        let fixture = "gobbly/gook".to_owned();
+        let fixture = "gobbly/gook";
         let expected = Part::Constant("{{ data.gobbly/gook }}".to_owned());
         let actual = migrate_variable(fixture);
         assert_eq!(actual, expected);
@@ -140,13 +152,17 @@ mod test {
 
     #[test]
     fn convert_permalink_known_variable() {
-        assert_eq!(convert_permalink("hello/:path/world/:i_day/"),
-                   "/hello/{{ parent }}/world/{{ i_day }}/".to_owned());
+        assert_eq!(
+            convert_permalink("hello/:path/world/:i_day/"),
+            "/hello/{{ parent }}/world/{{ i_day }}/".to_owned()
+        );
     }
 
     #[test]
     fn convert_permalink_unknown_variable() {
-        assert_eq!(convert_permalink("hello/:party/world/:i_day/"),
-                   "/hello/{{ data.party/world/ }}{{ i_day }}/".to_owned());
+        assert_eq!(
+            convert_permalink("hello/:party/world/:i_day/"),
+            "/hello/{{ data.party/world/ }}{{ i_day }}/".to_owned()
+        );
     }
 }

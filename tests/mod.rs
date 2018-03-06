@@ -65,9 +65,11 @@ fn assert_dirs_eq(expected: &Path, actual: &Path) {
             .expect("Comparison error");
         let src_file = Path::new(actual).join(&extra_file);
 
-        File::open(&src_file).expect(&format!("File {:?} does not exist in reference ({:?}).",
-                                              entry.path(),
-                                              src_file));
+        File::open(&src_file).expect(&format!(
+            "File {:?} does not exist in reference ({:?}).",
+            entry.path(),
+            src_file
+        ));
     }
 }
 
@@ -163,8 +165,10 @@ pub fn incomplete_rss() {
     assert!(err.is_err());
 
     let err = err.unwrap_err();
-    assert_eq!(format!("{}", err),
-               "name, description and link need to be defined in the config file to generate RSS");
+    assert_eq!(
+        format!("{}", err),
+        "name, description and link need to be defined in the config file to generate RSS"
+    );
     assert_eq!(err.description(), "missing fields in config file");
 }
 
@@ -172,8 +176,10 @@ pub fn incomplete_rss() {
 pub fn liquid_error() {
     let err = run_test("liquid_error");
     assert!(err.is_err());
-    assert_contains!(format!("{}", err.unwrap_err().display_chain()),
-                     "Invalid identifier");
+    assert_contains!(
+        format!("{}", err.unwrap_err().display_chain()),
+        "Invalid identifier"
+    );
 }
 
 #[test]
@@ -185,9 +191,11 @@ pub fn liquid_raw() {
 pub fn no_extends_error() {
     let err = run_test("no_extends_error");
     assert!(err.is_err());
-    assert_contains!(format!("{}", err.unwrap_err().display_chain()),
-                     "Layout default_nonexistent.liquid does not exist (referenced in \
-                      \"index.html\")");
+    assert_contains!(
+        format!("{}", err.unwrap_err().display_chain()),
+        "Layout default_nonexistent.liquid does not exist (referenced in \
+         \"index.html\")"
+    );
 }
 
 #[test]

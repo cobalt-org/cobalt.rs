@@ -8,30 +8,30 @@ use log;
 use cobalt;
 use error::*;
 
-
 pub fn get_config_args() -> Vec<clap::Arg<'static, 'static>> {
-    [clap::Arg::with_name("config")
-         .short("c")
-         .long("config")
-         .value_name("FILE")
-         .help("Config file to use [default: _cobalt.yml]")
-         .takes_value(true),
-     clap::Arg::with_name("destination")
-         .short("d")
-         .long("destination")
-         .value_name("DIR")
-         .help("Site destination folder [default: ./]")
-         .takes_value(true),
-     clap::Arg::with_name("drafts")
-         .long("drafts")
-         .help("Include drafts.")
-         .takes_value(false),
-     clap::Arg::with_name("no-drafts")
-         .long("no-drafts")
-         .help("Ignore drafts.")
-         .conflicts_with("drafts")
-         .takes_value(false)]
-        .to_vec()
+    [
+        clap::Arg::with_name("config")
+            .short("c")
+            .long("config")
+            .value_name("FILE")
+            .help("Config file to use [default: _cobalt.yml]")
+            .takes_value(true),
+        clap::Arg::with_name("destination")
+            .short("d")
+            .long("destination")
+            .value_name("DIR")
+            .help("Site destination folder [default: ./]")
+            .takes_value(true),
+        clap::Arg::with_name("drafts")
+            .long("drafts")
+            .help("Include drafts.")
+            .takes_value(false),
+        clap::Arg::with_name("no-drafts")
+            .long("no-drafts")
+            .help("Ignore drafts.")
+            .conflicts_with("drafts")
+            .takes_value(false),
+    ].to_vec()
 }
 
 pub fn get_config(matches: &clap::ArgMatches) -> Result<cobalt::ConfigBuilder> {
@@ -59,29 +59,31 @@ pub fn get_config(matches: &clap::ArgMatches) -> Result<cobalt::ConfigBuilder> {
 }
 
 pub fn get_logging_args() -> Vec<clap::Arg<'static, 'static>> {
-    [clap::Arg::with_name("log-level")
-         .short("L")
-         .long("log-level")
-         .possible_values(&["error", "warn", "info", "debug", "trace", "off"])
-         .help("Log level [default: info]")
-         .global(true)
-         .takes_value(true),
-     clap::Arg::with_name("trace")
-         .long("trace")
-         .help("Log ultra-verbose (trace level) information")
-         .global(true)
-         .takes_value(false),
-     clap::Arg::with_name("silent")
-         .long("silent")
-         .help("Suppress all output")
-         .global(true)
-         .takes_value(false)]
-        .to_vec()
+    [
+        clap::Arg::with_name("log-level")
+            .short("L")
+            .long("log-level")
+            .possible_values(&["error", "warn", "info", "debug", "trace", "off"])
+            .help("Log level [default: info]")
+            .global(true)
+            .takes_value(true),
+        clap::Arg::with_name("trace")
+            .long("trace")
+            .help("Log ultra-verbose (trace level) information")
+            .global(true)
+            .takes_value(false),
+        clap::Arg::with_name("silent")
+            .long("silent")
+            .help("Suppress all output")
+            .global(true)
+            .takes_value(false),
+    ].to_vec()
 }
 
-pub fn get_logging(global_matches: &clap::ArgMatches,
-                   matches: &clap::ArgMatches)
-                   -> Result<env_logger::LogBuilder> {
+pub fn get_logging(
+    global_matches: &clap::ArgMatches,
+    matches: &clap::ArgMatches,
+) -> Result<env_logger::LogBuilder> {
     let format = |record: &log::LogRecord| {
         let level = format!("[{}]", record.level()).to_lowercase();
         format!("{:8} {}", level, record.args())
@@ -91,8 +93,9 @@ pub fn get_logging(global_matches: &clap::ArgMatches,
     builder.format(format);
 
     match matches
-              .value_of("log-level")
-              .or_else(|| global_matches.value_of("log-level")) {
+        .value_of("log-level")
+        .or_else(|| global_matches.value_of("log-level"))
+    {
         Some("error") => builder.filter(None, log::LogLevelFilter::Error),
         Some("warn") => builder.filter(None, log::LogLevelFilter::Warn),
         Some("debug") => builder.filter(None, log::LogLevelFilter::Debug),

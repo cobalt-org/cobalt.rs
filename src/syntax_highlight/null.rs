@@ -2,7 +2,7 @@ use liquid;
 use liquid::interpreter::{Context, Renderable};
 use liquid::compiler::LiquidOptions;
 use liquid::compiler::Token::{self, Identifier};
-use liquid::compiler::Element::{self, Expression, Tag, Raw};
+use liquid::compiler::Element::{self, Expression, Raw, Tag};
 use pulldown_cmark as cmark;
 
 use error;
@@ -64,9 +64,10 @@ struct CodeBlock {
 impl Renderable for CodeBlock {
     fn render(&self, _: &mut Context) -> Result<Option<String>, liquid::Error> {
         if let Some(ref lang) = self.lang {
-            Ok(Some(format!("<pre><code class=\"language-{}\">{}</code></pre>",
-                            lang,
-                            self.code)))
+            Ok(Some(format!(
+                "<pre><code class=\"language-{}\">{}</code></pre>",
+                lang, self.code
+            )))
         } else {
             Ok(Some(format!("<pre><code>{}</code></pre>", self.code)))
         }
@@ -83,17 +84,16 @@ impl CodeBlockParser {
 }
 
 impl liquid::compiler::ParseBlock for CodeBlockParser {
-    fn parse(&self,
-             _tag_name: &str,
-             arguments: &[Token],
-             tokens: &[Element],
-             _options: &LiquidOptions)
-             -> Result<Box<Renderable>, liquid::Error> {
+    fn parse(
+        &self,
+        _tag_name: &str,
+        arguments: &[Token],
+        tokens: &[Element],
+        _options: &LiquidOptions,
+    ) -> Result<Box<Renderable>, liquid::Error> {
         let content = tokens.iter().fold("".to_owned(), |a, b| {
             match *b {
-                Expression(_, ref text) |
-                Tag(_, ref text) |
-                Raw(ref text) => text,
+                Expression(_, ref text) | Tag(_, ref text) | Raw(ref text) => text,
             }.to_owned() + &a
         });
 
@@ -105,9 +105,9 @@ impl liquid::compiler::ParseBlock for CodeBlockParser {
         let content = html_escape(&content);
 
         Ok(Box::new(CodeBlock {
-                        lang: lang,
-                        code: content,
-                    }))
+            lang: lang,
+            code: content,
+        }))
     }
 }
 
@@ -121,7 +121,7 @@ pub fn decorate_markdown<'a>(parser: cmark::Parser<'a>, _theme_name: &str) -> De
 mod test {
     use super::*;
 
-    const CODE_BLOCK: &'static str = "mod test {
+    const CODE_BLOCK: &str = "mod test {
         fn hello(arg: int) -> bool {
             \
                                       true
@@ -129,7 +129,7 @@ mod test {
     }
 ";
 
-    const CODEBLOCK_RENDERED: &'static str = r#"<pre><code class="language-rust">mod test {
+    const CODEBLOCK_RENDERED: &str = r#"<pre><code class="language-rust">mod test {
         fn hello(arg: int) -&gt; bool {
             true
         }
@@ -144,13 +144,16 @@ mod test {
             .block("highlight", highlight)
             .build();
         let template = parser
-            .parse(&format!("{{% highlight rust %}}{}{{% endhighlight %}}", CODE_BLOCK))
+            .parse(&format!(
+                "{{% highlight rust %}}{}{{% endhighlight %}}",
+                CODE_BLOCK
+            ))
             .unwrap();
         let output = template.render(&liquid::Object::new());
         assert_eq!(output.unwrap(), CODEBLOCK_RENDERED.to_string());
     }
 
-    const MARKDOWN_RENDERED: &'static str = r#"<pre><code class="language-rust">mod test {
+    const MARKDOWN_RENDERED: &str = r#"<pre><code class="language-rust">mod test {
         fn hello(arg: int) -&gt; bool {
             true
         }

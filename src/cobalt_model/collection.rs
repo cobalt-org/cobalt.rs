@@ -7,8 +7,7 @@ use super::FrontmatterBuilder;
 use super::files;
 use super::slug;
 
-#[derive(Debug, Eq, PartialEq, Hash, Copy, Clone)]
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Eq, PartialEq, Hash, Copy, Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub enum SortOrder {
     None,
@@ -22,8 +21,7 @@ impl Default for SortOrder {
     }
 }
 
-#[derive(Clone, Default, Debug, PartialEq)]
-#[derive(Serialize, Deserialize)]
+#[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields, default)]
 pub struct CollectionBuilder {
     pub title: Option<String>,
@@ -76,20 +74,22 @@ impl CollectionBuilder {
         let source = source.ok_or_else(|| "No asset source provided")?;
 
         let dir = dir.unwrap_or_else(|| slug.clone());
-        let pages = Self::build_files(&source, dir, &template_extensions, &ignore)?;
+        let pages = Self::build_files(&source, &dir, &template_extensions, &ignore)?;
 
         let drafts_dir = if include_drafts { drafts_dir } else { None };
         let drafts = drafts_dir
-            .map(|dir| Self::build_files(&source, dir, &template_extensions, &ignore))
+            .map(|dir| Self::build_files(&source, &dir, &template_extensions, &ignore))
             .map_or(Ok(None), |r| r.map(Some))?;
 
-        let mut attributes: liquid::Object =
-            vec![("title".to_owned(), liquid::Value::scalar(&title)),
-                 ("slug".to_owned(), liquid::Value::scalar(&slug)),
-                 ("description".to_owned(),
-                  liquid::Value::scalar(description.clone().unwrap_or_else(|| "".to_owned())))]
-                .into_iter()
-                .collect();
+        let mut attributes: liquid::Object = vec![
+            ("title".to_owned(), liquid::Value::scalar(&title)),
+            ("slug".to_owned(), liquid::Value::scalar(&slug)),
+            (
+                "description".to_owned(),
+                liquid::Value::scalar(description.clone().unwrap_or_else(|| "".to_owned())),
+            ),
+        ].into_iter()
+            .collect();
         if let Some(ref rss) = rss {
             attributes.insert("rss".to_owned(), liquid::Value::scalar(rss));
         }
@@ -116,11 +116,12 @@ impl CollectionBuilder {
         Ok(new)
     }
 
-    fn build_files(source: &path::Path,
-                   dir: String,
-                   template_extensions: &[String],
-                   ignore: &[String])
-                   -> Result<files::Files> {
+    fn build_files(
+        source: &path::Path,
+        dir: &str,
+        template_extensions: &[String],
+        ignore: &[String],
+    ) -> Result<files::Files> {
         if dir.starts_with('/') {
             bail!("Collection dir {} must be a relative path", dir)
         }
@@ -193,8 +194,10 @@ mod test {
         collection.drafts_dir = Some("rel".to_owned());
         collection.include_drafts = true;
         let collection = collection.build().unwrap();
-        assert_eq!(collection.drafts.unwrap().subtree(),
-                   path::Path::new("/rel"));
+        assert_eq!(
+            collection.drafts.unwrap().subtree(),
+            path::Path::new("/rel")
+        );
     }
 
     #[test]

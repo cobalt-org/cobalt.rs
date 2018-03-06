@@ -8,16 +8,16 @@ use liquid;
 use liquid::interpreter::{Context, Renderable};
 use liquid::compiler::LiquidOptions;
 use liquid::compiler::Token::{self, Identifier};
-use liquid::compiler::Element::{self, Expression, Tag, Raw};
+use liquid::compiler::Element::{self, Expression, Raw, Tag};
 
 use syntect::parsing::{SyntaxDefinition, SyntaxSet};
-use syntect::highlighting::{ThemeSet, Theme};
-use syntect::html::{IncludeBackground, highlighted_snippet_for_string, styles_to_coloured_html,
-                    start_coloured_html_snippet};
+use syntect::highlighting::{Theme, ThemeSet};
+use syntect::html::{highlighted_snippet_for_string, start_coloured_html_snippet,
+                    styles_to_coloured_html, IncludeBackground};
 use syntect::easy::HighlightLines;
 
 use pulldown_cmark as cmark;
-use pulldown_cmark::Event::{self, Start, End, Text, Html};
+use pulldown_cmark::Event::{self, End, Html, Start, Text};
 
 use error;
 
@@ -77,7 +77,11 @@ impl Renderable for CodeBlock {
             _ => None,
         }.unwrap_or_else(|| SETUP.syntax_set.find_syntax_plain_text());
 
-        Ok(Some(highlighted_snippet_for_string(&self.code, syntax, &self.theme)))
+        Ok(Some(highlighted_snippet_for_string(
+            &self.code,
+            syntax,
+            &self.theme,
+        )))
     }
 }
 
@@ -93,17 +97,16 @@ impl CodeBlockParser {
 }
 
 impl liquid::compiler::ParseBlock for CodeBlockParser {
-    fn parse(&self,
-             _tag_name: &str,
-             arguments: &[Token],
-             tokens: &[Element],
-             _options: &LiquidOptions)
-             -> Result<Box<Renderable>, liquid::Error> {
+    fn parse(
+        &self,
+        _tag_name: &str,
+        arguments: &[Token],
+        tokens: &[Element],
+        _options: &LiquidOptions,
+    ) -> Result<Box<Renderable>, liquid::Error> {
         let content = tokens.iter().fold("".to_owned(), |a, b| {
             match *b {
-                Expression(_, ref text) |
-                Tag(_, ref text) |
-                Raw(ref text) => text,
+                Expression(_, ref text) | Tag(_, ref text) | Raw(ref text) => text,
             }.to_owned() + &a
         });
 
@@ -113,10 +116,10 @@ impl liquid::compiler::ParseBlock for CodeBlockParser {
         };
 
         Ok(Box::new(CodeBlock {
-                        code: content,
-                        lang: lang,
-                        theme: SETUP.theme_set.themes[&self.syntax_theme].clone(),
-                    }))
+            code: content,
+            lang: lang,
+            theme: SETUP.theme_set.themes[&self.syntax_theme].clone(),
+        }))
     }
 }
 
@@ -153,12 +156,11 @@ impl<'a> Iterator for DecoratedParser<'a> {
                 } else {
                     if let Start(cmark::Tag::CodeBlock(ref info)) = item {
                         // set local highlighter, if found
-                        let cur_syntax =
-                            info.clone()
-                                .split(' ')
-                                .next()
-                                .and_then(|lang| SETUP.syntax_set.find_syntax_by_token(lang))
-                                .unwrap_or_else(|| SETUP.syntax_set.find_syntax_plain_text());
+                        let cur_syntax = info.clone()
+                            .split(' ')
+                            .next()
+                            .and_then(|lang| SETUP.syntax_set.find_syntax_by_token(lang))
+                            .unwrap_or_else(|| SETUP.syntax_set.find_syntax_plain_text());
                         self.h = Some(HighlightLines::new(cur_syntax, self.theme));
                         let snippet = start_coloured_html_snippet(self.theme);
                         return Some(Html(Owned(snippet)));
@@ -186,7 +188,7 @@ pub fn decorate_markdown<'a>(parser: cmark::Parser<'a>, theme_name: &str) -> Dec
 mod test {
     use super::*;
 
-    const CODE_BLOCK: &'static str = "mod test {
+    const CODE_BLOCK: &str = "mod test {
         fn hello(arg: int) -> bool {
             \
                                       true
@@ -194,7 +196,8 @@ mod test {
     }
     ";
 
-    const CODEBLOCK_RENDERED: &'static str = "<pre style=\"background-color:#2b303b;\">\n<span \
+    const CODEBLOCK_RENDERED: &str =
+        "<pre style=\"background-color:#2b303b;\">\n<span \
          style=\"color:#b48ead;\">mod</span><span style=\"color:#c0c5ce;\"> </span><span \
          style=\"color:#c0c5ce;\">test</span><span style=\"color:#c0c5ce;\"> </span><span \
          style=\"color:#c0c5ce;\">{</span>\n<span style=\"color:#c0c5ce;\">        </span><span \
@@ -211,40 +214,41 @@ mod test {
          </span><span style=\"color:#c0c5ce;\">}</span>\n<span style=\"color:#c0c5ce;\">    \
          </span>\n</pre>\n";
 
-    const MARKDOWN_RENDERED: &'static str = "<pre style=\"background-color:#2b303b\">\n<span \
-        style=\"background-color:#2b303b;color:#b48ead;\">mod</span><span \
-        style=\"background-color:#2b303b;color:#c0c5ce;\"> </span><span \
-        style=\"background-color:#2b303b;color:#c0c5ce;\">test</span><span \
-        style=\"background-color:#2b303b;color:#c0c5ce;\"> </span><span \
-        style=\"background-color:#2b303b;color:#c0c5ce;\">{</span><span \
-        style=\"background-color:#2b303b;color:#c0c5ce;\">\n</span><span \
-        style=\"background-color:#2b303b;color:#c0c5ce;\">        </span><span \
-        style=\"background-color:#2b303b;color:#b48ead;\">fn</span><span \
-        style=\"background-color:#2b303b;color:#c0c5ce;\"> </span><span \
-        style=\"background-color:#2b303b;color:#8fa1b3;\">hello</span><span \
-        style=\"background-color:#2b303b;color:#c0c5ce;\">(</span><span \
-        style=\"background-color:#2b303b;color:#bf616a;\">arg</span><span \
-        style=\"background-color:#2b303b;color:#c0c5ce;\">:</span><span \
-        style=\"background-color:#2b303b;color:#c0c5ce;\"> int</span><span \
-        style=\"background-color:#2b303b;color:#c0c5ce;\">)</span><span \
-        style=\"background-color:#2b303b;color:#c0c5ce;\"> </span><span \
-        style=\"background-color:#2b303b;color:#c0c5ce;\">-&gt;</span><span \
-        style=\"background-color:#2b303b;color:#c0c5ce;\"> </span><span \
-        style=\"background-color:#2b303b;color:#b48ead;\">bool</span><span \
-        style=\"background-color:#2b303b;color:#c0c5ce;\"> </span><span \
-        style=\"background-color:#2b303b;color:#c0c5ce;\">{</span><span \
-        style=\"background-color:#2b303b;color:#c0c5ce;\">\n</span><span \
-        style=\"background-color:#2b303b;color:#c0c5ce;\">            </span><span \
-        style=\"background-color:#2b303b;color:#d08770;\">true</span><span \
-        style=\"background-color:#2b303b;color:#c0c5ce;\">\n</span><span \
-        style=\"background-color:#2b303b;color:#c0c5ce;\">        </span><span \
-        style=\"background-color:#2b303b;color:#c0c5ce;\">}</span><span \
-        style=\"background-color:#2b303b;color:#c0c5ce;\">\n</span><span \
-        style=\"background-color:#2b303b;color:#c0c5ce;\">    </span><span \
-        style=\"background-color:#2b303b;color:#c0c5ce;\">}</span><span \
-        style=\"background-color:#2b303b;color:#c0c5ce;\">\n</span><span \
-        style=\"background-color:#2b303b;color:#c0c5ce;\">    </span><span \
-        style=\"background-color:#2b303b;color:#c0c5ce;\">\n</span></pre>";
+    const MARKDOWN_RENDERED: &str =
+        "<pre style=\"background-color:#2b303b\">\n<span \
+         style=\"background-color:#2b303b;color:#b48ead;\">mod</span><span \
+         style=\"background-color:#2b303b;color:#c0c5ce;\"> </span><span \
+         style=\"background-color:#2b303b;color:#c0c5ce;\">test</span><span \
+         style=\"background-color:#2b303b;color:#c0c5ce;\"> </span><span \
+         style=\"background-color:#2b303b;color:#c0c5ce;\">{</span><span \
+         style=\"background-color:#2b303b;color:#c0c5ce;\">\n</span><span \
+         style=\"background-color:#2b303b;color:#c0c5ce;\">        </span><span \
+         style=\"background-color:#2b303b;color:#b48ead;\">fn</span><span \
+         style=\"background-color:#2b303b;color:#c0c5ce;\"> </span><span \
+         style=\"background-color:#2b303b;color:#8fa1b3;\">hello</span><span \
+         style=\"background-color:#2b303b;color:#c0c5ce;\">(</span><span \
+         style=\"background-color:#2b303b;color:#bf616a;\">arg</span><span \
+         style=\"background-color:#2b303b;color:#c0c5ce;\">:</span><span \
+         style=\"background-color:#2b303b;color:#c0c5ce;\"> int</span><span \
+         style=\"background-color:#2b303b;color:#c0c5ce;\">)</span><span \
+         style=\"background-color:#2b303b;color:#c0c5ce;\"> </span><span \
+         style=\"background-color:#2b303b;color:#c0c5ce;\">-&gt;</span><span \
+         style=\"background-color:#2b303b;color:#c0c5ce;\"> </span><span \
+         style=\"background-color:#2b303b;color:#b48ead;\">bool</span><span \
+         style=\"background-color:#2b303b;color:#c0c5ce;\"> </span><span \
+         style=\"background-color:#2b303b;color:#c0c5ce;\">{</span><span \
+         style=\"background-color:#2b303b;color:#c0c5ce;\">\n</span><span \
+         style=\"background-color:#2b303b;color:#c0c5ce;\">            </span><span \
+         style=\"background-color:#2b303b;color:#d08770;\">true</span><span \
+         style=\"background-color:#2b303b;color:#c0c5ce;\">\n</span><span \
+         style=\"background-color:#2b303b;color:#c0c5ce;\">        </span><span \
+         style=\"background-color:#2b303b;color:#c0c5ce;\">}</span><span \
+         style=\"background-color:#2b303b;color:#c0c5ce;\">\n</span><span \
+         style=\"background-color:#2b303b;color:#c0c5ce;\">    </span><span \
+         style=\"background-color:#2b303b;color:#c0c5ce;\">}</span><span \
+         style=\"background-color:#2b303b;color:#c0c5ce;\">\n</span><span \
+         style=\"background-color:#2b303b;color:#c0c5ce;\">    </span><span \
+         style=\"background-color:#2b303b;color:#c0c5ce;\">\n</span></pre>";
 
     #[test]
     fn codeblock_renders_rust() {
@@ -256,7 +260,10 @@ mod test {
                 .block("highlight", highlight)
                 .build();
             let template = parser
-                .parse(&format!("{{% highlight rust %}}{}{{% endhighlight %}}", CODE_BLOCK))
+                .parse(&format!(
+                    "{{% highlight rust %}}{}{{% endhighlight %}}",
+                    CODE_BLOCK
+                ))
                 .unwrap();
             let output = template.render(&liquid::Object::new());
             assert_eq!(output.unwrap(), CODEBLOCK_RENDERED.to_string());

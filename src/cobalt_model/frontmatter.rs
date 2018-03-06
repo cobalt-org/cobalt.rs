@@ -13,15 +13,14 @@ use error::Result;
 use super::datetime;
 use super::slug;
 
-const PATH_ALIAS: &'static str = "/{{parent}}/{{name}}{{ext}}";
+const PATH_ALIAS: &str = "/{{parent}}/{{name}}{{ext}}";
 lazy_static!{
     static ref PERMALINK_ALIASES: HashMap<&'static str, &'static str> = [
         ("path", PATH_ALIAS),
     ].iter().map(|&(k, v)| (k, v)).collect();
 }
 
-#[derive(Debug, Eq, PartialEq, Hash, Copy, Clone)]
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Eq, PartialEq, Hash, Copy, Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub enum SourceFormat {
     Raw,
@@ -53,38 +52,25 @@ pub trait Front
     }
 }
 
-#[derive(Debug, Eq, PartialEq, Default, Clone)]
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Eq, PartialEq, Default, Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields, default)]
 pub struct FrontmatterBuilder {
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub permalink: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub slug: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub title: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub description: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub excerpt: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub categories: Option<Vec<String>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub excerpt_separator: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")] pub permalink: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")] pub slug: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")] pub title: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")] pub description: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")] pub excerpt: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")] pub categories: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")] pub excerpt_separator: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub published_date: Option<datetime::DateTime>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub format: Option<SourceFormat>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub layout: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub is_draft: Option<bool>,
-    #[serde(skip_serializing_if = "liquid::Object::is_empty")]
-    pub data: liquid::Object,
+    #[serde(skip_serializing_if = "Option::is_none")] pub format: Option<SourceFormat>,
+    #[serde(skip_serializing_if = "Option::is_none")] pub layout: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")] pub is_draft: Option<bool>,
+    #[serde(skip_serializing_if = "liquid::Object::is_empty")] pub data: liquid::Object,
     // Controlled by where the file is found.  We might allow control over the type at a later
     // point but we need to first define those semantics.
-    #[serde(skip)]
-    pub collection: Option<String>,
+    #[serde(skip)] pub collection: Option<String>,
 }
 
 impl FrontmatterBuilder {
@@ -141,9 +127,10 @@ impl FrontmatterBuilder {
         }
     }
 
-    pub fn set_published_date<D: Into<Option<datetime::DateTime>>>(self,
-                                                                   published_date: D)
-                                                                   -> Self {
+    pub fn set_published_date<D: Into<Option<datetime::DateTime>>>(
+        self,
+        published_date: D,
+    ) -> Self {
         Self {
             published_date: published_date.into(),
             ..self
@@ -207,9 +194,10 @@ impl FrontmatterBuilder {
         self.merge(Self::new().set_excerpt_separator(excerpt_separator.into()))
     }
 
-    pub fn merge_published_date<D: Into<Option<datetime::DateTime>>>(self,
-                                                                     published_date: D)
-                                                                     -> Self {
+    pub fn merge_published_date<D: Into<Option<datetime::DateTime>>>(
+        self,
+        published_date: D,
+    ) -> Self {
         self.merge(Self::new().set_published_date(published_date.into()))
     }
 
@@ -370,10 +358,9 @@ impl FrontmatterBuilder {
 
         let permalink = permalink.unwrap_or_else(|| PATH_ALIAS.to_owned());
         let permalink = if !permalink.starts_with('/') {
-            let resolved =
-                *PERMALINK_ALIASES
-                    .get(permalink.as_str())
-                    .ok_or_else(|| format!("Unsupported permalink alias '{}'", permalink))?;
+            let resolved = *PERMALINK_ALIASES
+                .get(permalink.as_str())
+                .ok_or_else(|| format!("Unsupported permalink alias '{}'", permalink))?;
             resolved.to_owned()
         } else {
             permalink
@@ -408,8 +395,7 @@ impl fmt::Display for FrontmatterBuilder {
 
 impl Front for FrontmatterBuilder {}
 
-#[derive(Debug, Eq, PartialEq, Default, Clone)]
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Eq, PartialEq, Default, Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields, default)]
 pub struct Frontmatter {
     pub permalink: String,
@@ -485,12 +471,14 @@ fn parse_file_stem(stem: String) -> (Option<datetime::DateTime>, String) {
             .and_then(|d| d.with_month(month))
             .and_then(|d| d.with_day(day));
         published.map(|p| {
-                          (Some(p),
-                           caps.get(4)
-                               .expect("unconditional capture")
-                               .as_str()
-                               .to_owned())
-                      })
+            (
+                Some(p),
+                caps.get(4)
+                    .expect("unconditional capture")
+                    .as_str()
+                    .to_owned(),
+            )
+        })
     });
 
     parts.unwrap_or((None, stem))
@@ -514,72 +502,102 @@ mod test {
 
     #[test]
     fn parse_file_stem_none() {
-        assert_eq!(parse_file_stem("First Blog Post".to_owned()),
-                   (None, "First Blog Post".to_owned()));
+        assert_eq!(
+            parse_file_stem("First Blog Post".to_owned()),
+            (None, "First Blog Post".to_owned())
+        );
     }
 
     #[test]
     fn parse_file_stem_out_of_range_month() {
-        assert_eq!(parse_file_stem("2017-30-5 First Blog Post".to_owned()),
-                   (None, "2017-30-5 First Blog Post".to_owned()));
+        assert_eq!(
+            parse_file_stem("2017-30-5 First Blog Post".to_owned()),
+            (None, "2017-30-5 First Blog Post".to_owned())
+        );
     }
 
     #[test]
     fn parse_file_stem_out_of_range_day() {
-        assert_eq!(parse_file_stem("2017-3-50 First Blog Post".to_owned()),
-                   (None, "2017-3-50 First Blog Post".to_owned()));
+        assert_eq!(
+            parse_file_stem("2017-3-50 First Blog Post".to_owned()),
+            (None, "2017-3-50 First Blog Post".to_owned())
+        );
     }
 
     #[test]
     fn parse_file_stem_single_digit() {
-        assert_eq!(parse_file_stem("2017-3-5 First Blog Post".to_owned()),
-                   (Some(datetime::DateTime::default()
-                             .with_year(2017)
-                             .unwrap()
-                             .with_month(3)
-                             .unwrap()
-                             .with_day(5)
-                             .unwrap()),
-                    "First Blog Post".to_owned()));
+        assert_eq!(
+            parse_file_stem("2017-3-5 First Blog Post".to_owned()),
+            (
+                Some(
+                    datetime::DateTime::default()
+                        .with_year(2017)
+                        .unwrap()
+                        .with_month(3)
+                        .unwrap()
+                        .with_day(5)
+                        .unwrap()
+                ),
+                "First Blog Post".to_owned()
+            )
+        );
     }
 
     #[test]
     fn parse_file_stem_double_digit() {
-        assert_eq!(parse_file_stem("2017-12-25 First Blog Post".to_owned()),
-                   (Some(datetime::DateTime::default()
-                             .with_year(2017)
-                             .unwrap()
-                             .with_month(12)
-                             .unwrap()
-                             .with_day(25)
-                             .unwrap()),
-                    "First Blog Post".to_owned()));
+        assert_eq!(
+            parse_file_stem("2017-12-25 First Blog Post".to_owned()),
+            (
+                Some(
+                    datetime::DateTime::default()
+                        .with_year(2017)
+                        .unwrap()
+                        .with_month(12)
+                        .unwrap()
+                        .with_day(25)
+                        .unwrap()
+                ),
+                "First Blog Post".to_owned()
+            )
+        );
     }
 
     #[test]
     fn parse_file_stem_double_digit_leading_zero() {
-        assert_eq!(parse_file_stem("2017-03-05 First Blog Post".to_owned()),
-                   (Some(datetime::DateTime::default()
-                             .with_year(2017)
-                             .unwrap()
-                             .with_month(3)
-                             .unwrap()
-                             .with_day(5)
-                             .unwrap()),
-                    "First Blog Post".to_owned()));
+        assert_eq!(
+            parse_file_stem("2017-03-05 First Blog Post".to_owned()),
+            (
+                Some(
+                    datetime::DateTime::default()
+                        .with_year(2017)
+                        .unwrap()
+                        .with_month(3)
+                        .unwrap()
+                        .with_day(5)
+                        .unwrap()
+                ),
+                "First Blog Post".to_owned()
+            )
+        );
     }
 
     #[test]
     fn parse_file_stem_dashed() {
-        assert_eq!(parse_file_stem("2017-3-5-First-Blog-Post".to_owned()),
-                   (Some(datetime::DateTime::default()
-                             .with_year(2017)
-                             .unwrap()
-                             .with_month(3)
-                             .unwrap()
-                             .with_day(5)
-                             .unwrap()),
-                    "First-Blog-Post".to_owned()));
+        assert_eq!(
+            parse_file_stem("2017-3-5-First-Blog-Post".to_owned()),
+            (
+                Some(
+                    datetime::DateTime::default()
+                        .with_year(2017)
+                        .unwrap()
+                        .with_month(3)
+                        .unwrap()
+                        .with_day(5)
+                        .unwrap()
+                ),
+                "First-Blog-Post".to_owned()
+            )
+        );
     }
 
     #[test]

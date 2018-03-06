@@ -12,18 +12,22 @@ use error::*;
 pub fn convert_command_args() -> clap::App<'static, 'static> {
     clap::SubCommand::with_name("convert-jekyll")
         .about("convert jekyll website to cobalt")
-        .arg(clap::Arg::with_name("source")
-                 .long("source")
-                 .value_name("JEKYLL-FILE-OR-DIR")
-                 .help("Jekyll posts' directory")
-                 .required(true)
-                 .takes_value(true))
-        .arg(clap::Arg::with_name("destination")
-                 .long("destination")
-                 .value_name("DIR")
-                 .help("Output dir of converted posts")
-                 .takes_value(true)
-                 .default_value("./posts"))
+        .arg(
+            clap::Arg::with_name("source")
+                .long("source")
+                .value_name("JEKYLL-FILE-OR-DIR")
+                .help("Jekyll posts' directory")
+                .required(true)
+                .takes_value(true),
+        )
+        .arg(
+            clap::Arg::with_name("destination")
+                .long("destination")
+                .value_name("DIR")
+                .help("Output dir of converted posts")
+                .takes_value(true)
+                .default_value("./posts"),
+        )
 }
 
 pub fn convert_command(matches: &clap::ArgMatches) -> Result<()> {

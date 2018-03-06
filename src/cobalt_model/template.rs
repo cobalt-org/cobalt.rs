@@ -59,15 +59,16 @@ impl liquid::compiler::Include for InMemoryInclude {
                     .as_ref()
                     .ok_or_else(|| liquid::Error::with_msg("No legacy path specified"))?
                     .include(path)?;
-                warn!("Loading `include`s relative to `source` is deprecated, see {}.",
-                      path);
+                warn!(
+                    "Loading `include`s relative to `source` is deprecated, see {}.",
+                    path
+                );
                 Ok(content)
             })
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct LiquidBuilder {
     pub includes_dir: path::PathBuf,

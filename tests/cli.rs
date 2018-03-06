@@ -170,7 +170,7 @@ pub fn clean_warning() {
         .stderr()
         .contains(
             "Attempting to delete current directory, Cancelling the \
-              operation",
+             operation",
         )
         .unwrap();
 }
