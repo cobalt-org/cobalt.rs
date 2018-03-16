@@ -38,7 +38,7 @@ matrix:
     install:
     - travis_wait cargo install clippy --version $CLIPPY_VERSION || echo "clippy already installed"
     script:
-    - cargo clippy --features "sass" -- -D clippy
+    - cargo clippy -- -D clippy
 
 install:
 - rustc -Vv
@@ -53,8 +53,6 @@ script:
 - cargo test  --verbose
 - cargo check --no-default-features --verbose
 - cargo test --no-default-features --verbose
-- cargo check --verbose --features "sass"
-- cargo test  --verbose --features "sass"
 
 before_deploy:
 - sh ci/before_deploy.sh
