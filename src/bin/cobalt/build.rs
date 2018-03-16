@@ -13,31 +13,6 @@ pub fn build_command_args() -> clap::App<'static, 'static> {
     clap::SubCommand::with_name("build")
         .about("build the cobalt project at the source dir")
         .args(&args::get_config_args())
-        .arg(
-            clap::Arg::with_name("import")
-                .short("i")
-                .long("import")
-                .help("Import after build to gh-pages branch")
-                .takes_value(false),
-        )
-        .arg(
-            clap::Arg::with_name("branch")
-                .short("b")
-                .long("branch")
-                .value_name("BRANCH")
-                .help("Branch that will be used to import the site to")
-                .default_value("gh-pages")
-                .takes_value(true),
-        )
-        .arg(
-            clap::Arg::with_name("message")
-                .short("m")
-                .long("message")
-                .value_name("COMMIT-MESSAGE")
-                .help("Commit message that will be used on import")
-                .default_value("cobalt site import")
-                .takes_value(true),
-        )
 }
 
 pub fn build_command(matches: &clap::ArgMatches) -> Result<()> {
@@ -46,12 +21,6 @@ pub fn build_command(matches: &clap::ArgMatches) -> Result<()> {
 
     build(config.clone())?;
     info!("Build successful");
-
-    if matches.is_present("import") {
-        let branch = matches.value_of("branch").unwrap().to_string();
-        let message = matches.value_of("message").unwrap().to_string();
-        import(&config, &branch, &message)?
-    }
 
     Ok(())
 }
@@ -68,7 +37,7 @@ pub fn build(config: cobalt::Config) -> Result<()> {
 
 pub fn clean_command_args() -> clap::App<'static, 'static> {
     clap::SubCommand::with_name("clean")
-        .about("cleans directory set as destination")
+        .about("cleans `destination` directory")
         .args(&args::get_config_args())
 }
 
@@ -76,16 +45,16 @@ pub fn clean_command(matches: &clap::ArgMatches) -> Result<()> {
     let config = args::get_config(matches)?;
     let config = config.build()?;
 
-    clean(config)
+    clean(&config)
 }
 
-pub fn clean(config: cobalt::Config) -> Result<()> {
+pub fn clean(config: &cobalt::Config) -> Result<()> {
     let cwd = env::current_dir().unwrap_or_else(|_| path::PathBuf::new());
     let destdir = config.destination.canonicalize();
     let destdir = match destdir {
         Ok(destdir) => destdir,
         Err(e) => {
-            debug!("directory \"{:?}\" doesn't exist", &config.destination);
+            debug!("No \"{:?}\" to clean", &config.destination);
             debug!("{}", e);
             return Ok(());
         }
@@ -132,6 +101,9 @@ pub fn import_command_args() -> clap::App<'static, 'static> {
 pub fn import_command(matches: &clap::ArgMatches) -> Result<()> {
     let config = args::get_config(matches)?;
     let config = config.build()?;
+
+    clean(&config)?;
+    build(config.clone())?;
 
     let branch = matches.value_of("branch").unwrap().to_string();
     let message = matches.value_of("message").unwrap().to_string();
