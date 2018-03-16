@@ -1,4 +1,5 @@
 use std::env;
+use std::io::Write;
 use std::path;
 
 use clap;
@@ -83,33 +84,39 @@ pub fn get_logging_args() -> Vec<clap::Arg<'static, 'static>> {
 pub fn get_logging(
     global_matches: &clap::ArgMatches,
     matches: &clap::ArgMatches,
-) -> Result<env_logger::LogBuilder> {
-    let format = |record: &log::LogRecord| {
-        let level = format!("[{}]", record.level()).to_lowercase();
-        format!("{:8} {}", level, record.args())
+) -> Result<env_logger::Builder> {
+    let mut builder = env_logger::Builder::new();
+
+    let level = if matches.is_present("trace") {
+        log::LevelFilter::Trace
+    } else if matches.is_present("silent") {
+        log::LevelFilter::Off
+    } else {
+        match matches
+            .value_of("log-level")
+            .or_else(|| global_matches.value_of("log-level"))
+        {
+            Some("error") => log::LevelFilter::Error,
+            Some("warn") => log::LevelFilter::Warn,
+            Some("debug") => log::LevelFilter::Debug,
+            Some("trace") => log::LevelFilter::Trace,
+            Some("off") => log::LevelFilter::Off,
+            Some("info") | _ => log::LevelFilter::Info,
+        }
     };
+    builder.filter(None, level);
 
-    let mut builder = env_logger::LogBuilder::new();
-    builder.format(format);
-
-    match matches
-        .value_of("log-level")
-        .or_else(|| global_matches.value_of("log-level"))
-    {
-        Some("error") => builder.filter(None, log::LogLevelFilter::Error),
-        Some("warn") => builder.filter(None, log::LogLevelFilter::Warn),
-        Some("debug") => builder.filter(None, log::LogLevelFilter::Debug),
-        Some("trace") => builder.filter(None, log::LogLevelFilter::Trace),
-        Some("off") => builder.filter(None, log::LogLevelFilter::Off),
-        Some("info") | _ => builder.filter(None, log::LogLevelFilter::Info),
-    };
-
-    if matches.is_present("trace") {
-        builder.filter(None, log::LogLevelFilter::Trace);
-    }
-
-    if matches.is_present("silent") {
-        builder.filter(None, log::LogLevelFilter::Off);
+    if level == log::LevelFilter::Trace {
+        builder.default_format_timestamp(false);
+    } else {
+        builder.format(|f, record| {
+            writeln!(
+                f,
+                "[{}] {}",
+                record.level().to_string().to_lowercase(),
+                record.args()
+            )
+        });
     }
 
     Ok(builder)

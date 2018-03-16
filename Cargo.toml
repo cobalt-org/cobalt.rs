@@ -1,5 +1,4 @@
 [package]
-
 name = "cobalt-bin"
 version = "0.11.1"
 authors = ["Benny Klotz <r3qnbenni@gmail.com>", "Johann Hofmann <mail@johann-hofmann.com>"]
@@ -26,8 +25,8 @@ clap = "2.24"
 liquid = {version = "0.14.1", features=["serde"]}
 walkdir = "2.0"
 chrono = "0.4"
-log = "0.3.9"
-env_logger = "0.4"
+log = "0.4"
+env_logger = "0.5"
 rss = "1.1"
 jsonfeed = "0.2"
 pulldown-cmark = {version="0.1", default-features = false}
@@ -38,7 +37,7 @@ clippy = {version = "0.0", optional = true}
 error-chain = "0.11"
 lazy_static = "1.0"
 itertools = "0.7"
-ignore = "0.3"
+ignore = "0.4"
 serde = "1.0"
 serde_yaml = "0.7"
 serde_json = "1.0"

@@ -56,7 +56,7 @@ fn run() -> Result<()> {
     };
 
     let mut builder = args::get_logging(&global_matches, matches)?;
-    builder.init().unwrap();
+    builder.init();
 
     match command {
         "init" => new::init_command(matches),
