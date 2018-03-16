@@ -76,15 +76,25 @@ pub fn clean_command(matches: &clap::ArgMatches) -> Result<()> {
     let config = args::get_config(matches)?;
     let config = config.build()?;
 
+    clean(config)
+}
+
+pub fn clean(config: cobalt::Config) -> Result<()> {
     let cwd = env::current_dir().unwrap_or_else(|_| path::PathBuf::new());
-    let destdir = config
-        .destination
-        .canonicalize()
-        .unwrap_or_else(|_| path::PathBuf::new());
+    let destdir = config.destination.canonicalize();
+    let destdir = match destdir {
+        Ok(destdir) => destdir,
+        Err(e) => {
+            debug!("directory \"{:?}\" doesn't exist", &config.destination);
+            debug!("{}", e);
+            return Ok(());
+        }
+    };
     if cwd.starts_with(&destdir) {
         bail!(
-            "Attempting to delete current directory, \
-             Cancelling the operation"
+            "Attempting to delete current directory ({:?}), \
+             Cancelling the operation",
+            destdir
         );
     }
 
