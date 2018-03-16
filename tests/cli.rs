@@ -45,11 +45,11 @@ pub fn log_levels_trace() {
     assert_cli::Assert::command(&[&BIN, "build", "-L", "trace", "-d", &dest_param])
         .current_dir(CWD.join("tests/fixtures/example"))
         .stderr()
-        .contains("[trace]")
+        .contains("TRACE")
         .stderr()
-        .contains("[debug]")
+        .contains("DEBUG")
         .stderr()
-        .contains("[info]")
+        .contains("INFO")
         .unwrap();
 
     destdir.close().unwrap();
@@ -67,11 +67,11 @@ pub fn log_levels_trace_alias() {
     assert_cli::Assert::command(&[&BIN, "build", "--trace", "-d", &dest_param])
         .current_dir(CWD.join("tests/fixtures/example"))
         .stderr()
-        .contains("[trace]")
+        .contains("TRACE")
         .stderr()
-        .contains("[debug]")
+        .contains("DEBUG")
         .stderr()
-        .contains("[info]")
+        .contains("INFO")
         .unwrap();
 
     destdir.close().unwrap();

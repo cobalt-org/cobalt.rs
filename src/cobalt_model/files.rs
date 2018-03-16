@@ -530,7 +530,12 @@ mod tests {
 
     #[test]
     fn files_includes_overriden_dir() {
-        let ignores = &["!_posts", "!_posts/**", "_posts/**/_*", "_posts/**/_*/**"];
+        let ignores = &[
+            "!/_posts",
+            "!/_posts/**",
+            "/_posts/**/_*",
+            "/_posts/**/_*/**",
+        ];
 
         assert_includes_dir!("/usr/cobalt/site", ignores, "/usr/cobalt/site/_posts", true);
         assert_includes_dir!(
@@ -540,18 +545,17 @@ mod tests {
             true
         );
 
-        // TODO These two cases should instead fail
         assert_includes_dir!(
             "/usr/cobalt/site",
             ignores,
             "/usr/cobalt/site/child/_posts",
-            true
+            false
         );
         assert_includes_dir!(
             "/usr/cobalt/site",
             ignores,
             "/usr/cobalt/site/child/_posts/child",
-            true
+            false
         );
 
         assert_includes_dir!(
@@ -570,9 +574,8 @@ mod tests {
         assert_includes_dir!("./", ignores, "./_posts", true);
         assert_includes_dir!("./", ignores, "./_posts/child", true);
 
-        // TODO These two cases should instead fail
-        assert_includes_dir!("./", ignores, "./child/_posts", true);
-        assert_includes_dir!("./", ignores, "./child/_posts/child", true);
+        assert_includes_dir!("./", ignores, "./child/_posts", false);
+        assert_includes_dir!("./", ignores, "./child/_posts/child", false);
 
         assert_includes_dir!("./", ignores, "./_posts/child/_child", false);
         assert_includes_dir!("./", ignores, "./_posts/child/_child/child", false);
@@ -580,7 +583,12 @@ mod tests {
 
     #[test]
     fn files_includes_overriden_dir_file() {
-        let ignores = &["!_posts", "!_posts/**", "_posts/**/_*", "_posts/**/_*/**"];
+        let ignores = &[
+            "!/_posts",
+            "!/_posts/**",
+            "/_posts/**/_*",
+            "/_posts/**/_*/**",
+        ];
 
         assert_includes_file!(
             "/usr/cobalt/site",
@@ -595,18 +603,17 @@ mod tests {
             true
         );
 
-        // TODO These two cases should instead fail
         assert_includes_file!(
             "/usr/cobalt/site",
             ignores,
             "/usr/cobalt/site/child/_posts/child.txt",
-            true
+            false
         );
         assert_includes_file!(
             "/usr/cobalt/site",
             ignores,
             "/usr/cobalt/site/child/_posts/child/child.txt",
-            true
+            false
         );
 
         assert_includes_file!(
@@ -625,9 +632,8 @@ mod tests {
         assert_includes_file!("./", ignores, "./_posts/child.txt", true);
         assert_includes_file!("./", ignores, "./_posts/child/child.txt", true);
 
-        // TODO These two cases should instead fail
-        assert_includes_file!("./", ignores, "./child/_posts/child.txt", true);
-        assert_includes_file!("./", ignores, "./child/_posts/child/child.txt", true);
+        assert_includes_file!("./", ignores, "./child/_posts/child.txt", false);
+        assert_includes_file!("./", ignores, "./child/_posts/child/child.txt", false);
 
         assert_includes_file!("./", ignores, "./_posts/child/_child.txt", false);
         assert_includes_file!("./", ignores, "./_posts/child/_child/child.txt", false);
