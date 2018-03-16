@@ -161,17 +161,10 @@ pub fn clean() {
     assert_eq!(destdir.path().is_dir(), false);
 }
 
-#[cfg(not(windows))]
 #[test]
-pub fn clean_warning() {
+pub fn clean_empty() {
     assert_cli::Assert::command(&[&BIN, "clean"])
         .current_dir(CWD.join("tests/fixtures/example"))
-        .fails_with(1)
-        .stderr()
-        .contains(
-            "Attempting to delete current directory, Cancelling the \
-             operation",
-        )
         .unwrap();
 }
 
