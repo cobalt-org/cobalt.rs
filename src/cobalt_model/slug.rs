@@ -1,5 +1,6 @@
 use itertools::Itertools;
 use regex::Regex;
+use unidecode;
 
 lazy_static!{
     static ref SLUG_INVALID_CHARS: Regex = Regex::new(r"([^a-zA-Z0-9]+)").unwrap();
@@ -11,7 +12,8 @@ pub fn slugify<S: AsRef<str>>(name: S) -> String {
 }
 
 fn slugify_str(name: &str) -> String {
-    let slug = SLUG_INVALID_CHARS.replace_all(name, "-");
+    let name = unidecode::unidecode(name);
+    let slug = SLUG_INVALID_CHARS.replace_all(&name, "-");
     slug.trim_matches('-').to_lowercase()
 }
 
@@ -39,6 +41,12 @@ fn titleize_slug_str(slug: &str) -> String {
 fn test_slugify() {
     let actual = slugify("___filE-worlD-__09___");
     assert_eq!(actual, "file-world-09");
+}
+
+#[test]
+fn test_slugify_unicode() {
+    let actual = slugify("__Æneid__北亰-worlD-__09___");
+    assert_eq!(actual, "aeneid-bei-jing-world-09");
 }
 
 #[test]
