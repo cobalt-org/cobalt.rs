@@ -23,6 +23,7 @@ doc = false
 [dependencies]
 clap = "2.24"
 liquid = {version = "0.14.1", features=["serde"]}
+unidecode = "0.3.0"
 walkdir = "2.0"
 chrono = "0.4"
 log = "0.4"
