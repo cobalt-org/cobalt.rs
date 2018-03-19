@@ -1,3 +1,5 @@
+use std::borrow;
+use std::collections;
 use std::env;
 use std::fs;
 use std::io::Write;
@@ -48,6 +50,13 @@ pub fn new_command_args() -> clap::App<'static, 'static> {
                 .help("New document's parent directory or file (default: `<CWD>/title.ext`)")
                 .takes_value(true),
         )
+        .arg(
+            clap::Arg::with_name("with-ext")
+                .long("with-ext")
+                .value_name("EXT")
+                .help("The default file's extension (e.g. `liquid`)")
+                .takes_value(true),
+        )
 }
 
 pub fn new_command(matches: &clap::ArgMatches) -> Result<()> {
@@ -61,7 +70,9 @@ pub fn new_command(matches: &clap::ArgMatches) -> Result<()> {
         file.push(path::Path::new(rel_file))
     }
 
-    create_new_document(&config, title, file)
+    let ext = matches.value_of("with-ext");
+
+    create_new_document(&config, title, file, ext)
         .chain_err(|| format!("Could not create `{}`", title))?;
 
     Ok(())
@@ -135,6 +146,10 @@ const INDEX_MD: &str = "layout: default.liquid
 {% endfor %}
 ";
 
+lazy_static! {
+    static ref DEFAULT: collections::HashMap<&'static str, &'static str> = [("pages", INDEX_MD), ("posts", POST_MD)].iter().cloned().collect();
+}
+
 pub fn create_new_project<P: AsRef<path::Path>>(dest: P) -> Result<()> {
     create_new_project_for_path(dest.as_ref())
 }
@@ -151,6 +166,10 @@ pub fn create_new_project_for_path(dest: &path::Path) -> Result<()> {
     fs::create_dir_all(&dest.join("posts"))?;
     create_file(&dest.join("posts/post-1.md"), POST_MD)?;
 
+    fs::create_dir_all(&dest.join("_defaults"))?;
+    create_file(&dest.join("_defaults/pages.md"), INDEX_MD)?;
+    create_file(&dest.join("_defaults/posts.md"), POST_MD)?;
+
     Ok(())
 }
 
@@ -158,14 +177,26 @@ pub fn create_new_document(
     config: &cobalt_model::Config,
     title: &str,
     file: path::PathBuf,
+    extension: Option<&str>,
 ) -> Result<()> {
-    let file = if file.extension().is_none() {
-        let file_name = format!("{}.md", cobalt_model::slug::slugify(title));
+    let (file, extension) = if file.extension().is_none() || file.is_dir() {
+        let extension = extension.unwrap_or("md");
+        let file_name = format!("{}.{}", cobalt_model::slug::slugify(title), extension);
         let mut file = file;
         file.push(path::Path::new(&file_name));
-        file
+        (file, borrow::Cow::Borrowed(extension))
     } else {
-        file
+        // The user-provided extension will be used for selecting a template
+        let extension = extension.map(borrow::Cow::Borrowed).unwrap_or_else(|| {
+            borrow::Cow::Owned(
+                file.extension()
+                    .unwrap_or_default()
+                    .to_str()
+                    .unwrap_or_default()
+                    .to_string(),
+            )
+        });
+        (file, extension)
     };
 
     let rel_file = file.strip_prefix(&config.source).map_err(|_| {
@@ -175,20 +206,52 @@ pub fn create_new_document(
         )
     })?;
 
+    let pages = config.pages.clone().build()?;
     let posts = config.posts.clone().build()?;
-    let (file_type, doc) = if file.starts_with(posts.pages.subtree())
+    let file_type = if posts.pages.includes_file(&file)
         || posts
             .drafts
-            .as_ref()
-            .map(|d| file.starts_with(d.subtree()))
-            .unwrap_or(false)
+            .map(|d| d.includes_file(&file))
+            .unwrap_or_default()
     {
-        ("post", POST_MD)
+        posts.slug.as_str()
+    } else if pages.pages.includes_file(&file)
+        || pages
+            .drafts
+            .map(|d| d.includes_file(&file))
+            .unwrap_or_default()
+    {
+        pages.slug.as_str()
     } else {
-        ("page", INDEX_MD)
+        bail!(
+            "Target file wouldn't be a member of any collection: {:?}",
+            file
+        );
     };
 
-    let doc = cobalt_model::DocumentBuilder::<cobalt_model::FrontmatterBuilder>::parse(doc)?;
+    let source_path = config
+        .source
+        .join(format!("_defaults/{}.{}", file_type, extension));
+    let source = if source_path.is_file() {
+        cobalt_model::files::read_file(&source_path)
+            .chain_err(|| format!("Failed to read default: {:?}", source_path))?
+    } else {
+        debug!(
+            "No custom default provided ({:?}), falling back to built-in",
+            source_path
+        );
+        if extension != "md" {
+            bail!(
+                "No builtin default for `{}` files, only `md`: {:?}",
+                extension,
+                file
+            );
+        }
+        // For custom collections, use a post default.
+        DEFAULT.get(file_type).unwrap_or(&POST_MD).to_string()
+    };
+
+    let doc = cobalt_model::DocumentBuilder::<cobalt_model::FrontmatterBuilder>::parse(&source)?;
     let (front, content) = doc.parts();
     let front = front.set_title(title.to_owned());
     let doc =

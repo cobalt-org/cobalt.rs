@@ -8,6 +8,9 @@ extern crate notify;
 extern crate serde_yaml;
 
 #[macro_use]
+extern crate lazy_static;
+
+#[macro_use]
 extern crate error_chain;
 
 #[macro_use]
