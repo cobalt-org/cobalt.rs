@@ -1,3 +1,4 @@
+use std::borrow;
 use std::collections;
 use std::env;
 use std::fs;
@@ -49,6 +50,13 @@ pub fn new_command_args() -> clap::App<'static, 'static> {
                 .help("New document's parent directory or file (default: `<CWD>/title.ext`)")
                 .takes_value(true),
         )
+        .arg(
+            clap::Arg::with_name("with-ext")
+                .long("with-ext")
+                .value_name("EXT")
+                .help("The default file's extension (e.g. `liquid`)")
+                .takes_value(true),
+        )
 }
 
 pub fn new_command(matches: &clap::ArgMatches) -> Result<()> {
@@ -62,7 +70,9 @@ pub fn new_command(matches: &clap::ArgMatches) -> Result<()> {
         file.push(path::Path::new(rel_file))
     }
 
-    create_new_document(&config, title, file)
+    let ext = matches.value_of("with-ext");
+
+    create_new_document(&config, title, file, ext)
         .chain_err(|| format!("Could not create `{}`", title))?;
 
     Ok(())
@@ -167,14 +177,26 @@ pub fn create_new_document(
     config: &cobalt_model::Config,
     title: &str,
     file: path::PathBuf,
+    extension: Option<&str>,
 ) -> Result<()> {
-    let file = if file.extension().is_none() || file.is_dir() {
-        let file_name = format!("{}.md", cobalt_model::slug::slugify(title));
+    let (file, extension) = if file.extension().is_none() || file.is_dir() {
+        let extension = extension.unwrap_or("md");
+        let file_name = format!("{}.{}", cobalt_model::slug::slugify(title), extension);
         let mut file = file;
         file.push(path::Path::new(&file_name));
-        file
+        (file, borrow::Cow::Borrowed(extension))
     } else {
-        file
+        // The user-provided extension will be used for selecting a template
+        let extension = extension.map(borrow::Cow::Borrowed).unwrap_or_else(|| {
+            borrow::Cow::Owned(
+                file.extension()
+                    .unwrap_or_default()
+                    .to_str()
+                    .unwrap_or_default()
+                    .to_string(),
+            )
+        });
+        (file, extension)
     };
 
     let rel_file = file.strip_prefix(&config.source).map_err(|_| {
@@ -207,10 +229,6 @@ pub fn create_new_document(
         );
     };
 
-    let extension = file.extension()
-        .unwrap_or_default()
-        .to_str()
-        .unwrap_or_default();
     let source_path = config
         .source
         .join(format!("_defaults/{}.{}", file_type, extension));
