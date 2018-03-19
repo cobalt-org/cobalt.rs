@@ -164,7 +164,7 @@ pub fn create_new_document(
     title: &str,
     file: path::PathBuf,
 ) -> Result<()> {
-    let file = if file.extension().is_none() {
+    let file = if file.extension().is_none() || file.is_dir() {
         let file_name = format!("{}.md", cobalt_model::slug::slugify(title));
         let mut file = file;
         file.push(path::Path::new(&file_name));
