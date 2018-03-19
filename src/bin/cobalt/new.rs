@@ -1,3 +1,4 @@
+use std::collections;
 use std::env;
 use std::fs;
 use std::io::Write;
@@ -135,6 +136,10 @@ const INDEX_MD: &str = "layout: default.liquid
 {% endfor %}
 ";
 
+lazy_static! {
+    static ref DEFAULT: collections::HashMap<&'static str, &'static str> = [("pages", INDEX_MD), ("posts", POST_MD)].iter().map(|e| e.clone()).collect();
+}
+
 pub fn create_new_project<P: AsRef<path::Path>>(dest: P) -> Result<()> {
     create_new_project_for_path(dest.as_ref())
 }
@@ -175,18 +180,31 @@ pub fn create_new_document(
         )
     })?;
 
+    let pages = config.pages.clone().build()?;
     let posts = config.posts.clone().build()?;
-    let (file_type, doc) = if file.starts_with(posts.pages.subtree())
+    let file_type = if posts.pages.includes_file(&file)
         || posts
             .drafts
-            .as_ref()
-            .map(|d| file.starts_with(d.subtree()))
-            .unwrap_or(false)
+            .map(|d| d.includes_file(&file))
+            .unwrap_or_default()
     {
-        ("post", POST_MD)
+        posts.slug.as_str()
+    } else if pages.pages.includes_file(&file)
+        || pages
+            .drafts
+            .map(|d| d.includes_file(&file))
+            .unwrap_or_default()
+    {
+        pages.slug.as_str()
     } else {
-        ("page", INDEX_MD)
+        bail!(
+            "Target file wouldn't be a member of any collection: {:?}",
+            file
+        );
     };
+
+    // For custom collections, use a post default.
+    let doc = DEFAULT.get(file_type).unwrap_or(&POST_MD);
 
     let doc = cobalt_model::DocumentBuilder::<cobalt_model::FrontmatterBuilder>::parse(doc)?;
     let (front, content) = doc.parts();
