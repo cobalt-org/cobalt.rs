@@ -156,6 +156,10 @@ pub fn create_new_project_for_path(dest: &path::Path) -> Result<()> {
     fs::create_dir_all(&dest.join("posts"))?;
     create_file(&dest.join("posts/post-1.md"), POST_MD)?;
 
+    fs::create_dir_all(&dest.join("_defaults"))?;
+    create_file(&dest.join("_defaults/pages.md"), INDEX_MD)?;
+    create_file(&dest.join("_defaults/posts.md"), POST_MD)?;
+
     Ok(())
 }
 
@@ -203,10 +207,33 @@ pub fn create_new_document(
         );
     };
 
-    // For custom collections, use a post default.
-    let doc = DEFAULT.get(file_type).unwrap_or(&POST_MD);
+    let extension = file.extension()
+        .unwrap_or_default()
+        .to_str()
+        .unwrap_or_default();
+    let source_path = config
+        .source
+        .join(format!("_defaults/{}.{}", file_type, extension));
+    let source = if source_path.is_file() {
+        cobalt_model::files::read_file(&source_path)
+            .chain_err(|| format!("Failed to read default: {:?}", source_path))?
+    } else {
+        debug!(
+            "No custom default provided ({:?}), falling back to built-in",
+            source_path
+        );
+        if extension != "md" {
+            bail!(
+                "No builtin default for `{}` files, only `md`: {:?}",
+                extension,
+                file
+            );
+        }
+        // For custom collections, use a post default.
+        DEFAULT.get(file_type).unwrap_or(&POST_MD).to_string()
+    };
 
-    let doc = cobalt_model::DocumentBuilder::<cobalt_model::FrontmatterBuilder>::parse(doc)?;
+    let doc = cobalt_model::DocumentBuilder::<cobalt_model::FrontmatterBuilder>::parse(&source)?;
     let (front, content) = doc.parts();
     let front = front.set_title(title.to_owned());
     let doc =
