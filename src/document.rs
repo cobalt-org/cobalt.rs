@@ -166,6 +166,7 @@ fn document_attributes(
     let attributes = vec![
         ("permalink".to_owned(), liquid::Value::scalar(url_path)),
         ("title".to_owned(), liquid::Value::scalar(&front.title)),
+        ("slug".to_owned(), liquid::Value::scalar(&front.slug)),
         (
             "description".to_owned(),
             liquid::Value::scalar(front.description.as_ref().map(|s| s.as_str()).unwrap_or("")),
