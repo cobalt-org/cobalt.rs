@@ -78,6 +78,52 @@ pub fn new_command(matches: &clap::ArgMatches) -> Result<()> {
     Ok(())
 }
 
+pub fn rename_command_args() -> clap::App<'static, 'static> {
+    clap::SubCommand::with_name("rename")
+        .about("Rename a document")
+        .args(&args::get_config_args())
+        .arg(
+            clap::Arg::with_name("SRC")
+                .required(true)
+                .help("File to rename")
+                .takes_value(true),
+        )
+        .arg(
+            clap::Arg::with_name("TITLE")
+                .required(true)
+                .help("Title of the post")
+                .takes_value(true),
+        )
+        .arg(
+            clap::Arg::with_name("file")
+                .short("f")
+                .long("file")
+                .value_name("DIR_OR_FILE")
+                .help("New document's parent directory or file (default: `<CWD>/title.ext`)")
+                .takes_value(true),
+        )
+}
+
+pub fn rename_command(matches: &clap::ArgMatches) -> Result<()> {
+    let config = args::get_config(matches)?;
+    let config = config.build()?;
+
+    let source = path::PathBuf::from(matches.value_of("SRC").unwrap());
+
+    let title = matches.value_of("TITLE").unwrap();
+
+    let mut file = env::current_dir().expect("How does this fail?");
+    if let Some(rel_file) = matches.value_of("file") {
+        file.push(path::Path::new(rel_file))
+    }
+    let file = file;
+
+    rename_document(&config, source, title, file)
+        .chain_err(|| format!("Could not rename `{}`", title))?;
+
+    Ok(())
+}
+
 pub fn publish_command_args() -> clap::App<'static, 'static> {
     clap::SubCommand::with_name("publish")
         .about("Publish a document")
@@ -278,6 +324,78 @@ fn create_file_for_path(path: &path::Path, content: &str) -> Result<()> {
         .chain_err(|| format!("Failed to create file {:?}", path))?;
 
     file.write_all(content.as_bytes())?;
+
+    Ok(())
+}
+
+pub fn rename_document(
+    config: &cobalt_model::Config,
+    source: path::PathBuf,
+    title: &str,
+    file: path::PathBuf,
+) -> Result<()> {
+    let target = if file.extension().is_none() || file.is_dir() {
+        let extension = source.extension().and_then(|s| s.to_str()).unwrap_or("md");
+        let file_name = format!("{}.{}", cobalt_model::slug::slugify(title), extension);
+        let mut file = file;
+        file.push(path::Path::new(&file_name));
+        file
+    } else {
+        file
+    };
+
+    let doc = cobalt_model::files::read_file(&source)?;
+    let doc = cobalt_model::DocumentBuilder::<cobalt_model::FrontmatterBuilder>::parse(&doc)?;
+    let (front, content) = doc.parts();
+
+    let pages = config.pages.clone().build()?;
+    let posts = config.posts.clone().build()?;
+    let full_front = if posts.pages.includes_file(&target)
+        || posts
+            .drafts
+            .map(|d| d.includes_file(&target))
+            .unwrap_or_default()
+    {
+        // Can't rely on this for drafts atm
+        let rel_src = target
+            .strip_prefix(&config.source)
+            .expect("file was found under the root");
+        front
+            .clone()
+            .merge_path(rel_src)
+            .merge(posts.default.clone())
+    } else if pages.pages.includes_file(&target)
+        || pages
+            .drafts
+            .map(|d| d.includes_file(&target))
+            .unwrap_or_default()
+    {
+        // Can't rely on this for drafts atm
+        let rel_src = target
+            .strip_prefix(&config.source)
+            .expect("file was found under the root");
+        front
+            .clone()
+            .merge_path(rel_src)
+            .merge(pages.default.clone())
+    } else {
+        bail!(
+            "Target file wouldn't be a member of any collection: {:?}",
+            target
+        );
+    };
+    let full_front = full_front.build()?;
+
+    let new_front = front.set_title(Some(title.to_string()));
+    let doc =
+        cobalt_model::DocumentBuilder::<cobalt_model::FrontmatterBuilder>::new(new_front, content);
+    let doc = doc.to_string();
+    cobalt_model::files::write_document_file(doc, target)?;
+
+    if !full_front.is_draft {
+        warn!("Renaming a published page might invalidate links");
+    }
+    fs::remove_file(source)?;
 
     Ok(())
 }
