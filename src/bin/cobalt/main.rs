@@ -43,6 +43,7 @@ fn run() -> Result<()> {
         .args(&args::get_logging_args())
         .subcommand(new::init_command_args())
         .subcommand(new::new_command_args())
+        .subcommand(new::rename_command_args())
         .subcommand(new::publish_command_args())
         .subcommand(build::build_command_args())
         .subcommand(build::clean_command_args())
@@ -64,6 +65,7 @@ fn run() -> Result<()> {
     match command {
         "init" => new::init_command(matches),
         "new" => new::new_command(matches),
+        "rename" => new::rename_command(matches),
         "publish" => new::publish_command(matches),
         "build" => build::build_command(matches),
         "clean" => build::clean_command(matches),
