@@ -1,3 +1,54 @@
+<a name="0.12.0"></a>
+## 0.12.0 (2018-03-22)
+
+This release drops support for migrating from pre-0.11.  Please use 0.11 to migrate first.
+
+#### Performance
+
+* **layouts:**  Switch from lazy to eager loading ([b2cbe13a](https://github.com/cobalt-org/cobalt.rs/commit/b2cbe13aaa1ee25b4f7710230a2a6c350e545381))
+
+#### Features
+
+* **`new`:**
+  *  Load default files from disk ([3382901c](https://github.com/cobalt-org/cobalt.rs/commit/3382901c15634191e7358bbeb3e9c83cd18a97f0), closes [#355](https://github.com/cobalt-org/cobalt.rs/issues/355))
+  *  `--with-ext` to specify type without `--file` ([1fd83fce](https://github.com/cobalt-org/cobalt.rs/commit/1fd83fce544b2178f4f6e9b4438a8f5c5b861f84))
+* New `rename` subcommand ([1fee0775](https://github.com/cobalt-org/cobalt.rs/commit/1fee0775295b644c68f5464696ecc5ffaf3e2342), closes [#393](https://github.com/cobalt-org/cobalt.rs/issues/393))
+* **liquid:**
+  * Add `page.slug` ([46de52e5](https://github.com/cobalt-org/cobalt.rs/commit/46de52e502c51c6f525fe5318a29a7c4c23f06b9))
+  * Basic `compact` support ([8fca4340](https://github.com/cobalt-org/cobalt.rs/commit/8fca43406de568f9d163e70077f25267cc1b46a0))
+  * Whole number (integer) support ([8fca4340](https://github.com/cobalt-org/cobalt.rs/commit/8fca43406de568f9d163e70077f25267cc1b46a0))
+  * Provide context on errors ([8fca4340](https://github.com/cobalt-org/cobalt.rs/commit/8fca43406de568f9d163e70077f25267cc1b46a0), closes [#136](https://github.com/cobalt-org/cobalt.rs/issues/136))
+* **`serve`:** Custom host support ([e654541](https://github.com/cobalt-org/cobalt.rs/commit/e654541dae4a9ef2f74ff115fcc5f5eb16bcddb5))
+* **`debug`:**
+  *  Print pages and posts files ([29d5a74e](https://github.com/cobalt-org/cobalt.rs/commit/29d5a74e4438744332f2719de7b6ae18578c16e0))
+  *  Dump config ([b5ac9c5c](https://github.com/cobalt-org/cobalt.rs/commit/b5ac9c5c0f42dafc84fb991f91aed0fce5f5c3c2))
+* More details available with `--trace` ([0ed5247](https://github.com/cobalt-org/cobalt.rs/commit/0ed5247e896b9b152ef3f24196e49e499fb5ddae))
+
+#### Breaking Changes
+
+* **`migrate`:**  Removing migration support ([20b29932](https://github.com/cobalt-org/cobalt.rs/commit/20b29932f794b17fe71b467fb3d05901982cc331))
+* **`import`:**  `import` is self-contained ([4e0be270](https://github.com/cobalt-org/cobalt.rs/commit/4e0be270aaaef92a4b9638b170a3acfcd96ae0a3), closes [#394](https://github.com/cobalt-org/cobalt.rs/issues/394))
+* **layouts:**  Switch from lazy to eager ([b2cbe13a](https://github.com/cobalt-org/cobalt.rs/commit/b2cbe13aaa1ee25b4f7710230a2a6c350e545381))
+* **liquid:**
+  * Whole number (integer) support ([8fca4340](https://github.com/cobalt-org/cobalt.rs/commit/8fca43406de568f9d163e70077f25267cc1b46a0))
+  * Improve value coercion ([8fca4340](https://github.com/cobalt-org/cobalt.rs/commit/8fca43406de568f9d163e70077f25267cc1b46a0))
+
+#### Bug Fixes
+
+* **`clean`:**  Don't error on double-clean ([a380fd15](https://github.com/cobalt-org/cobalt.rs/commit/a380fd15fb400eb1074a06e5d779345154d7b3be))
+* **`import`:** `import` is self-contained ([4e0be270](https://github.com/cobalt-org/cobalt.rs/commit/4e0be270aaaef92a4b9638b170a3acfcd96ae0a3), closes [#394](https://github.com/cobalt-org/cobalt.rs/issues/394))
+* **`new`:**
+  *  Dont assume dirs are files ([35bed0c5](https://github.com/cobalt-org/cobalt.rs/commit/35bed0c5e2461176ff90689e793d08b1924747f5), closes [#401](https://github.com/cobalt-org/cobalt.rs/issues/401))
+  *  Error if file isn't a part of a collection ([99a0d017](https://github.com/cobalt-org/cobalt.rs/commit/99a0d017ce5260ac27d23665d39f6b389dced729))
+* **`serve`:** Fix site.base_url by adding http:// ([1a3ae383](https://github.com/cobalt-org/cobalt.rs/commit/1a3ae383910cd799605567db6182244b33bd098c))
+* **slug:**  Dont ignore non-ascii in slug ([08f0621c](https://github.com/cobalt-org/cobalt.rs/commit/08f0621cd94fb4be0cde9c999a4a5b2d72691864), closes [#383](https://github.com/cobalt-org/cobalt.rs/issues/383))
+* **liquid:**
+  * `date_in_tz` correctly parse date strings ([8fca4340](https://github.com/cobalt-org/cobalt.rs/commit/8fca43406de568f9d163e70077f25267cc1b46a0))
+  * Improve value coercion ([8fca4340](https://github.com/cobalt-org/cobalt.rs/commit/8fca43406de568f9d163e70077f25267cc1b46a0))
+  * `if` can do existence check again ([0ed5247](https://github.com/cobalt-org/cobalt.rs/commit/0ed5247e896b9b152ef3f24196e49e499fb5ddae))
+* **config**: Bug fixes with `ignore` ([0ed5247](https://github.com/cobalt-org/cobalt.rs/commit/0ed5247e896b9b152ef3f24196e49e499fb5ddae))
+
+
 <a name="0.11.1"></a>
 ## 0.11.1 (2018-01-10)
 
