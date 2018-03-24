@@ -1,3 +1,9 @@
+<a name="0.12.1"></a>
+## 0.12.1 (2018-03-24)
+
+No user-visible change; just working around CI problems.
+
+
 <a name="0.12.0"></a>
 ## 0.12.0 (2018-03-22)
 
