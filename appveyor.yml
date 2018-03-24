@@ -45,7 +45,7 @@ deploy:
     secure: utuy2/b3b27gNjfJb/n/pZYEP3uMi9oDa6qvtbTg31QAgeih1+q8cQTsiCzN8fWZ
   description: ''
   on:
-    RUST_VERSION: stable
+    CHANNEL: stable
     appveyor_repo_tag: true
   provider: GitHub
 
