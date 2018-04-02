@@ -1,4 +1,5 @@
 use std::path;
+use std::ffi;
 
 #[cfg(feature = "sass")]
 use sass_rs;
@@ -100,4 +101,9 @@ impl SassCompiler {
         let dest_file = dest.join(rel_src);
         files::copy_file(file_path, &dest_file)
     }
+}
+
+pub fn is_sass_file(file_path: &path::Path) -> bool {
+    file_path.extension() == Some(ffi::OsStr::new("scss"))
+        || file_path.extension() == Some(ffi::OsStr::new("sass"))
 }

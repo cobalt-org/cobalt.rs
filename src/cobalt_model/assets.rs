@@ -1,5 +1,4 @@
 use std::path;
-use std::ffi;
 
 use super::sass;
 use super::files;
@@ -62,7 +61,7 @@ impl Assets {
 
     fn populate_path(&self, dest: &path::Path) -> Result<()> {
         for file_path in self.files() {
-            if file_path.extension() == Some(ffi::OsStr::new("scss")) {
+            if sass::is_sass_file(file_path.as_path()) {
                 self.sass.compile_file(self.source(), dest, file_path)?;
             } else {
                 let rel_src = file_path
