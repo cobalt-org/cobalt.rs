@@ -19,12 +19,14 @@ use super::template;
 #[serde(deny_unknown_fields, default)]
 pub struct SyntaxHighlight {
     pub theme: String,
+    pub enabled: bool,
 }
 
 impl Default for SyntaxHighlight {
     fn default() -> Self {
         Self {
             theme: "base16-ocean.dark".to_owned(),
+            enabled: true,
         }
     }
 }
@@ -384,6 +386,7 @@ impl ConfigBuilder {
         };
         let markdown = mark::MarkdownBuilder {
             theme: syntax_highlight.theme,
+            syntax_highlight_enabled: syntax_highlight.enabled,
         };
 
         let config = Config {
