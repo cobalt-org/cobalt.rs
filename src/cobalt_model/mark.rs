@@ -7,17 +7,22 @@ use error::*;
 #[serde(deny_unknown_fields)]
 pub struct MarkdownBuilder {
     pub theme: String,
+    pub syntax_highlight_enabled: bool,
 }
 
 impl MarkdownBuilder {
     pub fn build(self) -> Markdown {
-        Markdown { theme: self.theme }
+        Markdown {
+            theme: self.theme,
+            syntax_highlight_enabled: self.syntax_highlight_enabled,
+        }
     }
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Markdown {
     theme: String,
+    syntax_highlight_enabled: bool,
 }
 
 impl Markdown {
@@ -25,7 +30,11 @@ impl Markdown {
         let mut buf = String::new();
         let options = cmark::OPTION_ENABLE_FOOTNOTES | cmark::OPTION_ENABLE_TABLES;
         let parser = cmark::Parser::new_ext(content, options);
-        cmark::html::push_html(&mut buf, decorate_markdown(parser, &self.theme));
+        if self.syntax_highlight_enabled {
+            cmark::html::push_html(&mut buf, decorate_markdown(parser, &self.theme));
+        } else {
+            cmark::html::push_html(&mut buf, parser);
+        }
         Ok(buf)
     }
 }
