@@ -61,7 +61,7 @@ features =  ["parsing", "assets", "html", "static-onig", "dump-load"]
 
 [dev-dependencies]
 assert_cli = "0.5"
-difference = "1.0"
+difference = "2.0"
 tempdir = "0.3"
 
 [features]
