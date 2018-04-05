@@ -58,6 +58,12 @@ script:
 before_deploy:
 - sh ci/before_deploy.sh
 
+branches:
+  only:
+  # Release tags
+  - /^v\d+\.\d+\.\d+.*$/
+  - master
+
 deploy:
   provider: releases
   api_key:
