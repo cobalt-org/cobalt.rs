@@ -55,9 +55,9 @@ cache:
 
 branches:
   only:
-    # Release tags
-    - /^v\d+\.\d+\.\d+.*$/
-    - master
+  # Release tags
+  - /^v\d+\.\d+\.\d+.*$/
+  - master
 
 notifications:
   - provider: Email
