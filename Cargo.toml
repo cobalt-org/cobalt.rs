@@ -21,7 +21,7 @@ name = "cobalt"
 doc = false
 
 [dependencies]
-clap = "2.24"
+clap = "2.31"
 liquid = {version = "0.14.1", features=["serde"]}
 unidecode = "0.3.0"
 walkdir = "2.0"
