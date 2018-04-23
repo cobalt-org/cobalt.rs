@@ -28,7 +28,7 @@ walkdir = "2.0"
 chrono = "0.4"
 log = "0.4"
 env_logger = "0.5"
-rss = "1.1"
+rss = "1.5"
 jsonfeed = "0.2"
 pulldown-cmark = {version="0.1", default-features = false}
 notify = "4.0"
