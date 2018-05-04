@@ -1,16 +1,16 @@
-use std::fs;
-use std::collections::HashMap;
-use std::io::Write;
-use std::path;
+use jsonfeed;
+use jsonfeed::Feed;
 use liquid;
 use rss;
-use jsonfeed::Feed;
-use jsonfeed;
+use std::collections::HashMap;
+use std::fs;
+use std::io::Write;
+use std::path;
 
-use cobalt_model::{Config, SortOrder};
+use cobalt_model;
 use cobalt_model::files;
 use cobalt_model::Collection;
-use cobalt_model;
+use cobalt_model::{Config, SortOrder};
 use document::Document;
 use error::*;
 
@@ -69,17 +69,15 @@ impl Context {
 pub fn build(config: Config) -> Result<()> {
     let context = Context::with_config(config)?;
 
-    let post_files = &context.posts.pages;
-    let mut posts = parse_pages(post_files, &context.posts, &context.source)?;
+    let mut posts = parse_documents(&context.posts, &context.source)?;
     if let Some(ref drafts) = context.posts.drafts {
         let drafts_root = drafts.subtree();
         parse_drafts(drafts_root, drafts, &mut posts, &context.posts)?;
     }
 
-    let page_files = &context.pages.pages;
-    let documents = parse_pages(page_files, &context.pages, &context.source)?;
+    let pages = parse_documents(&context.pages, &context.source)?;
 
-    sort_pages(&mut posts, &context.posts)?;
+    sort_documents(&mut posts, &context.posts)?;
     generate_posts(&mut posts, &context)?;
 
     // check if we should create an RSS file and create it!
@@ -91,7 +89,7 @@ pub fn build(config: Config) -> Result<()> {
         create_jsonfeed(path, &context.destination, &context.posts, &posts)?;
     }
 
-    generate_pages(posts, documents, &context)?;
+    generate_pages(posts, pages, &context)?;
 
     // copy all remaining files in the source to the destination
     // compile SASS along the way
@@ -196,7 +194,7 @@ fn generate_posts(posts: &mut Vec<Document>, context: &Context) -> Result<()> {
     Ok(())
 }
 
-fn sort_pages(posts: &mut Vec<Document>, collection: &Collection) -> Result<()> {
+fn sort_documents(posts: &mut Vec<Document>, collection: &Collection) -> Result<()> {
     // January 1, 1970 0:00:00 UTC, the beginning of time
     let default_date = cobalt_model::DateTime::default();
 
@@ -224,9 +222,9 @@ fn parse_drafts(
     collection: &Collection,
 ) -> Result<()> {
     let rel_real = collection
-        .pages
+        .documents
         .subtree()
-        .strip_prefix(collection.pages.root())
+        .strip_prefix(collection.documents.root())
         .expect("subtree is under root");
     for file_path in draft_files.files() {
         // Provide a fake path as if it was not a draft
@@ -280,13 +278,10 @@ fn parse_layouts(files: &files::Files) -> HashMap<String, String> {
         .collect()
 }
 
-fn parse_pages(
-    page_files: &files::Files,
-    collection: &Collection,
-    source: &path::Path,
-) -> Result<Vec<Document>> {
+fn parse_documents(collection: &Collection, source: &path::Path) -> Result<Vec<Document>> {
+    let doc_files: &files::Files = &collection.documents;
     let mut documents = vec![];
-    for file_path in page_files.files() {
+    for file_path in doc_files.files() {
         let rel_src = file_path
             .strip_prefix(source)
             .expect("file was found under the root");
