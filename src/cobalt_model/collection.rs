@@ -173,7 +173,7 @@ mod test {
         collection.title = Some("title".to_owned());
         collection.dir = Some("rel".to_owned());
         let collection = collection.build().unwrap();
-        assert_eq!(collection.pages.subtree(), path::Path::new("/rel"));
+        assert_eq!(collection.documents.subtree(), path::Path::new("/rel"));
     }
 
     #[test]

@@ -103,7 +103,7 @@ fn generate_doc(posts_data: &[liquid::Value], doc: &mut Document, context: &Cont
     // improve this.
     let mut posts_variable = context.posts.attributes.clone();
     posts_variable.insert(
-        "pages".to_owned(),
+        "documents".to_owned(),
         liquid::Value::Array(posts_data.to_vec()),
     );
     let global_collection: liquid::Object = vec![
