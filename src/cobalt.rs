@@ -106,6 +106,11 @@ fn generate_doc(posts_data: &[liquid::Value], doc: &mut Document, context: &Cont
         "documents".to_owned(),
         liquid::Value::Array(posts_data.to_vec()),
     );
+    warn!("In layouts, `.pages` is being depecrated, use `.documents` instead (ex: `collections.posts.pages` became `collections.posts.documents`)");
+    posts_variable.insert(
+        "pages".to_owned(),
+        liquid::Value::Array(posts_data.to_vec()),
+    );
     let global_collection: liquid::Object = vec![
         (
             context.posts.slug.clone(),
