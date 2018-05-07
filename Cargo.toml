@@ -33,7 +33,7 @@ jsonfeed = "0.2"
 pulldown-cmark = {version="0.1", default-features = false}
 notify = "4.0"
 ghp = "0.1"
-regex = "0.2"
+regex = "1.0"
 clippy = {version = "0.0", optional = true}
 error-chain = "0.11"
 lazy_static = "1.0"
