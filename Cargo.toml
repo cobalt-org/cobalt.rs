@@ -60,7 +60,7 @@ default-features = false
 features =  ["parsing", "assets", "html", "static-onig", "dump-load"]
 
 [dev-dependencies]
-assert_cli = "0.5"
+assert_cli = "0.6"
 difference = "2.0"
 tempdir = "0.3"
 
