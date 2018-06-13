@@ -1,17 +1,17 @@
 #[macro_use]
 extern crate difference;
 
+extern crate assert_fs;
 extern crate cobalt;
 extern crate error_chain;
-extern crate tempdir;
 extern crate walkdir;
 
-use std::fs::{self, File};
+use std::fs::File;
 use std::io::Read;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
+use assert_fs::prelude::*;
 use error_chain::ChainedError;
-use tempdir::TempDir;
 use walkdir::WalkDir;
 
 macro_rules! assert_contains {
@@ -73,28 +73,24 @@ fn assert_dirs_eq(expected: &Path, actual: &Path) {
 }
 
 fn run_test(name: &str) -> Result<(), cobalt::Error> {
-    let target = format!("tests/target/{}/", name);
-    let target: PathBuf = target.into();
-    let mut config = cobalt::ConfigBuilder::from_cwd(format!("tests/fixtures/{}", name))?;
-    let destdir = TempDir::new(name).expect("Tempdir not created");
+    let target = assert_fs::TempDir::new().unwrap();
+    target
+        .copy_from(format!("tests/fixtures/{}", name), &["*"])
+        .unwrap();
 
-    config.source = "./".to_owned();
-    config.abs_dest = Some(destdir.path().to_owned());
-
+    let mut config = cobalt::ConfigBuilder::from_cwd(target.path())?;
+    config.destination = "./_dest".into();
     let config = config.build()?;
     let destination = config.destination.clone();
-
-    // try to create the target directory, ignore errors
-    fs::create_dir_all(&destination).is_ok();
-
     let result = cobalt::build(config);
 
     if result.is_ok() {
-        assert_dirs_eq(&destination, &target);
+        let expected = format!("tests/target/{}", name);
+        let expected_path = Path::new(&expected);
+        assert_dirs_eq(&destination, expected_path);
     }
-
-    // clean up
-    destdir.close()?;
+    // Always explicitly close to catch errors, especially on Windows.
+    target.close()?;
 
     result
 }

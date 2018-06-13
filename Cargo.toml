@@ -59,9 +59,10 @@ default-features = false
 features =  ["parsing", "assets", "html", "static-onig", "dump-load"]
 
 [dev-dependencies]
-assert_cli = "0.5"
+assert_cmd = "0.9"
+assert_fs = "0.9"
+predicates = "0.9"
 difference = "2.0"
-tempdir = "0.3"
 
 [features]
 default = ["syntax-highlight", "sass"]
