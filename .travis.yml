@@ -27,13 +27,13 @@ matrix:
     - cmake --version
     - cargo coverage || true
   - env: RUSTFMT
-    rust: 1.24.0  # `stable`: Locking down for consistent behavior
+    rust: 1.25.0  # `stable`: Locking down for consistent behavior
     install:
     - rustup component add rustfmt-preview
     script:
     - cargo fmt -- --write-mode=diff
   - env: RUSTFLAGS="-D warnings"
-    rust: 1.24.0  # `stable`: Locking down for consistent behavior
+    rust: 1.25.0  # `stable`: Locking down for consistent behavior
     install:
     script:
     - cargo check --features "sass" --tests

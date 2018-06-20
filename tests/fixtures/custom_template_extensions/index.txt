@@ -2,6 +2,6 @@ layout: default.txt
 ---
 This is my Index page!
 
-{% for post in collections.posts.pages %}
+{% for post in collections.posts.documents %}
  <a href="{{post.permalink}}">{{ post.title }}</a>
 {% endfor %}

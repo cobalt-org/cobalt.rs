@@ -74,7 +74,7 @@ impl CollectionBuilder {
         let source = source.ok_or_else(|| "No asset source provided")?;
 
         let dir = dir.unwrap_or_else(|| slug.clone());
-        let pages = Self::build_files(&source, &dir, &template_extensions, &ignore)?;
+        let documents = Self::build_files(&source, &dir, &template_extensions, &ignore)?;
 
         let drafts_dir = if include_drafts { drafts_dir } else { None };
         let drafts = drafts_dir
@@ -103,7 +103,7 @@ impl CollectionBuilder {
             title,
             slug,
             description,
-            pages,
+            documents,
             drafts,
             include_drafts,
             order,
@@ -151,7 +151,7 @@ pub struct Collection {
     pub title: String,
     pub slug: String,
     pub description: Option<String>,
-    pub pages: files::Files,
+    pub documents: files::Files,
     pub drafts: Option<files::Files>,
     pub include_drafts: bool,
     pub order: SortOrder,
@@ -173,7 +173,7 @@ mod test {
         collection.title = Some("title".to_owned());
         collection.dir = Some("rel".to_owned());
         let collection = collection.build().unwrap();
-        assert_eq!(collection.pages.subtree(), path::Path::new("/rel"));
+        assert_eq!(collection.documents.subtree(), path::Path::new("/rel"));
     }
 
     #[test]

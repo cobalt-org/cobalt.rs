@@ -55,7 +55,7 @@ pub fn debug_command(matches: &clap::ArgMatches) -> Result<()> {
                 }
                 Some("pages") => {
                     let pages = config.pages.build()?;
-                    for file_path in pages.pages.files() {
+                    for file_path in pages.documents.files() {
                         println!("{:?}", file_path);
                     }
                     if let Some(ref drafts) = pages.drafts {
@@ -66,7 +66,7 @@ pub fn debug_command(matches: &clap::ArgMatches) -> Result<()> {
                 }
                 Some("posts") => {
                     let posts = config.posts.build()?;
-                    for file_path in posts.pages.files() {
+                    for file_path in posts.documents.files() {
                         println!("{:?}", file_path);
                     }
                     if let Some(ref drafts) = posts.drafts {

@@ -4,7 +4,7 @@ layout: default.liquid
   <h2>Blog!</h2>
   <!--<br />-->
   <div>
-    {% for post in collections.posts.pages %}
+    {% for post in collections.posts.documents %}
       <div>
         <h4>{{post.title}}</h4>
         <h4><a href="{{post.permalink}}">{{ post.title }}</a></h4>

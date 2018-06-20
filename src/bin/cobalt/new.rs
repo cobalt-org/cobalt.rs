@@ -185,7 +185,7 @@ const INDEX_MD: &str = "layout: default.liquid
 ---
 ## Blog!
 
-{% for post in collections.posts.pages %}
+{% for post in collections.posts.documents %}
 #### {{post.title}}
 
 [{{ post.title }}]({{ post.permalink }})
@@ -193,7 +193,11 @@ const INDEX_MD: &str = "layout: default.liquid
 ";
 
 lazy_static! {
-    static ref DEFAULT: collections::HashMap<&'static str, &'static str> = [("pages", INDEX_MD), ("posts", POST_MD)].iter().cloned().collect();
+    static ref DEFAULT: collections::HashMap<&'static str, &'static str> =
+        [("pages", INDEX_MD), ("posts", POST_MD)]
+            .iter()
+            .cloned()
+            .collect();
 }
 
 pub fn create_new_project<P: AsRef<path::Path>>(dest: P) -> Result<()> {
@@ -254,14 +258,14 @@ pub fn create_new_document(
 
     let pages = config.pages.clone().build()?;
     let posts = config.posts.clone().build()?;
-    let file_type = if posts.pages.includes_file(&file)
+    let file_type = if posts.documents.includes_file(&file)
         || posts
             .drafts
             .map(|d| d.includes_file(&file))
             .unwrap_or_default()
     {
         posts.slug.as_str()
-    } else if pages.pages.includes_file(&file)
+    } else if pages.documents.includes_file(&file)
         || pages
             .drafts
             .map(|d| d.includes_file(&file))
@@ -350,7 +354,7 @@ pub fn rename_document(
 
     let pages = config.pages.clone().build()?;
     let posts = config.posts.clone().build()?;
-    let full_front = if posts.pages.includes_file(&target)
+    let full_front = if posts.documents.includes_file(&target)
         || posts
             .drafts
             .map(|d| d.includes_file(&target))
@@ -364,7 +368,7 @@ pub fn rename_document(
             .clone()
             .merge_path(rel_src)
             .merge(posts.default.clone())
-    } else if pages.pages.includes_file(&target)
+    } else if pages.documents.includes_file(&target)
         || pages
             .drafts
             .map(|d| d.includes_file(&target))
