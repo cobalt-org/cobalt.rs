@@ -11,6 +11,7 @@ mod template;
 
 pub mod files;
 pub mod permalink;
+pub mod pagination;
 pub mod slug;
 
 pub use self::assets::Assets;

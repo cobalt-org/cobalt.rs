@@ -132,6 +132,10 @@ fn document_attributes(
             liquid::Value::scalar(&front.collection),
         ),
         ("data".to_owned(), liquid::Value::Object(front.data.clone())),
+        (
+            "pagination".to_owned(),
+            liquid::Value::Object(front.pagination.clone()),
+        ),
     ];
     let mut attributes: liquid::Object = attributes.into_iter().collect();
 

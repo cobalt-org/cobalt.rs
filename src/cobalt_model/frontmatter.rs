@@ -80,6 +80,8 @@ pub struct FrontmatterBuilder {
     pub is_draft: Option<bool>,
     #[serde(skip_serializing_if = "liquid::Object::is_empty")]
     pub data: liquid::Object,
+    #[serde(skip_serializing_if = "liquid::Object::is_empty")]
+    pub pagination: liquid::Object,
     // Controlled by where the file is found.  We might allow control over the type at a later
     // point but we need to first define those semantics.
     #[serde(skip)]
@@ -247,6 +249,7 @@ impl FrontmatterBuilder {
             is_draft,
             collection,
             data,
+            pagination,
         } = self;
         Self {
             permalink,
@@ -262,6 +265,42 @@ impl FrontmatterBuilder {
             is_draft,
             collection,
             data: merge_objects(data, other_data),
+            pagination: pagination,
+        }
+    }
+
+    pub fn merge_pagination(self, other_pagination: liquid::Object) -> Self {
+        let Self {
+            permalink,
+            slug,
+            title,
+            description,
+            excerpt,
+            categories,
+            excerpt_separator,
+            published_date,
+            format,
+            layout,
+            is_draft,
+            collection,
+            data,
+            pagination,
+        } = self;
+        Self {
+            permalink: permalink,
+            slug: slug,
+            title: title,
+            description: description,
+            excerpt: excerpt,
+            categories: categories,
+            excerpt_separator: excerpt_separator,
+            published_date: published_date,
+            format: format,
+            layout: layout,
+            is_draft: is_draft,
+            collection: collection,
+            data: data,
+            pagination: merge_objects(pagination, other_pagination),
         }
     }
 
@@ -280,6 +319,7 @@ impl FrontmatterBuilder {
             is_draft,
             collection,
             data,
+            pagination,
         } = self;
         let Self {
             permalink: other_permalink,
@@ -295,6 +335,7 @@ impl FrontmatterBuilder {
             is_draft: other_is_draft,
             collection: other_collection,
             data: other_data,
+            pagination: other_pagination,
         } = other;
         Self {
             permalink: permalink.or_else(|| other_permalink),
@@ -310,6 +351,7 @@ impl FrontmatterBuilder {
             is_draft: is_draft.or_else(|| other_is_draft),
             collection: collection.or_else(|| other_collection),
             data: merge_objects(data, other_data),
+            pagination: merge_objects(pagination, other_pagination),
         }
     }
 
@@ -365,6 +407,7 @@ impl FrontmatterBuilder {
             is_draft,
             collection,
             data,
+            pagination,
         } = self;
 
         let collection = collection.unwrap_or_else(|| "".to_owned());
@@ -391,8 +434,9 @@ impl FrontmatterBuilder {
             format: format.unwrap_or_else(SourceFormat::default),
             layout,
             is_draft: is_draft.unwrap_or(false),
-            collection,
-            data,
+            collection: collection,
+            data: data,
+            pagination: pagination,
         };
 
         Ok(fm)
@@ -424,6 +468,7 @@ pub struct Frontmatter {
     pub is_draft: bool,
     pub collection: String,
     pub data: liquid::Object,
+    pub pagination: liquid::Object,
 }
 
 impl Front for Frontmatter {}
@@ -665,6 +710,7 @@ mod test {
             is_draft: Some(true),
             collection: Some("pages".to_owned()),
             data: liquid::Object::new(),
+            pagination: liquid::Object::new(),
         };
         let b = FrontmatterBuilder {
             permalink: Some("permalink b".to_owned()),
@@ -680,6 +726,7 @@ mod test {
             is_draft: Some(true),
             collection: Some("posts".to_owned()),
             data: liquid::Object::new(),
+            pagination: liquid::Object::new(),
         };
 
         let merge_b_into_a = a.clone().merge(b.clone());
@@ -708,6 +755,7 @@ mod test {
             is_draft: Some(true),
             collection: Some("pages".to_owned()),
             data: liquid::Object::new(),
+            pagination: liquid::Object::new(),
         };
 
         let merge_b_into_a = a.clone()
