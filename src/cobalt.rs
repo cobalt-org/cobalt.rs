@@ -169,10 +169,11 @@ fn generate_pages(posts: Vec<Document>, pages: Vec<Document>, context: &Context)
     trace!("Generating other documents");
     for mut doc in pages {
         trace!("Generating {} / {:?}", doc.url_path, doc.file_path.to_str());
-        if pagination::is_pagination_enable(&doc.front.pagination) {
+        let pagination_cfg = pagination::PaginationCfg::new(&doc.front.pagination);
+        if pagination_cfg.is_pagination_enable() {
             trace!("It's an index page {}", doc.url_path);
             let paginators: Vec<liquid::Object> =
-                pagination::generate_paginators(&mut doc, &posts_data);
+                pagination::generate_paginators(&mut doc, &posts_data, &pagination_cfg);
             // page 1 is not in "_p" folder
             let mut paginators = paginators.into_iter();
             generate_doc(
