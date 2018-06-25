@@ -5,6 +5,7 @@ use std::borrow::Cow;
 use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::ops::Range;
+use std::path::PathBuf;
 use std::vec::Vec;
 
 enum Order {
@@ -126,7 +127,7 @@ fn sort_posts(posts: &mut Vec<liquid::Value>, config: &PaginationCfg) {
         if let Some(b) = extract_value(b, &k) {
           match config.order {
             Order::Desc => b.partial_cmp(&a).unwrap_or(Ordering::Equal),
-            Order::Asc => a.partial_cmp(&b).unwrap_or(Ordering::Equal)
+            Order::Asc => a.partial_cmp(&b).unwrap_or(Ordering::Equal),
           }
         } else {
           Ordering::Greater
@@ -155,7 +156,7 @@ fn create_all_paginators(
       i,
       total_pages,
       total_posts,
-      pagination_cfg.per_page,
+      &pagination_cfg,
       &doc,
       &mut all_posts,
     ));
@@ -166,7 +167,7 @@ fn create_paginator(
   i: i32,
   total_pages: i32,
   total_posts: i32,
-  per_page: i32,
+  config: &PaginationCfg,
   doc: &Document,
   mut all_posts: &mut Vec<liquid::Value>,
 ) -> liquid::Object {
@@ -181,35 +182,84 @@ fn create_paginator(
     &mut paginator,
     total_posts,
     total_pages,
-    per_page,
+    &config,
     &file_name,
+    &doc.file_path,
   );
 
-  fill_current_page_info(&mut paginator, page, &mut all_posts, per_page, &file_name);
+  fill_current_page_info(
+    &mut paginator,
+    page,
+    &mut all_posts,
+    &config,
+    &file_name,
+    &doc.file_path,
+  );
 
-  fill_previous_next_info(&mut paginator, page, total_pages, &file_name);
+  fill_previous_next_info(
+    &mut paginator,
+    page,
+    total_pages,
+    &file_name,
+    &doc.file_path,
+    &config
+  );
 
   // TODO trails
   paginator
+}
+
+fn interpret_permalink(
+  config: &PaginationCfg,
+  file_path: &PathBuf,
+  page_num: i32,
+  file_name: &str,
+) -> String {
+  let cleanup = config.permalink.trim().replace(" ", "");
+  let mut result = String::new();
+  cleanup.split('/').for_each(|p| match p {
+    "{{parent}}" => {
+      let has_parent = if let Some(container_dir) = file_path.parent() {
+        match container_dir.parent() {
+          Some(_) => true,
+          None => false,
+        }
+      } else {
+        false
+      };
+      result.push_str(if has_parent { "../" } else { "/" });
+    }
+    "{{num}}" => result.push_str(format!("{:02}/", page_num).as_str()),
+    "{{include}}" => result.push_str(format!("{}/", config.include).as_str()),
+    _ => result.push_str(format!("{}/", p).as_str()),
+  });
+  result.push_str(file_name);
+  result
 }
 
 fn init_paginator_constants(
   paginator: &mut liquid::Object,
   total_posts: i32,
   total_pages: i32,
-  per_page: i32,
+  config: &PaginationCfg,
   file_name: &str,
+  file_path: &PathBuf,
 ) {
-  paginator.insert("per_page".to_owned(), Value::scalar(per_page));
+  paginator.insert("per_page".to_owned(), Value::scalar(config.per_page));
   paginator.insert("total_posts".to_owned(), Value::scalar(total_posts));
   paginator.insert("total_pages".to_owned(), Value::scalar(total_pages));
   paginator.insert(
     "first_page_path".to_owned(),
-    Value::scalar(format!("/{}", file_name)),
+    Value::scalar(format!("/{}", file_path.to_string_lossy())),
   );
   paginator.insert(
     "last_page_path".to_owned(),
-    Value::scalar(format!("/_p/{:02}_{}", total_pages, file_name)),
+    Value::scalar(interpret_permalink(
+      &config,
+      &file_path,
+      total_pages,
+      &file_name,
+    )),
   );
 }
 
@@ -228,8 +278,9 @@ fn fill_current_page_info(
   paginator: &mut liquid::Object,
   page: i32,
   all_posts: &mut Vec<liquid::Value>,
-  per_page: i32,
+  config: &PaginationCfg,
   file_name: &str,
+  file_path: &PathBuf,
 ) {
   let nb_posts_left = all_posts.len();
   paginator.insert("page".to_owned(), Value::scalar(page));
@@ -237,7 +288,7 @@ fn fill_current_page_info(
     "posts".to_owned(),
     Value::Array(
       all_posts
-        .drain(range_for_page(per_page, nb_posts_left))
+        .drain(range_for_page(config.per_page, nb_posts_left))
         .collect(),
     ),
   );
@@ -247,7 +298,11 @@ fn fill_current_page_info(
     Value::scalar(if page == 1 {
       format!("{}", file_name)
     } else {
-      format!("_p/{:02}_{}", page, file_name)
+      let mut path = interpret_permalink(&config, &file_path, page, &file_name);
+      if path.starts_with('/') {
+        path.remove(0);
+      }
+      path
     }),
   );
 }
@@ -257,6 +312,8 @@ fn fill_previous_next_info(
   page: i32,
   total_pages: i32,
   file_name: &str,
+  file_path: &PathBuf,
+  config: &PaginationCfg,
 ) {
   if page > 1 {
     // we have a previous page
@@ -265,7 +322,7 @@ fn fill_previous_next_info(
       Value::scalar(if page == 2 {
         format!("/{}", file_name)
       } else {
-        format!("/_p/{:02}_{}", page - 1, file_name)
+        interpret_permalink(&config, &file_path, page - 1, &file_name)
       }),
     );
     paginator.insert("previous_page".to_owned(), Value::scalar(page - 1));
@@ -274,7 +331,12 @@ fn fill_previous_next_info(
     // we have a next page
     paginator.insert(
       "next_page_path".to_owned(),
-      Value::scalar(format!("/_p/{:02}_{}", page + 1, file_name)),
+      Value::scalar(interpret_permalink(
+        &config,
+        &file_path,
+        page + 1,
+        &file_name,
+      )),
     );
     paginator.insert("next_page".to_owned(), Value::scalar(page + 1));
   }
