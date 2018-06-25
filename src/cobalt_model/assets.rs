@@ -1,7 +1,7 @@
 use std::path;
 
-use super::sass;
 use super::files;
+use super::sass;
 
 use error::*;
 

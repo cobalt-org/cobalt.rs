@@ -3,10 +3,10 @@ use std::fmt;
 use std::path;
 use std::result;
 
+use super::files;
+use error::*;
 use liquid;
 use syntax_highlight;
-use error::*;
-use super::files;
 
 #[derive(Clone, Debug, Default)]
 struct InMemoryInclude {

@@ -1,20 +1,22 @@
 #[allow(unused_imports)]
 use std::ascii::AsciiExt;
 
-use std::borrow::Cow::Owned;
 use itertools::Itertools;
+use std::borrow::Cow::Owned;
 
 use liquid;
-use liquid::interpreter::{Context, Renderable};
+use liquid::compiler::Element::{self, Expression, Raw, Tag};
 use liquid::compiler::LiquidOptions;
 use liquid::compiler::Token::{self, Identifier};
-use liquid::compiler::Element::{self, Expression, Raw, Tag};
+use liquid::interpreter::{Context, Renderable};
 
-use syntect::parsing::{SyntaxDefinition, SyntaxSet};
-use syntect::highlighting::{Theme, ThemeSet};
-use syntect::html::{highlighted_snippet_for_string, start_coloured_html_snippet,
-                    styles_to_coloured_html, IncludeBackground};
 use syntect::easy::HighlightLines;
+use syntect::highlighting::{Theme, ThemeSet};
+use syntect::html::{
+    highlighted_snippet_for_string, start_coloured_html_snippet, styles_to_coloured_html,
+    IncludeBackground,
+};
+use syntect::parsing::{SyntaxDefinition, SyntaxSet};
 
 use pulldown_cmark as cmark;
 use pulldown_cmark::Event::{self, End, Html, Start, Text};
@@ -29,7 +31,7 @@ struct Setup {
 unsafe impl Send for Setup {}
 unsafe impl Sync for Setup {}
 
-lazy_static!{
+lazy_static! {
     static ref SETUP: Setup = Setup {
         syntax_set: SyntaxSet::load_defaults_newlines(),
         theme_set: ThemeSet::load_defaults()
@@ -117,7 +119,7 @@ impl liquid::compiler::ParseBlock for CodeBlockParser {
 
         Ok(Box::new(CodeBlock {
             code: content,
-            lang: lang,
+            lang,
             theme: SETUP.theme_set.themes[&self.syntax_theme].clone(),
         }))
     }
@@ -133,8 +135,8 @@ impl<'a> DecoratedParser<'a> {
     pub fn new(parser: cmark::Parser<'a>, theme: &'a Theme) -> Self {
         DecoratedParser {
             h: None,
-            parser: parser,
-            theme: theme,
+            parser,
+            theme,
         }
     }
 }

@@ -193,7 +193,11 @@ const INDEX_MD: &str = "layout: default.liquid
 ";
 
 lazy_static! {
-    static ref DEFAULT: collections::HashMap<&'static str, &'static str> = [("pages", INDEX_MD), ("posts", POST_MD)].iter().cloned().collect();
+    static ref DEFAULT: collections::HashMap<&'static str, &'static str> =
+        [("pages", INDEX_MD), ("posts", POST_MD)]
+            .iter()
+            .cloned()
+            .collect();
 }
 
 pub fn create_new_project<P: AsRef<path::Path>>(dest: P) -> Result<()> {

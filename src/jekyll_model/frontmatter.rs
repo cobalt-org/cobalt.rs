@@ -3,11 +3,11 @@ use std::fmt;
 use liquid;
 use serde_yaml;
 
-use error::*;
-use cobalt_model;
-use super::Permalink;
 use super::Part;
+use super::Permalink;
 use super::VARIABLES;
+use cobalt_model;
+use error::*;
 
 #[derive(Debug, Eq, PartialEq, Default, Clone, Serialize, Deserialize)]
 pub struct FrontmatterBuilder(liquid::Object);

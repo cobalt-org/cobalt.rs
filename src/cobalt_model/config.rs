@@ -62,7 +62,7 @@ impl PageConfig {
             drafts_dir: None,
             include_drafts: false,
             template_extensions: template_extensions.to_vec(),
-            ignore: ignore,
+            ignore,
             order: collection::SortOrder::None,
             rss: None,
             jsonfeed: None,
@@ -120,7 +120,7 @@ impl PostConfig {
             source: Some(source.to_owned()),
             dir: Some(dir),
             drafts_dir,
-            include_drafts: include_drafts,
+            include_drafts,
             template_extensions: template_extensions.to_vec(),
             ignore: ignore.to_vec(),
             order,
@@ -154,7 +154,8 @@ pub struct SiteConfig {
     pub description: Option<String>,
     pub base_url: Option<String>,
     pub data: Option<liquid::Object>,
-    #[serde(skip)] pub data_dir: &'static str,
+    #[serde(skip)]
+    pub data_dir: &'static str,
 }
 
 impl SiteConfig {
@@ -184,7 +185,8 @@ impl Default for SiteConfig {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields, default)]
 pub struct SassConfig {
-    #[serde(skip)] pub import_dir: &'static str,
+    #[serde(skip)]
+    pub import_dir: &'static str,
     pub style: sass::SassOutputStyle,
 }
 
@@ -235,10 +237,12 @@ impl AssetsConfig {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields, default)]
 pub struct ConfigBuilder {
-    #[serde(skip)] pub root: path::PathBuf,
+    #[serde(skip)]
+    pub root: path::PathBuf,
     pub source: String,
     pub destination: String,
-    #[serde(skip)] pub abs_dest: Option<path::PathBuf>,
+    #[serde(skip)]
+    pub abs_dest: Option<path::PathBuf>,
     pub include_drafts: bool,
     pub default: frontmatter::FrontmatterBuilder,
     pub pages: PageConfig,
@@ -247,8 +251,10 @@ pub struct ConfigBuilder {
     pub template_extensions: Vec<String>,
     pub ignore: Vec<String>,
     pub syntax_highlight: SyntaxHighlight,
-    #[serde(skip)] pub layouts_dir: &'static str,
-    #[serde(skip)] pub includes_dir: &'static str,
+    #[serde(skip)]
+    pub layouts_dir: &'static str,
+    #[serde(skip)]
+    pub includes_dir: &'static str,
     pub assets: AssetsConfig,
 }
 

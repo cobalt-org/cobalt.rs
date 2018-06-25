@@ -2,8 +2,8 @@ use std::fmt;
 
 use regex;
 
-use error::*;
 use super::frontmatter;
+use error::*;
 
 #[derive(Debug, Eq, PartialEq, Default, Clone)]
 pub struct DocumentBuilder<T: frontmatter::Front> {
@@ -44,7 +44,7 @@ impl<T: frontmatter::Front> fmt::Display for DocumentBuilder<T> {
 }
 
 fn split_document(content: &str) -> Result<(Option<&str>, &str)> {
-    lazy_static!{
+    lazy_static! {
         static ref FRONT_MATTER_DIVIDE: regex::Regex = regex::Regex::new(r"---\s*\r?\n").unwrap();
     }
 

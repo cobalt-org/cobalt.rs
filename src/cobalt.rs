@@ -1,16 +1,16 @@
-use std::fs;
-use std::collections::HashMap;
-use std::io::Write;
-use std::path;
+use jsonfeed;
+use jsonfeed::Feed;
 use liquid;
 use rss;
-use jsonfeed::Feed;
-use jsonfeed;
+use std::collections::HashMap;
+use std::fs;
+use std::io::Write;
+use std::path;
 
-use cobalt_model::{Config, SortOrder};
+use cobalt_model;
 use cobalt_model::files;
 use cobalt_model::Collection;
-use cobalt_model;
+use cobalt_model::{Config, SortOrder};
 use document::Document;
 use error::*;
 
@@ -108,12 +108,10 @@ fn generate_doc(posts_data: &[liquid::Value], doc: &mut Document, context: &Cont
         "pages".to_owned(),
         liquid::Value::Array(posts_data.to_vec()),
     );
-    let global_collection: liquid::Object = vec![
-        (
-            context.posts.slug.clone(),
-            liquid::Value::Object(posts_variable),
-        ),
-    ].into_iter()
+    let global_collection: liquid::Object = vec![(
+        context.posts.slug.clone(),
+        liquid::Value::Object(posts_variable),
+    )].into_iter()
         .collect();
     let mut globals: liquid::Object = vec![
         (

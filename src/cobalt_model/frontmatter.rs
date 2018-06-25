@@ -1,6 +1,6 @@
+use std::collections::HashMap;
 use std::fmt;
 use std::path;
-use std::collections::HashMap;
 
 use chrono::Datelike;
 use liquid;
@@ -14,10 +14,11 @@ use super::datetime;
 use super::slug;
 
 const PATH_ALIAS: &str = "/{{parent}}/{{name}}{{ext}}";
-lazy_static!{
-    static ref PERMALINK_ALIASES: HashMap<&'static str, &'static str> = [
-        ("path", PATH_ALIAS),
-    ].iter().map(|&(k, v)| (k, v)).collect();
+lazy_static! {
+    static ref PERMALINK_ALIASES: HashMap<&'static str, &'static str> = [("path", PATH_ALIAS),]
+        .iter()
+        .map(|&(k, v)| (k, v))
+        .collect();
 }
 
 #[derive(Debug, Eq, PartialEq, Hash, Copy, Clone, Serialize, Deserialize)]
@@ -34,9 +35,9 @@ impl Default for SourceFormat {
 }
 
 // TODO(epage): Remove the serde traits and instead provide an impl based on if serde traits exist
-pub trait Front
-    : Default + fmt::Display + for<'de> serde::Deserialize<'de> + serde::Serialize
-    {
+pub trait Front:
+    Default + fmt::Display + for<'de> serde::Deserialize<'de> + serde::Serialize
+{
     fn parse(content: &str) -> Result<Self> {
         let front: Self = serde_yaml::from_str(content)?;
         Ok(front)
@@ -55,22 +56,34 @@ pub trait Front
 #[derive(Debug, Eq, PartialEq, Default, Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields, default)]
 pub struct FrontmatterBuilder {
-    #[serde(skip_serializing_if = "Option::is_none")] pub permalink: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")] pub slug: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")] pub title: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")] pub description: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")] pub excerpt: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")] pub categories: Option<Vec<String>>,
-    #[serde(skip_serializing_if = "Option::is_none")] pub excerpt_separator: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub permalink: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub slug: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub title: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub excerpt: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub categories: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub excerpt_separator: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub published_date: Option<datetime::DateTime>,
-    #[serde(skip_serializing_if = "Option::is_none")] pub format: Option<SourceFormat>,
-    #[serde(skip_serializing_if = "Option::is_none")] pub layout: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")] pub is_draft: Option<bool>,
-    #[serde(skip_serializing_if = "liquid::Object::is_empty")] pub data: liquid::Object,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub format: Option<SourceFormat>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub layout: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub is_draft: Option<bool>,
+    #[serde(skip_serializing_if = "liquid::Object::is_empty")]
+    pub data: liquid::Object,
     // Controlled by where the file is found.  We might allow control over the type at a later
     // point but we need to first define those semantics.
-    #[serde(skip)] pub collection: Option<String>,
+    #[serde(skip)]
+    pub collection: Option<String>,
 }
 
 impl FrontmatterBuilder {
@@ -236,18 +249,18 @@ impl FrontmatterBuilder {
             data,
         } = self;
         Self {
-            permalink: permalink,
-            slug: slug,
-            title: title,
-            description: description,
-            excerpt: excerpt,
-            categories: categories,
-            excerpt_separator: excerpt_separator,
-            published_date: published_date,
-            format: format,
-            layout: layout,
-            is_draft: is_draft,
-            collection: collection,
+            permalink,
+            slug,
+            title,
+            description,
+            excerpt,
+            categories,
+            excerpt_separator,
+            published_date,
+            format,
+            layout,
+            is_draft,
+            collection,
             data: merge_objects(data, other_data),
         }
     }
@@ -367,19 +380,19 @@ impl FrontmatterBuilder {
         };
 
         let fm = Frontmatter {
-            permalink: permalink,
+            permalink,
             slug: slug.ok_or_else(|| "No slug")?,
             title: title.ok_or_else(|| "No title")?,
-            description: description,
-            excerpt: excerpt,
+            description,
+            excerpt,
             categories: categories.unwrap_or_else(|| vec![]),
             excerpt_separator: excerpt_separator.unwrap_or_else(|| "\n\n".to_owned()),
-            published_date: published_date,
+            published_date,
             format: format.unwrap_or_else(SourceFormat::default),
-            layout: layout,
+            layout,
             is_draft: is_draft.unwrap_or(false),
-            collection: collection,
-            data: data,
+            collection,
+            data,
         };
 
         Ok(fm)
@@ -444,10 +457,9 @@ fn file_stem_path(p: &path::Path) -> String {
 }
 
 fn parse_file_stem(stem: String) -> (Option<datetime::DateTime>, String) {
-    lazy_static!{
-       static ref DATE_PREFIX_REF: regex::Regex =
-           regex::Regex::new(r"^(\d{4})-(\d{1,2})-(\d{1,2})[- ](.*)$")
-           .unwrap();
+    lazy_static! {
+        static ref DATE_PREFIX_REF: regex::Regex =
+            regex::Regex::new(r"^(\d{4})-(\d{1,2})-(\d{1,2})[- ](.*)$").unwrap();
     }
 
     let parts = DATE_PREFIX_REF.captures(&stem).and_then(|caps| {
