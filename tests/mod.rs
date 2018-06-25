@@ -6,7 +6,6 @@ extern crate error_chain;
 extern crate tempdir;
 extern crate walkdir;
 
-use std::error::Error;
 use std::fs::{self, File};
 use std::io::Read;
 use std::path::{Path, PathBuf};
