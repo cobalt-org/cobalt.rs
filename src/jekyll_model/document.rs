@@ -2,9 +2,9 @@ use std::fmt;
 
 use regex;
 
-use error::*;
 use super::frontmatter;
 use cobalt_model;
+use error::*;
 
 #[derive(Debug, Eq, PartialEq, Default, Clone)]
 pub struct DocumentBuilder {

@@ -2,10 +2,10 @@ use std::path;
 
 use liquid;
 
-use error::*;
-use super::FrontmatterBuilder;
 use super::files;
 use super::slug;
+use super::FrontmatterBuilder;
+use error::*;
 
 #[derive(Debug, Eq, PartialEq, Hash, Copy, Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]

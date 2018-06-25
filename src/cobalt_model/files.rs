@@ -2,14 +2,14 @@ use std::ffi;
 use std::fs;
 use std::io::Read;
 use std::io::Write;
-use std::path;
 use std::iter::FromIterator;
+use std::path;
 
-use ignore::Match;
-use ignore::gitignore::{Gitignore, GitignoreBuilder};
-use walkdir::{DirEntry, WalkDir};
-use normalize_line_endings::normalized;
 use error::Result;
+use ignore::gitignore::{Gitignore, GitignoreBuilder};
+use ignore::Match;
+use normalize_line_endings::normalized;
+use walkdir::{DirEntry, WalkDir};
 
 pub struct FilesBuilder {
     root_dir: path::PathBuf,
@@ -26,7 +26,7 @@ impl FilesBuilder {
 
     fn new_from_path(root_dir: path::PathBuf) -> Result<Self> {
         let builder = FilesBuilder {
-            root_dir: root_dir,
+            root_dir,
             subtree: Default::default(),
             ignore: Default::default(),
             ignore_hidden: true,
@@ -299,7 +299,7 @@ mod tests {
     use super::*;
 
     macro_rules! assert_includes_dir {
-        ($root: expr, $ignores: expr, $test: expr, $included: expr) => {
+        ($root:expr, $ignores:expr, $test:expr, $included:expr) => {
             let mut files = FilesBuilder::new(path::Path::new($root)).unwrap();
             let ignores: &[&str] = $ignores;
             for ignore in ignores {
@@ -307,10 +307,10 @@ mod tests {
             }
             let files = files.build().unwrap();
             assert_eq!(files.includes_dir(path::Path::new($test)), $included);
-        }
+        };
     }
     macro_rules! assert_includes_file {
-        ($root: expr, $ignores: expr, $test: expr, $included: expr) => {
+        ($root:expr, $ignores:expr, $test:expr, $included:expr) => {
             let mut files = FilesBuilder::new(path::Path::new($root)).unwrap();
             let ignores: &[&str] = $ignores;
             for ignore in ignores {
@@ -318,7 +318,7 @@ mod tests {
             }
             let files = files.build().unwrap();
             assert_eq!(files.includes_file(path::Path::new($test)), $included);
-        }
+        };
     }
 
     #[test]

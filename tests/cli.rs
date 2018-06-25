@@ -4,8 +4,8 @@ extern crate lazy_static;
 extern crate tempdir;
 
 use std::env;
-use std::str;
 use std::path::{Path, PathBuf};
+use std::str;
 
 use tempdir::TempDir;
 

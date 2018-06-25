@@ -34,12 +34,12 @@ extern crate lazy_static;
 extern crate serde;
 
 pub use cobalt::build;
-pub use error::Error;
 pub use cobalt_model::Config;
 pub use cobalt_model::ConfigBuilder;
+pub use error::Error;
 
-pub mod error;
 pub mod cobalt_model;
+pub mod error;
 
 mod cobalt;
 mod document;

@@ -21,8 +21,8 @@ extern crate log;
 
 mod args;
 mod build;
-mod error;
 mod debug;
+mod error;
 mod jekyll;
 mod new;
 mod serve;

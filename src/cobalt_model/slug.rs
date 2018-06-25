@@ -2,7 +2,7 @@ use itertools::Itertools;
 use regex::Regex;
 use unidecode;
 
-lazy_static!{
+lazy_static! {
     static ref SLUG_INVALID_CHARS: Regex = Regex::new(r"([^a-zA-Z0-9]+)").unwrap();
 }
 

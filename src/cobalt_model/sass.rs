@@ -1,11 +1,11 @@
-use std::path;
 use std::ffi;
+use std::path;
 
 #[cfg(feature = "sass")]
 use sass_rs;
 
-use error::*;
 use super::files;
+use error::*;
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Hash, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]

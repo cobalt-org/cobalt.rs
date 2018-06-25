@@ -2,12 +2,12 @@
 
 use std::io;
 
-use walkdir;
-use liquid;
 use ignore;
-use serde_yaml;
+use liquid;
 use serde_json;
+use serde_yaml;
 use toml;
+use walkdir;
 
 error_chain! {
 

@@ -16,12 +16,12 @@ use tempdir::TempDir;
 use walkdir::WalkDir;
 
 macro_rules! assert_contains {
-    ($haystack: expr, $needle: expr) => {
+    ($haystack:expr, $needle:expr) => {
         let text = $haystack.to_owned();
         println!("text='''{}'''", text);
         println!("needle='''{}'''", $needle);
         assert!(text.contains($needle))
-    }
+    };
 }
 
 fn assert_dirs_eq(expected: &Path, actual: &Path) {

@@ -1,8 +1,8 @@
 use liquid;
-use liquid::interpreter::{Context, Renderable};
+use liquid::compiler::Element::{self, Expression, Raw, Tag};
 use liquid::compiler::LiquidOptions;
 use liquid::compiler::Token::{self, Identifier};
-use liquid::compiler::Element::{self, Expression, Raw, Tag};
+use liquid::interpreter::{Context, Renderable};
 use pulldown_cmark as cmark;
 
 use error;
