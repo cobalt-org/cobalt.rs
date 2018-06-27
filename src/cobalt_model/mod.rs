@@ -10,6 +10,7 @@ mod site;
 mod template;
 
 pub mod files;
+pub mod permalink;
 pub mod slug;
 
 pub use self::assets::Assets;
