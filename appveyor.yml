@@ -13,14 +13,16 @@ environment:
     - TARGET: x86_64-pc-windows-msvc
       CHANNEL: stable
       TOOLCHAIN: msvc
+      PLATFORM: x86_64
 
     # Beta channel
     - TARGET: x86_64-pc-windows-msvc
       CHANNEL: beta
       TOOLCHAIN: msvc
+      PLATFORM: x86_64
 
 install:
-  - if "%TOOLCHAIN%" == "msvc" call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars64.bat"
+  - if "%TOOLCHAIN%" == "msvc" if "%PLATFORM%" == "x86_64" call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvarsall.bat" x86_amd64
   - if "%TOOLCHAIN%" == "msys" set PATH=C:\msys64\mingw%MSYS_BITS%\bin;C:\msys64\usr\bin;%PATH%
   - curl -sSf -o rustup-init.exe https://win.rustup.rs/
   - rustup-init.exe -y --default-host %TARGET% --default-toolchain %CHANNEL%
@@ -30,11 +32,11 @@ install:
 
 test_script:
   # we don't run the "test phase" when doing deploys
-  - if [%APPVEYOR_REPO_TAG%]==[false] ( cargo +%CHANNEL%-%TARGET% build )
-  - if [%APPVEYOR_REPO_TAG%]==[false] ( cargo +%CHANNEL%-%TARGET% test )
-  - if [%APPVEYOR_REPO_TAG%]==[false] ( cargo +%CHANNEL%-%TARGET% build --no-default-features )
-  - if [%APPVEYOR_REPO_TAG%]==[false] ( cargo +%CHANNEL%-%TARGET% test --no-default-features )
-
+  - if [%APPVEYOR_REPO_TAG%]==[false] ( cargo build --all )
+  - if [%APPVEYOR_REPO_TAG%]==[false] ( cargo test --all )
+  - if [%APPVEYOR_REPO_TAG%]==[false] ( cargo build --all --no-default-features )
+  - if [%APPVEYOR_REPO_TAG%]==[false] ( cargo test --all --no-default-features )
+  
 before_deploy:
   - cargo rustc --target %TARGET% --release --bin cobalt -- -C lto
   - ps: ci\before_deploy.ps1

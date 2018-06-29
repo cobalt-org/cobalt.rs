@@ -64,7 +64,7 @@ difference = "2.0"
 tempdir = "0.3"
 
 [features]
-default = ["syntax-highlight"]
+default = ["syntax-highlight", "sass"]
 unstable = []
 
 syntax-highlight = ["syntect"]

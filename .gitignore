@@ -1,5 +1,6 @@
 /target
 /build
+/rls
 
 .DS_Store
 *.rs.bk
