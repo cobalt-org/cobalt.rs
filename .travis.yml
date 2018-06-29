@@ -36,13 +36,13 @@ matrix:
     rust: 1.27.0  # `stable`: Locking down for consistent behavior
     install:
     script:
-    - cargo check --features "sass" --tests
+    - cargo check --tests
   - env: CLIPPY_VERSION="0.0.209"
     rust: nightly-2018-06-19
     install:
     - travis_wait cargo install clippy --version $CLIPPY_VERSION || echo "clippy already installed"
     script:
-    - cargo clippy --features "sass" -- -D clippy
+    - cargo clippy -- -D clippy
 
 install:
 - rustc -Vv
@@ -53,7 +53,6 @@ install:
 script:
 - cargo test --verbose
 - cargo test --verbose --no-default-features
-- cargo test --verbose --features "sass"
 
 before_deploy:
 - sh ci/before_deploy.sh
