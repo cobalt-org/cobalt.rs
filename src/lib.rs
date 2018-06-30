@@ -43,6 +43,7 @@ pub mod error;
 
 mod cobalt;
 mod document;
+mod pagination;
 
 pub mod jekyll_model;
 mod syntax_highlight;

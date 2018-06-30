@@ -9,10 +9,12 @@ use std::path;
 
 use cobalt_model;
 use cobalt_model::files;
+use cobalt_model::pagination_config;
 use cobalt_model::Collection;
 use cobalt_model::{Config, SortOrder};
 use document::Document;
 use error::*;
+use pagination;
 
 pub struct Context {
     pub source: path::PathBuf,
@@ -153,7 +155,10 @@ fn generate_doc(
     let doc_html = doc
         .render(&globals, &context.liquid, &context.layouts)
         .chain_err(|| format!("Failed to render for {:?}", doc.file_path))?;
-    trace!("doc.file_path: {:?}", context.destination.join(&doc.file_path));
+    trace!(
+        "doc.file_path: {:?}",
+        context.destination.join(&doc.file_path)
+    );
     files::write_document_file(doc_html, context.destination.join(&doc.file_path))?;
     Ok(())
 }
@@ -169,7 +174,7 @@ fn generate_pages(posts: Vec<Document>, pages: Vec<Document>, context: &Context)
     trace!("Generating other documents");
     for mut doc in pages {
         trace!("Generating {} / {:?}", doc.url_path, doc.file_path.to_str());
-        let pagination_cfg = pagination::PaginationCfg::new(&doc.front.pagination);
+        let pagination_cfg = pagination_config::PaginationCfg::new(&doc.front.pagination);
         if pagination_cfg.is_pagination_enable() {
             trace!("It's an index page {}", doc.url_path);
             let paginators: Vec<liquid::Object> =

@@ -1,89 +1,12 @@
+use cobalt_model::pagination_config::{Order, PaginationCfg};
+use cobalt_model::permalink;
+use document;
 use document::Document;
 use liquid;
-use liquid::Value;
-use std::borrow::Cow;
 use std::cmp::Ordering;
-use std::collections::HashMap;
 use std::ops::Range;
-use std::path::PathBuf;
-use std::vec::Vec;
 
-enum Order {
-  Desc,
-  Asc,
-}
-
-struct Trails {
-  before: i32,
-  after: i32,
-}
-
-pub struct PaginationCfg {
-  include: String,
-  per_page: i32,
-  permalink: String,
-  order: Order,
-  sort_by: Vec<String>,
-  trails: Trails,
-}
-
-const DEFAULT_PERMALINK: &str = "{{parent}}/{{include}}/_p/{{num}}/";
-const DEFAULT_SORT: &str = "published_date";
-
-impl PaginationCfg {
-  pub fn new(pagination_cfg: &HashMap<String, liquid::Value>) -> PaginationCfg {
-    trace!("Parsing pagination cfg: {:#?}", pagination_cfg);
-    PaginationCfg {
-      include: pagination_cfg
-        .get("include")
-        .map_or("None".to_string(), |inc| {
-          inc
-            .as_scalar()
-            .map_or("None".to_string(), |i| i.clone().into_string())
-        }),
-      per_page: pagination_cfg.get("per_page").map_or(10, |per| {
-        per.as_scalar().map_or(10, |s| s.to_integer().unwrap_or(10))
-      }),
-      permalink: pagination_cfg
-        .get("permalink")
-        .map_or(DEFAULT_PERMALINK.to_string(), |p| {
-          p.as_scalar()
-            .map_or(DEFAULT_PERMALINK.to_string(), |p| p.to_string())
-        }),
-      order: pagination_cfg.get("order").map_or(Order::Desc, |o| {
-        o.as_scalar().map_or(Order::Desc, |o| match o.to_str() {
-          Cow::Borrowed("Desc") => Order::Desc,
-          Cow::Borrowed("Asc") => Order::Asc,
-          _ => Order::Desc,
-        })
-      }),
-      sort_by: pagination_cfg
-        .get("sort_by")
-        .map_or(vec![DEFAULT_SORT.to_string()], |s| {
-          s.as_array().map_or(vec![DEFAULT_SORT.to_string()], |arr| {
-            arr
-              .iter()
-              .map(|sort| {
-                sort
-                  .as_scalar()
-                  .map_or(DEFAULT_SORT.to_string(), |conv| conv.clone().into_string())
-              })
-              .collect()
-          })
-        }),
-      trails: Trails {
-        before: 0,
-        after: 0,
-      }, // TODO: read from front
-    }
-  }
-
-  pub fn is_pagination_enable(&self) -> bool {
-    self.include != "None"
-  }
-}
-
-pub fn generate_paginators(
+pub(crate) fn generate_paginators(
   doc: &mut Document,
   posts_data: &[liquid::Value],
   config: &PaginationCfg,
@@ -122,7 +45,6 @@ fn sort_posts(posts: &mut Vec<liquid::Value>, config: &PaginationCfg) {
     let keys = config.sort_by.clone();
     let mut cmp = Ordering::Less;
     for k in keys {
-      trace!("sort by {}", k);
       cmp = if let Some(a) = extract_value(a, &k) {
         if let Some(b) = extract_value(b, &k) {
           match config.order {
@@ -184,7 +106,7 @@ fn create_paginator(
     total_pages,
     &config,
     &file_name,
-    &doc.file_path,
+    &doc,
   );
 
   fill_current_page_info(
@@ -193,48 +115,40 @@ fn create_paginator(
     &mut all_posts,
     &config,
     &file_name,
-    &doc.file_path,
+    &doc,
   );
 
-  fill_previous_next_info(
-    &mut paginator,
-    page,
-    total_pages,
-    &file_name,
-    &doc.file_path,
-    &config
-  );
+  fill_previous_next_info(&mut paginator, page, total_pages, &file_name, &doc, &config);
 
   // TODO trails
   paginator
 }
 
+fn pagination_attributes(page_num: i32, include: &String) -> liquid::Object {
+  let mut attributes = liquid::Object::new();
+  attributes.insert("num".to_owned(), liquid::Value::scalar(page_num));
+  attributes.insert("include".to_owned(), liquid::Value::scalar(include));
+  attributes
+}
+
 fn interpret_permalink(
   config: &PaginationCfg,
-  file_path: &PathBuf,
+  doc: &Document,
   page_num: i32,
   file_name: &str,
 ) -> String {
-  let cleanup = config.permalink.trim().replace(" ", "");
-  let mut result = String::new();
-  cleanup.split('/').for_each(|p| match p {
-    "{{parent}}" => {
-      let has_parent = if let Some(container_dir) = file_path.parent() {
-        match container_dir.parent() {
-          Some(_) => true,
-          None => false,
-        }
-      } else {
-        false
-      };
-      result.push_str(if has_parent { "../" } else { "/" });
-    }
-    "{{num}}" => result.push_str(format!("{:02}/", page_num).as_str()),
-    "{{include}}" => result.push_str(format!("{}/", config.include).as_str()),
-    _ => result.push_str(format!("{}/", p).as_str()),
+  let mut attributes = document::permalink_attributes(&doc.front, &doc.file_path);
+  let pagination_attr = pagination_attributes(page_num, &config.include);
+  pagination_attr.into_iter().for_each(|(k, v)| {
+    attributes.insert(k, v);
   });
-  result.push_str(file_name);
-  result
+  let permalink = permalink::explode_permalink(&config.permalink, &attributes);
+  permalink
+    .and_then(|mut p| {
+      p.push_str(file_name);
+      Ok(p)
+    })
+    .unwrap_or(file_name.to_owned())
 }
 
 fn init_paginator_constants(
@@ -243,23 +157,21 @@ fn init_paginator_constants(
   total_pages: i32,
   config: &PaginationCfg,
   file_name: &str,
-  file_path: &PathBuf,
+  doc: &Document,
 ) {
-  paginator.insert("per_page".to_owned(), Value::scalar(config.per_page));
-  paginator.insert("total_posts".to_owned(), Value::scalar(total_posts));
-  paginator.insert("total_pages".to_owned(), Value::scalar(total_pages));
+  paginator.insert(
+    "per_page".to_owned(),
+    liquid::Value::scalar(config.per_page),
+  );
+  paginator.insert("total_posts".to_owned(), liquid::Value::scalar(total_posts));
+  paginator.insert("total_pages".to_owned(), liquid::Value::scalar(total_pages));
   paginator.insert(
     "first_page_path".to_owned(),
-    Value::scalar(format!("/{}", file_path.to_string_lossy())),
+    liquid::Value::scalar(format!("/{}", doc.file_path.to_string_lossy())),
   );
   paginator.insert(
     "last_page_path".to_owned(),
-    Value::scalar(interpret_permalink(
-      &config,
-      &file_path,
-      total_pages,
-      &file_name,
-    )),
+    liquid::Value::scalar(interpret_permalink(&config, &doc, total_pages, &file_name)),
   );
 }
 
@@ -280,13 +192,13 @@ fn fill_current_page_info(
   all_posts: &mut Vec<liquid::Value>,
   config: &PaginationCfg,
   file_name: &str,
-  file_path: &PathBuf,
+  doc: &Document,
 ) {
   let nb_posts_left = all_posts.len();
-  paginator.insert("page".to_owned(), Value::scalar(page));
+  paginator.insert("page".to_owned(), liquid::Value::scalar(page));
   paginator.insert(
     "posts".to_owned(),
-    Value::Array(
+    liquid::Value::Array(
       all_posts
         .drain(range_for_page(config.per_page, nb_posts_left))
         .collect(),
@@ -295,10 +207,10 @@ fn fill_current_page_info(
 
   paginator.insert(
     "page_path".to_owned(),
-    Value::scalar(if page == 1 {
+    liquid::Value::scalar(if page == 1 {
       format!("{}", file_name)
     } else {
-      let mut path = interpret_permalink(&config, &file_path, page, &file_name);
+      let mut path = interpret_permalink(&config, &doc, page, &file_name);
       if path.starts_with('/') {
         path.remove(0);
       }
@@ -312,32 +224,27 @@ fn fill_previous_next_info(
   page: i32,
   total_pages: i32,
   file_name: &str,
-  file_path: &PathBuf,
+  doc: &Document,
   config: &PaginationCfg,
 ) {
   if page > 1 {
     // we have a previous page
     paginator.insert(
       "previous_page_path".to_owned(),
-      Value::scalar(if page == 2 {
+      liquid::Value::scalar(if page == 2 {
         format!("/{}", file_name)
       } else {
-        interpret_permalink(&config, &file_path, page - 1, &file_name)
+        interpret_permalink(&config, &doc, page - 1, &file_name)
       }),
     );
-    paginator.insert("previous_page".to_owned(), Value::scalar(page - 1));
+    paginator.insert("previous_page".to_owned(), liquid::Value::scalar(page - 1));
   }
   if page < total_pages {
     // we have a next page
     paginator.insert(
       "next_page_path".to_owned(),
-      Value::scalar(interpret_permalink(
-        &config,
-        &file_path,
-        page + 1,
-        &file_name,
-      )),
+      liquid::Value::scalar(interpret_permalink(&config, &doc, page + 1, &file_name)),
     );
-    paginator.insert("next_page".to_owned(), Value::scalar(page + 1));
+    paginator.insert("next_page".to_owned(), liquid::Value::scalar(page + 1));
   }
 }
