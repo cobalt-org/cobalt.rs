@@ -1,6 +1,3 @@
-#[allow(unused_imports)]
-use std::ascii::AsciiExt;
-
 use itertools::Itertools;
 use std::borrow::Cow::Owned;
 
