@@ -8,12 +8,14 @@ use super::SortOrder;
 //   after: i32,
 // }
 
+#[derive(Clone, Debug)]
 pub(crate) struct PaginationCfg {
   pub(crate) include: String,
   pub(crate) per_page: i32,
   pub(crate) permalink: String,
   pub(crate) order: SortOrder,
   pub(crate) sort_by: Vec<String>,
+  pub(crate) post_include: Option<String>
   //trails: Trails,
 }
 
@@ -60,6 +62,7 @@ impl PaginationCfg {
               .collect()
           })
         }),
+        post_include: None,
       // trails: Trails {
       //   before: 0,
       //   after: 0,
