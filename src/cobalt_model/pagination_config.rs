@@ -1,12 +1,7 @@
 use liquid;
 use std::borrow::Cow;
-use std::collections::HashMap;
 use std::vec::Vec;
-
-pub(crate) enum Order {
-  Desc,
-  Asc,
-}
+use super::SortOrder;
 
 // struct Trails {
 //   before: i32,
@@ -17,7 +12,7 @@ pub(crate) struct PaginationCfg {
   pub(crate) include: String,
   pub(crate) per_page: i32,
   pub(crate) permalink: String,
-  pub(crate) order: Order,
+  pub(crate) order: SortOrder,
   pub(crate) sort_by: Vec<String>,
   //trails: Trails,
 }
@@ -26,8 +21,7 @@ const DEFAULT_PERMALINK: &str = "{{parent}}/{{include}}/_p/{{num}}/";
 const DEFAULT_SORT: &str = "published_date";
 
 impl PaginationCfg {
-  pub fn new(pagination_cfg: &HashMap<String, liquid::Value>) -> PaginationCfg {
-    trace!("Parsing pagination cfg: {:#?}", pagination_cfg);
+  pub fn new(pagination_cfg: &liquid::Object) -> PaginationCfg {
     PaginationCfg {
       include: pagination_cfg
         .get("include")
@@ -45,11 +39,11 @@ impl PaginationCfg {
           p.as_scalar()
             .map_or(DEFAULT_PERMALINK.to_string(), |p| p.to_string())
         }),
-      order: pagination_cfg.get("order").map_or(Order::Desc, |o| {
-        o.as_scalar().map_or(Order::Desc, |o| match o.to_str() {
-          Cow::Borrowed("Desc") => Order::Desc,
-          Cow::Borrowed("Asc") => Order::Asc,
-          _ => Order::Desc,
+      order: pagination_cfg.get("order").map_or(SortOrder::Desc, |o| {
+        o.as_scalar().map_or(SortOrder::Desc, |o| match o.to_str() {
+          Cow::Borrowed("Desc") => SortOrder::Desc,
+          Cow::Borrowed("Asc") => SortOrder::Asc,
+          _ => SortOrder::Desc,
         })
       }),
       sort_by: pagination_cfg
@@ -76,4 +70,36 @@ impl PaginationCfg {
   pub fn is_pagination_enable(&self) -> bool {
     self.include != "None"
   }
+}
+
+#[cfg(test)]
+mod test_pagination_config {
+    use super::*;
+
+    #[test]
+    fn test_new() {
+        let mut pagination_front = liquid::Object::new();
+        pagination_front.insert("include".to_owned(), liquid::Value::scalar("all"));
+        pagination_front.insert("per_page".to_owned(), liquid::Value::scalar(5));
+        pagination_front.insert("permalink".to_owned(), liquid::Value::scalar("{{parent}}/{{include}}/_p/{{num}}/"));
+        pagination_front.insert("order".to_owned(), liquid::Value::scalar("Asc"));
+        pagination_front.insert("sort_by".to_owned(), liquid::Value::Array(vec![liquid::Value::scalar("published_date"), liquid::Value::scalar("title")]));
+        let pagination_cfg = PaginationCfg::new(&pagination_front);
+        assert_eq!(pagination_cfg.include, "all".to_owned());
+        assert_eq!(pagination_cfg.per_page, 5);
+        assert_eq!(pagination_cfg.permalink, "{{parent}}/{{include}}/_p/{{num}}/".to_owned());
+        assert_eq!(pagination_cfg.order, SortOrder::Asc);
+        assert_eq!(pagination_cfg.sort_by, vec!["published_date", "title"]);
+    }
+
+    #[test]
+    fn test_new_default() {
+        let pagination_front = liquid::Object::new();
+        let pagination_cfg = PaginationCfg::new(&pagination_front);
+        assert_eq!(pagination_cfg.include, "None".to_owned());
+        assert_eq!(pagination_cfg.per_page, 10);
+        assert_eq!(pagination_cfg.permalink, "{{parent}}/{{include}}/_p/{{num}}/".to_owned());
+        assert_eq!(pagination_cfg.order, SortOrder::Desc);
+        assert_eq!(pagination_cfg.sort_by, vec!["published_date"]);
+    }
 }

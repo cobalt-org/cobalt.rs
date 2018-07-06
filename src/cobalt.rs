@@ -174,31 +174,26 @@ fn generate_pages(posts: Vec<Document>, pages: Vec<Document>, context: &Context)
     trace!("Generating other documents");
     for mut doc in pages {
         trace!("Generating {} / {:?}", doc.url_path, doc.file_path.to_str());
-        let pagination_cfg = pagination_config::PaginationCfg::new(&doc.front.pagination);
+        let mut pagination_cfg = pagination_config::PaginationCfg::new(&doc.front.pagination);
         if pagination_cfg.is_pagination_enable() {
             trace!("It's an index page {}", doc.url_path);
-            let paginators: Vec<liquid::Object> =
-                pagination::generate_paginators(&mut doc, &posts_data, &pagination_cfg);
+            let paginators =
+                pagination::generate_paginators(&mut doc, &posts_data, &mut pagination_cfg);
             // page 1 is not in "_p" folder
             let mut paginators = paginators.into_iter();
+            let paginator = paginators.next().expect("no paginator");
             generate_doc(
                 &mut doc,
                 context,
                 (
                     "paginator".to_owned(),
-                    liquid::Value::Object(paginators.next().expect("no paginator")),
+                    liquid::Value::Object(paginator),
                 ),
             )?;
             for p in paginators {
                 let mut doc_page = doc.clone();
-                doc_page.file_path = path::PathBuf::from(
-                    p.get("page_path")
-                        .expect("Should have a page_path")
-                        .as_scalar()
-                        .expect("Should be a scalar")
-                        .to_str()
-                        .into_owned(),
-                );
+                doc_page.file_path = pagination::extract_page_path(&p, &pagination_cfg);
+                println!("doc_page.file_path: {:?}", doc_page.file_path);
                 generate_doc(
                     &mut doc_page,
                     context,
@@ -213,7 +208,6 @@ fn generate_pages(posts: Vec<Document>, pages: Vec<Document>, context: &Context)
             )?;
         };
     }
-
     Ok(())
 }
 

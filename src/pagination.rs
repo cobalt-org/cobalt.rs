@@ -1,45 +1,57 @@
-use cobalt_model::pagination_config::{Order, PaginationCfg};
+use cobalt_model::pagination_config::PaginationCfg;
 use cobalt_model::permalink;
+use cobalt_model::SortOrder;
 use document;
 use document::Document;
 use liquid;
 use std::cmp::Ordering;
 use std::ops::Range;
+use std::path::PathBuf;
 
 pub(crate) fn generate_paginators(
   doc: &mut Document,
   posts_data: &[liquid::Value],
-  config: &PaginationCfg,
+  config: &mut PaginationCfg,
 ) -> Vec<liquid::Object> {
-  let mut paginators = Vec::new();
   let mut all_posts = posts_data.to_vec();
   match config.include.as_str() {
     "all" => {
       sort_posts(&mut all_posts, &config);
-      create_all_paginators(&mut paginators, &mut all_posts, &doc, &config);
+      create_all_paginators(&mut all_posts, &doc, &config)
     }
-    _ => {}
-  };
-
-  paginators
-}
-
-fn extract_value(a: &liquid::Value, key: &String) -> Option<liquid::Scalar> {
-  if let Some(attr) = a.as_object() {
-    if let Some(sort_key) = attr.get(key) {
-      if let Some(value) = sort_key.as_scalar() {
-        Some(value.clone())
-      } else {
-        None
-      }
-    } else {
-      None
+    _ => {
+      unreachable!();
     }
-  } else {
-    None
   }
 }
 
+fn extract_page_path_from(p: &liquid::Object) -> String {
+  p.get("page_path")
+    .expect("Should have a page_path")
+    .as_scalar()
+    .expect("Should be a scalar")
+    .to_str()
+    .into_owned()
+}
+
+pub(crate) fn extract_page_path(p: &liquid::Object, config: &PaginationCfg) -> PathBuf {
+  PathBuf::from(match config.include.as_str() {
+    "all" => extract_page_path_from(&p),
+    _ => "".to_owned(),
+  })
+}
+
+fn extract_value(a: &liquid::Value, key: &String) -> Option<liquid::Scalar> {
+  a.as_object().map_or(None, |attr| {
+    attr.get(key).map_or(None, |sort_key| {
+      sort_key
+        .as_scalar()
+        .map_or(None, |value| Some(value.clone()))
+    })
+  })
+}
+
+// sort posts by multiple criteria
 fn sort_posts(posts: &mut Vec<liquid::Value>, config: &PaginationCfg) {
   posts.sort_by(|a, b| {
     let keys = config.sort_by.clone();
@@ -48,8 +60,9 @@ fn sort_posts(posts: &mut Vec<liquid::Value>, config: &PaginationCfg) {
       cmp = if let Some(a) = extract_value(a, &k) {
         if let Some(b) = extract_value(b, &k) {
           match config.order {
-            Order::Desc => b.partial_cmp(&a).unwrap_or(Ordering::Equal),
-            Order::Asc => a.partial_cmp(&b).unwrap_or(Ordering::Equal),
+            SortOrder::Desc => b.partial_cmp(&a).unwrap_or(Ordering::Equal),
+            SortOrder::Asc => a.partial_cmp(&b).unwrap_or(Ordering::Equal),
+            SortOrder::None => unreachable!("We should always have a sort order default value"),
           }
         } else {
           Ordering::Greater
@@ -66,11 +79,11 @@ fn sort_posts(posts: &mut Vec<liquid::Value>, config: &PaginationCfg) {
 }
 
 fn create_all_paginators(
-  paginators: &mut Vec<liquid::Object>,
   mut all_posts: &mut Vec<liquid::Value>,
   doc: &Document,
   pagination_cfg: &PaginationCfg,
-) {
+) -> Vec<liquid::Object> {
+  let mut paginators = Vec::new();
   let total_posts = all_posts.len() as i32;
   let total_pages = (total_posts as f32 / pagination_cfg.per_page as f32).ceil() as i32;
   for i in 0..total_pages {
@@ -83,6 +96,7 @@ fn create_all_paginators(
       &mut all_posts,
     ));
   }
+  paginators
 }
 
 fn create_paginator(
@@ -137,18 +151,23 @@ fn interpret_permalink(
   page_num: i32,
   file_name: &str,
 ) -> String {
+  let cfg = config.clone();
+  let includes = cfg.post_include.map_or(cfg.include, |post_include| {
+    format!("{}/{}/", config.include, post_include).to_owned()
+  });
   let mut attributes = document::permalink_attributes(&doc.front, &doc.file_path);
-  let pagination_attr = pagination_attributes(page_num, &config.include);
+  let pagination_attr = pagination_attributes(page_num, &includes);
   pagination_attr.into_iter().for_each(|(k, v)| {
     attributes.insert(k, v);
   });
   let permalink = permalink::explode_permalink(&config.permalink, &attributes);
-  permalink
+  let p = permalink
     .and_then(|mut p| {
       p.push_str(file_name);
       Ok(p)
     })
-    .unwrap_or(file_name.to_owned())
+    .unwrap_or(file_name.to_owned());
+  p
 }
 
 fn init_paginator_constants(
@@ -210,11 +229,7 @@ fn fill_current_page_info(
     liquid::Value::scalar(if page == 1 {
       format!("{}", file_name)
     } else {
-      let mut path = interpret_permalink(&config, &doc, page, &file_name);
-      if path.starts_with('/') {
-        path.remove(0);
-      }
-      path
+      interpret_permalink(&config, &doc, page, &file_name)
     }),
   );
 }
@@ -246,5 +261,19 @@ fn fill_previous_next_info(
       liquid::Value::scalar(interpret_permalink(&config, &doc, page + 1, &file_name)),
     );
     paginator.insert("next_page".to_owned(), liquid::Value::scalar(page + 1));
+  }
+}
+
+#[cfg(test)]
+mod test_pagination {
+  use super::*;
+
+  #[test]
+  fn test_extract_value() {
+    let mut obj = liquid::Object::new();
+    obj.insert("key".to_owned(), liquid::Value::scalar("toto"));
+    let value = liquid::Value::Object(obj);
+    let expected: liquid::Scalar = liquid::Scalar::new("toto");
+    assert_eq!(Some(expected), extract_value(&value, &"key".to_owned()));
   }
 }

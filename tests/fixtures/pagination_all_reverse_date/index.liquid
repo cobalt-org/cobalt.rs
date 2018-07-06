@@ -1,0 +1,24 @@
+layout: default.liquid
+pagination:
+  include: "all"
+  order: "Asc"
+---
+This is my Index page!
+
+{% for post in paginator.posts %}
+ <a href="{{post.permalink}}">{{ post.title }}</a>
+{% endfor %}
+
+
+<div>
+  {% if paginator.previous_page %}
+    <a href="{{ paginator.previous_page_path }}"
+    class="left arrow">&#8592;</a>
+  {% endif %}
+  {% if paginator.next_page %}
+    <a href="{{ paginator.next_page_path }}"
+    class="right arrow">&#8594;</a>
+  {% endif %}
+
+  <span>{{ paginator.page }} / {{ paginator.total_pages }}</span>
+</div>
