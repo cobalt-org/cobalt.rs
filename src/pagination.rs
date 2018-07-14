@@ -1,27 +1,28 @@
-use cobalt_model::pagination_config::PaginationCfg;
-use cobalt_model::permalink;
-use cobalt_model::SortOrder;
-use document;
-use document::Document;
-use liquid;
 use std::cmp::Ordering;
 use std::ops::Range;
 use std::path::PathBuf;
 
-pub(crate) fn generate_paginators(
+use liquid;
+
+use cobalt_model::pagination_config::Include;
+use cobalt_model::pagination_config::PaginationConfig;
+use cobalt_model::permalink;
+use cobalt_model::SortOrder;
+use document;
+use document::Document;
+
+pub fn generate_paginators(
   doc: &mut Document,
   posts_data: &[liquid::Value],
-  config: &mut PaginationCfg,
 ) -> Vec<liquid::Object> {
+  let config = doc.front.pagination.as_ref().unwrap();
   let mut all_posts = posts_data.to_vec();
-  match config.include.as_str() {
-    "all" => {
+  match config.include {
+    Include::All => {
       sort_posts(&mut all_posts, &config);
       create_all_paginators(&mut all_posts, &doc, &config)
     }
-    _ => {
-      unreachable!();
-    }
+    Include::None => Vec::new(),
   }
 }
 
@@ -34,27 +35,22 @@ fn extract_page_path_from(p: &liquid::Object) -> String {
     .into_owned()
 }
 
-pub(crate) fn extract_page_path(p: &liquid::Object, config: &PaginationCfg) -> PathBuf {
-  PathBuf::from(match config.include.as_str() {
-    "all" => extract_page_path_from(&p),
+pub fn extract_page_path(p: &liquid::Object, config: &PaginationConfig) -> PathBuf {
+  PathBuf::from(match config.include {
+    Include::All => extract_page_path_from(&p),
     _ => "".to_owned(),
   })
 }
 
 fn extract_value(a: &liquid::Value, key: &String) -> Option<liquid::Scalar> {
-  a.as_object().map_or(None, |attr| {
-    attr.get(key).map_or(None, |sort_key| {
-      sort_key
-        .as_scalar()
-        .map_or(None, |value| Some(value.clone()))
-    })
-  })
+  a.get(&key.clone().into())
+    .map_or(None, |sort_key| sort_key.as_scalar().cloned())
 }
 
 // sort posts by multiple criteria
-fn sort_posts(posts: &mut Vec<liquid::Value>, config: &PaginationCfg) {
+fn sort_posts(posts: &mut Vec<liquid::Value>, config: &PaginationConfig) {
   posts.sort_by(|a, b| {
-    let keys = config.sort_by.clone();
+    let keys = &config.sort_by;
     let mut cmp = Ordering::Less;
     for k in keys {
       cmp = if let Some(a) = extract_value(a, &k) {
@@ -62,7 +58,9 @@ fn sort_posts(posts: &mut Vec<liquid::Value>, config: &PaginationCfg) {
           match config.order {
             SortOrder::Desc => b.partial_cmp(&a).unwrap_or(Ordering::Equal),
             SortOrder::Asc => a.partial_cmp(&b).unwrap_or(Ordering::Equal),
-            SortOrder::None => unreachable!("We should always have a sort order default value"),
+            SortOrder::None => unreachable!(
+              "Sort order should have default value when constructing PaginationConfig"
+            ),
           }
         } else {
           Ordering::Greater
@@ -81,7 +79,7 @@ fn sort_posts(posts: &mut Vec<liquid::Value>, config: &PaginationCfg) {
 fn create_all_paginators(
   mut all_posts: &mut Vec<liquid::Value>,
   doc: &Document,
-  pagination_cfg: &PaginationCfg,
+  pagination_cfg: &PaginationConfig,
 ) -> Vec<liquid::Object> {
   let mut paginators = Vec::new();
   let total_posts = all_posts.len() as i32;
@@ -103,7 +101,7 @@ fn create_paginator(
   i: i32,
   total_pages: i32,
   total_posts: i32,
-  config: &PaginationCfg,
+  config: &PaginationConfig,
   doc: &Document,
   mut all_posts: &mut Vec<liquid::Value>,
 ) -> liquid::Object {
@@ -134,11 +132,10 @@ fn create_paginator(
 
   fill_previous_next_info(&mut paginator, page, total_pages, &file_name, &doc, &config);
 
-  // TODO trails
   paginator
 }
 
-fn pagination_attributes(page_num: i32, include: &String) -> liquid::Object {
+fn pagination_attributes(page_num: i32, include: Include) -> liquid::Object {
   let mut attributes = liquid::Object::new();
   attributes.insert("num".to_owned(), liquid::Value::scalar(page_num));
   attributes.insert("include".to_owned(), liquid::Value::scalar(include));
@@ -146,17 +143,14 @@ fn pagination_attributes(page_num: i32, include: &String) -> liquid::Object {
 }
 
 fn interpret_permalink(
-  config: &PaginationCfg,
+  config: &PaginationConfig,
   doc: &Document,
   page_num: i32,
   file_name: &str,
 ) -> String {
   let cfg = config.clone();
-  let includes = cfg.post_include.map_or(cfg.include, |post_include| {
-    format!("{}/{}/", config.include, post_include).to_owned()
-  });
   let mut attributes = document::permalink_attributes(&doc.front, &doc.file_path);
-  let pagination_attr = pagination_attributes(page_num, &includes);
+  let pagination_attr = pagination_attributes(page_num, cfg.include);
   pagination_attr.into_iter().for_each(|(k, v)| {
     attributes.insert(k, v);
   });
@@ -174,7 +168,7 @@ fn init_paginator_constants(
   paginator: &mut liquid::Object,
   total_posts: i32,
   total_pages: i32,
-  config: &PaginationCfg,
+  config: &PaginationConfig,
   file_name: &str,
   doc: &Document,
 ) {
@@ -209,7 +203,7 @@ fn fill_current_page_info(
   paginator: &mut liquid::Object,
   page: i32,
   all_posts: &mut Vec<liquid::Value>,
-  config: &PaginationCfg,
+  config: &PaginationConfig,
   file_name: &str,
   doc: &Document,
 ) {
@@ -240,7 +234,7 @@ fn fill_previous_next_info(
   total_pages: i32,
   file_name: &str,
   doc: &Document,
-  config: &PaginationCfg,
+  config: &PaginationConfig,
 ) {
   if page > 1 {
     // we have a previous page

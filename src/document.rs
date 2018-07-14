@@ -35,7 +35,7 @@ fn format_path_variable(source_file: &Path) -> String {
     path
 }
 
-pub(crate) fn permalink_attributes(front: &cobalt_model::Frontmatter, dest_file: &Path) -> liquid::Object {
+pub fn permalink_attributes(front: &cobalt_model::Frontmatter, dest_file: &Path) -> liquid::Object {
     let mut attributes = liquid::Object::new();
 
     attributes.insert(
@@ -132,10 +132,6 @@ fn document_attributes(
             liquid::Value::scalar(&front.collection),
         ),
         ("data".to_owned(), liquid::Value::Object(front.data.clone())),
-        (
-            "pagination".to_owned(),
-            liquid::Value::Object(front.pagination.clone()),
-        ),
     ];
     let mut attributes: liquid::Object = attributes.into_iter().collect();
 

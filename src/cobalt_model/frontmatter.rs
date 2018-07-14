@@ -12,6 +12,7 @@ use error::Result;
 
 use super::datetime;
 use super::slug;
+use super::pagination_config;
 
 const PATH_ALIAS: &str = "/{{parent}}/{{name}}{{ext}}";
 lazy_static! {
@@ -80,8 +81,8 @@ pub struct FrontmatterBuilder {
     pub is_draft: Option<bool>,
     #[serde(skip_serializing_if = "liquid::Object::is_empty")]
     pub data: liquid::Object,
-    #[serde(skip_serializing_if = "liquid::Object::is_empty")]
-    pub pagination: liquid::Object,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub pagination: Option<pagination_config::PaginationConfig>,
     // Controlled by where the file is found.  We might allow control over the type at a later
     // point but we need to first define those semantics.
     #[serde(skip)]
@@ -131,6 +132,13 @@ impl FrontmatterBuilder {
     pub fn set_categories<S: Into<Option<Vec<String>>>>(self, categories: S) -> Self {
         Self {
             categories: categories.into(),
+            ..self
+        }
+    }
+
+    pub fn set_pagination<S: Into<Option<pagination_config::PaginationConfig>>>(self, pagination: S) -> Self {
+        Self {
+            pagination: pagination.into(),
             ..self
         }
     }
@@ -205,6 +213,10 @@ impl FrontmatterBuilder {
         self.merge(Self::new().set_categories(categories.into()))
     }
 
+    pub fn merge_pagination<S: Into<Option<pagination_config::PaginationConfig>>>(self, pagination: S) -> Self {
+        self.merge(Self::new().set_pagination(pagination.into()))
+    }
+
     pub fn merge_excerpt_separator<S: Into<Option<String>>>(self, excerpt_separator: S) -> Self {
         self.merge(Self::new().set_excerpt_separator(excerpt_separator.into()))
     }
@@ -269,41 +281,6 @@ impl FrontmatterBuilder {
         }
     }
 
-    pub fn merge_pagination(self, other_pagination: liquid::Object) -> Self {
-        let Self {
-            permalink,
-            slug,
-            title,
-            description,
-            excerpt,
-            categories,
-            excerpt_separator,
-            published_date,
-            format,
-            layout,
-            is_draft,
-            collection,
-            data,
-            pagination,
-        } = self;
-        Self {
-            permalink: permalink,
-            slug: slug,
-            title: title,
-            description: description,
-            excerpt: excerpt,
-            categories: categories,
-            excerpt_separator: excerpt_separator,
-            published_date: published_date,
-            format: format,
-            layout: layout,
-            is_draft: is_draft,
-            collection: collection,
-            data: data,
-            pagination: merge_objects(pagination, other_pagination),
-        }
-    }
-
     pub fn merge(self, other: Self) -> Self {
         let Self {
             permalink,
@@ -351,7 +328,7 @@ impl FrontmatterBuilder {
             is_draft: is_draft.or_else(|| other_is_draft),
             collection: collection.or_else(|| other_collection),
             data: merge_objects(data, other_data),
-            pagination: merge_objects(pagination, other_pagination),
+            pagination: pagination.or_else(|| other_pagination),
         }
     }
 
@@ -468,7 +445,7 @@ pub struct Frontmatter {
     pub is_draft: bool,
     pub collection: String,
     pub data: liquid::Object,
-    pub pagination: liquid::Object,
+    pub pagination: Option<pagination_config::PaginationConfig>,
 }
 
 impl Front for Frontmatter {}
