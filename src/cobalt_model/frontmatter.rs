@@ -687,7 +687,7 @@ mod test {
             is_draft: Some(true),
             collection: Some("pages".to_owned()),
             data: liquid::Object::new(),
-            pagination: liquid::Object::new(),
+            pagination: Some(Default::default()),
         };
         let b = FrontmatterBuilder {
             permalink: Some("permalink b".to_owned()),
@@ -703,7 +703,7 @@ mod test {
             is_draft: Some(true),
             collection: Some("posts".to_owned()),
             data: liquid::Object::new(),
-            pagination: liquid::Object::new(),
+            pagination: Some(Default::default()),
         };
 
         let merge_b_into_a = a.clone().merge(b.clone());
@@ -732,7 +732,7 @@ mod test {
             is_draft: Some(true),
             collection: Some("pages".to_owned()),
             data: liquid::Object::new(),
-            pagination: liquid::Object::new(),
+            pagination: Some(Default::default()),
         };
 
         let merge_b_into_a = a.clone()
@@ -746,7 +746,8 @@ mod test {
             .merge_format(SourceFormat::Raw)
             .merge_layout("layout b".to_owned())
             .merge_draft(true)
-            .merge_collection("posts".to_owned());
+            .merge_collection("posts".to_owned())
+            .merge_pagination(Some(Default::default()));
         assert_eq!(merge_b_into_a, a);
 
         let merge_empty_into_a = a.clone()
@@ -760,7 +761,8 @@ mod test {
             .merge_format(None)
             .merge_layout(None)
             .merge_draft(None)
-            .merge_collection(None);
+            .merge_collection(None)
+            .merge_pagination(None);
         assert_eq!(merge_empty_into_a, a);
 
         let merge_a_into_empty = FrontmatterBuilder::new()
@@ -774,7 +776,8 @@ mod test {
             .merge_format(SourceFormat::Markdown)
             .merge_layout("layout a".to_owned())
             .merge_draft(true)
-            .merge_collection("pages".to_owned());
+            .merge_collection("pages".to_owned())
+            .merge_pagination(Some(Default::default()));
         assert_eq!(merge_a_into_empty, a);
     }
 
