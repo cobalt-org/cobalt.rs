@@ -37,12 +37,12 @@ matrix:
     install:
     script:
     - cargo check --tests
-  - env: CLIPPY_VERSION="0.0.209"
-    rust: nightly-2018-06-19
+  - env: CLIPPY
+    rust: nightly-2018-07-17
     install:
-    - travis_wait cargo install clippy --version $CLIPPY_VERSION || echo "clippy already installed"
+      - rustup component add clippy-preview
     script:
-    - cargo clippy -- -D clippy
+      - cargo clippy --all-features -- -D clippy
 
 install:
 - rustc -Vv
