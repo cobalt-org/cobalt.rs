@@ -1,3 +1,16 @@
+<a name="0.12.2"></a>
+## 0.12.2 (2018-07-21)
+
+
+#### Features
+
+* **sass:**
+  *  Enable by default ([5cd0f120](https://github.com/cobalt-org/cobalt.rs/commit/5cd0f12006937a08090b5d2177a2839c06479241))
+  *  add support for Sass's indented syntax ([8ca7cb81](https://github.com/cobalt-org/cobalt.rs/commit/8ca7cb819af8308fc765d9e5d8415ec88de23af9))
+*   add runtime configuration to built in syntax highlighting ([3f73c817](https://github.com/cobalt-org/cobalt.rs/commit/3f73c81748070e690f8e9a3a90b8600bbcfc0cca))
+
+
+
 <a name="0.12.1"></a>
 ## 0.12.1 (2018-03-24)
 
