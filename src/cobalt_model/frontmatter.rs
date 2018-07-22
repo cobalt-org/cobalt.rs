@@ -11,8 +11,8 @@ use serde_yaml;
 use error::Result;
 
 use super::datetime;
-use super::slug;
 use super::pagination_config;
+use super::slug;
 
 const PATH_ALIAS: &str = "/{{parent}}/{{name}}{{ext}}";
 lazy_static! {
@@ -136,7 +136,10 @@ impl FrontmatterBuilder {
         }
     }
 
-    pub fn set_pagination<S: Into<Option<pagination_config::PaginationConfig>>>(self, pagination: S) -> Self {
+    pub fn set_pagination<S: Into<Option<pagination_config::PaginationConfig>>>(
+        self,
+        pagination: S,
+    ) -> Self {
         Self {
             pagination: pagination.into(),
             ..self
@@ -213,7 +216,10 @@ impl FrontmatterBuilder {
         self.merge(Self::new().set_categories(categories.into()))
     }
 
-    pub fn merge_pagination<S: Into<Option<pagination_config::PaginationConfig>>>(self, pagination: S) -> Self {
+    pub fn merge_pagination<S: Into<Option<pagination_config::PaginationConfig>>>(
+        self,
+        pagination: S,
+    ) -> Self {
         self.merge(Self::new().set_pagination(pagination.into()))
     }
 
@@ -359,7 +365,8 @@ impl FrontmatterBuilder {
         }
 
         if self.title.is_none() {
-            let slug = self.slug
+            let slug = self
+                .slug
                 .as_ref()
                 .expect("slug has been unconditionally initialized");
             let title = slug::titleize_slug(slug);
@@ -398,6 +405,18 @@ impl FrontmatterBuilder {
         } else {
             permalink
         };
+
+        if let Some(ref pagination) = pagination {
+            if pagination
+                .sort_by
+                .iter()
+                .filter(|sort_key| sort_key.chars().find(|&c| c == '.') != None)
+                .next()
+                .is_some()
+            {
+                return Err("Dotted keys are not supported for `sort_by`".into());
+            }
+        }
 
         let fm = Frontmatter {
             permalink,
@@ -485,17 +504,20 @@ fn parse_file_stem(stem: String) -> (Option<datetime::DateTime>, String) {
     }
 
     let parts = DATE_PREFIX_REF.captures(&stem).and_then(|caps| {
-        let year: i32 = caps.get(1)
+        let year: i32 = caps
+            .get(1)
             .expect("unconditional capture")
             .as_str()
             .parse()
             .expect("regex gets back an integer");
-        let month: u32 = caps.get(2)
+        let month: u32 = caps
+            .get(2)
             .expect("unconditional capture")
             .as_str()
             .parse()
             .expect("regex gets back an integer");
-        let day: u32 = caps.get(3)
+        let day: u32 = caps
+            .get(3)
             .expect("unconditional capture")
             .as_str()
             .parse()
@@ -735,7 +757,8 @@ mod test {
             pagination: Some(Default::default()),
         };
 
-        let merge_b_into_a = a.clone()
+        let merge_b_into_a = a
+            .clone()
             .merge_permalink("permalink b".to_owned())
             .merge_slug("slug b".to_owned())
             .merge_title("title b".to_owned())
@@ -750,7 +773,8 @@ mod test {
             .merge_pagination(Some(Default::default()));
         assert_eq!(merge_b_into_a, a);
 
-        let merge_empty_into_a = a.clone()
+        let merge_empty_into_a = a
+            .clone()
             .merge_permalink(None)
             .merge_slug(None)
             .merge_title(None)

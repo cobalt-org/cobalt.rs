@@ -4,20 +4,20 @@ pagination:
 ---
 This is my Index page!
 
-{% for post in paginator.posts %}
- <a href="{{post.permalink}}">{{ post.title }}</a>
+{% for page in paginator.pages %}
+ <a href="{{page.permalink}}">{{ page.title }}</a>
 {% endfor %}
 
 
 <div>
-  {% if paginator.previous_page %}
-    <a href="{{ paginator.previous_page_path }}"
+  {% if paginator.previous_index %}
+    <a href="{{ paginator.previous_index_permalink }}"
     class="left arrow">&#8592;</a>
   {% endif %}
-  {% if paginator.next_page %}
-    <a href="{{ paginator.next_page_path }}"
+  {% if paginator.next_index %}
+    <a href="{{ paginator.next_index_permalink }}"
     class="right arrow">&#8594;</a>
   {% endif %}
 
-  <span>{{ paginator.page }} / {{ paginator.total_pages }}</span>
+  <span>{{ paginator.index }} / {{ paginator.total_indexes }}</span>
 </div>

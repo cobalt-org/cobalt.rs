@@ -1,8 +1,6 @@
 use std::convert::Into;
 use std::vec::Vec;
 
-use liquid;
-
 use super::SortOrder;
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
@@ -11,14 +9,13 @@ pub enum Include {
   None,
   #[serde(rename = "all")]
   All,
-  // tags,
 }
 
-impl Into<liquid::Scalar> for Include {
-  fn into(self) -> liquid::Scalar {
+impl Into<&'static str> for Include {
+  fn into(self) -> &'static str {
     match self {
-      Include::None => liquid::Scalar::new(""),
-      Include::All => liquid::Scalar::new("all"),
+      Include::None => "",
+      Include::All => "all",
     }
   }
 }
@@ -60,50 +57,3 @@ impl PaginationConfig {
     self.include != Include::None
   }
 }
-
-// #[cfg(test)]
-// mod test_pagination_config {
-//   use super::*;
-
-//   #[test]
-//   fn test_new() {
-//     let mut pagination_front = liquid::Object::new();
-//     pagination_front.insert("include".to_owned(), liquid::Value::scalar("all"));
-//     pagination_front.insert("per_page".to_owned(), liquid::Value::scalar(5));
-//     pagination_front.insert(
-//       "permalink".to_owned(),
-//       liquid::Value::scalar("{{parent}}/{{include}}/_p/{{num}}/"),
-//     );
-//     pagination_front.insert("order".to_owned(), liquid::Value::scalar("Asc"));
-//     pagination_front.insert(
-//       "sort_by".to_owned(),
-//       liquid::Value::Array(vec![
-//         liquid::Value::scalar("published_date"),
-//         liquid::Value::scalar("title"),
-//       ]),
-//     );
-//     let pagination_cfg = PaginationConfig::new(&pagination_front);
-//     assert_eq!(pagination_cfg.include, "all".to_owned());
-//     assert_eq!(pagination_cfg.per_page, 5);
-//     assert_eq!(
-//       pagination_cfg.permalink,
-//       "{{parent}}/{{include}}/_p/{{num}}/".to_owned()
-//     );
-//     assert_eq!(pagination_cfg.order, SortOrder::Asc);
-//     assert_eq!(pagination_cfg.sort_by, vec!["published_date", "title"]);
-//   }
-
-//   #[test]
-//   fn test_new_default() {
-//     let pagination_front = liquid::Object::new();
-//     let pagination_cfg = PaginationConfig::new(&pagination_front);
-//     assert_eq!(pagination_cfg.include, "None".to_owned());
-//     assert_eq!(pagination_cfg.per_page, 10);
-//     assert_eq!(
-//       pagination_cfg.permalink,
-//       "{{parent}}/{{include}}/_p/{{num}}/".to_owned()
-//     );
-//     assert_eq!(pagination_cfg.order, SortOrder::Desc);
-//     assert_eq!(pagination_cfg.sort_by, vec!["published_date"]);
-//   }
-// }

@@ -9,7 +9,7 @@ use std::path;
 
 use cobalt_model;
 use cobalt_model::files;
-// use cobalt_model::pagination_config;
+use cobalt_model::permalink;
 use cobalt_model::Collection;
 use cobalt_model::{Config, SortOrder};
 use document::Document;
@@ -187,22 +187,22 @@ fn generate_pages(posts: Vec<Document>, pages: Vec<Document>, context: &Context)
             generate_doc(
                 &mut doc,
                 context,
-                ("paginator".to_owned(), liquid::Value::Object(paginator)),
+                (
+                    "paginator".to_owned(),
+                    liquid::Value::Object(paginator.into()),
+                ),
             )?;
-            for p in paginators {
+            for paginator in paginators {
                 let mut doc_page = doc.clone();
-                doc_page.file_path = pagination::extract_page_path(
-                    &p,
-                    &doc.front
-                        .pagination
-                        .as_ref()
-                        .expect("Must have a pagination"),
-                );
-                println!("doc_page.file_path: {:?}", doc_page.file_path);
+                doc_page.file_path =
+                    permalink::format_url_as_file(paginator.index_permalink.clone());
                 generate_doc(
                     &mut doc_page,
                     context,
-                    ("paginator".to_owned(), liquid::Value::Object(p)),
+                    (
+                        "paginator".to_owned(),
+                        liquid::Value::Object(paginator.into()),
+                    ),
                 )?;
             }
         } else {

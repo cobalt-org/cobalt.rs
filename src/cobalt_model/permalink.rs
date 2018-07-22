@@ -35,8 +35,9 @@ pub fn format_url_as_file<S: AsRef<str>>(permalink: S) -> PathBuf {
 }
 
 fn format_url_as_file_str(permalink: &str) -> PathBuf {
+  trace!("format_url_as_file_str: {}", permalink);
   let mut path = Path::new(&permalink);
-
+  trace!("format_url_as_file_str: path {:?}", path);
   // remove the root prefix (leading slash on unix systems)
   if path.has_root() {
     let mut components = path.components();
@@ -44,13 +45,16 @@ fn format_url_as_file_str(permalink: &str) -> PathBuf {
     path = components.as_path();
   }
 
+trace!("format_url_as_file_str: path after has_root {:?}", path);
   let mut path_buf = path.to_path_buf();
 
+trace!("format_url_as_file_str: path_buf {:?}", path_buf);
   // explode the url if no extension was specified
   if path_buf.extension().is_none() {
     path_buf.push("index.html")
   }
 
+trace!("format_url_as_file_str: path_buf after extension {:?}", path_buf);
   path_buf
 }
 
