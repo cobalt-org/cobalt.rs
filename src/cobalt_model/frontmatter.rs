@@ -216,13 +216,6 @@ impl FrontmatterBuilder {
         self.merge(Self::new().set_categories(categories.into()))
     }
 
-    pub fn merge_pagination<S: Into<Option<pagination_config::PaginationConfig>>>(
-        self,
-        pagination: S,
-    ) -> Self {
-        self.merge(Self::new().set_pagination(pagination.into()))
-    }
-
     pub fn merge_excerpt_separator<S: Into<Option<String>>>(self, excerpt_separator: S) -> Self {
         self.merge(Self::new().set_excerpt_separator(excerpt_separator.into()))
     }
@@ -283,7 +276,7 @@ impl FrontmatterBuilder {
             is_draft,
             collection,
             data: merge_objects(data, other_data),
-            pagination: pagination,
+            pagination,
         }
     }
 
@@ -334,7 +327,7 @@ impl FrontmatterBuilder {
             is_draft: is_draft.or_else(|| other_is_draft),
             collection: collection.or_else(|| other_collection),
             data: merge_objects(data, other_data),
-            pagination: pagination.or_else(|| other_pagination),
+            pagination: Some(merge_pagination(pagination, &other_pagination.unwrap_or_default())),
         }
     }
 
@@ -410,9 +403,7 @@ impl FrontmatterBuilder {
             if pagination
                 .sort_by
                 .iter()
-                .filter(|sort_key| sort_key.chars().find(|&c| c == '.') != None)
-                .next()
-                .is_some()
+                .any(|sort_key| sort_key.chars().find(|&c| c == '.') != None)
             {
                 return Err("Dotted keys are not supported for `sort_by`".into());
             }
@@ -430,9 +421,9 @@ impl FrontmatterBuilder {
             format: format.unwrap_or_else(SourceFormat::default),
             layout,
             is_draft: is_draft.unwrap_or(false),
-            collection: collection,
-            data: data,
-            pagination: pagination,
+            collection,
+            data,
+            pagination,
         };
 
         Ok(fm)
@@ -484,6 +475,32 @@ fn merge_objects(mut primary: liquid::Object, secondary: liquid::Object) -> liqu
             .or_insert_with(|| value.clone());
     }
     primary
+}
+
+fn merge_pagination(
+    primary: Option<pagination_config::PaginationConfig>,
+    secondary: &pagination_config::PaginationConfig,
+) -> pagination_config::PaginationConfig {
+    if let Some(mut primary) = primary {
+        if primary.include == pagination_config::Include::None {
+            primary.include = secondary.include;
+        }
+        if primary.per_page == pagination_config::DEFAULT_PER_PAGE {
+            primary.per_page = secondary.per_page;
+        }
+        if primary.permalink == pagination_config::DEFAULT_PERMALINK {
+            primary.permalink = secondary.permalink.clone();
+        }
+        if primary.order == super::SortOrder::Desc {
+            primary.order = secondary.order;
+        }
+        if primary.sort_by == vec![pagination_config::DEFAULT_SORT.to_owned()] {
+            primary.sort_by = secondary.sort_by.clone();
+        }
+        primary
+    } else {
+        secondary.clone()
+    }
 }
 
 /// The base-name without an extension.  Correlates to Jekyll's :name path tag
@@ -769,8 +786,7 @@ mod test {
             .merge_format(SourceFormat::Raw)
             .merge_layout("layout b".to_owned())
             .merge_draft(true)
-            .merge_collection("posts".to_owned())
-            .merge_pagination(Some(Default::default()));
+            .merge_collection("posts".to_owned());
         assert_eq!(merge_b_into_a, a);
 
         let merge_empty_into_a = a
@@ -785,8 +801,7 @@ mod test {
             .merge_format(None)
             .merge_layout(None)
             .merge_draft(None)
-            .merge_collection(None)
-            .merge_pagination(None);
+            .merge_collection(None);
         assert_eq!(merge_empty_into_a, a);
 
         let merge_a_into_empty = FrontmatterBuilder::new()
@@ -800,8 +815,7 @@ mod test {
             .merge_format(SourceFormat::Markdown)
             .merge_layout("layout a".to_owned())
             .merge_draft(true)
-            .merge_collection("pages".to_owned())
-            .merge_pagination(Some(Default::default()));
+            .merge_collection("pages".to_owned());
         assert_eq!(merge_a_into_empty, a);
     }
 

@@ -180,7 +180,7 @@ fn generate_pages(posts: Vec<Document>, pages: Vec<Document>, context: &Context)
         };
         if pagination_enabled {
             trace!("It's an index page {}", doc.url_path);
-            let paginators = pagination::generate_paginators(&mut doc, &posts_data);
+            let paginators = pagination::generate_paginators(&mut doc, &posts_data)?;
             // page 1 is not in "_p" folder
             let mut paginators = paginators.into_iter();
             let paginator = paginators.next().expect("no paginator");

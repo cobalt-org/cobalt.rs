@@ -9,6 +9,7 @@ use cobalt_model::permalink;
 use cobalt_model::SortOrder;
 use document;
 use document::Document;
+use error::*;
 
 pub struct Paginator {
   pub pages: Option<Vec<liquid::Value>>,
@@ -38,14 +39,20 @@ impl Paginator {
       next_index_permalink: None,
       first_index_permalink: String::new(),
       last_index_permalink: String::new(),
-      total_indexes: total_indexes,
-      total_pages: total_pages,
+      total_indexes,
+      total_pages,
     }
   }
 
-  pub fn set_first_last(&mut self, doc: &Document, config: &PaginationConfig, total_pages: usize) {
+  pub fn set_first_last(
+    &mut self,
+    doc: &Document,
+    config: &PaginationConfig,
+    total_pages: usize,
+  ) -> Result<()> {
     self.first_index_permalink = format!("/{}", doc.url_path);
-    self.last_index_permalink = interpret_permalink(&config, &doc, total_pages);
+    self.last_index_permalink = interpret_permalink(&config, &doc, total_pages)?;
+    Ok(())
   }
 
   fn set_current_index_info(
@@ -54,7 +61,7 @@ impl Paginator {
     all_pages: &mut Vec<liquid::Value>,
     config: &PaginationConfig,
     doc: &Document,
-  ) {
+  ) -> Result<()> {
     let nb_posts_left = all_pages.len();
     self.index = index;
     self.pages = Some(
@@ -62,7 +69,8 @@ impl Paginator {
         .drain(range_for_page(config.per_page, nb_posts_left))
         .collect(),
     );
-    self.index_permalink = interpret_permalink(&config, &doc, index);
+    self.index_permalink = interpret_permalink(&config, &doc, index)?;
+    Ok(())
   }
 
   fn set_previous_next_info(
@@ -71,18 +79,19 @@ impl Paginator {
     total_indexes: usize,
     doc: &Document,
     config: &PaginationConfig,
-  ) {
+  ) -> Result<()> {
     if index > 1 {
       // we have a previous index
-      self.previous_index_permalink = Some(interpret_permalink(&config, &doc, index - 1));
+      self.previous_index_permalink = Some(interpret_permalink(&config, &doc, index - 1)?);
       self.previous_index = index - 1;
     }
 
     if index < total_indexes {
       // we have a next index
       self.next_index = index + 1;
-      self.next_index_permalink = Some(interpret_permalink(&config, &doc, index + 1));
+      self.next_index_permalink = Some(interpret_permalink(&config, &doc, index + 1)?);
     }
+    Ok(())
   }
 }
 
@@ -95,7 +104,7 @@ impl Into<liquid::Object> for Paginator {
     if let Some(indexes) = self.indexes {
       object.insert(
         "indexes".to_owned(),
-        liquid::Value::Array(indexes.iter().map(|s| liquid::Value::scalar(s)).collect()),
+        liquid::Value::Array(indexes.iter().map(liquid::Value::scalar).collect()),
       );
     }
     object.insert("index".to_owned(), liquid::Value::scalar(self.index as i32));
@@ -143,7 +152,10 @@ impl Into<liquid::Object> for Paginator {
   }
 }
 
-pub fn generate_paginators(doc: &mut Document, posts_data: &[liquid::Value]) -> Vec<Paginator> {
+pub fn generate_paginators(
+  doc: &mut Document,
+  posts_data: &[liquid::Value],
+) -> Result<Vec<Paginator>> {
   let config = doc.front.pagination.as_ref().unwrap();
   let mut all_posts = posts_data.to_vec();
   match config.include {
@@ -151,29 +163,13 @@ pub fn generate_paginators(doc: &mut Document, posts_data: &[liquid::Value]) -> 
       sort_posts(&mut all_posts, &config);
       create_all_paginators(&mut all_posts, &doc, &config)
     }
-    Include::None => Vec::new(),
+    Include::None => Ok(Vec::new()),
   }
 }
 
-// fn extract_page_path_from(p: &liquid::Object) -> String {
-//   p.get("index_permalink")
-//     .expect("Should have a index_permalink")
-//     .as_scalar()
-//     .expect("Should be a scalar")
-//     .to_str()
-//     .into_owned()
-// }
-
-// pub fn extract_page_path(p: &liquid::Object, config: &PaginationConfig) -> PathBuf {
-//   PathBuf::from(match config.include {
-//     Include::All => extract_page_path_from(&p),
-//     _ => "".to_owned(),
-//   })
-// }
-
-fn extract_value(a: &liquid::Value, key: &String) -> Option<liquid::Scalar> {
-  a.get(&key.clone().into())
-    .map_or(None, |sort_key| sort_key.as_scalar().cloned())
+fn extract_value(a: &liquid::Value, key: &str) -> Option<liquid::Scalar> {
+  a.get(&key.into())
+    .and_then(|sort_key| sort_key.as_scalar().cloned())
 }
 
 // sort posts by multiple criteria
@@ -211,7 +207,7 @@ fn create_all_paginators(
   mut all_posts: &mut Vec<liquid::Value>,
   doc: &Document,
   pagination_cfg: &PaginationConfig,
-) -> Vec<Paginator> {
+) -> Result<Vec<Paginator>> {
   let mut paginators = Vec::new();
   let total_pages = all_posts.len();
   let total_indexes = (total_pages as f32 / pagination_cfg.per_page as f32).ceil() as usize;
@@ -223,9 +219,9 @@ fn create_all_paginators(
       &pagination_cfg,
       &doc,
       &mut all_posts,
-    ));
+    )?);
   }
-  paginators
+  Ok(paginators)
 }
 
 fn create_paginator(
@@ -235,15 +231,15 @@ fn create_paginator(
   config: &PaginationConfig,
   doc: &Document,
   mut all_posts: &mut Vec<liquid::Value>,
-) -> Paginator {
+) -> Result<Paginator> {
   let index = i + 1;
   let mut paginator = Paginator::new(total_indexes, total_pages);
 
-  paginator.set_first_last(&doc, &config, total_pages);
-  paginator.set_current_index_info(index, &mut all_posts, &config, &doc);
-  paginator.set_previous_next_info(index, total_indexes, &doc, &config);
+  paginator.set_first_last(&doc, &config, total_pages)?;
+  paginator.set_current_index_info(index, &mut all_posts, &config, &doc)?;
+  paginator.set_previous_next_info(index, total_indexes, &doc, &config)?;
 
-  paginator.into()
+  Ok(paginator)
 }
 
 fn pagination_attributes(index_num: i32, include: Include) -> liquid::Object {
@@ -254,22 +250,26 @@ fn pagination_attributes(index_num: i32, include: Include) -> liquid::Object {
   attributes
 }
 
-fn interpret_permalink(config: &PaginationConfig, doc: &Document, index_num: usize) -> String {
+fn interpret_permalink(
+  config: &PaginationConfig,
+  doc: &Document,
+  index_num: usize,
+) -> Result<String> {
   let cfg = config.clone();
   let mut attributes = document::permalink_attributes(&doc.front, &doc.file_path);
   let pagination_attr = pagination_attributes(index_num as i32, cfg.include);
   pagination_attr.into_iter().for_each(|(k, v)| {
     attributes.insert(k, v);
   });
-  if index_num == 1 {
+  Ok(if index_num == 1 {
     doc.url_path.clone()
   } else {
-    permalink::format_url_as_file(
-      permalink::explode_permalink(&config.permalink, &attributes)
-        .expect(format!("Error while interpreting permalink {}", config.permalink).as_str()),
-    ).to_string_lossy()
+    permalink::format_url_as_file(permalink::explode_permalink(
+      &config.permalink,
+      &attributes,
+    )?).to_string_lossy()
       .to_string()
-  }
+  })
 }
 
 fn range_for_page(per_page: i32, nb_posts: usize) -> Range<usize> {

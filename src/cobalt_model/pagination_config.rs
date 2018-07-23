@@ -3,7 +3,7 @@ use std::vec::Vec;
 
 use super::SortOrder;
 
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Copy, Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(deny_unknown_fields)]
 pub enum Include {
   None,
@@ -36,9 +36,9 @@ pub struct PaginationConfig {
   pub sort_by: Vec<String>,
 }
 
-const DEFAULT_PERMALINK: &str = "{{parent}}/{{include}}/_p/{{num}}/";
-const DEFAULT_SORT: &str = "published_date";
-const DEFAULT_PER_PAGE: i32 = 10;
+pub const DEFAULT_PERMALINK: &str = "{{parent}}/{{include}}/_p/{{num}}/";
+pub const DEFAULT_SORT: &str = "published_date";
+pub const DEFAULT_PER_PAGE: i32 = 10;
 
 impl Default for PaginationConfig {
   fn default() -> PaginationConfig {
