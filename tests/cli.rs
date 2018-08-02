@@ -1,191 +1,197 @@
-extern crate assert_cli;
-#[macro_use]
-extern crate lazy_static;
-extern crate tempdir;
+extern crate assert_cmd;
+extern crate assert_fs;
+extern crate predicates;
 
-use std::env;
-use std::path::{Path, PathBuf};
-use std::str;
+use std::process;
 
-use tempdir::TempDir;
-
-lazy_static! {
-    static ref _CWD: PathBuf = env::current_dir().unwrap();
-    static ref CWD: &'static Path = _CWD.as_path();
-    // TODO test on release
-    static ref _BIN: PathBuf = CWD.join("target/debug/cobalt");
-    static ref BIN: &'static str = _BIN.to_str().unwrap();
-}
+use assert_cmd::prelude::*;
+use assert_fs::prelude::*;
+use predicates::prelude::*;
 
 #[test]
 pub fn invalid_calls() {
-    println!("Binary: {:?}", BIN.to_owned());
-    assert_cli::Assert::command(&[&BIN])
-        .fails()
-        .stderr()
-        .contains("requires a subcommand")
-        .unwrap();
+    process::Command::cargo_bin("cobalt")
+        .unwrap()
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("requires a subcommand").from_utf8());
 
-    assert_cli::Assert::command(&[&BIN, "--nonexistent-argument"])
-        .fails_with(1)
-        .stderr()
-        .contains(r"Found argument '--nonexistent-argument' which wasn't expected")
-        .unwrap();
+    process::Command::cargo_bin("cobalt")
+        .unwrap()
+        .arg("--nonexistent-argument")
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("--nonexistent-argument").from_utf8());
 }
 
 #[test]
 pub fn log_levels_trace() {
-    let destdir = TempDir::new("trace").expect("Tempdir not created");
-    let dest_param = destdir
-        .path()
-        .to_str()
-        .expect("Can't convert destdir to str")
-        .to_owned();
-
-    assert_cli::Assert::command(&[&BIN, "build", "-L", "trace", "-d", &dest_param])
-        .current_dir(CWD.join("tests/fixtures/example"))
-        .stderr()
-        .contains("TRACE")
-        .stderr()
-        .contains("DEBUG")
-        .stderr()
-        .contains("INFO")
+    let project_root = assert_fs::TempDir::new().unwrap();
+    project_root
+        .copy_from("tests/fixtures/example", &["*"])
         .unwrap();
 
-    destdir.close().unwrap();
+    process::Command::cargo_bin("cobalt")
+        .unwrap()
+        .args(&["build", "-L", "trace"])
+        .current_dir(project_root.path())
+        .assert()
+        .success()
+        .stderr(predicate::str::contains("TRACE").from_utf8())
+        .stderr(predicate::str::contains("DEBUG").from_utf8())
+        .stderr(predicate::str::contains("INFO").from_utf8());
+
+    project_root.close().unwrap();
 }
 
 #[test]
 pub fn log_levels_trace_alias() {
-    let destdir = TempDir::new("trace").expect("Tempdir not created");
-    let dest_param = destdir
-        .path()
-        .to_str()
-        .expect("Can't convert destdir to str")
-        .to_owned();
-
-    assert_cli::Assert::command(&[&BIN, "build", "--trace", "-d", &dest_param])
-        .current_dir(CWD.join("tests/fixtures/example"))
-        .stderr()
-        .contains("TRACE")
-        .stderr()
-        .contains("DEBUG")
-        .stderr()
-        .contains("INFO")
+    let project_root = assert_fs::TempDir::new().unwrap();
+    project_root
+        .copy_from("tests/fixtures/example", &["*"])
         .unwrap();
 
-    destdir.close().unwrap();
+    process::Command::cargo_bin("cobalt")
+        .unwrap()
+        .args(&["build", "--trace"])
+        .current_dir(project_root.path())
+        .assert()
+        .success()
+        .stderr(predicate::str::contains("TRACE").from_utf8())
+        .stderr(predicate::str::contains("DEBUG").from_utf8())
+        .stderr(predicate::str::contains("INFO").from_utf8());
+
+    project_root.close().unwrap();
 }
 
 #[test]
 pub fn log_levels_debug() {
-    let destdir = TempDir::new("debug").expect("Tempdir not created");
-    let dest_param = destdir
-        .path()
-        .to_str()
-        .expect("Can't convert destdir to str")
-        .to_owned();
-
-    assert_cli::Assert::command(&[&BIN, "build", "-L", "debug", "-d", &dest_param])
-        .current_dir(CWD.join("tests/fixtures/example"))
-        .stderr()
-        .doesnt_contain("[trace]")
-        .stderr()
-        .contains("[debug]")
-        .stderr()
-        .contains("[info]")
+    let project_root = assert_fs::TempDir::new().unwrap();
+    project_root
+        .copy_from("tests/fixtures/example", &["*"])
         .unwrap();
 
-    destdir.close().unwrap();
+    process::Command::cargo_bin("cobalt")
+        .unwrap()
+        .args(&["build", "-L", "debug"])
+        .current_dir(project_root.path())
+        .assert()
+        .success()
+        .stderr(predicate::str::contains("[trace]").not().from_utf8())
+        .stderr(predicate::str::contains("[debug]").from_utf8())
+        .stderr(predicate::str::contains("[info]").from_utf8());
+
+    project_root.close().unwrap();
 }
 
 #[test]
 pub fn log_levels_info() {
-    let destdir = TempDir::new("info").expect("Tempdir not created");
-    let dest_param = destdir
-        .path()
-        .to_str()
-        .expect("Can't convert destdir to str")
-        .to_owned();
-
-    assert_cli::Assert::command(&[&BIN, "build", "-L", "info", "-d", &dest_param])
-        .current_dir(CWD.join("tests/fixtures/example"))
-        .stderr()
-        .doesnt_contain("[trace]")
-        .stderr()
-        .doesnt_contain("[debug]")
-        .stderr()
-        .contains("[info]")
+    let project_root = assert_fs::TempDir::new().unwrap();
+    project_root
+        .copy_from("tests/fixtures/example", &["*"])
         .unwrap();
 
-    destdir.close().unwrap();
+    process::Command::cargo_bin("cobalt")
+        .unwrap()
+        .args(&["build", "-L", "info"])
+        .current_dir(project_root.path())
+        .assert()
+        .success()
+        .stderr(predicate::str::contains("[trace]").not().from_utf8())
+        .stderr(predicate::str::contains("[debug]").not().from_utf8())
+        .stderr(predicate::str::contains("[info]").from_utf8());
+
+    project_root.close().unwrap();
 }
 
 #[test]
 pub fn log_levels_silent() {
-    let destdir = TempDir::new("silent").expect("Tempdir not created");
-    let dest_param = destdir
-        .path()
-        .to_str()
-        .expect("Can't convert destdir to str")
-        .to_owned();
-
-    assert_cli::Assert::command(&[&BIN, "build", "--silent", "-d", &dest_param])
-        .current_dir(CWD.join("tests/fixtures/example"))
-        .stderr()
-        .is("")
-        .stdout()
-        .is("")
+    let project_root = assert_fs::TempDir::new().unwrap();
+    project_root
+        .copy_from("tests/fixtures/example", &["*"])
         .unwrap();
 
-    destdir.close().unwrap();
+    process::Command::cargo_bin("cobalt")
+        .unwrap()
+        .args(&["build", "--silent"])
+        .current_dir(project_root.path())
+        .assert()
+        .success()
+        .stdout(predicate::str::is_empty().from_utf8())
+        .stderr(predicate::str::is_empty().from_utf8());
+
+    project_root.close().unwrap();
 }
 
 #[test]
 pub fn clean() {
-    let destdir = TempDir::new("clean").expect("Tempdir not created");
-    let dest_param = destdir
-        .path()
-        .to_str()
-        .expect("Can't convert destdir to str")
-        .to_owned();
-
-    assert_cli::Assert::command(&[&BIN, "build", "--trace", "-d", &dest_param])
-        .current_dir(CWD.join("tests/fixtures/example"))
+    let project_root = assert_fs::TempDir::new().unwrap();
+    project_root
+        .copy_from("tests/fixtures/example", &["*"])
         .unwrap();
-    assert_eq!(destdir.path().is_dir(), true);
+    let dest = project_root.child("_dest");
+    dest.assert(predicate::path::missing());
 
-    assert_cli::Assert::command(&[&BIN, "clean", "--trace", "-d", &dest_param])
-        .current_dir(CWD.join("tests/fixtures/example"))
-        .unwrap();
-    assert_eq!(destdir.path().is_dir(), false);
+    process::Command::cargo_bin("cobalt")
+        .unwrap()
+        .args(&["build", "--trace", "-d", "_dest"])
+        .current_dir(project_root.path())
+        .assert()
+        .success();
+    dest.assert(predicate::path::exists());
+
+    process::Command::cargo_bin("cobalt")
+        .unwrap()
+        .args(&["clean", "--trace", "-d", "_dest"])
+        .current_dir(project_root.path())
+        .assert()
+        .success();
+    dest.assert(predicate::path::missing());
+
+    project_root.close().unwrap();
 }
 
 #[test]
 pub fn clean_empty() {
-    assert_cli::Assert::command(&[&BIN, "clean"])
-        .current_dir(CWD.join("tests/fixtures/example"))
+    let project_root = assert_fs::TempDir::new().unwrap();
+    project_root
+        .copy_from("tests/fixtures/example", &["*"])
         .unwrap();
+    let dest = project_root.child("_dest");
+    dest.assert(predicate::path::missing());
+
+    process::Command::cargo_bin("cobalt")
+        .unwrap()
+        .args(&["clean", "--trace", "-d", "_dest"])
+        .current_dir(project_root.path())
+        .assert()
+        .success();
+    dest.assert(predicate::path::missing());
+
+    project_root.close().unwrap();
 }
 
 #[test]
 pub fn init_project_can_build() {
-    let initdir = TempDir::new("init").expect("Tempdir not created");
+    let project_root = assert_fs::TempDir::new().unwrap();
+    let dest = project_root.child("_dest");
+    dest.assert(predicate::path::missing());
 
-    let destdir = TempDir::new("dest").expect("Tempdir not created");
-    let dest_param = destdir
-        .path()
-        .to_str()
-        .expect("Can't convert destdir to str")
-        .to_owned();
+    process::Command::cargo_bin("cobalt")
+        .unwrap()
+        .args(&["init", "--trace"])
+        .current_dir(project_root.path())
+        .assert()
+        .success();
+    dest.assert(predicate::path::missing());
 
-    assert_cli::Assert::command(&[&BIN, "init", "--trace"])
-        .current_dir(initdir.path())
-        .unwrap();
-    assert_cli::Assert::command(&[&BIN, "build", "--trace", "--drafts", "-d", &dest_param])
-        .current_dir(initdir.path())
-        .unwrap();
+    process::Command::cargo_bin("cobalt")
+        .unwrap()
+        .args(&["build", "--trace", "-d", "_dest", "--drafts"])
+        .current_dir(project_root.path())
+        .assert()
+        .success();
+    dest.assert(predicate::path::exists());
 
-    destdir.close().unwrap();
-    initdir.close().unwrap();
+    project_root.close().unwrap();
 }
