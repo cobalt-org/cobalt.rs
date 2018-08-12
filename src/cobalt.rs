@@ -169,21 +169,13 @@ fn generate_pages(posts: Vec<Document>, pages: Vec<Document>, context: &Context)
 
     trace!("Generating other documents");
     for mut doc in pages {
-        trace!("Generating {} / {:?}", doc.url_path, doc.file_path.to_str());
-        let pagination_enabled = {
-            doc.front
-                .pagination
-                .as_ref()
-                .map_or(false, |pagination_config| {
-                    pagination_config.is_pagination_enable()
-                })
-        };
-        if pagination_enabled {
-            trace!("It's an index page {}", doc.url_path);
+        trace!("Generating {}", doc.url_path);
+        if doc.front.pagination.is_some() {
+            trace!("It's an index page.");
             let paginators = pagination::generate_paginators(&mut doc, &posts_data)?;
-            // page 1 is not in "_p" folder
+            // page 1 uses frontmatter.permalink instead of paginator.permalink
             let mut paginators = paginators.into_iter();
-            let paginator = paginators.next().expect("no paginator");
+            let paginator = paginators.next().expect("We detected pagination enabled but we have no paginator");
             generate_doc(
                 &mut doc,
                 context,

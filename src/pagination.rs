@@ -29,8 +29,8 @@ pub struct Paginator {
 impl Paginator {
   pub fn new(total_indexes: usize, total_pages: usize) -> Paginator {
     Paginator {
-      pages: None,
-      indexes: None,
+      pages: None,   // pages in current index
+      indexes: None, // list of the available indexes, use when include is tags for instance
       index: 0,
       index_permalink: String::new(),
       previous_index: 0,
@@ -64,6 +64,8 @@ impl Paginator {
   ) -> Result<()> {
     let nb_posts_left = all_pages.len();
     self.index = index;
+    // `drain` is used to free up some memory as the pages are already put in a
+    // paginator, no need to keep them in the `all_pages` vector
     self.pages = Some(
       all_pages
         .drain(range_for_page(config.per_page, nb_posts_left))
@@ -98,9 +100,11 @@ impl Paginator {
 impl Into<liquid::Object> for Paginator {
   fn into(self) -> liquid::Object {
     let mut object = liquid::Object::new();
+    // if no pages, means we have indexes instead, `tags` like cases for exemple
     if let Some(pages) = self.pages {
       object.insert("pages".to_owned(), liquid::Value::Array(pages));
     }
+    // list of available indexes, in `tags` like cases
     if let Some(indexes) = self.indexes {
       object.insert(
         "indexes".to_owned(),
@@ -163,7 +167,7 @@ pub fn generate_paginators(
       sort_posts(&mut all_posts, &config);
       create_all_paginators(&mut all_posts, &doc, &config)
     }
-    Include::None => Ok(Vec::new()),
+    Include::None => Ok(Vec::new()), // user can set `include: None`
   }
 }
 
@@ -174,20 +178,21 @@ fn extract_value(a: &liquid::Value, key: &str) -> Option<liquid::Scalar> {
 
 // sort posts by multiple criteria
 fn sort_posts(posts: &mut Vec<liquid::Value>, config: &PaginationConfig) {
+  // Boxing needed to compile, don't really understand why
+  let order: Box<Fn(liquid::Scalar, liquid::Scalar) -> Ordering> = match config.order {
+    SortOrder::Desc => {
+      Box::new(|a, b: liquid::Scalar| b.partial_cmp(&a).unwrap_or(Ordering::Equal))
+    }
+    SortOrder::Asc => Box::new(|a: liquid::Scalar, b| a.partial_cmp(&b).unwrap_or(Ordering::Equal)),
+    SortOrder::None => {
+      // when built, order is set like this:
+      // `order.unwrap_or(SortOrder::Desc);` so it's unreachable
+      unreachable!("Sort order should have default value when constructing PaginationConfig")
+    }
+  };
   posts.sort_by(|a, b| {
     let keys = &config.sort_by;
     let mut cmp = Ordering::Less;
-    let order: Box<Fn(liquid::Scalar, liquid::Scalar) -> Ordering> = match config.order {
-      SortOrder::Desc => {
-        Box::new(|a, b: liquid::Scalar| b.partial_cmp(&a).unwrap_or(Ordering::Equal))
-      }
-      SortOrder::Asc => {
-        Box::new(|a: liquid::Scalar, b| a.partial_cmp(&b).unwrap_or(Ordering::Equal))
-      }
-      SortOrder::None => {
-        unreachable!("Sort order should have default value when constructing PaginationConfig")
-      }
-    };
     for k in keys {
       cmp = match (extract_value(a, &k), extract_value(b, &k)) {
         (Some(a), Some(b)) => order(a, b),
@@ -208,9 +213,14 @@ fn create_all_paginators(
   doc: &Document,
   pagination_cfg: &PaginationConfig,
 ) -> Result<Vec<Paginator>> {
-  let mut paginators = Vec::new();
   let total_pages = all_posts.len();
+  // f32 used here in order to not lose information to ceil the result,
+  // otherwise we can lose an index
   let total_indexes = (total_pages as f32 / pagination_cfg.per_page as f32).ceil() as usize;
+  let mut paginators = Vec::with_capacity(total_indexes);
+  // keeping `for` loop instead of `map` as asked in PR because I need `i`
+  // anyway and it keep the code more understandable. The issue was
+  // pre-allocating  which is done with `with_capacity`
   for i in 0..total_indexes {
     paginators.push(create_paginator(
       i,
@@ -255,32 +265,30 @@ fn interpret_permalink(
   doc: &Document,
   index_num: usize,
 ) -> Result<String> {
-  let cfg = config.clone();
-  let mut attributes = document::permalink_attributes(&doc.front, &doc.file_path);
-  let pagination_attr = pagination_attributes(index_num as i32, cfg.include);
-  pagination_attr.into_iter().for_each(|(k, v)| {
-    attributes.insert(k, v);
-  });
   Ok(if index_num == 1 {
     doc.url_path.clone()
   } else {
-    permalink::format_url_as_file(permalink::explode_permalink(
+    let mut attributes = document::permalink_attributes(&doc.front, &doc.file_path);
+    let pagination_attr = pagination_attributes(index_num as i32, config.include);
+    pagination_attr.into_iter().for_each(|(k, v)| {
+      attributes.insert(k, v);
+    });
+
+    permalink::explode_permalink(
       &config.permalink,
       &attributes,
-    )?).to_string_lossy()
-      .to_string()
+    )?
   })
 }
 
 fn range_for_page(per_page: i32, nb_posts: usize) -> Range<usize> {
   let nb_posts = nb_posts as i32;
   // make sure `end` is not beyond capacity
-  let end = if per_page < nb_posts {
-    per_page
+  0..if per_page < nb_posts {
+    per_page as usize
   } else {
-    nb_posts
-  } as usize;
-  0..end
+    nb_posts as usize
+  } 
 }
 
 #[cfg(test)]

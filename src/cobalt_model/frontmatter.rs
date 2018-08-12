@@ -82,7 +82,7 @@ pub struct FrontmatterBuilder {
     #[serde(skip_serializing_if = "liquid::Object::is_empty")]
     pub data: liquid::Object,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub pagination: Option<pagination_config::PaginationConfig>,
+    pub pagination: Option<pagination_config::PaginationConfigBuilder>,
     // Controlled by where the file is found.  We might allow control over the type at a later
     // point but we need to first define those semantics.
     #[serde(skip)]
@@ -136,7 +136,7 @@ impl FrontmatterBuilder {
         }
     }
 
-    pub fn set_pagination<S: Into<Option<pagination_config::PaginationConfig>>>(
+    pub fn set_pagination<S: Into<Option<pagination_config::PaginationConfigBuilder>>>(
         self,
         pagination: S,
     ) -> Self {
@@ -225,6 +225,13 @@ impl FrontmatterBuilder {
         published_date: D,
     ) -> Self {
         self.merge(Self::new().set_published_date(published_date.into()))
+    }
+
+    pub fn merge_pagination<S: Into<Option<pagination_config::PaginationConfigBuilder>>>(
+        self,
+        secondary: S,
+    ) -> Self {
+        self.merge(Self::new().set_pagination(secondary.into()))
     }
 
     #[cfg(test)]
@@ -327,7 +334,7 @@ impl FrontmatterBuilder {
             is_draft: is_draft.or_else(|| other_is_draft),
             collection: collection.or_else(|| other_collection),
             data: merge_objects(data, other_data),
-            pagination: Some(merge_pagination(pagination, &other_pagination.unwrap_or_default())),
+            pagination: merge_pagination(pagination, other_pagination),
         }
     }
 
@@ -399,16 +406,6 @@ impl FrontmatterBuilder {
             permalink
         };
 
-        if let Some(ref pagination) = pagination {
-            if pagination
-                .sort_by
-                .iter()
-                .any(|sort_key| sort_key.chars().find(|&c| c == '.') != None)
-            {
-                return Err("Dotted keys are not supported for `sort_by`".into());
-            }
-        }
-
         let fm = Frontmatter {
             permalink,
             slug: slug.ok_or_else(|| "No slug")?,
@@ -423,7 +420,7 @@ impl FrontmatterBuilder {
             is_draft: is_draft.unwrap_or(false),
             collection,
             data,
-            pagination,
+            pagination: pagination.and_then(|p| p.build()),
         };
 
         Ok(fm)
@@ -478,28 +475,14 @@ fn merge_objects(mut primary: liquid::Object, secondary: liquid::Object) -> liqu
 }
 
 fn merge_pagination(
-    primary: Option<pagination_config::PaginationConfig>,
-    secondary: &pagination_config::PaginationConfig,
-) -> pagination_config::PaginationConfig {
-    if let Some(mut primary) = primary {
-        if primary.include == pagination_config::Include::None {
-            primary.include = secondary.include;
-        }
-        if primary.per_page == pagination_config::DEFAULT_PER_PAGE {
-            primary.per_page = secondary.per_page;
-        }
-        if primary.permalink == pagination_config::DEFAULT_PERMALINK {
-            primary.permalink = secondary.permalink.clone();
-        }
-        if primary.order == super::SortOrder::Desc {
-            primary.order = secondary.order;
-        }
-        if primary.sort_by == vec![pagination_config::DEFAULT_SORT.to_owned()] {
-            primary.sort_by = secondary.sort_by.clone();
-        }
-        primary
-    } else {
-        secondary.clone()
+    primary: Option<pagination_config::PaginationConfigBuilder>,
+    secondary: Option<pagination_config::PaginationConfigBuilder>,
+) -> Option<pagination_config::PaginationConfigBuilder> {
+    match (primary, secondary) {
+        (Some(primary), Some(secondary)) => Some(primary.merge(&secondary)),
+        (Some(primary), None) => Some(primary),
+        (None, Some(secondary)) => Some(secondary),
+        (None, None) => None,
     }
 }
 
@@ -815,7 +798,8 @@ mod test {
             .merge_format(SourceFormat::Markdown)
             .merge_layout("layout a".to_owned())
             .merge_draft(true)
-            .merge_collection("pages".to_owned());
+            .merge_collection("pages".to_owned())
+            .merge_pagination(Some(Default::default()));
         assert_eq!(merge_a_into_empty, a);
     }
 
