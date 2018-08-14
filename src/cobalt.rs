@@ -9,12 +9,14 @@ use std::path;
 
 use cobalt_model;
 use cobalt_model::files;
+use cobalt_model::permalink;
 use cobalt_model::Collection;
 use cobalt_model::{Config, SortOrder};
 use document::Document;
 use error::*;
+use pagination;
 
-struct Context {
+pub struct Context {
     pub source: path::PathBuf,
     pub destination: path::PathBuf,
     pub pages: cobalt_model::Collection,
@@ -77,7 +79,7 @@ pub fn build(config: Config) -> Result<()> {
     }
 
     let page_files = &context.pages.pages;
-    let documents = parse_pages(page_files, &context.pages, &context.source)?;
+    let pages = parse_pages(page_files, &context.pages, &context.source)?;
 
     sort_pages(&mut posts, &context.posts)?;
     generate_posts(&mut posts, &context)?;
@@ -91,7 +93,7 @@ pub fn build(config: Config) -> Result<()> {
         create_jsonfeed(path, &context.destination, &context.posts, &posts)?;
     }
 
-    generate_pages(posts, documents, &context)?;
+    generate_pages(posts, pages, &context)?;
 
     // copy all remaining files in the source to the destination
     // compile SASS along the way
@@ -100,9 +102,10 @@ pub fn build(config: Config) -> Result<()> {
     Ok(())
 }
 
-fn generate_doc(posts_data: &[liquid::Value], doc: &mut Document, context: &Context) -> Result<()> {
-    // Everything done with `globals` is terrible for performance.  liquid#95 allows us to
-    // improve this.
+fn generate_collections_var(
+    posts_data: &[liquid::Value],
+    context: &Context,
+) -> (String, liquid::Value) {
     let mut posts_variable = context.posts.attributes.clone();
     posts_variable.insert(
         "pages".to_owned(),
@@ -113,15 +116,25 @@ fn generate_doc(posts_data: &[liquid::Value], doc: &mut Document, context: &Cont
         liquid::Value::Object(posts_variable),
     )].into_iter()
         .collect();
+    (
+        "collections".to_owned(),
+        liquid::Value::Object(global_collection),
+    )
+}
+
+fn generate_doc(
+    doc: &mut Document,
+    context: &Context,
+    global_collection: (String, liquid::Value),
+) -> Result<()> {
+    // Everything done with `globals` is terrible for performance.  liquid#95 allows us to
+    // improve this.
     let mut globals: liquid::Object = vec![
         (
             "site".to_owned(),
             liquid::Value::Object(context.site.clone()),
         ),
-        (
-            "collections".to_owned(),
-            liquid::Value::Object(global_collection),
-        ),
+        global_collection,
     ].into_iter()
         .collect();
     globals.insert(
@@ -139,13 +152,14 @@ fn generate_doc(posts_data: &[liquid::Value], doc: &mut Document, context: &Cont
         "page".to_owned(),
         liquid::Value::Object(doc.attributes.clone()),
     );
-    let doc_html = doc.render(&globals, &context.liquid, &context.layouts)
+    let doc_html = doc
+        .render(&globals, &context.liquid, &context.layouts)
         .chain_err(|| format!("Failed to render for {:?}", doc.file_path))?;
     files::write_document_file(doc_html, context.destination.join(&doc.file_path))?;
     Ok(())
 }
 
-fn generate_pages(posts: Vec<Document>, documents: Vec<Document>, context: &Context) -> Result<()> {
+fn generate_pages(posts: Vec<Document>, pages: Vec<Document>, context: &Context) -> Result<()> {
     // during post rendering additional attributes such as content were
     // added to posts. collect them so that non-post documents can access them
     let posts_data: Vec<liquid::Value> = posts
@@ -154,11 +168,43 @@ fn generate_pages(posts: Vec<Document>, documents: Vec<Document>, context: &Cont
         .collect();
 
     trace!("Generating other documents");
-    for mut doc in documents {
+    for mut doc in pages {
         trace!("Generating {}", doc.url_path);
-        generate_doc(&posts_data, &mut doc, context)?;
+        if doc.front.pagination.is_some() {
+            trace!("It's an index page.");
+            let paginators = pagination::generate_paginators(&mut doc, &posts_data)?;
+            // page 1 uses frontmatter.permalink instead of paginator.permalink
+            let mut paginators = paginators.into_iter();
+            let paginator = paginators.next().expect("We detected pagination enabled but we have no paginator");
+            generate_doc(
+                &mut doc,
+                context,
+                (
+                    "paginator".to_owned(),
+                    liquid::Value::Object(paginator.into()),
+                ),
+            )?;
+            for paginator in paginators {
+                let mut doc_page = doc.clone();
+                doc_page.file_path =
+                    permalink::format_url_as_file(paginator.index_permalink.clone());
+                generate_doc(
+                    &mut doc_page,
+                    context,
+                    (
+                        "paginator".to_owned(),
+                        liquid::Value::Object(paginator.into()),
+                    ),
+                )?;
+            }
+        } else {
+            generate_doc(
+                &mut doc,
+                context,
+                generate_collections_var(&posts_data, &context),
+            )?;
+        };
     }
-
     Ok(())
 }
 
@@ -188,7 +234,11 @@ fn generate_posts(posts: &mut Vec<Document>, context: &Context) -> Result<()> {
             .unwrap_or(liquid::Value::Nil);
         post.attributes.insert("next".to_owned(), next);
 
-        generate_doc(&simple_posts_data, post, context)?;
+        generate_doc(
+            post,
+            context,
+            generate_collections_var(&simple_posts_data, &context),
+        )?;
     }
 
     Ok(())

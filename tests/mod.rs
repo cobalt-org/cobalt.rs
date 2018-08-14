@@ -282,3 +282,23 @@ pub fn data_files() {
 pub fn published_date() {
     run_test("published_date").expect("Build error");
 }
+
+#[test]
+pub fn pagination_all() {
+    run_test("pagination_all").expect("Build error");
+}
+
+#[test]
+pub fn pagination_all_reverse_date() {
+    run_test("pagination_all_reverse_date").expect("Build error");
+}
+
+#[test]
+pub fn pagination_less_per_page() {
+    run_test("pagination_less_per_page").expect("Build error");
+}
+
+#[test]
+pub fn pagination_all_sort_by_title() {
+    run_test("pagination_all_sort_by_title").expect("Build error");
+}

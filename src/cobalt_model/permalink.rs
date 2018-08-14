@@ -36,28 +36,24 @@ pub fn format_url_as_file<S: AsRef<str>>(permalink: S) -> PathBuf {
 
 fn format_url_as_file_str(permalink: &str) -> PathBuf {
   let mut path = Path::new(&permalink);
-
   // remove the root prefix (leading slash on unix systems)
   if path.has_root() {
     let mut components = path.components();
     components.next();
     path = components.as_path();
   }
-
   let mut path_buf = path.to_path_buf();
-
   // explode the url if no extension was specified
   if path_buf.extension().is_none() {
     path_buf.push("index.html")
   }
-
   path_buf
 }
 
 #[cfg(test)]
 mod test {
   use super::*;
-  
+
   #[test]
   fn explode_permalink_relative() {
     let attributes = liquid::Object::new();
