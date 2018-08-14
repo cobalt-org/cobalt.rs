@@ -298,8 +298,8 @@ pub fn pagination_all_reverse_date() {
 }
 
 #[test]
-pub fn pagination_all_less_per_page() {
-    run_test("pagination_all_less_per_page").expect("Build error");
+pub fn pagination_less_per_page() {
+    run_test("pagination_less_per_page").expect("Build error");
 }
 
 #[test]
