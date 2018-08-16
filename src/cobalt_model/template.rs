@@ -55,7 +55,8 @@ impl liquid::compiler::Include for InMemoryInclude {
             .get(path)
             .map(|s| Ok(s.to_owned()))
             .unwrap_or_else(|| {
-                let content = self.legacy
+                let content = self
+                    .legacy
                     .as_ref()
                     .ok_or_else(|| liquid::Error::with_msg("No legacy path specified"))?
                     .include(path)?;

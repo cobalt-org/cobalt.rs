@@ -340,7 +340,8 @@ impl FrontmatterBuilder {
         }
 
         if self.title.is_none() {
-            let slug = self.slug
+            let slug = self
+                .slug
                 .as_ref()
                 .expect("slug has been unconditionally initialized");
             let title = slug::titleize_slug(slug);
@@ -463,17 +464,20 @@ fn parse_file_stem(stem: String) -> (Option<datetime::DateTime>, String) {
     }
 
     let parts = DATE_PREFIX_REF.captures(&stem).and_then(|caps| {
-        let year: i32 = caps.get(1)
+        let year: i32 = caps
+            .get(1)
             .expect("unconditional capture")
             .as_str()
             .parse()
             .expect("regex gets back an integer");
-        let month: u32 = caps.get(2)
+        let month: u32 = caps
+            .get(2)
             .expect("unconditional capture")
             .as_str()
             .parse()
             .expect("regex gets back an integer");
-        let day: u32 = caps.get(3)
+        let day: u32 = caps
+            .get(3)
             .expect("unconditional capture")
             .as_str()
             .parse()
@@ -710,7 +714,8 @@ mod test {
             data: liquid::Object::new(),
         };
 
-        let merge_b_into_a = a.clone()
+        let merge_b_into_a = a
+            .clone()
             .merge_permalink("permalink b".to_owned())
             .merge_slug("slug b".to_owned())
             .merge_title("title b".to_owned())
@@ -724,7 +729,8 @@ mod test {
             .merge_collection("posts".to_owned());
         assert_eq!(merge_b_into_a, a);
 
-        let merge_empty_into_a = a.clone()
+        let merge_empty_into_a = a
+            .clone()
             .merge_permalink(None)
             .merge_slug(None)
             .merge_title(None)

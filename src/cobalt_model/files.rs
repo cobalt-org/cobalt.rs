@@ -71,7 +71,8 @@ impl FilesBuilder {
 
         let files = Files {
             root_dir: self.root_dir.clone(),
-            subtree: self.subtree
+            subtree: self
+                .subtree
                 .as_ref()
                 .map(|subtree| self.root_dir.join(subtree)),
             ignore,

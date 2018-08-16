@@ -155,7 +155,8 @@ impl<'a> Iterator for DecoratedParser<'a> {
                 } else {
                     if let Start(cmark::Tag::CodeBlock(ref info)) = item {
                         // set local highlighter, if found
-                        let cur_syntax = info.clone()
+                        let cur_syntax = info
+                            .clone()
                             .split(' ')
                             .next()
                             .and_then(|lang| SETUP.syntax_set.find_syntax_by_token(lang))

@@ -67,7 +67,8 @@ impl PageConfig {
             rss: None,
             jsonfeed: None,
             base_url: None,
-            default: self.default
+            default: self
+                .default
                 .merge_excerpt_separator("".to_owned())
                 .merge(common_default.clone()),
         }
