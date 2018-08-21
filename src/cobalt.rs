@@ -139,7 +139,8 @@ fn generate_doc(posts_data: &[liquid::Value], doc: &mut Document, context: &Cont
         "page".to_owned(),
         liquid::Value::Object(doc.attributes.clone()),
     );
-    let doc_html = doc.render(&globals, &context.liquid, &context.layouts)
+    let doc_html = doc
+        .render(&globals, &context.liquid, &context.layouts)
         .chain_err(|| format!("Failed to render for {:?}", doc.file_path))?;
     files::write_document_file(doc_html, context.destination.join(&doc.file_path))?;
     Ok(())
