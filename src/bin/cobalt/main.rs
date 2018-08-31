@@ -23,7 +23,6 @@ mod args;
 mod build;
 mod debug;
 mod error;
-mod jekyll;
 mod new;
 mod serve;
 
@@ -49,7 +48,6 @@ fn run() -> Result<()> {
         .subcommand(build::clean_command_args())
         .subcommand(serve::serve_command_args())
         .subcommand(build::import_command_args())
-        .subcommand(jekyll::convert_command_args())
         .subcommand(debug::debug_command_args());
 
     let global_matches = app_cli.get_matches();
@@ -72,7 +70,6 @@ fn run() -> Result<()> {
         "serve" => serve::serve_command(matches),
         "import" => build::import_command(matches),
         "debug" => debug::debug_command(matches),
-        "convert-jekyll" => jekyll::convert_command(matches),
         _ => {
             bail!(global_matches.usage());
         }
