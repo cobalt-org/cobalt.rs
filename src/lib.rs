@@ -33,6 +33,10 @@ extern crate lazy_static;
 #[macro_use]
 extern crate serde;
 
+#[cfg(test)]
+#[macro_use]
+extern crate difference;
+
 pub use cobalt::build;
 pub use cobalt_model::Config;
 pub use cobalt_model::ConfigBuilder;
