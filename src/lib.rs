@@ -44,7 +44,6 @@ pub mod error;
 mod cobalt;
 mod document;
 
-pub mod jekyll_model;
 mod syntax_highlight;
 
 pub use syntax_highlight::{list_syntax_themes, list_syntaxes};
