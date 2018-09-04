@@ -197,58 +197,42 @@ mod test {
     ";
 
     const CODEBLOCK_RENDERED: &str =
-        "<pre style=\"background-color:#2b303b;\">\n<span \
-         style=\"color:#b48ead;\">mod</span><span style=\"color:#c0c5ce;\"> </span><span \
-         style=\"color:#c0c5ce;\">test</span><span style=\"color:#c0c5ce;\"> </span><span \
-         style=\"color:#c0c5ce;\">{</span>\n<span style=\"color:#c0c5ce;\">        </span><span \
-         style=\"color:#b48ead;\">fn</span><span style=\"color:#c0c5ce;\"> </span><span \
-         style=\"color:#8fa1b3;\">hello</span><span style=\"color:#c0c5ce;\">(</span><span \
-         style=\"color:#bf616a;\">arg</span><span style=\"color:#c0c5ce;\">:</span><span \
-         style=\"color:#c0c5ce;\"> int</span><span style=\"color:#c0c5ce;\">)</span><span \
-         style=\"color:#c0c5ce;\"> </span><span style=\"color:#c0c5ce;\">-&gt;</span><span \
-         style=\"color:#c0c5ce;\"> </span><span style=\"color:#b48ead;\">bool</span><span \
-         style=\"color:#c0c5ce;\"> </span><span style=\"color:#c0c5ce;\">{</span>\n<span \
-         style=\"color:#c0c5ce;\">            </span><span \
-         style=\"color:#d08770;\">true</span>\n<span style=\"color:#c0c5ce;\">        \
-         </span><span style=\"color:#c0c5ce;\">}</span>\n<span style=\"color:#c0c5ce;\">    \
-         </span><span style=\"color:#c0c5ce;\">}</span>\n<span style=\"color:#c0c5ce;\">    \
-         </span>\n</pre>\n";
+        "<pre style=\"background-color:#2b303b;\">\n\
+         <span style=\"color:#b48ead;\">mod </span>\
+         <span style=\"color:#c0c5ce;\">test {</span>\n\
+         <span style=\"color:#c0c5ce;\">        </span>\
+         <span style=\"color:#b48ead;\">fn </span>\
+         <span style=\"color:#8fa1b3;\">hello</span><span style=\"color:#c0c5ce;\">(</span>\
+         <span style=\"color:#bf616a;\">arg</span><span style=\"color:#c0c5ce;\">: int) -&gt; </span>\
+         <span style=\"color:#b48ead;\">bool </span><span style=\"color:#c0c5ce;\">{</span>\n\
+         <span style=\"color:#c0c5ce;\">            </span>\
+         <span style=\"color:#d08770;\">true</span>\n\
+         <span style=\"color:#c0c5ce;\">        }</span>\n\
+         <span style=\"color:#c0c5ce;\">    }</span>\n\
+         <span style=\"color:#c0c5ce;\">    </span>\n\
+         </pre>\n";
 
     const MARKDOWN_RENDERED: &str =
-        "<pre style=\"background-color:#2b303b\">\n<span \
-         style=\"background-color:#2b303b;color:#b48ead;\">mod</span><span \
-         style=\"background-color:#2b303b;color:#c0c5ce;\"> </span><span \
-         style=\"background-color:#2b303b;color:#c0c5ce;\">test</span><span \
-         style=\"background-color:#2b303b;color:#c0c5ce;\"> </span><span \
-         style=\"background-color:#2b303b;color:#c0c5ce;\">{</span><span \
-         style=\"background-color:#2b303b;color:#c0c5ce;\">\n</span><span \
-         style=\"background-color:#2b303b;color:#c0c5ce;\">        </span><span \
-         style=\"background-color:#2b303b;color:#b48ead;\">fn</span><span \
-         style=\"background-color:#2b303b;color:#c0c5ce;\"> </span><span \
-         style=\"background-color:#2b303b;color:#8fa1b3;\">hello</span><span \
-         style=\"background-color:#2b303b;color:#c0c5ce;\">(</span><span \
-         style=\"background-color:#2b303b;color:#bf616a;\">arg</span><span \
-         style=\"background-color:#2b303b;color:#c0c5ce;\">:</span><span \
-         style=\"background-color:#2b303b;color:#c0c5ce;\"> int</span><span \
-         style=\"background-color:#2b303b;color:#c0c5ce;\">)</span><span \
-         style=\"background-color:#2b303b;color:#c0c5ce;\"> </span><span \
-         style=\"background-color:#2b303b;color:#c0c5ce;\">-&gt;</span><span \
-         style=\"background-color:#2b303b;color:#c0c5ce;\"> </span><span \
-         style=\"background-color:#2b303b;color:#b48ead;\">bool</span><span \
-         style=\"background-color:#2b303b;color:#c0c5ce;\"> </span><span \
-         style=\"background-color:#2b303b;color:#c0c5ce;\">{</span><span \
-         style=\"background-color:#2b303b;color:#c0c5ce;\">\n</span><span \
-         style=\"background-color:#2b303b;color:#c0c5ce;\">            </span><span \
-         style=\"background-color:#2b303b;color:#d08770;\">true</span><span \
-         style=\"background-color:#2b303b;color:#c0c5ce;\">\n</span><span \
-         style=\"background-color:#2b303b;color:#c0c5ce;\">        </span><span \
-         style=\"background-color:#2b303b;color:#c0c5ce;\">}</span><span \
-         style=\"background-color:#2b303b;color:#c0c5ce;\">\n</span><span \
-         style=\"background-color:#2b303b;color:#c0c5ce;\">    </span><span \
-         style=\"background-color:#2b303b;color:#c0c5ce;\">}</span><span \
-         style=\"background-color:#2b303b;color:#c0c5ce;\">\n</span><span \
-         style=\"background-color:#2b303b;color:#c0c5ce;\">    </span><span \
-         style=\"background-color:#2b303b;color:#c0c5ce;\">\n</span></pre>";
+        "<pre style=\"background-color:#2b303b\">\n\
+         <span style=\"background-color:#2b303b;color:#b48ead;\">mod </span>\
+         <span style=\"background-color:#2b303b;color:#c0c5ce;\">test {\n\
+         </span><span style=\"background-color:#2b303b;color:#c0c5ce;\">        </span>\
+         <span style=\"background-color:#2b303b;color:#b48ead;\">fn </span>\
+         <span style=\"background-color:#2b303b;color:#8fa1b3;\">hello</span>\
+         <span style=\"background-color:#2b303b;color:#c0c5ce;\">(</span>\
+         <span style=\"background-color:#2b303b;color:#bf616a;\">arg</span>\
+         <span style=\"background-color:#2b303b;color:#c0c5ce;\">: int) -&gt; </span>\
+         <span style=\"background-color:#2b303b;color:#b48ead;\">bool </span>\
+         <span style=\"background-color:#2b303b;color:#c0c5ce;\">{\n\
+         </span><span style=\"background-color:#2b303b;color:#c0c5ce;\">            </span>\
+         <span style=\"background-color:#2b303b;color:#d08770;\">true\n\
+         </span><span style=\"background-color:#2b303b;color:#c0c5ce;\">        </span>\
+         <span style=\"background-color:#2b303b;color:#c0c5ce;\">}\n\
+         </span><span style=\"background-color:#2b303b;color:#c0c5ce;\">    </span>\
+         <span style=\"background-color:#2b303b;color:#c0c5ce;\">}\n\
+         </span><span style=\"background-color:#2b303b;color:#c0c5ce;\">    </span>\
+         <span style=\"background-color:#2b303b;color:#c0c5ce;\">\n\
+         </span></pre>";
 
     #[test]
     fn codeblock_renders_rust() {
@@ -266,7 +250,7 @@ mod test {
                 ))
                 .unwrap();
             let output = template.render(&liquid::Object::new());
-            assert_eq!(output.unwrap(), CODEBLOCK_RENDERED.to_string());
+            assert_diff!(&output.unwrap(), CODEBLOCK_RENDERED, "\n", 0);
         }
 
         {
@@ -280,7 +264,7 @@ mod test {
             let mut buf = String::new();
             let parser = cmark::Parser::new(&html);
             cmark::html::push_html(&mut buf, decorate_markdown(parser, "base16-ocean.dark"));
-            assert_eq!(buf, MARKDOWN_RENDERED);
+            assert_diff!(&buf, MARKDOWN_RENDERED, "\n", 0);
         }
     }
 }
