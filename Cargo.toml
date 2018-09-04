@@ -24,7 +24,7 @@ doc = false
 clap = "2.32"
 liquid = {version = "0.15.0", features=["serde"]}
 unidecode = "0.3.0"
-walkdir = "2.0"
+walkdir = "2.2"
 chrono = "0.4"
 log = "0.4"
 env_logger = "0.5"
