@@ -1,6 +1,6 @@
 use itertools::Itertools;
 use regex::Regex;
-use unidecode;
+use deunicode;
 
 lazy_static! {
     static ref SLUG_INVALID_CHARS: Regex = Regex::new(r"([^a-zA-Z0-9]+)").unwrap();
@@ -12,7 +12,7 @@ pub fn slugify<S: AsRef<str>>(name: S) -> String {
 }
 
 fn slugify_str(name: &str) -> String {
-    let name = unidecode::unidecode(name);
+    let name = deunicode::deunicode(name);
     let slug = SLUG_INVALID_CHARS.replace_all(&name, "-");
     slug.trim_matches('-').to_lowercase()
 }
