@@ -12,7 +12,7 @@ extern crate rss;
 extern crate serde_json;
 extern crate serde_yaml;
 extern crate toml;
-extern crate unidecode;
+extern crate deunicode;
 extern crate walkdir;
 
 #[cfg(feature = "sass")]
