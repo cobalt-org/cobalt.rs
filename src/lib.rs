@@ -1,6 +1,7 @@
 #![warn(warnings)]
 
 extern crate chrono;
+extern crate deunicode;
 extern crate ignore;
 extern crate itertools;
 extern crate jsonfeed;
@@ -12,7 +13,6 @@ extern crate rss;
 extern crate serde_json;
 extern crate serde_yaml;
 extern crate toml;
-extern crate unidecode;
 extern crate walkdir;
 
 #[cfg(feature = "sass")]
