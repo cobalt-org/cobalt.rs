@@ -205,7 +205,7 @@ dependencies = [
  "sass-rs 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde 1.0.76 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_json 1.0.26 (registry+https://github.com/rust-lang/crates.io-index)",
- "serde_yaml 0.7.5 (registry+https://github.com/rust-lang/crates.io-index)",
+ "serde_yaml 0.8.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "syntect 2.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "toml 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "walkdir 2.2.5 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1061,7 +1061,7 @@ dependencies = [
 
 [[package]]
 name = "serde_yaml"
-version = "0.7.5"
+version = "0.8.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "dtoa 0.4.3 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1563,7 +1563,7 @@ dependencies = [
 "checksum serde 1.0.76 (registry+https://github.com/rust-lang/crates.io-index)" = "d00c69ae39089576cddfd235556e3b21bf41c2d80018063cb5ab8a1183c917fd"
 "checksum serde_derive 1.0.76 (registry+https://github.com/rust-lang/crates.io-index)" = "7d8384360683b7114fc6eeeb41dde6ee37eeba2cf3660deef3a7a0d7548e55e9"
 "checksum serde_json 1.0.26 (registry+https://github.com/rust-lang/crates.io-index)" = "44dd2cfde475037451fa99b7e5df77aa3cfd1536575fa8e7a538ab36dcde49ae"
-"checksum serde_yaml 0.7.5 (registry+https://github.com/rust-lang/crates.io-index)" = "ef8099d3df28273c99a1728190c7a9f19d444c941044f64adf986bee7ec53051"
+"checksum serde_yaml 0.8.5 (registry+https://github.com/rust-lang/crates.io-index)" = "dc205f88b0342ba640b351b5fb0645515e4a6880f2ebed0dbe8dfb03e70e7e92"
 "checksum slab 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)" = "5f9776d6b986f77b35c6cf846c11ad986ff128fe0b2b63a3628e3755e8d3102d"
 "checksum smallvec 0.6.5 (registry+https://github.com/rust-lang/crates.io-index)" = "153ffa32fd170e9944f7e0838edf824a754ec4c1fc64746fcc9fe1f8fa602e5d"
 "checksum stable_deref_trait 1.1.1 (registry+https://github.com/rust-lang/crates.io-index)" = "dba1a27d3efae4351c8051072d619e3ade2820635c3958d826bfea39d59b54c8"
