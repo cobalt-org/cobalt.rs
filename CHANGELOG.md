@@ -1,3 +1,17 @@
+<a name="0.13.0"></a>
+## 0.13.0 (2018-10-04)
+
+
+#### Features
+
+*   Liquid for-block works on hashes ([68ca7b25](https://github.com/cobalt-org/cobalt.rs/commit/68ca7b25e9a6d946b69718a3946e83cf50bd9f98))
+
+#### Breaking Changes
+
+* **jekyll:**  Split out migration ([673a4cf6](https://github.com/cobalt-org/cobalt.rs/commit/673a4cf6334c7d5d1b5c04ce9da13fc6d62902a2), closes [#438](https://github.com/cobalt-org/cobalt.rs/issues/438), breaks [#](https://github.com/cobalt-org/cobalt.rs/issues/))
+
+
+
 <a name="0.12.2"></a>
 ## 0.12.2 (2018-07-21)
 
