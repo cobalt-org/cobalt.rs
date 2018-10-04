@@ -101,7 +101,11 @@ pub fn build(config: Config) -> Result<()> {
     Ok(())
 }
 
-fn generate_doc(posts_data: &[liquid::value::Value], doc: &mut Document, context: &Context) -> Result<()> {
+fn generate_doc(
+    posts_data: &[liquid::value::Value],
+    doc: &mut Document,
+    context: &Context,
+) -> Result<()> {
     // Everything done with `globals` is terrible for performance.  liquid#95 allows us to
     // improve this.
     let mut posts_variable = context.posts.attributes.clone();
@@ -113,7 +117,7 @@ fn generate_doc(posts_data: &[liquid::value::Value], doc: &mut Document, context
         context.posts.slug.clone().into(),
         liquid::value::Value::Object(posts_variable),
     )].into_iter()
-        .collect();
+    .collect();
     let mut globals: liquid::value::Object = vec![
         (
             "site".into(),
@@ -124,7 +128,7 @@ fn generate_doc(posts_data: &[liquid::value::Value], doc: &mut Document, context
             liquid::value::Value::Object(global_collection),
         ),
     ].into_iter()
-        .collect();
+    .collect();
     globals.insert(
         "page".into(),
         liquid::value::Value::Object(doc.attributes.clone()),
@@ -187,7 +191,7 @@ fn generate_posts(posts: &mut Vec<Document>, context: &Context) -> Result<()> {
         } else {
             None
         }.cloned()
-            .unwrap_or(liquid::value::Value::Nil);
+        .unwrap_or(liquid::value::Value::Nil);
         post.attributes.insert("next".into(), next);
 
         generate_doc(&simple_posts_data, post, context)?;
@@ -267,8 +271,7 @@ fn parse_layouts(files: &files::Files) -> HashMap<String, String> {
                 .to_owned();
 
             Ok((path, layout_data))
-        })
-        .partition(Result::is_ok);
+        }).partition(Result::is_ok);
 
     for error in errors {
         warn!("{}", error.expect_err("partition to filter out oks"));

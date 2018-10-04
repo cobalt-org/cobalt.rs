@@ -13,8 +13,7 @@ pub fn debug_command_args() -> clap::App<'static, 'static> {
                 .about("Print syntax-highlight information")
                 .subcommand(clap::SubCommand::with_name("themes"))
                 .subcommand(clap::SubCommand::with_name("syntaxes")),
-        )
-        .subcommand(
+        ).subcommand(
             clap::SubCommand::with_name("files")
                 .about("Print files associated with a collection")
                 .args(&args::get_config_args())

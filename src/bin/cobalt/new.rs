@@ -41,16 +41,14 @@ pub fn new_command_args() -> clap::App<'static, 'static> {
                 .required(true)
                 .help("Title of the post")
                 .takes_value(true),
-        )
-        .arg(
+        ).arg(
             clap::Arg::with_name("file")
                 .short("f")
                 .long("file")
                 .value_name("DIR_OR_FILE")
                 .help("New document's parent directory or file (default: `<CWD>/title.ext`)")
                 .takes_value(true),
-        )
-        .arg(
+        ).arg(
             clap::Arg::with_name("with-ext")
                 .long("with-ext")
                 .value_name("EXT")
@@ -87,14 +85,12 @@ pub fn rename_command_args() -> clap::App<'static, 'static> {
                 .required(true)
                 .help("File to rename")
                 .takes_value(true),
-        )
-        .arg(
+        ).arg(
             clap::Arg::with_name("TITLE")
                 .required(true)
                 .help("Title of the post")
                 .takes_value(true),
-        )
-        .arg(
+        ).arg(
             clap::Arg::with_name("file")
                 .short("f")
                 .long("file")
@@ -258,18 +254,16 @@ pub fn create_new_document(
 
     let pages = config.pages.clone().build()?;
     let posts = config.posts.clone().build()?;
-    let file_type = if posts.pages.includes_file(&file)
-        || posts
-            .drafts
-            .map(|d| d.includes_file(&file))
-            .unwrap_or_default()
+    let file_type = if posts.pages.includes_file(&file) || posts
+        .drafts
+        .map(|d| d.includes_file(&file))
+        .unwrap_or_default()
     {
         posts.slug.as_str()
-    } else if pages.pages.includes_file(&file)
-        || pages
-            .drafts
-            .map(|d| d.includes_file(&file))
-            .unwrap_or_default()
+    } else if pages.pages.includes_file(&file) || pages
+        .drafts
+        .map(|d| d.includes_file(&file))
+        .unwrap_or_default()
     {
         pages.slug.as_str()
     } else {
@@ -354,11 +348,10 @@ pub fn rename_document(
 
     let pages = config.pages.clone().build()?;
     let posts = config.posts.clone().build()?;
-    let full_front = if posts.pages.includes_file(&target)
-        || posts
-            .drafts
-            .map(|d| d.includes_file(&target))
-            .unwrap_or_default()
+    let full_front = if posts.pages.includes_file(&target) || posts
+        .drafts
+        .map(|d| d.includes_file(&target))
+        .unwrap_or_default()
     {
         // Can't rely on this for drafts atm
         let rel_src = target
@@ -368,11 +361,10 @@ pub fn rename_document(
             .clone()
             .merge_path(rel_src)
             .merge(posts.default.clone())
-    } else if pages.pages.includes_file(&target)
-        || pages
-            .drafts
-            .map(|d| d.includes_file(&target))
-            .unwrap_or_default()
+    } else if pages.pages.includes_file(&target) || pages
+        .drafts
+        .map(|d| d.includes_file(&target))
+        .unwrap_or_default()
     {
         // Can't rely on this for drafts atm
         let rel_src = target

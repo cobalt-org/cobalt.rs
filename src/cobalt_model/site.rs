@@ -43,7 +43,10 @@ impl SiteBuilder {
             attributes.insert("title".into(), liquid::value::Value::scalar(title));
         }
         if let Some(description) = description {
-            attributes.insert("description".into(), liquid::value::Value::scalar(description));
+            attributes.insert(
+                "description".into(),
+                liquid::value::Value::scalar(description),
+            );
         }
         if let Some(base_url) = base_url {
             attributes.insert("base_url".into(), liquid::value::Value::scalar(base_url));

@@ -44,7 +44,11 @@ fn permalink_attributes(front: &cobalt_model::Frontmatter, dest_file: &Path) -> 
         Value::scalar(format_path_variable(dest_file)),
     );
 
-    let filename = dest_file.file_stem().and_then(|s| s.to_str()).unwrap_or("").to_owned();
+    let filename = dest_file
+        .file_stem()
+        .and_then(|s| s.to_str())
+        .unwrap_or("")
+        .to_owned();
     attributes.insert("name".into(), Value::scalar(filename));
 
     attributes.insert("ext".into(), Value::scalar(".html"));
@@ -68,19 +72,10 @@ fn permalink_attributes(front: &cobalt_model::Frontmatter, dest_file: &Path) -> 
             "month".into(),
             Value::scalar(format!("{:02}", &date.month())),
         );
-        attributes.insert(
-            "i_month".into(),
-            Value::scalar(date.month().to_string()),
-        );
-        attributes.insert(
-            "day".into(),
-            Value::scalar(format!("{:02}", &date.day())),
-        );
+        attributes.insert("i_month".into(), Value::scalar(date.month().to_string()));
+        attributes.insert("day".into(), Value::scalar(format!("{:02}", &date.day())));
         attributes.insert("i_day".into(), Value::scalar(date.day().to_string()));
-        attributes.insert(
-            "hour".into(),
-            Value::scalar(format!("{:02}", &date.hour())),
-        );
+        attributes.insert("hour".into(), Value::scalar(format!("{:02}", &date.hour())));
         attributes.insert(
             "minute".into(),
             Value::scalar(format!("{:02}", &date.minute())),
@@ -101,8 +96,7 @@ fn document_attributes(
     source_file: &Path,
     url_path: &str,
 ) -> Object {
-    let categories =
-        Value::Array(front.categories.iter().map(Value::scalar).collect());
+    let categories = Value::Array(front.categories.iter().map(Value::scalar).collect());
     // Reason for `file`:
     // - Allow access to assets in the original location
     // - Ease linking back to page's source
@@ -113,25 +107,35 @@ fn document_attributes(
         ),
         (
             "parent".into(),
-            Value::scalar(source_file.parent().and_then(Path::to_str).unwrap_or("").to_owned()),
+            Value::scalar(
+                source_file
+                    .parent()
+                    .and_then(Path::to_str)
+                    .unwrap_or("")
+                    .to_owned(),
+            ),
         ),
     ].into_iter()
-        .collect();
+    .collect();
     let attributes = vec![
         ("permalink".into(), Value::scalar(url_path.to_owned())),
         ("title".into(), Value::scalar(&front.title)),
         ("slug".into(), Value::scalar(&front.slug)),
         (
             "description".into(),
-            Value::scalar(front.description.as_ref().map(|s| s.as_str()).unwrap_or("").to_owned()),
+            Value::scalar(
+                front
+                    .description
+                    .as_ref()
+                    .map(|s| s.as_str())
+                    .unwrap_or("")
+                    .to_owned(),
+            ),
         ),
         ("categories".into(), categories),
         ("is_draft".into(), Value::scalar(front.is_draft)),
         ("file".into(), Value::Object(file)),
-        (
-            "collection".into(),
-            Value::scalar(&front.collection),
-        ),
+        ("collection".into(), Value::scalar(&front.collection)),
         ("data".into(), Value::Object(front.data.clone())),
     ];
     let mut attributes: Object = attributes.into_iter().collect();

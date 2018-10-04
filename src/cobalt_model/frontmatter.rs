@@ -437,7 +437,10 @@ impl fmt::Display for Frontmatter {
 }
 
 /// Shallow merge of `liquid::value::Object`'s
-fn merge_objects(mut primary: liquid::value::Object, secondary: liquid::value::Object) -> liquid::value::Object {
+fn merge_objects(
+    mut primary: liquid::value::Object,
+    secondary: liquid::value::Object,
+) -> liquid::value::Object {
     for (key, value) in secondary {
         primary
             .entry(key.to_owned())
