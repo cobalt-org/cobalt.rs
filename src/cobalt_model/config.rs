@@ -154,7 +154,7 @@ pub struct SiteConfig {
     pub title: Option<String>,
     pub description: Option<String>,
     pub base_url: Option<String>,
-    pub data: Option<liquid::Object>,
+    pub data: Option<liquid::value::Object>,
     #[serde(skip)]
     pub data_dir: &'static str,
 }

@@ -6,6 +6,7 @@ extern crate ignore;
 extern crate itertools;
 extern crate jsonfeed;
 extern crate liquid;
+extern crate liquid_error;
 extern crate normalize_line_endings;
 extern crate pulldown_cmark;
 extern crate regex;

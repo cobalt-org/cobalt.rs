@@ -1,8 +1,11 @@
+use std::io::Write;
+
 use liquid;
 use liquid::compiler::Element::{self, Expression, Raw, Tag};
 use liquid::compiler::LiquidOptions;
 use liquid::compiler::Token::{self, Identifier};
 use liquid::interpreter::{Context, Renderable};
+use liquid_error::ResultLiquidChainExt;
 use pulldown_cmark as cmark;
 
 use error;
@@ -62,15 +65,16 @@ struct CodeBlock {
 }
 
 impl Renderable for CodeBlock {
-    fn render(&self, _: &mut Context) -> Result<Option<String>, liquid::Error> {
+    fn render_to(&self, writer: &mut Write, _context: &mut Context) -> Result<(), liquid::Error> {
         if let Some(ref lang) = self.lang {
-            Ok(Some(format!(
+            write!(writer,
                 "<pre><code class=\"language-{}\">{}</code></pre>",
                 lang, self.code
-            )))
+            ).chain("Failed to render")?;
         } else {
-            Ok(Some(format!("<pre><code>{}</code></pre>", self.code)))
+            write!(writer, "<pre><code>{}</code></pre>", self.code).chain("Failed to render")?;
         }
+        Ok(())
     }
 }
 
@@ -149,7 +153,7 @@ mod test {
                 CODE_BLOCK
             ))
             .unwrap();
-        let output = template.render(&liquid::Object::new());
+        let output = template.render(&liquid::value::Object::new());
         assert_eq!(output.unwrap(), CODEBLOCK_RENDERED.to_string());
     }
 

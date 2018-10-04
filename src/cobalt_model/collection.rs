@@ -81,20 +81,20 @@ impl CollectionBuilder {
             .map(|dir| Self::build_files(&source, &dir, &template_extensions, &ignore))
             .map_or(Ok(None), |r| r.map(Some))?;
 
-        let mut attributes: liquid::Object = vec![
-            ("title".to_owned(), liquid::Value::scalar(&title)),
-            ("slug".to_owned(), liquid::Value::scalar(&slug)),
+        let mut attributes: liquid::value::Object = vec![
+            ("title".into(), liquid::value::Value::scalar(&title)),
+            ("slug".into(), liquid::value::Value::scalar(&slug)),
             (
-                "description".to_owned(),
-                liquid::Value::scalar(description.clone().unwrap_or_else(|| "".to_owned())),
+                "description".into(),
+                liquid::value::Value::scalar(description.clone().unwrap_or_else(|| "".to_owned())),
             ),
         ].into_iter()
             .collect();
         if let Some(ref rss) = rss {
-            attributes.insert("rss".to_owned(), liquid::Value::scalar(rss));
+            attributes.insert("rss".into(), liquid::value::Value::scalar(rss));
         }
         if let Some(ref jsonfeed) = jsonfeed {
-            attributes.insert("jsonfeed".to_owned(), liquid::Value::scalar(jsonfeed));
+            attributes.insert("jsonfeed".into(), liquid::value::Value::scalar(jsonfeed));
         }
 
         let default = default.set_collection(slug.clone());
@@ -159,7 +159,7 @@ pub struct Collection {
     pub jsonfeed: Option<String>,
     pub base_url: Option<String>,
     pub default: FrontmatterBuilder,
-    pub attributes: liquid::Object,
+    pub attributes: liquid::value::Object,
 }
 
 #[cfg(test)]
