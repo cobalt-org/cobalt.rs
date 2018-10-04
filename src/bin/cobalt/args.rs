@@ -32,7 +32,8 @@ pub fn get_config_args() -> Vec<clap::Arg<'static, 'static>> {
             .help("Ignore drafts.")
             .conflicts_with("drafts")
             .takes_value(false),
-    ].to_vec()
+    ]
+        .to_vec()
 }
 
 pub fn get_config(matches: &clap::ArgMatches) -> Result<cobalt::ConfigBuilder> {
@@ -78,7 +79,8 @@ pub fn get_logging_args() -> Vec<clap::Arg<'static, 'static>> {
             .help("Suppress all output")
             .global(true)
             .takes_value(false),
-    ].to_vec()
+    ]
+        .to_vec()
 }
 
 pub fn get_logging(

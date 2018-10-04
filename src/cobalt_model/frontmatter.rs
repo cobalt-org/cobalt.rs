@@ -78,8 +78,8 @@ pub struct FrontmatterBuilder {
     pub layout: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub is_draft: Option<bool>,
-    #[serde(skip_serializing_if = "liquid::Object::is_empty")]
-    pub data: liquid::Object,
+    #[serde(skip_serializing_if = "liquid::value::Object::is_empty")]
+    pub data: liquid::value::Object,
     // Controlled by where the file is found.  We might allow control over the type at a later
     // point but we need to first define those semantics.
     #[serde(skip)]
@@ -232,7 +232,7 @@ impl FrontmatterBuilder {
         self.merge(Self::new().set_collection(collection.into()))
     }
 
-    pub fn merge_data(self, other_data: liquid::Object) -> Self {
+    pub fn merge_data(self, other_data: liquid::value::Object) -> Self {
         let Self {
             permalink,
             slug,
@@ -424,7 +424,7 @@ pub struct Frontmatter {
     pub layout: Option<String>,
     pub is_draft: bool,
     pub collection: String,
-    pub data: liquid::Object,
+    pub data: liquid::value::Object,
 }
 
 impl Front for Frontmatter {}
@@ -436,8 +436,11 @@ impl fmt::Display for Frontmatter {
     }
 }
 
-/// Shallow merge of `liquid::Object`'s
-fn merge_objects(mut primary: liquid::Object, secondary: liquid::Object) -> liquid::Object {
+/// Shallow merge of `liquid::value::Object`'s
+fn merge_objects(
+    mut primary: liquid::value::Object,
+    secondary: liquid::value::Object,
+) -> liquid::value::Object {
     for (key, value) in secondary {
         primary
             .entry(key.to_owned())
@@ -668,7 +671,7 @@ mod test {
             layout: Some("layout a".to_owned()),
             is_draft: Some(true),
             collection: Some("pages".to_owned()),
-            data: liquid::Object::new(),
+            data: liquid::value::Object::new(),
         };
         let b = FrontmatterBuilder {
             permalink: Some("permalink b".to_owned()),
@@ -683,7 +686,7 @@ mod test {
             layout: Some("layout b".to_owned()),
             is_draft: Some(true),
             collection: Some("posts".to_owned()),
-            data: liquid::Object::new(),
+            data: liquid::value::Object::new(),
         };
 
         let merge_b_into_a = a.clone().merge(b.clone());
@@ -711,7 +714,7 @@ mod test {
             layout: Some("layout a".to_owned()),
             is_draft: Some(true),
             collection: Some("pages".to_owned()),
-            data: liquid::Object::new(),
+            data: liquid::value::Object::new(),
         };
 
         let merge_b_into_a = a

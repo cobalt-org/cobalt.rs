@@ -1,12 +1,15 @@
-use itertools::Itertools;
 use std::borrow::Cow::Owned;
+use std::io::Write;
 
+use itertools::Itertools;
 use liquid;
 use liquid::compiler::Element::{self, Expression, Raw, Tag};
 use liquid::compiler::LiquidOptions;
 use liquid::compiler::Token::{self, Identifier};
 use liquid::interpreter::{Context, Renderable};
-
+use liquid_error::ResultLiquidChainExt;
+use pulldown_cmark as cmark;
+use pulldown_cmark::Event::{self, End, Html, Start, Text};
 use syntect::easy::HighlightLines;
 use syntect::highlighting::{Theme, ThemeSet};
 use syntect::html::{
@@ -14,9 +17,6 @@ use syntect::html::{
     IncludeBackground,
 };
 use syntect::parsing::{SyntaxDefinition, SyntaxSet};
-
-use pulldown_cmark as cmark;
-use pulldown_cmark::Event::{self, End, Html, Start, Text};
 
 use error;
 
@@ -70,17 +70,19 @@ struct CodeBlock {
 }
 
 impl Renderable for CodeBlock {
-    fn render(&self, _: &mut Context) -> Result<Option<String>, liquid::Error> {
+    fn render_to(&self, writer: &mut Write, _context: &mut Context) -> Result<(), liquid::Error> {
         let syntax = match self.lang {
             Some(ref lang) => SETUP.syntax_set.find_syntax_by_token(lang),
             _ => None,
         }.unwrap_or_else(|| SETUP.syntax_set.find_syntax_plain_text());
 
-        Ok(Some(highlighted_snippet_for_string(
-            &self.code,
-            syntax,
-            &self.theme,
-        )))
+        write!(
+            writer,
+            "{}",
+            highlighted_snippet_for_string(&self.code, syntax, &self.theme,)
+        ).chain("Failed to render")?;
+
+        Ok(())
     }
 }
 
@@ -106,7 +108,8 @@ impl liquid::compiler::ParseBlock for CodeBlockParser {
         let content = tokens.iter().fold("".to_owned(), |a, b| {
             match *b {
                 Expression(_, ref text) | Tag(_, ref text) | Raw(ref text) => text,
-            }.to_owned() + &a
+            }.to_owned()
+                + &a
         });
 
         let lang = match arguments.iter().next() {
@@ -247,9 +250,8 @@ mod test {
                 .parse(&format!(
                     "{{% highlight rust %}}{}{{% endhighlight %}}",
                     CODE_BLOCK
-                ))
-                .unwrap();
-            let output = template.render(&liquid::Object::new());
+                )).unwrap();
+            let output = template.render(&liquid::value::Object::new());
             assert_diff!(&output.unwrap(), CODEBLOCK_RENDERED, "\n", 0);
         }
 

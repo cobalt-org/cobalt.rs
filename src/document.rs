@@ -7,7 +7,8 @@ use chrono::{Datelike, Timelike};
 use itertools;
 use jsonfeed;
 use liquid;
-use liquid::Value;
+use liquid::value::Object;
+use liquid::value::Value;
 use regex::Regex;
 use rss;
 
@@ -35,26 +36,30 @@ fn format_path_variable(source_file: &Path) -> String {
     path
 }
 
-fn permalink_attributes(front: &cobalt_model::Frontmatter, dest_file: &Path) -> liquid::Object {
-    let mut attributes = liquid::Object::new();
+fn permalink_attributes(front: &cobalt_model::Frontmatter, dest_file: &Path) -> Object {
+    let mut attributes = Object::new();
 
     attributes.insert(
-        "parent".to_owned(),
+        "parent".into(),
         Value::scalar(format_path_variable(dest_file)),
     );
 
-    let filename = dest_file.file_stem().and_then(|s| s.to_str()).unwrap_or("");
-    attributes.insert("name".to_owned(), Value::scalar(filename));
+    let filename = dest_file
+        .file_stem()
+        .and_then(|s| s.to_str())
+        .unwrap_or("")
+        .to_owned();
+    attributes.insert("name".into(), Value::scalar(filename));
 
-    attributes.insert("ext".to_owned(), Value::scalar(".html"));
+    attributes.insert("ext".into(), Value::scalar(".html"));
 
     // TODO(epage): Add `collection` (the collection's slug), see #257
     // or `parent.slug`, see #323
 
-    attributes.insert("slug".to_owned(), Value::scalar(&front.slug));
+    attributes.insert("slug".into(), Value::scalar(&front.slug));
 
     attributes.insert(
-        "categories".to_owned(),
+        "categories".into(),
         Value::scalar(itertools::join(
             front.categories.iter().map(slug::slugify),
             "/",
@@ -62,35 +67,26 @@ fn permalink_attributes(front: &cobalt_model::Frontmatter, dest_file: &Path) -> 
     );
 
     if let Some(ref date) = front.published_date {
-        attributes.insert("year".to_owned(), Value::scalar(date.year().to_string()));
+        attributes.insert("year".into(), Value::scalar(date.year().to_string()));
         attributes.insert(
-            "month".to_owned(),
+            "month".into(),
             Value::scalar(format!("{:02}", &date.month())),
         );
+        attributes.insert("i_month".into(), Value::scalar(date.month().to_string()));
+        attributes.insert("day".into(), Value::scalar(format!("{:02}", &date.day())));
+        attributes.insert("i_day".into(), Value::scalar(date.day().to_string()));
+        attributes.insert("hour".into(), Value::scalar(format!("{:02}", &date.hour())));
         attributes.insert(
-            "i_month".to_owned(),
-            Value::scalar(date.month().to_string()),
-        );
-        attributes.insert(
-            "day".to_owned(),
-            Value::scalar(format!("{:02}", &date.day())),
-        );
-        attributes.insert("i_day".to_owned(), Value::scalar(date.day().to_string()));
-        attributes.insert(
-            "hour".to_owned(),
-            Value::scalar(format!("{:02}", &date.hour())),
-        );
-        attributes.insert(
-            "minute".to_owned(),
+            "minute".into(),
             Value::scalar(format!("{:02}", &date.minute())),
         );
         attributes.insert(
-            "second".to_owned(),
+            "second".into(),
             Value::scalar(format!("{:02}", &date.second())),
         );
     }
 
-    attributes.insert("data".to_owned(), Value::Object(front.data.clone()));
+    attributes.insert("data".into(), Value::Object(front.data.clone()));
 
     attributes
 }
@@ -99,46 +95,55 @@ fn document_attributes(
     front: &cobalt_model::Frontmatter,
     source_file: &Path,
     url_path: &str,
-) -> liquid::Object {
-    let categories =
-        liquid::Value::Array(front.categories.iter().map(liquid::Value::scalar).collect());
+) -> Object {
+    let categories = Value::Array(front.categories.iter().map(Value::scalar).collect());
     // Reason for `file`:
     // - Allow access to assets in the original location
     // - Ease linking back to page's source
-    let file: liquid::Object = vec![
+    let file: Object = vec![
         (
-            "permalink".to_owned(),
-            liquid::Value::scalar(source_file.to_str().unwrap_or("")),
+            "permalink".into(),
+            Value::scalar(source_file.to_str().unwrap_or("").to_owned()),
         ),
         (
-            "parent".to_owned(),
-            liquid::Value::scalar(source_file.parent().and_then(Path::to_str).unwrap_or("")),
+            "parent".into(),
+            Value::scalar(
+                source_file
+                    .parent()
+                    .and_then(Path::to_str)
+                    .unwrap_or("")
+                    .to_owned(),
+            ),
         ),
     ].into_iter()
-        .collect();
+    .collect();
     let attributes = vec![
-        ("permalink".to_owned(), liquid::Value::scalar(url_path)),
-        ("title".to_owned(), liquid::Value::scalar(&front.title)),
-        ("slug".to_owned(), liquid::Value::scalar(&front.slug)),
+        ("permalink".into(), Value::scalar(url_path.to_owned())),
+        ("title".into(), Value::scalar(&front.title)),
+        ("slug".into(), Value::scalar(&front.slug)),
         (
-            "description".to_owned(),
-            liquid::Value::scalar(front.description.as_ref().map(|s| s.as_str()).unwrap_or("")),
+            "description".into(),
+            Value::scalar(
+                front
+                    .description
+                    .as_ref()
+                    .map(|s| s.as_str())
+                    .unwrap_or("")
+                    .to_owned(),
+            ),
         ),
-        ("categories".to_owned(), categories),
-        ("is_draft".to_owned(), liquid::Value::scalar(front.is_draft)),
-        ("file".to_owned(), liquid::Value::Object(file)),
-        (
-            "collection".to_owned(),
-            liquid::Value::scalar(&front.collection),
-        ),
-        ("data".to_owned(), liquid::Value::Object(front.data.clone())),
+        ("categories".into(), categories),
+        ("is_draft".into(), Value::scalar(front.is_draft)),
+        ("file".into(), Value::Object(file)),
+        ("collection".into(), Value::scalar(&front.collection)),
+        ("data".into(), Value::Object(front.data.clone())),
     ];
-    let mut attributes: liquid::Object = attributes.into_iter().collect();
+    let mut attributes: Object = attributes.into_iter().collect();
 
     if let Some(ref published_date) = front.published_date {
         attributes.insert(
-            "published_date".to_owned(),
-            liquid::Value::scalar(liquid::Date::from(*published_date)),
+            "published_date".into(),
+            Value::scalar(liquid::value::Date::from(*published_date)),
         );
     }
 
@@ -150,7 +155,7 @@ pub struct Document {
     pub url_path: String,
     pub file_path: PathBuf,
     pub content: String,
-    pub attributes: liquid::Object,
+    pub attributes: Object,
     pub front: cobalt_model::Frontmatter,
 }
 
@@ -159,7 +164,7 @@ impl Document {
         url_path: String,
         file_path: PathBuf,
         content: String,
-        attributes: liquid::Object,
+        attributes: Object,
         front: cobalt_model::Frontmatter,
     ) -> Document {
         Document {
@@ -256,7 +261,7 @@ impl Document {
     fn render_html(
         &self,
         content: &str,
-        globals: &liquid::Object,
+        globals: &Object,
         parser: &cobalt_model::Liquid,
         markdown: &cobalt_model::Markdown,
     ) -> Result<String> {
@@ -273,7 +278,7 @@ impl Document {
     /// Renders excerpt and adds it to attributes of the document.
     pub fn render_excerpt(
         &mut self,
-        globals: &liquid::Object,
+        globals: &Object,
         parser: &cobalt_model::Liquid,
         markdown: &cobalt_model::Markdown,
     ) -> Result<()> {
@@ -292,7 +297,7 @@ impl Document {
             Value::scalar(excerpt)
         };
 
-        self.attributes.insert("excerpt".to_owned(), value);
+        self.attributes.insert("excerpt".into(), value);
         Ok(())
     }
 
@@ -301,13 +306,13 @@ impl Document {
     /// When we say "content" we mean only this document without extended layout.
     pub fn render_content(
         &mut self,
-        globals: &liquid::Object,
+        globals: &Object,
         parser: &cobalt_model::Liquid,
         markdown: &cobalt_model::Markdown,
     ) -> Result<()> {
         let content_html = self.render_html(&self.content, globals, parser, markdown)?;
         self.attributes
-            .insert("content".to_owned(), Value::scalar(content_html.clone()));
+            .insert("content".into(), Value::scalar(content_html.clone()));
         Ok(())
     }
 
@@ -318,7 +323,7 @@ impl Document {
     /// * layout may be inserted to layouts cache
     pub fn render(
         &mut self,
-        globals: &liquid::Object,
+        globals: &Object,
         parser: &cobalt_model::Liquid,
         layouts: &HashMap<String, String>,
     ) -> Result<String> {
@@ -341,7 +346,7 @@ impl Document {
             let content_html = globals
                 .get("page")
                 .ok_or("Internal error: page isn't in globals")?
-                .get(&liquid::Index::with_key("content"))
+                .get(&liquid::value::Index::with_key("content"))
                 .ok_or("Internal error: page.content isn't in globals")?
                 .to_string();
 

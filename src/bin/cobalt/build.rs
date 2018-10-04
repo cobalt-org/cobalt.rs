@@ -86,8 +86,7 @@ pub fn import_command_args() -> clap::App<'static, 'static> {
                 .help("Branch that will be used to import the site to")
                 .default_value("gh-pages")
                 .takes_value(true),
-        )
-        .arg(
+        ).arg(
             clap::Arg::with_name("message")
                 .short("m")
                 .long("message")

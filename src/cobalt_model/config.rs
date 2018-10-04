@@ -154,7 +154,7 @@ pub struct SiteConfig {
     pub title: Option<String>,
     pub description: Option<String>,
     pub base_url: Option<String>,
-    pub data: Option<liquid::Object>,
+    pub data: Option<liquid::value::Object>,
     #[serde(skip)]
     pub data_dir: &'static str,
 }
@@ -312,8 +312,7 @@ impl ConfigBuilder {
             .map(|p| {
                 debug!("Using config file {:?}", &p);
                 Self::from_file(&p).chain_err(|| format!("Error reading config file {:?}", p))
-            })
-            .unwrap_or_else(|| {
+            }).unwrap_or_else(|| {
                 warn!("No _cobalt.yml file found in current directory, using default config.");
                 let config = ConfigBuilder {
                     root: cwd,

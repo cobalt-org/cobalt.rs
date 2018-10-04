@@ -17,12 +17,12 @@ pub struct SiteBuilder {
     pub title: Option<String>,
     pub description: Option<String>,
     pub base_url: Option<String>,
-    pub data: Option<liquid::Object>,
+    pub data: Option<liquid::value::Object>,
     pub data_dir: Option<path::PathBuf>,
 }
 
 impl SiteBuilder {
-    pub fn build(self) -> Result<liquid::Object> {
+    pub fn build(self) -> Result<liquid::value::Object> {
         let SiteBuilder {
             title,
             description,
@@ -38,22 +38,25 @@ impl SiteBuilder {
             l
         });
 
-        let mut attributes = liquid::Object::new();
+        let mut attributes = liquid::value::Object::new();
         if let Some(title) = title {
-            attributes.insert("title".to_owned(), liquid::Value::scalar(title));
+            attributes.insert("title".into(), liquid::value::Value::scalar(title));
         }
         if let Some(description) = description {
-            attributes.insert("description".to_owned(), liquid::Value::scalar(description));
+            attributes.insert(
+                "description".into(),
+                liquid::value::Value::scalar(description),
+            );
         }
         if let Some(base_url) = base_url {
-            attributes.insert("base_url".to_owned(), liquid::Value::scalar(base_url));
+            attributes.insert("base_url".into(), liquid::value::Value::scalar(base_url));
         }
         let mut data = data.unwrap_or_default();
         if let Some(ref data_dir) = data_dir {
             insert_data_dir(&mut data, data_dir)?;
         }
         if !data.is_empty() {
-            attributes.insert("data".to_owned(), liquid::Value::Object(data));
+            attributes.insert("data".into(), liquid::value::Value::Object(data));
         }
 
         Ok(attributes)
@@ -61,10 +64,10 @@ impl SiteBuilder {
 }
 
 fn deep_insert(
-    data_map: &mut liquid::Object,
+    data_map: &mut liquid::value::Object,
     file_path: &path::Path,
     target_key: String,
-    data: liquid::Value,
+    data: liquid::value::Value,
 ) -> Result<()> {
     // now find the nested map it is supposed to be in
     let target_map = if let Some(path) = file_path.parent() {
@@ -78,8 +81,8 @@ fn deep_insert(
             })?;
             let cur_map = map;
             map = cur_map
-                .entry(String::from(key))
-                .or_insert_with(|| liquid::Value::Object(liquid::Object::new()))
+                .entry(String::from(key).into())
+                .or_insert_with(|| liquid::value::Value::Object(liquid::value::Object::new()))
                 .as_object_mut()
                 .ok_or_else(|| {
                     format!(
@@ -93,7 +96,7 @@ fn deep_insert(
         data_map
     };
 
-    match target_map.insert(target_key, data) {
+    match target_map.insert(target_key.into(), data) {
         None => Ok(()),
         _ => Err(format!(
             "The data from {:?} can't be loaded: the key already exists",
@@ -102,10 +105,10 @@ fn deep_insert(
     }
 }
 
-fn load_data(data_path: &path::Path) -> Result<liquid::Value> {
+fn load_data(data_path: &path::Path) -> Result<liquid::value::Value> {
     let ext = data_path.extension().unwrap_or_else(|| OsStr::new(""));
 
-    let data: liquid::Value;
+    let data: liquid::value::Value;
 
     if ext == OsStr::new("yml") || ext == OsStr::new("yaml") {
         let reader = fs::File::open(data_path)?;
@@ -128,7 +131,7 @@ fn load_data(data_path: &path::Path) -> Result<liquid::Value> {
     Ok(data)
 }
 
-fn insert_data_dir(data: &mut liquid::Object, data_root: &path::Path) -> Result<()> {
+fn insert_data_dir(data: &mut liquid::value::Object, data_root: &path::Path) -> Result<()> {
     debug!("Loading data from {:?}", data_root);
 
     let data_files_builder = files::FilesBuilder::new(data_root)?;
