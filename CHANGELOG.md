@@ -1,3 +1,13 @@
+<a name="0.13.1"></a>
+## 0.13.1 (2018-10-05)
+
+
+#### Features
+
+* **liquid:**  filter input can index ([5a1eb91a](https://github.com/cobalt-org/cobalt.rs/commit/5a1eb91acd9fe3954949b24ad80588df2f1d636a))
+
+
+
 <a name="0.13.0"></a>
 ## 0.13.0 (2018-10-04)
 
