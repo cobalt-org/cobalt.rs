@@ -134,7 +134,7 @@ fn static_file_handler(dest: &path::Path, req: Request, mut res: Response) -> Re
 fn serve(dest: &path::Path, ip: &str) -> Result<()> {
     info!("Serving {:?} through static file server", dest);
 
-    info!("Server Listening on {}", &ip);
+    info!("Server Listening on http://{}", &ip);
     info!("Ctrl-c to stop the server");
 
     // attempts to create a server
