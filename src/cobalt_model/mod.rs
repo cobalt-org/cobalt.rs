@@ -10,6 +10,7 @@ mod site;
 mod template;
 
 pub mod files;
+pub mod pagination_config;
 pub mod permalink;
 pub mod slug;
 
