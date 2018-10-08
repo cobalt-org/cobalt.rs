@@ -11,6 +11,7 @@ use serde_yaml;
 use error::Result;
 
 use super::datetime;
+use super::pagination_config;
 use super::slug;
 
 const PATH_ALIAS: &str = "/{{parent}}/{{name}}{{ext}}";
@@ -80,6 +81,8 @@ pub struct FrontmatterBuilder {
     pub is_draft: Option<bool>,
     #[serde(skip_serializing_if = "liquid::value::Object::is_empty")]
     pub data: liquid::value::Object,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub pagination: Option<pagination_config::PaginationConfigBuilder>,
     // Controlled by where the file is found.  We might allow control over the type at a later
     // point but we need to first define those semantics.
     #[serde(skip)]
@@ -129,6 +132,16 @@ impl FrontmatterBuilder {
     pub fn set_categories<S: Into<Option<Vec<String>>>>(self, categories: S) -> Self {
         Self {
             categories: categories.into(),
+            ..self
+        }
+    }
+
+    pub fn set_pagination<S: Into<Option<pagination_config::PaginationConfigBuilder>>>(
+        self,
+        pagination: S,
+    ) -> Self {
+        Self {
+            pagination: pagination.into(),
             ..self
         }
     }
@@ -214,6 +227,13 @@ impl FrontmatterBuilder {
         self.merge(Self::new().set_published_date(published_date.into()))
     }
 
+    pub fn merge_pagination<S: Into<Option<pagination_config::PaginationConfigBuilder>>>(
+        self,
+        secondary: S,
+    ) -> Self {
+        self.merge(Self::new().set_pagination(secondary.into()))
+    }
+
     #[cfg(test)]
     pub fn merge_format<S: Into<Option<SourceFormat>>>(self, format: S) -> Self {
         self.merge(Self::new().set_format(format.into()))
@@ -247,6 +267,7 @@ impl FrontmatterBuilder {
             is_draft,
             collection,
             data,
+            pagination,
         } = self;
         Self {
             permalink,
@@ -262,6 +283,7 @@ impl FrontmatterBuilder {
             is_draft,
             collection,
             data: merge_objects(data, other_data),
+            pagination,
         }
     }
 
@@ -280,6 +302,7 @@ impl FrontmatterBuilder {
             is_draft,
             collection,
             data,
+            pagination,
         } = self;
         let Self {
             permalink: other_permalink,
@@ -295,6 +318,7 @@ impl FrontmatterBuilder {
             is_draft: other_is_draft,
             collection: other_collection,
             data: other_data,
+            pagination: other_pagination,
         } = other;
         Self {
             permalink: permalink.or_else(|| other_permalink),
@@ -310,6 +334,7 @@ impl FrontmatterBuilder {
             is_draft: is_draft.or_else(|| other_is_draft),
             collection: collection.or_else(|| other_collection),
             data: merge_objects(data, other_data),
+            pagination: merge_pagination(pagination, other_pagination),
         }
     }
 
@@ -366,6 +391,7 @@ impl FrontmatterBuilder {
             is_draft,
             collection,
             data,
+            pagination,
         } = self;
 
         let collection = collection.unwrap_or_else(|| "".to_owned());
@@ -394,9 +420,14 @@ impl FrontmatterBuilder {
             is_draft: is_draft.unwrap_or(false),
             collection,
             data,
+            pagination: pagination.and_then(|p| p.build()),
         };
 
-        Ok(fm)
+        if !cfg!(feature = "pagination-unstable") && fm.pagination.is_some() {
+            Err("Unsupported `pagination` field".into())
+        } else {
+            Ok(fm)
+        }
     }
 }
 
@@ -425,6 +456,7 @@ pub struct Frontmatter {
     pub is_draft: bool,
     pub collection: String,
     pub data: liquid::value::Object,
+    pub pagination: Option<pagination_config::PaginationConfig>,
 }
 
 impl Front for Frontmatter {}
@@ -447,6 +479,18 @@ fn merge_objects(
             .or_insert_with(|| value.clone());
     }
     primary
+}
+
+fn merge_pagination(
+    primary: Option<pagination_config::PaginationConfigBuilder>,
+    secondary: Option<pagination_config::PaginationConfigBuilder>,
+) -> Option<pagination_config::PaginationConfigBuilder> {
+    match (primary, secondary) {
+        (Some(primary), Some(secondary)) => Some(primary.merge(&secondary)),
+        (Some(primary), None) => Some(primary),
+        (None, Some(secondary)) => Some(secondary),
+        (None, None) => None,
+    }
 }
 
 /// The base-name without an extension.  Correlates to Jekyll's :name path tag
@@ -672,6 +716,7 @@ mod test {
             is_draft: Some(true),
             collection: Some("pages".to_owned()),
             data: liquid::value::Object::new(),
+            pagination: Some(Default::default()),
         };
         let b = FrontmatterBuilder {
             permalink: Some("permalink b".to_owned()),
@@ -687,6 +732,7 @@ mod test {
             is_draft: Some(true),
             collection: Some("posts".to_owned()),
             data: liquid::value::Object::new(),
+            pagination: Some(Default::default()),
         };
 
         let merge_b_into_a = a.clone().merge(b.clone());
@@ -715,6 +761,7 @@ mod test {
             is_draft: Some(true),
             collection: Some("pages".to_owned()),
             data: liquid::value::Object::new(),
+            pagination: Some(Default::default()),
         };
 
         let merge_b_into_a = a
@@ -758,7 +805,8 @@ mod test {
             .merge_format(SourceFormat::Markdown)
             .merge_layout("layout a".to_owned())
             .merge_draft(true)
-            .merge_collection("pages".to_owned());
+            .merge_collection("pages".to_owned())
+            .merge_pagination(Some(Default::default()));
         assert_eq!(merge_a_into_empty, a);
     }
 
