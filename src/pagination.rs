@@ -50,7 +50,7 @@ impl Paginator {
     config: &PaginationConfig,
     total_pages: usize,
   ) -> Result<()> {
-    self.first_index_permalink = format!("/{}", doc.url_path);
+    self.first_index_permalink = format!("{}", doc.url_path);
     self.last_index_permalink = interpret_permalink(&config, &doc, total_pages)?;
     Ok(())
   }
@@ -245,7 +245,7 @@ fn create_paginator(
   let index = i + 1;
   let mut paginator = Paginator::new(total_indexes, total_pages);
 
-  paginator.set_first_last(&doc, &config, total_pages)?;
+  paginator.set_first_last(&doc, &config, total_indexes)?;
   paginator.set_current_index_info(index, &mut all_posts, &config, &doc)?;
   paginator.set_previous_next_info(index, total_indexes, &doc, &config)?;
 
