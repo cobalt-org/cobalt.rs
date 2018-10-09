@@ -26,9 +26,14 @@ mod error;
 mod new;
 mod serve;
 
+use std::alloc;
+
 use clap::{App, AppSettings};
 
 use error::*;
+
+#[global_allocator]
+static GLOBAL: alloc::System = alloc::System;
 
 quick_main!(run);
 
