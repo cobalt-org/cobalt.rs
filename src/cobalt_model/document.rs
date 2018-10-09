@@ -38,7 +38,7 @@ impl<T: frontmatter::Front> fmt::Display for DocumentBuilder<T> {
         if front.trim().is_empty() {
             write!(f, "{}", self.content)
         } else {
-            write!(f, "{}\n---\n{}", front, self.content)
+            write!(f, "---\n{}\n---\n{}", front, self.content)
         }
     }
 }
@@ -46,7 +46,13 @@ impl<T: frontmatter::Front> fmt::Display for DocumentBuilder<T> {
 fn split_document(content: &str) -> Result<(Option<&str>, &str)> {
     lazy_static! {
         static ref FRONT_MATTER_DIVIDE: regex::Regex = regex::Regex::new(r"---\s*\r?\n").unwrap();
+        static ref FRONT_MATTER: regex::Regex = regex::Regex::new(r"\A---\s*\r?\n[\s\S]*---\s*\r?\n").unwrap();
     }
+
+    // remove divide at beginning of file if exists
+    let content = if FRONT_MATTER.is_match(content) {
+        content.splitn(2, '\n').skip(1).next().unwrap()
+    } else { content };
 
     if FRONT_MATTER_DIVIDE.is_match(content) {
         let mut splits = FRONT_MATTER_DIVIDE.splitn(content, 2);
@@ -65,6 +71,7 @@ fn split_document(content: &str) -> Result<(Option<&str>, &str)> {
     } else {
         Ok((None, content))
     }
+
 }
 
 #[cfg(test)]
@@ -88,7 +95,7 @@ mod test {
     }
 
     #[test]
-    fn split_document_empty_front_matter() {
+    fn split_document_deprecated_empty_front_matter() {
         let input = "---\nBody";
         let (cobalt_model, content) = split_document(input).unwrap();
         assert!(cobalt_model.is_none());
@@ -96,11 +103,35 @@ mod test {
     }
 
     #[test]
-    fn split_document_empty_body() {
-        let input = "cobalt_model---\n";
+    fn split_document_empty_front_matter() {
+        let input = "---\n---\nBody";
         let (cobalt_model, content) = split_document(input).unwrap();
-        assert_eq!(cobalt_model.unwrap(), "cobalt_model");
+        assert!(cobalt_model.is_none());
+        assert_eq!(content, "Body");
+    }
+
+    #[test]
+    fn split_document_deprecated_empty_body() {
+        let input = "cobalt_model\n---\n";
+        let (cobalt_model, content) = split_document(input).unwrap();
+        assert_eq!(cobalt_model.unwrap(), "cobalt_model\n");
         assert_eq!(content, "");
+    }
+
+    #[test]
+    fn split_document_empty_body() {
+        let input = "---\ncobalt_model\n---\n";
+        let (cobalt_model, content) = split_document(input).unwrap();
+        assert_eq!(cobalt_model.unwrap(), "cobalt_model\n");
+        assert_eq!(content, "");
+    }
+
+    #[test]
+    fn split_document_front_matter_and_body() {
+        let input = "---\ncobalt_model\n---\nbody";
+        let (cobalt_model, content) = split_document(input).unwrap();
+        assert_eq!(cobalt_model.unwrap(), "cobalt_model\n");
+        assert_eq!(content, "body");
     }
 
     #[test]
