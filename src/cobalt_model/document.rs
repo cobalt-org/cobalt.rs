@@ -74,6 +74,8 @@ fn deprecated_split_front_matter(content: &str) -> Result<(Option<&str>, &str)> 
         static ref FRONT_MATTER_DIVIDE: regex::Regex = regex::Regex::new(r"(\A|\n)---\s*\r?\n").unwrap();
     }
     if FRONT_MATTER_DIVIDE.is_match(content) {
+        warn!("Front matter should have a separator above and below. Using just a trailing separator is deprecated.");
+
         let mut splits = FRONT_MATTER_DIVIDE.splitn(content, 2);
 
         // above the split are the attributes
