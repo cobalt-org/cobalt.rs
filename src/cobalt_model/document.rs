@@ -46,7 +46,8 @@ impl<T: frontmatter::Front> fmt::Display for DocumentBuilder<T> {
 fn split_document(content: &str) -> Result<(Option<&str>, &str)> {
     lazy_static! {
         static ref FRONT_MATTER_DIVIDE: regex::Regex = regex::Regex::new(r"---\s*\r?\n").unwrap();
-        static ref FRONT_MATTER: regex::Regex = regex::Regex::new(r"\A---\s*\r?\n([\s\S]*\n)?---\s*\r?\n").unwrap();
+        static ref FRONT_MATTER: regex::Regex =
+            regex::Regex::new(r"\A---\s*\r?\n([\s\S]*\n)?---\s*\r?\n").unwrap();
     }
 
     if FRONT_MATTER.is_match(content) {
@@ -71,7 +72,8 @@ fn split_document(content: &str) -> Result<(Option<&str>, &str)> {
 
 fn deprecated_split_front_matter(content: &str) -> Result<(Option<&str>, &str)> {
     lazy_static! {
-        static ref FRONT_MATTER_DIVIDE: regex::Regex = regex::Regex::new(r"(\A|\n)---\s*\r?\n").unwrap();
+        static ref FRONT_MATTER_DIVIDE: regex::Regex =
+            regex::Regex::new(r"(\A|\n)---\s*\r?\n").unwrap();
     }
     if FRONT_MATTER_DIVIDE.is_match(content) {
         warn!("Trailing separators are deprecated. We recommend frontmatters be surrounded, above and below, with ---");
