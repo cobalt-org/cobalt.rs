@@ -346,7 +346,7 @@ impl Document {
             let content_html = globals
                 .get("page")
                 .ok_or("Internal error: page isn't in globals")?
-                .get(&liquid::value::Index::with_key("content"))
+                .get(&liquid::value::Scalar::new("content"))
                 .ok_or("Internal error: page.content isn't in globals")?
                 .to_string();
 
