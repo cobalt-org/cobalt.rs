@@ -36,7 +36,7 @@ fn format_path_variable(source_file: &Path) -> String {
     path
 }
 
-fn permalink_attributes(front: &cobalt_model::Frontmatter, dest_file: &Path) -> Object {
+pub fn permalink_attributes(front: &cobalt_model::Frontmatter, dest_file: &Path) -> Object {
     let mut attributes = Object::new();
 
     attributes.insert(

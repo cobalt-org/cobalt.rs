@@ -72,3 +72,4 @@ unstable = []
 syntax-highlight = ["syntect"]
 sass = ['sass-rs']
 pagination-unstable = []
+
