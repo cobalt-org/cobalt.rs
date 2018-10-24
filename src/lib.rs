@@ -49,6 +49,7 @@ pub mod error;
 mod cobalt;
 mod document;
 
+mod pagination;
 mod syntax_highlight;
 
 pub use syntax_highlight::{list_syntax_themes, list_syntaxes};
