@@ -96,7 +96,6 @@ fn deprecated_split_front_matter(content: &str) -> Result<(Option<&str>, &str)> 
     }
 }
 
-
 #[cfg(test)]
 mod test {
     use super::*;
@@ -163,7 +162,6 @@ mod test {
         let (cobalt_model, content) = split_document(input).unwrap();
         assert!(cobalt_model.is_none());
         assert_eq!(content, input);
-
     }
 
     #[test]
