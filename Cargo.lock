@@ -29,13 +29,13 @@ dependencies = [
 
 [[package]]
 name = "assert_cmd"
-version = "0.9.1"
+version = "0.10.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "escargot 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "predicates 0.9.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "predicates-core 0.9.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "predicates-tree 0.9.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "predicates 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "predicates-core 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "predicates-tree 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -188,7 +188,7 @@ dependencies = [
 name = "cobalt-bin"
 version = "0.13.2"
 dependencies = [
- "assert_cmd 0.9.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "assert_cmd 0.10.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "assert_fs 0.9.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "chrono 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "clap 2.32.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -973,8 +973,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "predicates"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "difference 2.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "predicates-core 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
 name = "predicates-core"
 version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
+name = "predicates-core"
+version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
@@ -983,6 +997,15 @@ version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "predicates-core 0.9.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "treeline 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "predicates-tree"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "predicates-core 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "treeline 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
@@ -1594,7 +1617,7 @@ dependencies = [
 "checksum aho-corasick 0.6.8 (registry+https://github.com/rust-lang/crates.io-index)" = "68f56c7353e5a9547cbd76ed90f7bb5ffc3ba09d4ea9bd1d8c06c8b1142eeb5a"
 "checksum ansi_term 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)" = "ee49baf6cb617b853aa8d93bf420db2383fab46d314482ca2803b40d5fde979b"
 "checksum arrayvec 0.4.7 (registry+https://github.com/rust-lang/crates.io-index)" = "a1e964f9e24d588183fcb43503abda40d288c8657dfc27311516ce2f05675aef"
-"checksum assert_cmd 0.9.1 (registry+https://github.com/rust-lang/crates.io-index)" = "c5b60c276f334145cf2cec09c5bb6f63523f078c0c850909f66bca8f933cf809"
+"checksum assert_cmd 0.10.1 (registry+https://github.com/rust-lang/crates.io-index)" = "d5db841dcfb4f172f34ec968f71c4a88e69f5421fb33e0daac6bfe4372317526"
 "checksum assert_fs 0.9.0 (registry+https://github.com/rust-lang/crates.io-index)" = "6a130bff0685da340df499bea35d1bf73257faa8f03d0a3a77a0b3e0546e50d9"
 "checksum atty 0.2.11 (registry+https://github.com/rust-lang/crates.io-index)" = "9a7d5b8723950951411ee34d271d99dddcc2035a16ab25310ea2c8cfd4369652"
 "checksum backtrace 0.3.9 (registry+https://github.com/rust-lang/crates.io-index)" = "89a47830402e9981c5c41223151efcced65a0510c13097c769cede7efb34782a"
@@ -1697,8 +1720,11 @@ dependencies = [
 "checksum pkg-config 0.3.14 (registry+https://github.com/rust-lang/crates.io-index)" = "676e8eb2b1b4c9043511a9b7bea0915320d7e502b0a079fb03f9635a5252b18c"
 "checksum plist 0.2.4 (registry+https://github.com/rust-lang/crates.io-index)" = "c61ac2afed2856590ae79d6f358a24b85ece246d2aa134741a66d589519b7503"
 "checksum predicates 0.9.0 (registry+https://github.com/rust-lang/crates.io-index)" = "799dc506006c16c25b28476046abfc20a95f71de59e95ebb8ee302e029a30173"
+"checksum predicates 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)" = "fa984b7cd021a0bf5315bcce4c4ae61d2a535db2a8d288fc7578638690a7b7c3"
 "checksum predicates-core 0.9.0 (registry+https://github.com/rust-lang/crates.io-index)" = "85f80bc390d1c02a4cdaa63f27f05c3c426679eb65433d8dd65d392147e4e5c5"
+"checksum predicates-core 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)" = "06075c3a3e92559ff8929e7a280684489ea27fe44805174c3ebd9328dcb37178"
 "checksum predicates-tree 0.9.0 (registry+https://github.com/rust-lang/crates.io-index)" = "2e86df9b81bdcb0a5141aca9d2b9c5e0c558ef6626d3ae2c12912f5c9df740bd"
+"checksum predicates-tree 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)" = "8e63c4859013b38a76eca2414c64911fba30def9e3202ac461a2d22831220124"
 "checksum proc-macro2 0.3.8 (registry+https://github.com/rust-lang/crates.io-index)" = "1b06e2f335f48d24442b35a19df506a835fb3547bc3c06ef27340da9acf5cae7"
 "checksum proc-macro2 0.4.19 (registry+https://github.com/rust-lang/crates.io-index)" = "ffe022fb8c8bd254524b0b3305906c1921fa37a84a644e29079a9e62200c3901"
 "checksum pulldown-cmark 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)" = "d6fdf85cda6cadfae5428a54661d431330b312bc767ddbc57adbedc24da66e32"
