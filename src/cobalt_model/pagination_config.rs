@@ -12,6 +12,7 @@ pub const DEFAULT_PER_PAGE: i32 = 10;
 pub enum Include {
     None,
     All,
+    Tags,
 }
 
 impl Into<&'static str> for Include {
@@ -19,6 +20,7 @@ impl Into<&'static str> for Include {
         match self {
             Include::None => "",
             Include::All => "all",
+            Include::Tags => "tags",
         }
     }
 }

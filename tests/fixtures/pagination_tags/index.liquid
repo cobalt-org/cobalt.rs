@@ -1,0 +1,30 @@
+---
+layout: default.liquid
+pagination:
+  include: Tags
+---
+{% if paginator.indexes %}
+<ul>
+  {% for ptag in paginator.indexes %}
+  <li><a href="/{{ ptag.index_permalink }}/">{{ ptag.index_title }} ({{ ptag.total_pages }})</a>
+    {% endfor %}
+</ul>
+{% else %}
+<ul>
+  {% for page in paginator.pages %}
+  <li><a href="/{{ page.permalink }}">{{ page.title }}</a>
+    {% endfor %}
+</ul>
+<div>
+  {% if paginator.previous_index %}
+    <a href="{{ paginator.previous_index_permalink }}"
+    class="left arrow">&#8592;</a>
+  {% endif %}
+  {% if paginator.next_index %}
+    <a href="{{ paginator.next_index_permalink }}"
+    class="right arrow">&#8594;</a>
+  {% endif %}
+
+  <span>{{ paginator.index }} / {{ paginator.total_indexes }}</span>
+</div>
+{% endif %}
