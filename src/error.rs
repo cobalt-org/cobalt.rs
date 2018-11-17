@@ -1,5 +1,3 @@
-#![cfg_attr(feature = "cargo-clippy", allow(redundant_closure))]
-
 use std::io;
 
 use ignore;
