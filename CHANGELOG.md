@@ -1,3 +1,37 @@
+<a name="0.13.3"></a>
+## 0.14.0 (2018-11-18)
+
+
+#### Performance
+
+*   Switch to system allocator ([c0db5ac1](https://github.com/cobalt-org/cobalt.rs/commit/c0db5ac1da9282d352ba9950f6d01871d373fd73))
+
+#### Features
+
+*   Jekyll-style frontmatter divider ([ad62b2fd](https://github.com/cobalt-org/cobalt.rs/commit/ad62b2fddec662d202cd59ad702650a62935f9dd), closes [#431](https://github.com/cobalt-org/cobalt.rs/issues/431))
+* **liquid:**  ([4ef1eded](https://github.com/cobalt-org/cobalt.rs/commit/4ef1eded4968eb1b8956b166c164d95077885e50), [a1d0006f](https://github.com/cobalt-org/cobalt.rs/commit/a1d0006fef22cc07051cfc47f80e810b9312292a))
+  * Index by variables
+  * `for` block parameters can be variables
+  * New filters: `at_most`, `at_least`, `push`, `pop`, `unshift`, `shift`, `array_to_sentence_string`
+  * New tags: `tablerow`, `ifchanged`, `increment`, `decerement`
+  * Slightly improved error reporting
+  * Arrays now have `.first` and `.last` variables
+  * `if` conditions support `or`/`and`
+* **pagination (prototype):**
+  *  core logic ([da6360d2](https://github.com/cobalt-org/cobalt.rs/commit/da6360d223d5e9ac80516b66b9cb0c43bc6dff91))
+  *  pagination frontmatter ([f35eec22](https://github.com/cobalt-org/cobalt.rs/commit/f35eec22618f84ab0222afc90130c5e8cb666d21))
+
+#### Breaking Changes
+
+* Empty frontmatters followed by `---` will no longer build ([ad62b2fd](https://github.com/cobalt-org/cobalt.rs/commit/ad62b2fddec662d202cd59ad702650a62935f9dd), closes [#431](https://github.com/cobalt-org/cobalt.rs/issues/431))
+* **liquid:**  `for` block ranges are now inclusive ([4ef1eded](https://github.com/cobalt-org/cobalt.rs/commit/4ef1eded4968eb1b8956b166c164d95077885e50))
+
+#### Bug Fixes
+
+* **liquid:**  ([4ef1eded](https://github.com/cobalt-org/cobalt.rs/commit/4ef1eded4968eb1b8956b166c164d95077885e50), [a1d0006f](https://github.com/cobalt-org/cobalt.rs/commit/a1d0006fef22cc07051cfc47f80e810b9312292a))
+  * `for` looping over a range is now inclusive to align with shopify liquid
+  * deeply nested array indexes work again (`a.b[0]`)
+
 <a name="0.13.1"></a>
 ## 0.13.2 (2018-10-05)
 
