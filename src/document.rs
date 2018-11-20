@@ -140,6 +140,11 @@ fn document_attributes(
     ];
     let mut attributes: Object = attributes.into_iter().collect();
 
+    if let Some(ref tags) = front.tags {
+        let tags = Value::Array(tags.iter().map(Value::scalar).collect());
+        attributes.insert("tags".into(), tags);
+    }
+
     if let Some(ref published_date) = front.published_date {
         attributes.insert(
             "published_date".into(),
