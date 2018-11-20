@@ -70,6 +70,8 @@ pub struct FrontmatterBuilder {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub categories: Option<Vec<String>>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub tags: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub excerpt_separator: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub published_date: Option<datetime::DateTime>,
@@ -132,6 +134,13 @@ impl FrontmatterBuilder {
     pub fn set_categories<S: Into<Option<Vec<String>>>>(self, categories: S) -> Self {
         Self {
             categories: categories.into(),
+            ..self
+        }
+    }
+
+    pub fn set_tags<S: Into<Option<Vec<String>>>>(self, tags: S) -> Self {
+        Self {
+            tags: tags.into(),
             ..self
         }
     }
@@ -216,6 +225,10 @@ impl FrontmatterBuilder {
         self.merge(Self::new().set_categories(categories.into()))
     }
 
+    pub fn merge_tags<S: Into<Option<Vec<String>>>>(self, tags: S) -> Self {
+        self.merge(Self::new().set_tags(tags.into()))
+    }
+
     pub fn merge_excerpt_separator<S: Into<Option<String>>>(self, excerpt_separator: S) -> Self {
         self.merge(Self::new().set_excerpt_separator(excerpt_separator.into()))
     }
@@ -260,6 +273,7 @@ impl FrontmatterBuilder {
             description,
             excerpt,
             categories,
+            tags,
             excerpt_separator,
             published_date,
             format,
@@ -276,6 +290,7 @@ impl FrontmatterBuilder {
             description,
             excerpt,
             categories,
+            tags,
             excerpt_separator,
             published_date,
             format,
@@ -295,6 +310,7 @@ impl FrontmatterBuilder {
             description,
             excerpt,
             categories,
+            tags,
             excerpt_separator,
             published_date,
             format,
@@ -311,6 +327,7 @@ impl FrontmatterBuilder {
             description: other_description,
             excerpt: other_excerpt,
             categories: other_categories,
+            tags: other_tags,
             excerpt_separator: other_excerpt_separator,
             published_date: other_published_date,
             format: other_format,
@@ -327,6 +344,7 @@ impl FrontmatterBuilder {
             description: description.or_else(|| other_description),
             excerpt: excerpt.or_else(|| other_excerpt),
             categories: categories.or_else(|| other_categories),
+            tags: tags.or_else(|| other_tags),
             excerpt_separator: excerpt_separator.or_else(|| other_excerpt_separator),
             published_date: published_date.or_else(|| other_published_date),
             format: format.or_else(|| other_format),
@@ -384,6 +402,7 @@ impl FrontmatterBuilder {
             description,
             excerpt,
             categories,
+            tags,
             excerpt_separator,
             published_date,
             format,
@@ -406,6 +425,12 @@ impl FrontmatterBuilder {
             permalink
         };
 
+        if let Some(ref tags) = tags {
+            if tags.iter().any(|x| x.trim().is_empty()) {
+                return Err("Empty strings are not allowed in tags".into());
+            }
+        }
+
         let fm = Frontmatter {
             permalink,
             slug: slug.ok_or_else(|| "No slug")?,
@@ -413,6 +438,7 @@ impl FrontmatterBuilder {
             description,
             excerpt,
             categories: categories.unwrap_or_else(|| vec![]),
+            tags: tags,
             excerpt_separator: excerpt_separator.unwrap_or_else(|| "\n\n".to_owned()),
             published_date,
             format: format.unwrap_or_else(SourceFormat::default),
@@ -449,6 +475,7 @@ pub struct Frontmatter {
     pub description: Option<String>,
     pub excerpt: Option<String>,
     pub categories: Vec<String>,
+    pub tags: Option<Vec<String>>,
     pub excerpt_separator: String,
     pub published_date: Option<datetime::DateTime>,
     pub format: SourceFormat,
@@ -709,6 +736,7 @@ mod test {
             description: Some("description a".to_owned()),
             excerpt: Some("excerpt a".to_owned()),
             categories: Some(vec!["a".to_owned(), "b".to_owned()]),
+            tags: Some(vec!["a".to_owned(), "b".to_owned()]),
             excerpt_separator: Some("excerpt_separator a".to_owned()),
             published_date: Some(datetime::DateTime::default()),
             format: Some(SourceFormat::Markdown),
@@ -725,6 +753,7 @@ mod test {
             description: Some("description b".to_owned()),
             excerpt: Some("excerpt b".to_owned()),
             categories: Some(vec!["b".to_owned(), "a".to_owned()]),
+            tags: Some(vec!["b".to_owned(), "a".to_owned()]),
             excerpt_separator: Some("excerpt_separator b".to_owned()),
             published_date: Some(datetime::DateTime::default()),
             format: Some(SourceFormat::Raw),
@@ -754,6 +783,7 @@ mod test {
             description: Some("description a".to_owned()),
             excerpt: Some("excerpt a".to_owned()),
             categories: Some(vec!["a".to_owned(), "b".to_owned()]),
+            tags: Some(vec!["a".to_owned(), "b".to_owned()]),
             excerpt_separator: Some("excerpt_separator a".to_owned()),
             published_date: None,
             format: Some(SourceFormat::Markdown),
@@ -772,6 +802,7 @@ mod test {
             .merge_description("description b".to_owned())
             .merge_excerpt("excerpt b".to_owned())
             .merge_categories(vec!["a".to_owned(), "b".to_owned()])
+            .merge_tags(vec!["a".to_owned(), "b".to_owned()])
             .merge_excerpt_separator("excerpt_separator b".to_owned())
             .merge_format(SourceFormat::Raw)
             .merge_layout("layout b".to_owned())
@@ -787,6 +818,7 @@ mod test {
             .merge_description(None)
             .merge_excerpt(None)
             .merge_categories(None)
+            .merge_tags(None)
             .merge_excerpt_separator(None)
             .merge_format(None)
             .merge_layout(None)
@@ -801,6 +833,7 @@ mod test {
             .merge_description("description a".to_owned())
             .merge_excerpt("excerpt a".to_owned())
             .merge_categories(vec!["a".to_owned(), "b".to_owned()])
+            .merge_tags(vec!["a".to_owned(), "b".to_owned()])
             .merge_excerpt_separator("excerpt_separator a".to_owned())
             .merge_format(SourceFormat::Markdown)
             .merge_layout("layout a".to_owned())
