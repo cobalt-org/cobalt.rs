@@ -13,10 +13,10 @@ use pulldown_cmark::Event::{self, End, Html, Start, Text};
 use syntect::easy::HighlightLines;
 use syntect::highlighting::{Theme, ThemeSet};
 use syntect::html::{
-    highlighted_snippet_for_string, start_coloured_html_snippet, styles_to_coloured_html,
+    highlighted_html_for_string, start_highlighted_html_snippet, styled_line_to_highlighted_html,
     IncludeBackground,
 };
-use syntect::parsing::{SyntaxDefinition, SyntaxSet};
+use syntect::parsing::{SyntaxReference, SyntaxSet};
 
 use error;
 
@@ -44,7 +44,7 @@ pub fn list_syntax_themes<'a>() -> Vec<&'a String> {
 }
 
 pub fn list_syntaxes() -> Vec<String> {
-    fn definition_to_string(sd: &SyntaxDefinition) -> String {
+    fn reference_to_string(sd: &SyntaxReference) -> String {
         let extensions = sd.file_extensions.iter().join(&", ".to_owned());
         format!("{} [{}]", sd.name, extensions)
     }
@@ -53,7 +53,7 @@ pub fn list_syntaxes() -> Vec<String> {
         .syntax_set
         .syntaxes()
         .iter()
-        .map(definition_to_string)
+        .map(reference_to_string)
         .collect::<Vec<_>>();
 
     // sort alphabetically with insensitive ascii case
@@ -79,7 +79,7 @@ impl Renderable for CodeBlock {
         write!(
             writer,
             "{}",
-            highlighted_snippet_for_string(&self.code, syntax, &self.theme,)
+            highlighted_html_for_string(&self.code, &SETUP.syntax_set, syntax, &self.theme,)
         ).chain("Failed to render")?;
 
         Ok(())
@@ -149,8 +149,9 @@ impl<'a> Iterator for DecoratedParser<'a> {
             Some(item) => {
                 if let Text(text) = item {
                     if let Some(ref mut h) = self.h {
-                        let highlighted = &h.highlight(&text);
-                        let html = styles_to_coloured_html(highlighted, IncludeBackground::Yes);
+                        let highlighted = &h.highlight(&text, &SETUP.syntax_set);
+                        let html =
+                            styled_line_to_highlighted_html(highlighted, IncludeBackground::Yes);
                         Some(Html(Owned(html)))
                     } else {
                         Some(Text(text))
@@ -165,8 +166,8 @@ impl<'a> Iterator for DecoratedParser<'a> {
                             .and_then(|lang| SETUP.syntax_set.find_syntax_by_token(lang))
                             .unwrap_or_else(|| SETUP.syntax_set.find_syntax_plain_text());
                         self.h = Some(HighlightLines::new(cur_syntax, self.theme));
-                        let snippet = start_coloured_html_snippet(self.theme);
-                        return Some(Html(Owned(snippet)));
+                        let snippet = start_highlighted_html_snippet(self.theme);
+                        return Some(Html(Owned(snippet.0)));
                     }
                     if let End(cmark::Tag::CodeBlock(_)) = item {
                         // reset highlighter
@@ -202,21 +203,36 @@ mod test {
     const CODEBLOCK_RENDERED: &str =
         "<pre style=\"background-color:#2b303b;\">\n\
          <span style=\"color:#b48ead;\">mod </span>\
-         <span style=\"color:#c0c5ce;\">test {</span>\n\
-         <span style=\"color:#c0c5ce;\">        </span>\
-         <span style=\"color:#b48ead;\">fn </span>\
-         <span style=\"color:#8fa1b3;\">hello</span><span style=\"color:#c0c5ce;\">(</span>\
-         <span style=\"color:#bf616a;\">arg</span><span style=\"color:#c0c5ce;\">: int) -&gt; </span>\
-         <span style=\"color:#b48ead;\">bool </span><span style=\"color:#c0c5ce;\">{</span>\n\
-         <span style=\"color:#c0c5ce;\">            </span>\
-         <span style=\"color:#d08770;\">true</span>\n\
-         <span style=\"color:#c0c5ce;\">        }</span>\n\
-         <span style=\"color:#c0c5ce;\">    }</span>\n\
-         <span style=\"color:#c0c5ce;\">    </span>\n\
-         </pre>\n";
+         <span style=\"color:#c0c5ce;\">test {\n\
+         </span><span style=\"color:#c0c5ce;\">        </span>\
+         <span style=\"color:#b48ead;\">fn \
+         </span><span style=\"color:#8fa1b3;\">hello</span><span style=\"color:#c0c5ce;\">(\
+         </span><span style=\"color:#bf616a;\">arg</span><span style=\"color:#c0c5ce;\">: int) -&gt; \
+         </span><span style=\"color:#b48ead;\">bool </span><span style=\"color:#c0c5ce;\">{\n\
+         </span><span style=\"color:#c0c5ce;\">            \
+         </span><span style=\"color:#d08770;\">true\n\
+         </span><span style=\"color:#c0c5ce;\">        }\n\
+         </span><span style=\"color:#c0c5ce;\">    }\n\
+         </span><span style=\"color:#c0c5ce;\">    </span></pre>\n";
+
+    #[test]
+    fn highlight_block_renders_rust() {
+        let highlight: Box<liquid::compiler::ParseBlock> =
+            Box::new(CodeBlockParser::new("base16-ocean.dark".to_owned()));
+        let parser = liquid::ParserBuilder::new()
+            .block("highlight", highlight)
+            .build();
+        let template = parser
+            .parse(&format!(
+                "{{% highlight rust %}}{}{{% endhighlight %}}",
+                CODE_BLOCK
+            )).unwrap();
+        let output = template.render(&liquid::value::Object::new());
+        assert_diff!(CODEBLOCK_RENDERED, &output.unwrap(), "\n", 0);
+    }
 
     const MARKDOWN_RENDERED: &str =
-        "<pre style=\"background-color:#2b303b\">\n\
+        "<pre style=\"background-color:#2b303b;\">\n\
          <span style=\"background-color:#2b303b;color:#b48ead;\">mod </span>\
          <span style=\"background-color:#2b303b;color:#c0c5ce;\">test {\n\
          </span><span style=\"background-color:#2b303b;color:#c0c5ce;\">        </span>\
@@ -238,35 +254,17 @@ mod test {
          </span></pre>";
 
     #[test]
-    fn codeblock_renders_rust() {
-        // Syntect isn't thread safe, for now run everything in the same test.
-        {
-            let highlight: Box<liquid::compiler::ParseBlock> =
-                Box::new(CodeBlockParser::new("base16-ocean.dark".to_owned()));
-            let parser = liquid::ParserBuilder::new()
-                .block("highlight", highlight)
-                .build();
-            let template = parser
-                .parse(&format!(
-                    "{{% highlight rust %}}{}{{% endhighlight %}}",
-                    CODE_BLOCK
-                )).unwrap();
-            let output = template.render(&liquid::value::Object::new());
-            assert_diff!(&output.unwrap(), CODEBLOCK_RENDERED, "\n", 0);
-        }
-
-        {
-            let html = format!(
-                "```rust
+    fn markdown_renders_rust() {
+        let html = format!(
+            "```rust
 {}
 ```",
-                CODE_BLOCK
-            );
+            CODE_BLOCK
+        );
 
-            let mut buf = String::new();
-            let parser = cmark::Parser::new(&html);
-            cmark::html::push_html(&mut buf, decorate_markdown(parser, "base16-ocean.dark"));
-            assert_diff!(&buf, MARKDOWN_RENDERED, "\n", 0);
-        }
+        let mut buf = String::new();
+        let parser = cmark::Parser::new(&html);
+        cmark::html::push_html(&mut buf, decorate_markdown(parser, "base16-ocean.dark"));
+        assert_diff!(MARKDOWN_RENDERED, &buf, "\n", 0);
     }
 }

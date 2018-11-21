@@ -25,14 +25,14 @@ macro_rules! assert_contains {
 
 fn assert_dirs_eq(expected: &Path, actual: &Path) {
     // Ensure everything was created.
-    let walker = WalkDir::new(&actual)
+    let walker = WalkDir::new(&expected)
         .into_iter()
         .filter_map(|e| e.ok())
         .filter(|e| e.file_type().is_file());
     for entry in walker {
         let relative = entry
             .path()
-            .strip_prefix(&actual)
+            .strip_prefix(&expected)
             .expect("Comparison error");
 
         let mut original = String::new();
@@ -41,7 +41,7 @@ fn assert_dirs_eq(expected: &Path, actual: &Path) {
             .read_to_string(&mut original)
             .expect("Could not read to string");
 
-        let dest_file = Path::new(expected).join(&relative);
+        let dest_file = Path::new(actual).join(&relative);
         assert!(dest_file.exists(), "{:?} doesn't exist", dest_file);
         let mut created = String::new();
         File::open(dest_file.as_path())
@@ -53,16 +53,13 @@ fn assert_dirs_eq(expected: &Path, actual: &Path) {
     }
 
     // Ensure no unnecessary files were created
-    let walker = WalkDir::new(expected)
+    let walker = WalkDir::new(actual)
         .into_iter()
         .filter_map(|e| e.ok())
         .filter(|e| e.file_type().is_file());
     for entry in walker {
-        let extra_file = entry
-            .path()
-            .strip_prefix(expected)
-            .expect("Comparison error");
-        let src_file = Path::new(actual).join(&extra_file);
+        let extra_file = entry.path().strip_prefix(actual).expect("Comparison error");
+        let src_file = Path::new(expected).join(&extra_file);
 
         File::open(&src_file).expect(&format!(
             "File {:?} does not exist in reference ({:?}).",
@@ -87,7 +84,7 @@ fn run_test(name: &str) -> Result<(), cobalt::Error> {
     if result.is_ok() {
         let expected = format!("tests/target/{}", name);
         let expected_path = Path::new(&expected);
-        assert_dirs_eq(&destination, expected_path);
+        assert_dirs_eq(expected_path, &destination);
     }
     // Always explicitly close to catch errors, especially on Windows.
     target.close()?;
