@@ -1,3 +1,4 @@
+---
 layout: default.liquid
 
 title: Reference-style links immediately above first block

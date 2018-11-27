@@ -1,3 +1,4 @@
+---
 layout: posts.liquid
 
 title:  Variables file name

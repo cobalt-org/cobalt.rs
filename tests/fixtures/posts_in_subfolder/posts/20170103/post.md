@@ -1,3 +1,4 @@
+---
 layout: default.liquid
 
 title: a post inside posts/20170103/

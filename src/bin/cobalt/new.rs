@@ -166,7 +166,8 @@ const DEFAULT_LAYOUT: &str = "<!DOCTYPE html>
 </html>
 ";
 
-const POST_MD: &str = "layout: default.liquid
+const POST_MD: &str = "---
+layout: default.liquid
 
 title: First Post
 is_draft: true
@@ -177,7 +178,8 @@ is_draft: true
 Welcome to the first post ever on cobalt.rs!
 ";
 
-const INDEX_MD: &str = "layout: default.liquid
+const INDEX_MD: &str = "---
+layout: default.liquid
 ---
 ## Blog!
 

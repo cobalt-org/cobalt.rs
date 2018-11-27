@@ -1,3 +1,4 @@
+---
 layout: default.liquid
 
 title: Both excerpt and excerpt separator are there
