@@ -1,3 +1,4 @@
+---
 layout: default.liquid
 
 title: An empty post means an empty excerpt

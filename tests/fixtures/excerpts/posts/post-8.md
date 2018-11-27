@@ -1,3 +1,4 @@
+---
 layout: default.liquid
 
 title: Reference-style links above first block and separated by blank line resolve

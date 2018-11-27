@@ -1,3 +1,4 @@
+---
 layout: default.liquid
 
 title: First block is an excerpt
