@@ -37,6 +37,7 @@ pub struct CollectionBuilder {
     pub rss: Option<String>,
     pub jsonfeed: Option<String>,
     pub base_url: Option<String>,
+    pub publish_date_in_filename: bool,
     pub default: FrontmatterBuilder,
 }
 
@@ -65,6 +66,7 @@ impl CollectionBuilder {
             rss,
             jsonfeed,
             base_url,
+            publish_date_in_filename: _,
             default,
         } = self;
 

@@ -526,7 +526,7 @@ fn merge_pagination(
 }
 
 /// The base-name without an extension.  Correlates to Jekyll's :name path tag
-fn file_stem<P: AsRef<path::Path>>(p: P) -> String {
+pub fn file_stem<P: AsRef<path::Path>>(p: P) -> String {
     file_stem_path(p.as_ref())
 }
 
@@ -536,7 +536,7 @@ fn file_stem_path(p: &path::Path) -> String {
         .unwrap_or_else(|| "".to_owned())
 }
 
-fn parse_file_stem(stem: String) -> (Option<datetime::DateTime>, String) {
+pub fn parse_file_stem(stem: String) -> (Option<datetime::DateTime>, String) {
     lazy_static! {
         static ref DATE_PREFIX_REF: regex::Regex =
             regex::Regex::new(r"^(\d{4})-(\d{1,2})-(\d{1,2})[- ](.*)$").unwrap();

@@ -140,8 +140,10 @@ pub fn publish_command(matches: &clap::ArgMatches) -> Result<()> {
         .value_of("FILENAME")
         .expect("required parameters are present");
     let file = path::Path::new(file);
+    let config = args::get_config(matches)?;
+    let config = config.build()?;
 
-    publish_document(file).chain_err(|| format!("Could not publish `{:?}`", file))?;
+    publish_document(&config, file).chain_err(|| format!("Could not publish `{:?}`", file))?;
 
     Ok(())
 }
@@ -406,7 +408,33 @@ pub fn rename_document(
     Ok(())
 }
 
-pub fn publish_document(file: &path::Path) -> Result<()> {
+fn prepend_date_to_filename(
+    config: &cobalt_model::Config,
+    file: &path::Path,
+    date: &cobalt_model::DateTime,
+) -> Result<()> {
+    // avoid prepend to existing date prefix
+
+    let file_stem = cobalt_model::file_stem(file);
+    let (_, file_stem) = cobalt_model::parse_file_stem(file_stem);
+    let file_name = format!(
+        "{}{}.{}",
+        (**date).format("%Y-%m-%d-"),
+        file_stem,
+        file.extension()
+            .and_then(|os| os.to_str())
+            .unwrap_or_else(|| &config
+                .posts
+                .template_extensions
+                .get(0)
+                .expect("at least one element is enforced by config validator"))
+    );
+    trace!("`publish_date_in_filename` setting is activated, prefix filename with date, new filename: {}", file_name);
+    fs::rename(file, file.with_file_name(file_name))?;
+    Ok(())
+}
+
+pub fn publish_document(config: &cobalt_model::Config, file: &path::Path) -> Result<()> {
     let doc = cobalt_model::files::read_file(file)?;
     let doc = cobalt_model::DocumentBuilder::<cobalt_model::FrontmatterBuilder>::parse(&doc)?;
     let (front, content) = doc.parts();
@@ -417,8 +445,13 @@ pub fn publish_document(file: &path::Path) -> Result<()> {
     let doc =
         cobalt_model::DocumentBuilder::<cobalt_model::FrontmatterBuilder>::new(front, content);
     let doc = doc.to_string();
-
     cobalt_model::files::write_document_file(doc, file)?;
-
+    let posts = config.posts.clone().build()?;
+    let pages = config.pages.clone().build()?;
+    if (posts.pages.includes_file(&file) && config.posts.publish_date_in_filename)
+        || (pages.pages.includes_file(&file) && config.pages.publish_date_in_filename)
+    {
+        prepend_date_to_filename(&config, &file, &date)?;
+    }
     Ok(())
 }

@@ -29,6 +29,8 @@ pub use self::config::SiteConfig;
 pub use self::config::SyntaxHighlight;
 pub use self::datetime::DateTime;
 pub use self::document::DocumentBuilder;
+pub use self::frontmatter::file_stem;
+pub use self::frontmatter::parse_file_stem;
 pub use self::frontmatter::Front;
 pub use self::frontmatter::Frontmatter;
 pub use self::frontmatter::FrontmatterBuilder;
