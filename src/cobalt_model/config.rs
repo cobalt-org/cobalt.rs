@@ -388,7 +388,6 @@ impl ConfigBuilder {
 
         let liquid = template::LiquidBuilder {
             includes_dir: includes_dir.clone(),
-            legacy_path: source.clone(),
             theme: syntax_highlight.theme.clone(),
         };
         let markdown = mark::MarkdownBuilder {

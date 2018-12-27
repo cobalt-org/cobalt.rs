@@ -82,8 +82,8 @@ impl CollectionBuilder {
             .map_or(Ok(None), |r| r.map(Some))?;
 
         let mut attributes: liquid::value::Object = vec![
-            ("title".into(), liquid::value::Value::scalar(&title)),
-            ("slug".into(), liquid::value::Value::scalar(&slug)),
+            ("title".into(), liquid::value::Value::scalar(title.clone())),
+            ("slug".into(), liquid::value::Value::scalar(slug.clone())),
             (
                 "description".into(),
                 liquid::value::Value::scalar(description.clone().unwrap_or_else(|| "".to_owned())),
@@ -92,10 +92,10 @@ impl CollectionBuilder {
         .into_iter()
         .collect();
         if let Some(ref rss) = rss {
-            attributes.insert("rss".into(), liquid::value::Value::scalar(rss));
+            attributes.insert("rss".into(), liquid::value::Value::scalar(rss.to_owned()));
         }
         if let Some(ref jsonfeed) = jsonfeed {
-            attributes.insert("jsonfeed".into(), liquid::value::Value::scalar(jsonfeed));
+            attributes.insert("jsonfeed".into(), liquid::value::Value::scalar(jsonfeed.to_owned()));
         }
 
         let default = default.set_collection(slug.clone());

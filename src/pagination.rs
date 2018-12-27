@@ -101,7 +101,7 @@ impl Into<liquid::value::Object> for Paginator {
             object.insert(
                 "indexes".into(),
                 liquid::value::Value::Array(
-                    indexes.iter().map(liquid::value::Value::scalar).collect(),
+                    indexes.iter().cloned().map(liquid::value::Value::scalar).collect(),
                 ),
             );
         }
@@ -183,10 +183,10 @@ fn extract_value<'a>(a: &'a liquid::value::Value, key: &str) -> Option<&'a liqui
 fn sort_posts(posts: &mut Vec<&liquid::value::Value>, config: &PaginationConfig) {
     let order: fn(&liquid::value::Scalar, &liquid::value::Scalar) -> Ordering = match config.order {
         SortOrder::Desc => {
-            |a, b: &liquid::value::Scalar| b.partial_cmp(&a).unwrap_or(Ordering::Equal)
+            |a, b: &liquid::value::Scalar| b.partial_cmp(a).unwrap_or(Ordering::Equal)
         }
         SortOrder::Asc => {
-            |a: &liquid::value::Scalar, b| a.partial_cmp(&b).unwrap_or(Ordering::Equal)
+            |a: &liquid::value::Scalar, b| a.partial_cmp(b).unwrap_or(Ordering::Equal)
         }
         SortOrder::None => {
             // when built, order is set like this:
