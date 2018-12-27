@@ -101,7 +101,8 @@ fn deep_insert(
         _ => Err(format!(
             "The data from {:?} can't be loaded: the key already exists",
             file_path
-        ).into()),
+        )
+        .into()),
     }
 }
 

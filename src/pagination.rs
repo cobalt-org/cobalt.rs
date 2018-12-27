@@ -226,7 +226,8 @@ fn create_all_paginators(
         .enumerate()
         .map(|(i, chunk)| {
             create_paginator(i, total_indexes, total_pages, &pagination_cfg, &doc, &chunk)
-        }).collect();
+        })
+        .collect();
     paginators
 }
 
@@ -253,7 +254,8 @@ fn pagination_attributes(index_num: i32, include: Include) -> liquid::value::Obj
     let attributes: liquid::value::Object = vec![
         ("num".into(), liquid::value::Value::scalar(index_num)),
         ("include".into(), liquid::value::Value::scalar(i)),
-    ].into_iter()
+    ]
+    .into_iter()
     .collect();
     attributes
 }

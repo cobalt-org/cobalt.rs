@@ -116,7 +116,8 @@ fn generate_collections_var(
     let global_collection: liquid::value::Object = vec![(
         context.posts.slug.clone().into(),
         liquid::value::Value::Object(posts_variable),
-    )].into_iter()
+    )]
+    .into_iter()
     .collect();
     (
         "collections".into(),
@@ -137,7 +138,8 @@ fn generate_doc(
             liquid::value::Value::Object(context.site.clone()),
         ),
         global_collection,
-    ].into_iter()
+    ]
+    .into_iter()
     .collect();
     globals.insert(
         "page".into(),
@@ -232,7 +234,8 @@ fn generate_posts(posts: &mut Vec<Document>, context: &Context) -> Result<()> {
             simple_posts_data.get(i - 1)
         } else {
             None
-        }.cloned()
+        }
+        .cloned()
         .unwrap_or(liquid::value::Value::Nil);
         post.attributes.insert("next".into(), next);
 
@@ -317,7 +320,8 @@ fn parse_layouts(files: &files::Files) -> HashMap<String, String> {
                 .to_owned();
 
             Ok((path, layout_data))
-        }).partition(Result::is_ok);
+        })
+        .partition(Result::is_ok);
 
     for error in errors {
         warn!("{}", error.expect_err("partition to filter out oks"));

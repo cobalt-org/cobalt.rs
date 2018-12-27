@@ -115,7 +115,8 @@ fn document_attributes(
                     .to_owned(),
             ),
         ),
-    ].into_iter()
+    ]
+    .into_iter()
     .collect();
     let attributes = vec![
         ("permalink".into(), Value::scalar(url_path.to_owned())),

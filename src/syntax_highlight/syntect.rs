@@ -74,13 +74,15 @@ impl Renderable for CodeBlock {
         let syntax = match self.lang {
             Some(ref lang) => SETUP.syntax_set.find_syntax_by_token(lang),
             _ => None,
-        }.unwrap_or_else(|| SETUP.syntax_set.find_syntax_plain_text());
+        }
+        .unwrap_or_else(|| SETUP.syntax_set.find_syntax_plain_text());
 
         write!(
             writer,
             "{}",
             highlighted_html_for_string(&self.code, &SETUP.syntax_set, syntax, &self.theme,)
-        ).chain("Failed to render")?;
+        )
+        .chain("Failed to render")?;
 
         Ok(())
     }
@@ -108,7 +110,8 @@ impl liquid::compiler::ParseBlock for CodeBlockParser {
         let content = tokens.iter().fold("".to_owned(), |a, b| {
             match *b {
                 Expression(_, ref text) | Tag(_, ref text) | Raw(ref text) => text,
-            }.to_owned()
+            }
+            .to_owned()
                 + &a
         });
 
@@ -226,7 +229,8 @@ mod test {
             .parse(&format!(
                 "{{% highlight rust %}}{}{{% endhighlight %}}",
                 CODE_BLOCK
-            )).unwrap();
+            ))
+            .unwrap();
         let output = template.render(&liquid::value::Object::new());
         assert_diff!(CODEBLOCK_RENDERED, &output.unwrap(), "\n", 0);
     }

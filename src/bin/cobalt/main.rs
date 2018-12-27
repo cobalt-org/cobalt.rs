@@ -78,7 +78,8 @@ fn run() -> Result<()> {
         _ => {
             bail!(global_matches.usage());
         }
-    }.chain_err(|| format!("{} command failed", command))?;
+    }
+    .chain_err(|| format!("{} command failed", command))?;
 
     Ok(())
 }

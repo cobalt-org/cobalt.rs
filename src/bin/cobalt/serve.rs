@@ -31,14 +31,16 @@ pub fn serve_command_args() -> clap::App<'static, 'static> {
                 .help("Port to serve from")
                 .default_value("3000")
                 .takes_value(true),
-        ).arg(
+        )
+        .arg(
             clap::Arg::with_name("host")
                 .long("host")
                 .value_name("host-name/IP")
                 .help("Host to serve from")
                 .default_value("localhost")
                 .takes_value(true),
-        ).arg(
+        )
+        .arg(
             clap::Arg::with_name("no-watch")
                 .long("no-watch")
                 .help("Disable rebuilding on change")
