@@ -71,7 +71,8 @@ impl Renderable for CodeBlock {
                 writer,
                 "<pre><code class=\"language-{}\">{}</code></pre>",
                 lang, self.code
-            ).chain("Failed to render")?;
+            )
+            .chain("Failed to render")?;
         } else {
             write!(writer, "<pre><code>{}</code></pre>", self.code).chain("Failed to render")?;
         }
@@ -99,7 +100,8 @@ impl liquid::compiler::ParseBlock for CodeBlockParser {
         let content = tokens.iter().fold("".to_owned(), |a, b| {
             match *b {
                 Expression(_, ref text) | Tag(_, ref text) | Raw(ref text) => text,
-            }.to_owned()
+            }
+            .to_owned()
                 + &a
         });
 
@@ -153,7 +155,8 @@ mod test {
             .parse(&format!(
                 "{{% highlight rust %}}{}{{% endhighlight %}}",
                 CODE_BLOCK
-            )).unwrap();
+            ))
+            .unwrap();
         let output = template.render(&liquid::value::Object::new());
         assert_eq!(output.unwrap(), CODEBLOCK_RENDERED.to_string());
     }

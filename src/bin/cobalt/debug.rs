@@ -13,7 +13,8 @@ pub fn debug_command_args() -> clap::App<'static, 'static> {
                 .about("Print syntax-highlight information")
                 .subcommand(clap::SubCommand::with_name("themes"))
                 .subcommand(clap::SubCommand::with_name("syntaxes")),
-        ).subcommand(
+        )
+        .subcommand(
             clap::SubCommand::with_name("files")
                 .about("Print files associated with a collection")
                 .args(&args::get_config_args())
@@ -33,12 +34,16 @@ pub fn debug_command(matches: &clap::ArgMatches) -> Result<()> {
             println!("{}", config);
         }
         ("highlight", Some(matches)) => match matches.subcommand() {
-            ("themes", _) => for name in cobalt::list_syntax_themes() {
-                println!("{}", name);
-            },
-            ("syntaxes", _) => for name in cobalt::list_syntaxes() {
-                println!("{}", name);
-            },
+            ("themes", _) => {
+                for name in cobalt::list_syntax_themes() {
+                    println!("{}", name);
+                }
+            }
+            ("syntaxes", _) => {
+                for name in cobalt::list_syntaxes() {
+                    println!("{}", name);
+                }
+            }
             _ => bail!(matches.usage()),
         },
         ("files", Some(matches)) => {

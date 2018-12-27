@@ -88,7 +88,8 @@ impl CollectionBuilder {
                 "description".into(),
                 liquid::value::Value::scalar(description.clone().unwrap_or_else(|| "".to_owned())),
             ),
-        ].into_iter()
+        ]
+        .into_iter()
         .collect();
         if let Some(ref rss) = rss {
             attributes.insert("rss".into(), liquid::value::Value::scalar(rss));
