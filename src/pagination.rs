@@ -101,7 +101,11 @@ impl Into<liquid::value::Object> for Paginator {
             object.insert(
                 "indexes".into(),
                 liquid::value::Value::Array(
-                    indexes.iter().cloned().map(liquid::value::Value::scalar).collect(),
+                    indexes
+                        .iter()
+                        .cloned()
+                        .map(liquid::value::Value::scalar)
+                        .collect(),
                 ),
             );
         }

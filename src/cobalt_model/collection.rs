@@ -95,7 +95,10 @@ impl CollectionBuilder {
             attributes.insert("rss".into(), liquid::value::Value::scalar(rss.to_owned()));
         }
         if let Some(ref jsonfeed) = jsonfeed {
-            attributes.insert("jsonfeed".into(), liquid::value::Value::scalar(jsonfeed.to_owned()));
+            attributes.insert(
+                "jsonfeed".into(),
+                liquid::value::Value::scalar(jsonfeed.to_owned()),
+            );
         }
 
         let default = default.set_collection(slug.clone());

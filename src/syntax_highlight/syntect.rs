@@ -3,12 +3,12 @@ use std::io::Write;
 
 use itertools::Itertools;
 use liquid;
+use liquid::compiler::Language;
 use liquid::compiler::TagBlock;
 use liquid::compiler::TagTokenIter;
 use liquid::compiler::TryMatchToken;
-use liquid::compiler::Language;
-use liquid::interpreter::{Context, Renderable};
 use liquid::error::ResultLiquidReplaceExt;
+use liquid::interpreter::{Context, Renderable};
 use pulldown_cmark as cmark;
 use pulldown_cmark::Event::{self, End, Html, Start, Text};
 use syntect::easy::HighlightLines;
@@ -82,7 +82,8 @@ impl Renderable for CodeBlock {
             writer,
             "{}",
             highlighted_html_for_string(&self.code, &SETUP.syntax_set, syntax, &self.theme,)
-        ).replace("Failed to render")?;
+        )
+        .replace("Failed to render")?;
 
         Ok(())
     }

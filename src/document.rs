@@ -96,7 +96,14 @@ fn document_attributes(
     source_file: &Path,
     url_path: &str,
 ) -> Object {
-    let categories = Value::Array(front.categories.iter().cloned().map(Value::scalar).collect());
+    let categories = Value::Array(
+        front
+            .categories
+            .iter()
+            .cloned()
+            .map(Value::scalar)
+            .collect(),
+    );
     // Reason for `file`:
     // - Allow access to assets in the original location
     // - Ease linking back to page's source
@@ -255,8 +262,16 @@ impl Document {
         self.front
             .description
             .clone()
-            .or_else(|| self.attributes.get("excerpt").map(|s| s.render().to_string()))
-            .or_else(|| self.attributes.get("content").map(|s| s.render().to_string()))
+            .or_else(|| {
+                self.attributes
+                    .get("excerpt")
+                    .map(|s| s.render().to_string())
+            })
+            .or_else(|| {
+                self.attributes
+                    .get("content")
+                    .map(|s| s.render().to_string())
+            })
     }
 
     /// Renders liquid templates into HTML in the context of current document.
