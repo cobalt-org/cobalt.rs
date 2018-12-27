@@ -80,8 +80,9 @@ fn deep_insert(
                 )
             })?;
             let cur_map = map;
+            let key: ::std::borrow::Cow<'static, str> = key.to_owned().into();
             map = cur_map
-                .entry(String::from(key).into())
+                .entry(key)
                 .or_insert_with(|| liquid::value::Value::Object(liquid::value::Object::new()))
                 .as_object_mut()
                 .ok_or_else(|| {

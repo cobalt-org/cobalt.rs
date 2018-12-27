@@ -3,11 +3,12 @@ use std::io::Write;
 
 use itertools::Itertools;
 use liquid;
-use liquid::compiler::Element::{self, Expression, Raw, Tag};
-use liquid::compiler::LiquidOptions;
-use liquid::compiler::Token::{self, Identifier};
+use liquid::compiler::Language;
+use liquid::compiler::TagBlock;
+use liquid::compiler::TagTokenIter;
+use liquid::compiler::TryMatchToken;
+use liquid::error::ResultLiquidReplaceExt;
 use liquid::interpreter::{Context, Renderable};
-use liquid_error::ResultLiquidChainExt;
 use pulldown_cmark as cmark;
 use pulldown_cmark::Event::{self, End, Html, Start, Text};
 use syntect::easy::HighlightLines;
@@ -82,7 +83,7 @@ impl Renderable for CodeBlock {
             "{}",
             highlighted_html_for_string(&self.code, &SETUP.syntax_set, syntax, &self.theme,)
         )
-        .chain("Failed to render")?;
+        .replace("Failed to render")?;
 
         Ok(())
     }
@@ -103,22 +104,30 @@ impl liquid::compiler::ParseBlock for CodeBlockParser {
     fn parse(
         &self,
         _tag_name: &str,
-        arguments: &[Token],
-        tokens: &[Element],
-        _options: &LiquidOptions,
+        mut arguments: TagTokenIter,
+        mut tokens: TagBlock,
+        _options: &Language,
     ) -> Result<Box<Renderable>, liquid::Error> {
-        let content = tokens.iter().fold("".to_owned(), |a, b| {
-            match *b {
-                Expression(_, ref text) | Tag(_, ref text) | Raw(ref text) => text,
-            }
-            .to_owned()
-                + &a
-        });
+        let lang = arguments
+            .expect_next("Identifier or literal expected.")
+            .ok()
+            .map(|lang| {
+                // This may accept strange inputs such as `{% include 0 %}` or `{% include filterchain | filter:0 %}`.
+                // Those inputs would fail anyway by there being not a path with those langs so they are not a big concern.
+                match lang.expect_literal() {
+                    // Using `to_str()` on literals ensures `Strings` will have their quotes trimmed.
+                    TryMatchToken::Matches(lang) => lang.to_str().to_string(),
+                    TryMatchToken::Fails(lang) => lang.as_str().to_string(),
+                }
+            });
+        // no more arguments should be supplied, trying to supply them is an error
+        arguments.expect_nothing()?;
 
-        let lang = match arguments.iter().next() {
-            Some(&Identifier(ref x)) => Some(x.clone()),
-            _ => None,
-        };
+        let mut content = String::new();
+        while let Some(element) = tokens.next()? {
+            content.push_str(element.as_str());
+        }
+        tokens.assert_empty();
 
         Ok(Box::new(CodeBlock {
             code: content,
@@ -224,7 +233,8 @@ mod test {
             Box::new(CodeBlockParser::new("base16-ocean.dark".to_owned()));
         let parser = liquid::ParserBuilder::new()
             .block("highlight", highlight)
-            .build();
+            .build()
+            .unwrap();
         let template = parser
             .parse(&format!(
                 "{{% highlight rust %}}{}{{% endhighlight %}}",

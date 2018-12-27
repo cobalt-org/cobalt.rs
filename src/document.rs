@@ -56,7 +56,7 @@ pub fn permalink_attributes(front: &cobalt_model::Frontmatter, dest_file: &Path)
     // TODO(epage): Add `collection` (the collection's slug), see #257
     // or `parent.slug`, see #323
 
-    attributes.insert("slug".into(), Value::scalar(&front.slug));
+    attributes.insert("slug".into(), Value::scalar(front.slug.clone()));
 
     attributes.insert(
         "categories".into(),
@@ -96,7 +96,14 @@ fn document_attributes(
     source_file: &Path,
     url_path: &str,
 ) -> Object {
-    let categories = Value::Array(front.categories.iter().map(Value::scalar).collect());
+    let categories = Value::Array(
+        front
+            .categories
+            .iter()
+            .cloned()
+            .map(Value::scalar)
+            .collect(),
+    );
     // Reason for `file`:
     // - Allow access to assets in the original location
     // - Ease linking back to page's source
@@ -120,8 +127,8 @@ fn document_attributes(
     .collect();
     let attributes = vec![
         ("permalink".into(), Value::scalar(url_path.to_owned())),
-        ("title".into(), Value::scalar(&front.title)),
-        ("slug".into(), Value::scalar(&front.slug)),
+        ("title".into(), Value::scalar(front.title.clone())),
+        ("slug".into(), Value::scalar(front.slug.clone())),
         (
             "description".into(),
             Value::scalar(
@@ -136,13 +143,13 @@ fn document_attributes(
         ("categories".into(), categories),
         ("is_draft".into(), Value::scalar(front.is_draft)),
         ("file".into(), Value::Object(file)),
-        ("collection".into(), Value::scalar(&front.collection)),
+        ("collection".into(), Value::scalar(front.collection.clone())),
         ("data".into(), Value::Object(front.data.clone())),
     ];
     let mut attributes: Object = attributes.into_iter().collect();
 
     if let Some(ref tags) = front.tags {
-        let tags = Value::Array(tags.iter().map(Value::scalar).collect());
+        let tags = Value::Array(tags.iter().cloned().map(Value::scalar).collect());
         attributes.insert("tags".into(), tags);
     }
 
@@ -255,8 +262,16 @@ impl Document {
         self.front
             .description
             .clone()
-            .or_else(|| self.attributes.get("excerpt").map(|s| s.to_string()))
-            .or_else(|| self.attributes.get("content").map(|s| s.to_string()))
+            .or_else(|| {
+                self.attributes
+                    .get("excerpt")
+                    .map(|s| s.render().to_string())
+            })
+            .or_else(|| {
+                self.attributes
+                    .get("content")
+                    .map(|s| s.render().to_string())
+            })
     }
 
     /// Renders liquid templates into HTML in the context of current document.
@@ -354,6 +369,7 @@ impl Document {
                 .ok_or("Internal error: page isn't in globals")?
                 .get(&liquid::value::Scalar::new("content"))
                 .ok_or("Internal error: page.content isn't in globals")?
+                .render()
                 .to_string();
 
             Ok(content_html)
