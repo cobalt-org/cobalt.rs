@@ -28,7 +28,7 @@ pub struct Markdown {
 impl Markdown {
     pub fn parse(&self, content: &str) -> Result<String> {
         let mut buf = String::new();
-        let options = cmark::OPTION_ENABLE_FOOTNOTES | cmark::OPTION_ENABLE_TABLES;
+        let options = cmark::Options::ENABLE_FOOTNOTES | cmark::Options::ENABLE_TABLES;
         let parser = cmark::Parser::new_ext(content, options);
         if self.syntax_highlight_enabled {
             cmark::html::push_html(&mut buf, decorate_markdown(parser, &self.theme));
