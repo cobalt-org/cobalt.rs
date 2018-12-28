@@ -430,6 +430,11 @@ impl FrontmatterBuilder {
                 return Err("Empty strings are not allowed in tags".into());
             }
         }
+        let tags = if tags.as_ref().map(|t| t.len()).unwrap_or(0) == 0 {
+            None
+        } else {
+            tags
+        };
 
         let fm = Frontmatter {
             permalink,
