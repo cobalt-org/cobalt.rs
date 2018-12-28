@@ -1,4 +1,27 @@
-<a name="0.13.3"></a>
+<a name="0.15.0"></a>
+## 0.15.0 (2018-12-28)
+
+
+#### Bug Fixes
+
+* **new:**  Generate files using jekyll frontmatter format ([bb3b31ae](https://github.com/cobalt-org/cobalt.rs/commit/bb3b31aeb6f72059d327f9fc80c219626546c742))
+
+#### Breaking Changes
+
+* **liquid:**  Upgrade ([b9981489](https://github.com/cobalt-org/cobalt.rs/commit/b9981489ffec4e39a6e5b2e61a45aedd75911fba), breaks [#](https://github.com/cobalt-org/cobalt.rs/issues/))
+
+#### Performance
+
+* **liquid:**  Upgrade ([b9981489](https://github.com/cobalt-org/cobalt.rs/commit/b9981489ffec4e39a6e5b2e61a45aedd75911fba), breaks [#](https://github.com/cobalt-org/cobalt.rs/issues/))
+
+#### Features
+
+* **liquid:**  Upgrade ([b9981489](https://github.com/cobalt-org/cobalt.rs/commit/b9981489ffec4e39a6e5b2e61a45aedd75911fba), breaks [#](https://github.com/cobalt-org/cobalt.rs/issues/))
+* **tags:**  support `tags` in frontmatter ([59db868a](https://github.com/cobalt-org/cobalt.rs/commit/59db868a393f2e0fd1d4a818a7e0c3eca9612210))
+
+
+
+<a name="0.14.0"></a>
 ## 0.14.0 (2018-11-18)
 
 
@@ -32,7 +55,7 @@
   * `for` looping over a range is now inclusive to align with shopify liquid
   * deeply nested array indexes work again (`a.b[0]`)
 
-<a name="0.13.1"></a>
+<a name="0.13.2"></a>
 ## 0.13.2 (2018-10-05)
 
 
