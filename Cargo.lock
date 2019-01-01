@@ -202,7 +202,7 @@ dependencies = [
  "assert_fs 0.10.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "chrono 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "clap 2.32.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "deunicode 0.4.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "deunicode 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "difference 2.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "env_logger 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "error-chain 0.12.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -331,7 +331,7 @@ dependencies = [
 
 [[package]]
 name = "deunicode"
-version = "0.4.3"
+version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
@@ -1707,7 +1707,7 @@ dependencies = [
 "checksum darling_macro 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)" = "9973050ba46be2a2935a7b316147f41a808ac604b8f0fef6eba77fd47a89daeb"
 "checksum derive_builder 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)" = "15d9e4f0be540b522e95c1de6200be0b12946fdd8408c093a1948de638e16f55"
 "checksum derive_builder_core 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)" = "e1cffc940f53a89045824e676302b840a5a60d447560704d352316e2039125a2"
-"checksum deunicode 0.4.3 (registry+https://github.com/rust-lang/crates.io-index)" = "850878694b7933ca4c9569d30a34b55031b9b139ee1fc7b94a527c4ef960d690"
+"checksum deunicode 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)" = "ca8a0f5bbdedde60605d0719b998e282af68e2b1c50203110211fe4abe857560"
 "checksum difference 2.0.0 (registry+https://github.com/rust-lang/crates.io-index)" = "524cbf6897b527295dff137cec09ecf3a05f4fddffd7dfcd1585403449e74198"
 "checksum digest 0.7.6 (registry+https://github.com/rust-lang/crates.io-index)" = "03b072242a8cbaf9c145665af9d250c59af3b958f83ed6824e13533cf76d5b90"
 "checksum dtoa 0.4.3 (registry+https://github.com/rust-lang/crates.io-index)" = "6d301140eb411af13d3115f9a562c85cc6b541ade9dfa314132244aaee7489dd"
