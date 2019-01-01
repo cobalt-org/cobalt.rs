@@ -42,7 +42,7 @@ serde = "1.0"
 serde_yaml = "0.8"
 serde_json = "1.0"
 toml = "0.4.9"
-normalize-line-endings = "0.2.2"
+normalize-line-endings = "0.3.0"
 
 [dependencies.sass-rs]
 version = "0.2"
