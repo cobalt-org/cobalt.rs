@@ -67,6 +67,7 @@ impl PageConfig {
             rss: None,
             jsonfeed: None,
             base_url: None,
+            publish_date_in_filename: false,
             default: self
                 .default
                 .merge_excerpt_separator("".to_owned())
@@ -85,6 +86,7 @@ pub struct PostConfig {
     pub order: collection::SortOrder,
     pub rss: Option<String>,
     pub jsonfeed: Option<String>,
+    pub publish_date_in_filename: bool,
     pub default: frontmatter::FrontmatterBuilder,
 }
 
@@ -106,6 +108,7 @@ impl PostConfig {
             order,
             rss,
             jsonfeed,
+            publish_date_in_filename,
             default,
         } = self;
         // Default with `site` for people quickly bootstrapping a blog, the blog and site are
@@ -128,6 +131,7 @@ impl PostConfig {
             rss,
             jsonfeed,
             base_url: site.base_url.clone(),
+            publish_date_in_filename,
             default: default.merge(common_default.clone()),
         }
     }
@@ -143,6 +147,7 @@ impl Default for PostConfig {
             order: Default::default(),
             rss: Default::default(),
             jsonfeed: Default::default(),
+            publish_date_in_filename: true,
             default: Default::default(),
         }
     }
@@ -345,6 +350,10 @@ impl ConfigBuilder {
 
         if include_drafts {
             debug!("Draft mode enabled");
+        }
+
+        if template_extensions.is_empty() {
+            return Err("`template_extensions` should not be empty.".into());
         }
 
         let source = files::cleanup_path(&source);
