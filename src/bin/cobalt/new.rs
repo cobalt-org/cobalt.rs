@@ -136,14 +136,16 @@ pub fn publish_command_args() -> clap::App<'static, 'static> {
 }
 
 pub fn publish_command(matches: &clap::ArgMatches) -> Result<()> {
-    let file = matches
+    let filename = matches
         .value_of("FILENAME")
         .expect("required parameters are present");
-    let file = path::Path::new(file);
+    let mut file = env::current_dir().expect("How does this fail?");
+    file.push(path::Path::new(filename));
+    let file = file;
     let config = args::get_config(matches)?;
     let config = config.build()?;
 
-    publish_document(&config, file).chain_err(|| format!("Could not publish `{:?}`", file))?;
+    publish_document(&config, &file).chain_err(|| format!("Could not publish `{:?}`", file))?;
 
     Ok(())
 }
