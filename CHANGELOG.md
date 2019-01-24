@@ -1,3 +1,17 @@
+<a name="0.15.1"></a>
+## 0.15.1 (2019-01-24)
+
+
+#### Features
+
+* **publish:**  Auto-prepend date ([95839ac5](https://github.com/cobalt-org/cobalt.rs/commit/95839ac51bfae82a7124b92d774de38088d500ca), closes [#562](https://github.com/cobalt-org/cobalt.rs/issues/562))
+
+#### Bug Fixes
+
+* **liquid:**  Raw/comment improved ([fe795248](https://github.com/cobalt-org/cobalt.rs/commit/fe795248baad055f0f20640f82967c84ba2fd8d9))
+
+
+
 <a name="0.15.0"></a>
 ## 0.15.0 (2018-12-28)
 
