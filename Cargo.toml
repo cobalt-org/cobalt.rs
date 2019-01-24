@@ -22,7 +22,7 @@ doc = false
 
 [dependencies]
 clap = "2.32"
-liquid = "0.18.0"
+liquid = "0.18.1"
 deunicode = "1.0.0"
 walkdir = "2.2"
 chrono = "0.4"
