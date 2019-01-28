@@ -299,3 +299,9 @@ pub fn pagination_less_per_page() {
 pub fn pagination_all_sort_by_title() {
     run_test("pagination_all_sort_by_title").expect("Build error");
 }
+
+#[cfg(feature = "pagination-unstable")]
+#[test]
+pub fn pagination_tags() {
+    run_test("pagination_tags").expect("Build error");
+}
