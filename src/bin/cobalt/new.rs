@@ -436,6 +436,40 @@ fn prepend_date_to_filename(
     Ok(())
 }
 
+fn move_from_drafts_to_posts(
+    config: &cobalt_model::Config,
+    file: &path::Path,
+) -> Result<path::PathBuf> {
+    let mut posts = config.posts.clone();
+    posts.include_drafts = true;
+    let posts = posts.build()?;
+
+    if posts
+        .drafts
+        .as_ref()
+        .map(|d| d.includes_file(&file))
+        .unwrap_or_default()
+    {
+        let drafts = posts.drafts.expect("Should have drafts in this if body");
+        let target = config.source.join("posts").join(
+            file.strip_prefix(drafts.subtree())
+                .expect("Should have subtree as prefix"),
+        );
+        trace!(
+            "post is in `drafts_dir` moving it to `posts` directory: {}",
+            target.display()
+        );
+        if let Some(parent) = target.parent() {
+            fs::create_dir_all(parent)
+                .map_err(|e| format!("Could not create {:?}: {}", parent, e))?;
+        }
+        fs::rename(file, &target)?;
+        Ok(target)
+    } else {
+        Ok(file.to_path_buf())
+    }
+}
+
 pub fn publish_document(config: &cobalt_model::Config, file: &path::Path) -> Result<()> {
     let doc = cobalt_model::files::read_file(file)?;
     let doc = cobalt_model::DocumentBuilder::<cobalt_model::FrontmatterBuilder>::parse(&doc)?;
@@ -448,6 +482,9 @@ pub fn publish_document(config: &cobalt_model::Config, file: &path::Path) -> Res
         cobalt_model::DocumentBuilder::<cobalt_model::FrontmatterBuilder>::new(front, content);
     let doc = doc.to_string();
     cobalt_model::files::write_document_file(doc, file)?;
+
+    let file = move_from_drafts_to_posts(&config, &file)?;
+
     let posts = config.posts.clone().build()?;
     let pages = config.pages.clone().build()?;
     if (posts.pages.includes_file(&file) && config.posts.publish_date_in_filename)
