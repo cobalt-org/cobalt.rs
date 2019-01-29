@@ -19,7 +19,7 @@ use syntect::html::{
 };
 use syntect::parsing::{SyntaxReference, SyntaxSet};
 
-use error;
+use crate::error;
 
 struct Setup {
     syntax_set: SyntaxSet,

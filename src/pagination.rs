@@ -2,14 +2,14 @@ use std::cmp::Ordering;
 
 use liquid;
 
-use cobalt_model::pagination_config::Include;
-use cobalt_model::pagination_config::PaginationConfig;
-use cobalt_model::permalink;
-use cobalt_model::slug;
-use cobalt_model::SortOrder;
-use document;
-use document::Document;
-use error::*;
+use crate::cobalt_model::pagination_config::Include;
+use crate::cobalt_model::pagination_config::PaginationConfig;
+use crate::cobalt_model::permalink;
+use crate::cobalt_model::slug;
+use crate::cobalt_model::SortOrder;
+use crate::document;
+use crate::document::Document;
+use crate::error::*;
 
 use std::collections::HashMap;
 

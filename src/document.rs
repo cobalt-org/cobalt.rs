@@ -12,11 +12,11 @@ use liquid::value::Value;
 use regex::Regex;
 use rss;
 
-use cobalt_model;
-use cobalt_model::files;
-use cobalt_model::permalink;
-use cobalt_model::slug;
-use error::*;
+use crate::cobalt_model;
+use crate::cobalt_model::files;
+use crate::cobalt_model::permalink;
+use crate::cobalt_model::slug;
+use crate::error::*;
 
 /// Convert the source file's relative path into a format useful for generating permalinks that
 /// mirror the source directory hierarchy.

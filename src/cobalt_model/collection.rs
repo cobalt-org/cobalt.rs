@@ -5,7 +5,7 @@ use liquid;
 use super::files;
 use super::slug;
 use super::FrontmatterBuilder;
-use error::*;
+use crate::error::*;
 
 #[derive(Debug, Eq, PartialEq, Hash, Copy, Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]

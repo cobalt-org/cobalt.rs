@@ -5,7 +5,7 @@ use std::path;
 use sass_rs;
 
 use super::files;
-use error::*;
+use crate::error::*;
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Hash, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]

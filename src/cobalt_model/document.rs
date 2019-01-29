@@ -3,7 +3,7 @@ use std::fmt;
 use regex;
 
 use super::frontmatter;
-use error::*;
+use crate::error::*;
 
 #[derive(Debug, Eq, PartialEq, Default, Clone)]
 pub struct DocumentBuilder<T: frontmatter::Front> {

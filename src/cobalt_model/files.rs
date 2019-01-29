@@ -5,7 +5,7 @@ use std::io::Write;
 use std::iter::FromIterator;
 use std::path;
 
-use error::Result;
+use crate::error::Result;
 use ignore::gitignore::{Gitignore, GitignoreBuilder};
 use ignore::Match;
 use normalize_line_endings::normalized;

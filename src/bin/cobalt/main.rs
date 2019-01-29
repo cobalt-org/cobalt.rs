@@ -30,7 +30,7 @@ use std::alloc;
 
 use clap::{App, AppSettings};
 
-use error::*;
+use crate::error::*;
 
 #[global_allocator]
 static GLOBAL: alloc::System = alloc::System;

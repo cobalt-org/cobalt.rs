@@ -2,7 +2,7 @@ use std::path::{Path, PathBuf};
 
 use liquid;
 
-use error::*;
+use crate::error::*;
 
 pub fn explode_permalink<S: AsRef<str>>(
     permalink: S,
