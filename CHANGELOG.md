@@ -1,3 +1,14 @@
+<a name="0.15.2"></a>
+## 0.15.2 (2019-01-29)
+
+
+#### Features
+
+* **experimental:**  pagination on tags ([1a968352](https://github.com/cobalt-org/cobalt.rs/commit/1a9683524bbc8450dc46c5ddd11f8edfbf794746))
+* **publish:**  move post to `posts` if in `drafts_dir` ([c21ca310](https://github.com/cobalt-org/cobalt.rs/commit/c21ca3103357f42c9d8a94f3edb88d4481e85f47))
+
+
+
 <a name="0.15.1"></a>
 ## 0.15.1 (2019-01-24)
 
