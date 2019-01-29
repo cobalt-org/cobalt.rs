@@ -8,6 +8,7 @@ readme = "README.md"
 keywords = ["static", "site", "generator"]
 categories = ["command-line-utilities"]
 license = "MIT"
+edition = "2018"
 
 [badges]
 travis-ci = { repository = "cobalt-org/cobalt.rs" }

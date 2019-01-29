@@ -9,7 +9,7 @@ use liquid::error::ResultLiquidReplaceExt;
 use liquid::interpreter::{Context, Renderable};
 use pulldown_cmark as cmark;
 
-use error;
+use crate::error;
 
 pub fn has_syntax_theme(_name: &str) -> error::Result<bool> {
     bail!("Themes are unsupported in this build.");

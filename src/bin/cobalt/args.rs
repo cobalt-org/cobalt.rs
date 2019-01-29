@@ -4,10 +4,9 @@ use std::path;
 
 use clap;
 use env_logger;
-use log;
 
+use crate::error::*;
 use cobalt;
-use error::*;
 
 pub fn get_config_args() -> Vec<clap::Arg<'static, 'static>> {
     [

@@ -2,9 +2,9 @@ use std::fmt;
 use std::path;
 
 use super::files;
-use error::*;
+use crate::error::*;
+use crate::syntax_highlight;
 use liquid;
-use syntax_highlight;
 
 fn load_partials_from_path(root: path::PathBuf) -> Result<liquid::Partials> {
     let mut source = liquid::Partials::empty();

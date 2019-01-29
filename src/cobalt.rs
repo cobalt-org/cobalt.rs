@@ -9,14 +9,14 @@ use jsonfeed::Feed;
 use liquid;
 use rss;
 
-use cobalt_model;
-use cobalt_model::files;
-use cobalt_model::permalink;
-use cobalt_model::Collection;
-use cobalt_model::{Config, SortOrder};
-use document::Document;
-use error::*;
-use pagination;
+use crate::cobalt_model;
+use crate::cobalt_model::files;
+use crate::cobalt_model::permalink;
+use crate::cobalt_model::Collection;
+use crate::cobalt_model::{Config, SortOrder};
+use crate::document::Document;
+use crate::error::*;
+use crate::pagination;
 
 struct Context {
     pub source: path::PathBuf,

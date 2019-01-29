@@ -6,8 +6,8 @@ use clap;
 use cobalt;
 use ghp;
 
-use args;
-use error::*;
+use crate::args;
+use crate::error::*;
 
 pub fn build_command_args() -> clap::App<'static, 'static> {
     clap::SubCommand::with_name("build")

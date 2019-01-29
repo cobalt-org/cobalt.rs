@@ -4,7 +4,7 @@ use std::path;
 use liquid;
 use serde_yaml;
 
-use error::*;
+use crate::error::*;
 
 use super::assets;
 use super::collection;

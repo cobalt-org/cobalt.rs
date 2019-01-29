@@ -7,7 +7,7 @@ use serde_json;
 use serde_yaml;
 use toml;
 
-use error::*;
+use crate::error::*;
 
 use super::files;
 

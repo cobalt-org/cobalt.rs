@@ -1,8 +1,8 @@
 use clap;
 use cobalt;
 
-use args;
-use error::*;
+use crate::args;
+use crate::error::*;
 
 pub fn debug_command_args() -> clap::App<'static, 'static> {
     clap::SubCommand::with_name("debug")

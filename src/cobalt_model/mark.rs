@@ -1,7 +1,7 @@
 use pulldown_cmark as cmark;
 
-use error::*;
-use syntax_highlight::decorate_markdown;
+use crate::error::*;
+use crate::syntax_highlight::decorate_markdown;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]

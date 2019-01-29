@@ -3,7 +3,7 @@ use std::path;
 use super::files;
 use super::sass;
 
-use error::*;
+use crate::error::*;
 
 #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
 #[serde(deny_unknown_fields, default)]

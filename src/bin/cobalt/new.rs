@@ -8,8 +8,8 @@ use std::path;
 use clap;
 use cobalt::cobalt_model;
 
-use args;
-use error::*;
+use crate::args;
+use crate::error::*;
 
 pub fn init_command_args() -> clap::App<'static, 'static> {
     clap::SubCommand::with_name("init")
