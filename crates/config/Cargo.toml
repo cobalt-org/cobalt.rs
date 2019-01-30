@@ -1,0 +1,27 @@
+[package]
+name = "cobalt-config"
+version = "0.16.0"
+authors = ["Ed Page <eopage@gmail.com>"]
+description = "Static site generator written in Rust"
+repository = "https://github.com/cobalt-org/cobalt.rs"
+readme = "../README.md"
+keywords = ["static", "site", "generator"]
+categories = ["command-line-utilities"]
+license = "MIT OR Apache-2.0"
+edition = "2018"
+
+[badges]
+travis-ci = { repository = "cobalt-org/cobalt.rs" }
+appveyor = { repository = "cobalt-org/cobalt.rs" }
+
+[dependencies]
+liquid = "0.19"
+chrono = "0.4"
+log = "0.4"
+regex = "1.1"
+serde = "1.0"
+serde_yaml = "0.8"
+once_cell = "1.2"
+status = { version = "0.0.10", features = ["send_sync"] }
+deunicode = "1.0"
+itertools = "0.8"
