@@ -77,7 +77,8 @@ impl SassCompiler {
             SassOutputStyle::Compact => sass_rs::OutputStyle::Compact,
             SassOutputStyle::Compressed => sass_rs::OutputStyle::Compressed,
         };
-        let content = sass_rs::compile_file(file_path, sass_opts)?;
+        let content =
+            sass_rs::compile_file(file_path, sass_opts).map_err(|e| failure::err_msg(e))?;
 
         let rel_src = file_path
             .strip_prefix(source)

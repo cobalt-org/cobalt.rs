@@ -1,17 +1,7 @@
 #![warn(warnings)]
 
-extern crate cobalt;
-extern crate env_logger;
-extern crate ghp;
-extern crate hyper;
-extern crate notify;
-extern crate serde_yaml;
-
 #[macro_use]
 extern crate lazy_static;
-
-#[macro_use]
-extern crate error_chain;
 
 #[macro_use]
 extern crate clap;
@@ -29,13 +19,17 @@ mod serve;
 use std::alloc;
 
 use clap::{App, AppSettings};
+use failure::ResultExt;
 
 use crate::error::*;
 
 #[global_allocator]
 static GLOBAL: alloc::System = alloc::System;
 
-quick_main!(run);
+fn main() -> std::result::Result<(), exitfailure::ExitFailure> {
+    run()?;
+    Ok(())
+}
 
 fn run() -> Result<()> {
     let app_cli = App::new("Cobalt")
@@ -76,10 +70,10 @@ fn run() -> Result<()> {
         "import" => build::import_command(matches),
         "debug" => debug::debug_command(matches),
         _ => {
-            bail!(global_matches.usage());
+            failure::bail!(global_matches.usage().to_owned());
         }
     }
-    .chain_err(|| format!("{} command failed", command))?;
+    .with_context(|_| failure::format_err!("{} command failed", command))?;
 
     Ok(())
 }

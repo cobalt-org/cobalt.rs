@@ -44,7 +44,7 @@ pub fn debug_command(matches: &clap::ArgMatches) -> Result<()> {
                     println!("{}", name);
                 }
             }
-            _ => bail!(matches.usage()),
+            _ => failure::bail!(matches.usage().to_owned()),
         },
         ("files", Some(matches)) => {
             let config = args::get_config(matches)?;
@@ -80,14 +80,14 @@ pub fn debug_command(matches: &clap::ArgMatches) -> Result<()> {
                     }
                 }
                 None => {
-                    bail!("Must specify collection");
+                    failure::bail!("Must specify collection");
                 }
                 _ => {
-                    bail!("Collection is not yet supported");
+                    failure::bail!("Collection is not yet supported");
                 }
             }
         }
-        _ => bail!(matches.usage()),
+        _ => failure::bail!(matches.usage().to_owned()),
     }
 
     Ok(())

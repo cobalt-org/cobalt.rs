@@ -4,6 +4,7 @@ use std::path;
 
 use clap;
 use env_logger;
+use failure::ResultExt;
 
 use crate::error::*;
 use cobalt;
@@ -41,7 +42,7 @@ pub fn get_config(matches: &clap::ArgMatches) -> Result<cobalt::ConfigBuilder> {
     // Fetch config information if available
     let mut config = if let Some(config_path) = config_path {
         cobalt::ConfigBuilder::from_file(config_path)
-            .chain_err(|| format!("Error reading config file {:?}", config_path))?
+            .with_context(|_| failure::format_err!("Error reading config file {:?}", config_path))?
     } else {
         let cwd = env::current_dir().expect("How does this fail?");
         cobalt::ConfigBuilder::from_cwd(cwd)?

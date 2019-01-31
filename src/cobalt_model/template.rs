@@ -48,7 +48,10 @@ impl LiquidBuilder {
     fn highlight(theme: String) -> Result<Box<liquid::compiler::ParseBlock>> {
         let result: Result<()> = match syntax_highlight::has_syntax_theme(&theme) {
             Ok(true) => Ok(()),
-            Ok(false) => Err(format!("Syntax theme '{}' is unsupported", theme).into()),
+            Ok(false) => Err(failure::format_err!(
+                "Syntax theme '{}' is unsupported",
+                theme
+            )),
             Err(err) => {
                 warn!("Syntax theme named '{}' ignored. Reason: {}", theme, err);
                 Ok(())

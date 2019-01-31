@@ -12,7 +12,7 @@ use pulldown_cmark as cmark;
 use crate::error;
 
 pub fn has_syntax_theme(_name: &str) -> error::Result<bool> {
-    bail!("Themes are unsupported in this build.");
+    failure::bail!("Themes are unsupported in this build.");
 }
 
 pub fn list_syntax_themes<'a>() -> Vec<&'a String> {

@@ -6,6 +6,7 @@ use std::iter::FromIterator;
 use std::path;
 
 use crate::error::Result;
+use failure::ResultExt;
 use ignore::gitignore::{Gitignore, GitignoreBuilder};
 use ignore::Match;
 use normalize_line_endings::normalized;
@@ -266,12 +267,18 @@ pub fn read_file<P: AsRef<path::Path>>(path: P) -> Result<String> {
 pub fn copy_file(src_file: &path::Path, dest_file: &path::Path) -> Result<()> {
     // create target directories if any exist
     if let Some(parent) = dest_file.parent() {
-        fs::create_dir_all(parent).map_err(|e| format!("Could not create {:?}: {}", parent, e))?;
+        fs::create_dir_all(parent)
+            .with_context(|_| failure::format_err!("Could not create {}", parent.display()))?;
     }
 
     debug!("Copying {:?} to {:?}", src_file, dest_file);
-    fs::copy(src_file, dest_file)
-        .map_err(|e| format!("Could not copy {:?} into {:?}: {}", src_file, dest_file, e))?;
+    fs::copy(src_file, dest_file).with_context(|_| {
+        failure::format_err!(
+            "Could not copy {} into {}",
+            src_file.display(),
+            dest_file.display()
+        )
+    })?;
     Ok(())
 }
 
@@ -285,11 +292,12 @@ pub fn write_document_file<S: AsRef<str>, P: AsRef<path::Path>>(
 fn write_document_file_internal(content: &str, dest_file: &path::Path) -> Result<()> {
     // create target directories if any exist
     if let Some(parent) = dest_file.parent() {
-        fs::create_dir_all(parent).map_err(|e| format!("Could not create {:?}: {}", parent, e))?;
+        fs::create_dir_all(parent)
+            .with_context(|_| failure::format_err!("Could not create {}", parent.display()))?;
     }
 
     let mut file = fs::File::create(dest_file)
-        .map_err(|e| format!("Could not create {:?}: {}", dest_file, e))?;
+        .with_context(|_| failure::format_err!("Could not create {}", dest_file.display()))?;
 
     file.write_all(content.as_bytes())?;
     trace!("Wrote {}", dest_file.display());

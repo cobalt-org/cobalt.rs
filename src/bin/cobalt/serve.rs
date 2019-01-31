@@ -8,7 +8,7 @@ use std::time;
 
 use clap;
 use cobalt::cobalt_model;
-use error_chain::ChainedError;
+use failure::ResultExt;
 use hyper;
 use hyper::server::{Request, Response, Server};
 use hyper::uri::RequestUri;
@@ -170,18 +170,20 @@ fn watch(config: &cobalt_model::Config) -> Result<()> {
     // Files::includes_file
     let source = path::Path::new(&config.source)
         .canonicalize()
-        .chain_err(|| "Failed in processing source")?;
+        .with_context(|_| failure::err_msg("Failed in processing source"))?;
 
     let (tx, rx) = channel();
-    let mut watcher =
-        notify::watcher(tx, time::Duration::from_secs(1)).chain_err(|| "Notify error")?;
+    let mut watcher = notify::watcher(tx, time::Duration::from_secs(1))
+        .with_context(|_| failure::err_msg("Notify error"))?;
     watcher
         .watch(&source, notify::RecursiveMode::Recursive)
-        .chain_err(|| "Notify error")?;
+        .with_context(|_| failure::err_msg("Notify error"))?;
     info!("Watching {:?} for changes", &config.source);
 
     loop {
-        let event = rx.recv().chain_err(|| "Notify error")?;
+        let event = rx
+            .recv()
+            .with_context(|_| failure::err_msg("Notify error"))?;
         let event_path = match event {
             notify::DebouncedEvent::Create(ref path)
             | notify::DebouncedEvent::NoticeWrite(ref path)
@@ -209,7 +211,8 @@ fn watch(config: &cobalt_model::Config) -> Result<()> {
         if rebuild {
             let result = build::build(config.clone());
             if let Err(fail) = result {
-                error!("build failed\n{}", fail.display_chain());
+                let fail: exitfailure::ExitFailure = fail.into();
+                error!("build failed\n{:?}", fail);
             }
         }
     }

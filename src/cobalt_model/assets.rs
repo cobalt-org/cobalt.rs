@@ -25,7 +25,7 @@ impl AssetsBuilder {
 
         let sass = sass.build();
 
-        let source = source.ok_or_else(|| "No asset source provided")?;
+        let source = source.ok_or_else(|| failure::err_msg("No asset source provided"))?;
 
         let mut files = files::FilesBuilder::new(source)?;
         for line in ignore {

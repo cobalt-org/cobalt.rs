@@ -249,7 +249,10 @@ fn distribute_posts_by_tags<'a>(
     for post in all_posts {
         if let Some(tags) = extract_tags(post) {
             for tag in tags {
-                let tag = tag.as_scalar().ok_or("Should have string tags")?.to_str();
+                let tag = tag
+                    .as_scalar()
+                    .ok_or_else(|| failure::err_msg("Should have string tags"))?
+                    .to_str();
                 // add_to_tag(&tag.to_string(), post, &mut per_tags)
                 let cur_tag = per_tags.entry(tag.to_string()).or_insert(vec![]);
                 cur_tag.push(post);
