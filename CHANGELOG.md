@@ -1,3 +1,13 @@
+<a name="0.15.3"></a>
+## 0.15.3 (2019-01-31)
+
+
+#### Bug Fixes
+
+* **files:**  sort by filename to have a reproducibly walking iterator ([1aa7510b](https://github.com/cobalt-org/cobalt.rs/commit/1aa7510bb742947e1786d5a3e56eecccff126985))
+
+
+
 <a name="0.15.2"></a>
 ## 0.15.2 (2019-01-29)
 
