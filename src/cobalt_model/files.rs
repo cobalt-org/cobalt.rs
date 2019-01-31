@@ -91,6 +91,7 @@ impl<'a> FilesIterator<'a> {
         let walker = WalkDir::new(files.root_dir.as_path())
             .min_depth(1)
             .follow_links(false)
+            .sort_by(|a, b| a.file_name().cmp(b.file_name()))
             .into_iter()
             .filter_entry(move |e| files.includes_entry(e))
             .filter_map(|e| e.ok())
