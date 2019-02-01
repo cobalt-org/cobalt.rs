@@ -1,17 +1,11 @@
 #[macro_use]
 extern crate difference;
 
-extern crate assert_fs;
-extern crate cobalt;
-extern crate error_chain;
-extern crate walkdir;
-
 use std::fs::File;
 use std::io::Read;
 use std::path::Path;
 
 use assert_fs::prelude::*;
-use error_chain::ChainedError;
 use walkdir::WalkDir;
 
 macro_rules! assert_contains {
@@ -155,13 +149,9 @@ pub fn syntax_highlight() {
 pub fn incomplete_rss() {
     let err = run_test("incomplete_rss");
     assert!(err.is_err());
-
-    let err = err.unwrap_err();
-    assert_eq!(
-        format!("{}", err),
-        "name, description and link need to be defined in the config file to generate RSS"
-    );
-    assert_eq!(err.description(), "missing fields in config file");
+    let err: exitfailure::ExitFailure = err.unwrap_err().into();
+    let error_message = format!("{:?}", err);
+    assert_contains!(error_message, "base_url");
 }
 
 #[test]
@@ -179,10 +169,12 @@ pub fn liquid_raw() {
 pub fn no_extends_error() {
     let err = run_test("no_extends_error");
     assert!(err.is_err());
+    let err: exitfailure::ExitFailure = err.unwrap_err().into();
+    let error_message = format!("{:?}", err);
     assert_contains!(
-        format!("{}", err.unwrap_err().display_chain()),
+        error_message,
         "Layout default_nonexistent.liquid does not exist (referenced in \
-         \"index.html\")"
+         index.html)"
     );
 }
 
@@ -220,7 +212,8 @@ pub fn ignore_files() {
 pub fn yaml_error() {
     let err = run_test("yaml_error");
     assert!(err.is_err());
-    let error_message = format!("{}", err.unwrap_err().display_chain());
+    let err: exitfailure::ExitFailure = err.unwrap_err().into();
+    let error_message = format!("{:?}", err);
     assert_contains!(error_message, "unexpected character");
 }
 

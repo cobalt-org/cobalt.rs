@@ -4,6 +4,7 @@ use std::default::Default;
 use std::path::{Path, PathBuf};
 
 use chrono::{Datelike, Timelike};
+use failure::ResultExt;
 use itertools;
 use jsonfeed;
 use liquid;
@@ -206,7 +207,9 @@ impl Document {
         let (file_path, url_path) = {
             let perma_attributes = permalink_attributes(&front, rel_path);
             let url_path = permalink::explode_permalink(&front.permalink, &perma_attributes)
-                .chain_err(|| format!("Failed to create permalink `{}`", front.permalink))?;
+                .with_context(|_| {
+                    failure::format_err!("Failed to create permalink `{}`", front.permalink)
+                })?;
             let file_path = permalink::format_url_as_file(&url_path);
             (file_path, url_path)
         };
@@ -228,7 +231,8 @@ impl Document {
         let guid = rss::GuidBuilder::default()
             .value(link.clone())
             .permalink(true)
-            .build()?;
+            .build()
+            .map_err(|e| failure::err_msg(e))?;
 
         let item = rss::ItemBuilder::default()
             .title(Some(self.front.title.clone()))
@@ -236,7 +240,8 @@ impl Document {
             .guid(Some(guid))
             .pub_date(self.front.published_date.map(|date| date.to_rfc2822()))
             .description(self.description_to_str())
-            .build()?;
+            .build()
+            .map_err(|e| failure::err_msg(e))?;
         Ok(item)
     }
 
@@ -350,25 +355,26 @@ impl Document {
     ) -> Result<String> {
         if let Some(ref layout) = self.front.layout {
             let layout_data_ref = layouts.get(layout).ok_or_else(|| {
-                format!(
-                    "Layout {} does not exist (referenced in {:?}).",
-                    layout, self.file_path
+                failure::format_err!(
+                    "Layout {} does not exist (referenced in {}).",
+                    layout,
+                    self.file_path.display()
                 )
             })?;
 
             let template = parser
                 .parse(layout_data_ref)
-                .chain_err(|| format!("Failed to parse layout {:?}", layout))?;
+                .with_context(|_| failure::format_err!("Failed to parse layout {:?}", layout))?;
             let content_html = template
                 .render(globals)
-                .chain_err(|| format!("Failed to render layout {:?}", layout))?;
+                .with_context(|_| failure::format_err!("Failed to render layout {:?}", layout))?;
             Ok(content_html)
         } else {
             let content_html = globals
                 .get("page")
-                .ok_or("Internal error: page isn't in globals")?
+                .ok_or_else(|| failure::err_msg("Internal error: page isn't in globals"))?
                 .get(&liquid::value::Scalar::new("content"))
-                .ok_or("Internal error: page.content isn't in globals")?
+                .ok_or_else(|| failure::err_msg("Internal error: page.content isn't in globals"))?
                 .render()
                 .to_string();
 

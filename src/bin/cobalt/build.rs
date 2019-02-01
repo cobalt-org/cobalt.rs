@@ -60,7 +60,7 @@ pub fn clean(config: &cobalt::Config) -> Result<()> {
         }
     };
     if cwd.starts_with(&destdir) {
-        bail!(
+        failure::bail!(
             "Attempting to delete current directory ({:?}), \
              Cancelling the operation",
             destdir
@@ -116,7 +116,7 @@ fn import(config: &cobalt::Config, branch: &str, message: &str) -> Result<()> {
     info!("Importing {:?} to {}", config.destination, branch);
 
     if !config.destination.is_dir() {
-        bail!("`{:?}` is not a directory", config.destination);
+        failure::bail!("`{:?}` is not a directory", config.destination);
     }
     ghp::import_dir(&config.destination, branch, message)?;
 

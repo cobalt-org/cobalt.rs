@@ -7,6 +7,7 @@ use std::path;
 
 use clap;
 use cobalt::cobalt_model;
+use failure::ResultExt;
 
 use crate::args;
 use crate::error::*;
@@ -26,7 +27,7 @@ pub fn init_command(matches: &clap::ArgMatches) -> Result<()> {
     let directory = matches.value_of("DIRECTORY").unwrap();
 
     create_new_project(&directory.to_string())
-        .chain_err(|| "Could not create a new cobalt project")?;
+        .with_context(|_| failure::err_msg("Could not create a new cobalt project"))?;
     info!("Created new project at {}", directory);
 
     Ok(())
@@ -73,7 +74,7 @@ pub fn new_command(matches: &clap::ArgMatches) -> Result<()> {
     let ext = matches.value_of("with-ext");
 
     create_new_document(&config, title, file, ext)
-        .chain_err(|| format!("Could not create `{}`", title))?;
+        .with_context(|_| failure::format_err!("Could not create `{}`", title))?;
 
     Ok(())
 }
@@ -119,7 +120,7 @@ pub fn rename_command(matches: &clap::ArgMatches) -> Result<()> {
     let file = file;
 
     rename_document(&config, source, title, file)
-        .chain_err(|| format!("Could not rename `{}`", title))?;
+        .with_context(|_| failure::format_err!("Could not rename `{}`", title))?;
 
     Ok(())
 }
@@ -145,7 +146,8 @@ pub fn publish_command(matches: &clap::ArgMatches) -> Result<()> {
     let config = args::get_config(matches)?;
     let config = config.build()?;
 
-    publish_document(&config, &file).chain_err(|| format!("Could not publish `{:?}`", file))?;
+    publish_document(&config, &file)
+        .with_context(|_| failure::format_err!("Could not publish `{:?}`", file))?;
 
     Ok(())
 }
@@ -256,9 +258,10 @@ pub fn create_new_document(
     };
 
     let rel_file = file.strip_prefix(&config.source).map_err(|_| {
-        format!(
-            "New file {:?} not project directory ({:?})",
-            file, config.source
+        failure::format_err!(
+            "New file {} not project directory ({})",
+            file.display(),
+            config.source.display()
         )
     })?;
 
@@ -279,9 +282,9 @@ pub fn create_new_document(
     {
         pages.slug.as_str()
     } else {
-        bail!(
-            "Target file wouldn't be a member of any collection: {:?}",
-            file
+        failure::bail!(
+            "Target file wouldn't be a member of any collection: {}",
+            file.display()
         );
     };
 
@@ -290,17 +293,17 @@ pub fn create_new_document(
         .join(format!("_defaults/{}.{}", file_type, extension));
     let source = if source_path.is_file() {
         cobalt_model::files::read_file(&source_path)
-            .chain_err(|| format!("Failed to read default: {:?}", source_path))?
+            .with_context(|_| failure::format_err!("Failed to read default: {:?}", source_path))?
     } else {
         debug!(
             "No custom default provided ({:?}), falling back to built-in",
             source_path
         );
         if extension != "md" {
-            bail!(
-                "No builtin default for `{}` files, only `md`: {:?}",
+            failure::bail!(
+                "No builtin default for `{}` files, only `md`: {}",
                 extension,
-                file
+                file.display()
             );
         }
         // For custom collections, use a post default.
@@ -331,7 +334,7 @@ fn create_file_for_path(path: &path::Path, content: &str) -> Result<()> {
         .write(true)
         .create_new(true)
         .open(path)
-        .chain_err(|| format!("Failed to create file {:?}", path))?;
+        .with_context(|_| failure::format_err!("Failed to create file {}", path.display()))?;
 
     file.write_all(content.as_bytes())?;
 
@@ -389,7 +392,7 @@ pub fn rename_document(
             .merge_path(rel_src)
             .merge(pages.default.clone())
     } else {
-        bail!(
+        failure::bail!(
             "Target file wouldn't be a member of any collection: {:?}",
             target
         );
@@ -461,7 +464,7 @@ fn move_from_drafts_to_posts(
         );
         if let Some(parent) = target.parent() {
             fs::create_dir_all(parent)
-                .map_err(|e| format!("Could not create {:?}: {}", parent, e))?;
+                .with_context(|_| failure::format_err!("Could not create {}", parent.display()))?;
         }
         fs::rename(file, &target)?;
         Ok(target)

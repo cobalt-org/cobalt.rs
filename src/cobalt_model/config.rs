@@ -1,6 +1,7 @@
 use std::fmt;
 use std::path;
 
+use failure::ResultExt;
 use liquid;
 use serde_yaml;
 
@@ -316,7 +317,7 @@ impl ConfigBuilder {
         let config = file_path
             .map(|p| {
                 debug!("Using config file {:?}", &p);
-                Self::from_file(&p).chain_err(|| format!("Error reading config file {:?}", p))
+                Self::from_file(&p).with_context(|_| format!("Error reading config file {:?}", p))
             })
             .unwrap_or_else(|| {
                 warn!("No _cobalt.yml file found in current directory, using default config.");
@@ -353,7 +354,7 @@ impl ConfigBuilder {
         }
 
         if template_extensions.is_empty() {
-            return Err("`template_extensions` should not be empty.".into());
+            failure::bail!("`template_extensions` should not be empty.");
         }
 
         let source = files::cleanup_path(&source);

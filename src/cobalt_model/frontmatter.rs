@@ -418,9 +418,9 @@ impl FrontmatterBuilder {
 
         let permalink = permalink.unwrap_or_else(|| PATH_ALIAS.to_owned());
         let permalink = if !permalink.starts_with('/') {
-            let resolved = *PERMALINK_ALIASES
-                .get(permalink.as_str())
-                .ok_or_else(|| format!("Unsupported permalink alias '{}'", permalink))?;
+            let resolved = *PERMALINK_ALIASES.get(permalink.as_str()).ok_or_else(|| {
+                failure::format_err!("Unsupported permalink alias '{}'", permalink)
+            })?;
             resolved.to_owned()
         } else {
             permalink
@@ -428,7 +428,7 @@ impl FrontmatterBuilder {
 
         if let Some(ref tags) = tags {
             if tags.iter().any(|x| x.trim().is_empty()) {
-                return Err("Empty strings are not allowed in tags".into());
+                failure::bail!("Empty strings are not allowed in tags");
             }
         }
         let tags = if tags.as_ref().map(|t| t.len()).unwrap_or(0) == 0 {
@@ -439,8 +439,8 @@ impl FrontmatterBuilder {
 
         let fm = Frontmatter {
             permalink,
-            slug: slug.ok_or_else(|| "No slug")?,
-            title: title.ok_or_else(|| "No title")?,
+            slug: slug.ok_or_else(|| failure::err_msg("No slug"))?,
+            title: title.ok_or_else(|| failure::err_msg("No title"))?,
             description,
             excerpt,
             categories: categories.unwrap_or_else(|| vec![]),
@@ -456,7 +456,7 @@ impl FrontmatterBuilder {
         };
 
         if !cfg!(feature = "pagination-unstable") && fm.pagination.is_some() {
-            Err("Unsupported `pagination` field".into())
+            failure::bail!("Unsupported `pagination` field");
         } else {
             Ok(fm)
         }

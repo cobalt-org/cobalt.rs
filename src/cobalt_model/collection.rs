@@ -70,10 +70,10 @@ impl CollectionBuilder {
             default,
         } = self;
 
-        let title = title.ok_or("Collection is missing a `title`")?;
+        let title = title.ok_or_else(|| failure::err_msg("Collection is missing a `title`"))?;
         let slug = slug.unwrap_or_else(|| slug::slugify(&title));
 
-        let source = source.ok_or_else(|| "No asset source provided")?;
+        let source = source.ok_or_else(|| failure::err_msg("No asset source provided"))?;
 
         let dir = dir.unwrap_or_else(|| slug.clone());
         let pages = Self::build_files(&source, &dir, &template_extensions, &ignore)?;
@@ -129,7 +129,7 @@ impl CollectionBuilder {
         ignore: &[String],
     ) -> Result<files::Files> {
         if dir.starts_with('/') {
-            bail!("Collection dir {} must be a relative path", dir)
+            failure::bail!("Collection dir {} must be a relative path", dir)
         }
         let dir = files::cleanup_path(dir);
         let mut pages = files::FilesBuilder::new(source)?;
