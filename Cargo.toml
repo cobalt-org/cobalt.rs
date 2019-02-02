@@ -23,7 +23,7 @@ doc = false
 
 [dependencies]
 clap = "2.32"
-liquid = "0.18.1"
+liquid = { version = "0.18.2", features = ["jekyll-filters"] }
 deunicode = "1.0.0"
 walkdir = "2.2"
 chrono = "0.4"
