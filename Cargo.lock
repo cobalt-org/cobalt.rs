@@ -211,7 +211,7 @@ dependencies = [
  "itertools 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "jsonfeed 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "lazy_static 1.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "liquid 0.18.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "liquid 0.18.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "normalize-line-endings 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "notify 4.0.7 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -691,10 +691,11 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "liquid"
-version = "0.18.1"
+version = "0.18.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "chrono 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)",
+ "deunicode 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "itertools 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "lazy_static 1.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "liquid-compiler 0.18.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1810,7 +1811,7 @@ dependencies = [
 "checksum lazycell 1.2.1 (registry+https://github.com/rust-lang/crates.io-index)" = "b294d6fa9ee409a054354afc4352b0b9ef7ca222c69b8812cbea9e7d2bf3783f"
 "checksum libc 0.2.48 (registry+https://github.com/rust-lang/crates.io-index)" = "e962c7641008ac010fa60a7dfdc1712449f29c44ef2d4702394aea943ee75047"
 "checksum linked-hash-map 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)" = "70fb39025bc7cdd76305867c4eccf2f2dcf6e9a57f5b21a93e1c2d86cd03ec9e"
-"checksum liquid 0.18.1 (registry+https://github.com/rust-lang/crates.io-index)" = "bb45ff5fc4c3e54a0a24250bcf5f51b544625576210128fdb569e2e301c41f50"
+"checksum liquid 0.18.2 (registry+https://github.com/rust-lang/crates.io-index)" = "e1d91078b50038dba2539ec474656192a0c83b4802e999e5ee334bf198a8120c"
 "checksum liquid-compiler 0.18.1 (registry+https://github.com/rust-lang/crates.io-index)" = "d6b581cfb0437adeb4628cceafed44441d0a4a5c858ab169ec932ba4b4fda815"
 "checksum liquid-error 0.18.1 (registry+https://github.com/rust-lang/crates.io-index)" = "76119f2171687b188d7b953627ae924ca0556499b0bd20099ee5f2dea8e8969b"
 "checksum liquid-interpreter 0.18.1 (registry+https://github.com/rust-lang/crates.io-index)" = "0cc07e0e8d8b87a34579e42644ac63e290989d4e0539b79993979163bb43ea7b"

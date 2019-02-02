@@ -39,6 +39,7 @@ impl LiquidBuilder {
         let highlight = Self::highlight(self.theme)?;
         let parser = liquid::ParserBuilder::with_liquid()
             .extra_filters()
+            .jekyll_filters()
             .partials(load_partials_from_path(self.includes_dir)?)
             .block("highlight", highlight)
             .build()?;
