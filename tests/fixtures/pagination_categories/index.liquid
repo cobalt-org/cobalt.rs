@@ -1,0 +1,39 @@
+---
+layout: default.liquid
+pagination:
+  include: Categories
+---
+{% if paginator.index_title %}
+  <div>Category: {% for category in paginator.index_title %}{{ category | prepend: "/" }}{% endfor %}</div>
+  {% if paginator.indexes %}
+    <div>Sub-categories:</div>
+  {% endif %}
+{% endif %}
+{% if paginator.indexes %}
+<ul>
+  {% for pcat in paginator.indexes %}
+    <li><a href="/{{ pcat.index_permalink }}/">{{ pcat.index_title | last }} ({{ pcat.total_pages }})</a>
+  {% endfor %}
+</ul>
+{% endif %}
+
+{% if paginator.pages %}
+<div>Posts in this category:</div>
+<ul>
+  {% for page in paginator.pages %}
+  <li><a href="/{{ page.permalink }}">{{ page.title }}</a>
+    {% endfor %}
+</ul>
+<div>
+  {% if paginator.previous_index %}
+    <a href="{{ paginator.previous_index_permalink }}"
+    class="left arrow">&#8592;</a>
+  {% endif %}
+  {% if paginator.next_index %}
+    <a href="{{ paginator.next_index_permalink }}"
+    class="right arrow">&#8594;</a>
+  {% endif %}
+
+  <span>{{ paginator.index }} / {{ paginator.total_indexes }}</span>
+</div>
+{% endif %}
