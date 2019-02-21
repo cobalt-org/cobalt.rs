@@ -1,0 +1,109 @@
+#!/bin/sh
+#
+# (C) 2014 Alexander Huemer <alexander.huemer@xx.vu>,
+#          Stefan Huber <shuber@sthu.org>
+# (C) 2019 Andreas Rottmann <mail@r0tty.org>
+#
+# Licensed under the MIT license <https://spdx.org/licenses/MIT.html>.
+
+set -e
+
+usage() {
+    echo "USAGE:"
+    echo "  cobalt-git-deploy STAGE-DIR DEPLOY-DIR"
+    echo "  cobalt-git-deploy --help"
+}
+
+invalid_args() {
+    usage >&2
+    exit 1
+}
+
+help() {
+    usage
+    echo
+    cat <<'EOF'
+Deploy a cobalt site atomically from a bare git repository. This
+script is intended to be run from a git `post-update` hook. It takes
+two arguments:
+
+- STAGE-DIR: The working area directory, which will be created if
+  it does not exist. This directory is intended to be under the
+  control of cobalt-git-deploy, and should be empty on the first run
+  of cobalt-git-deploy.
+
+  Note that cobalt-git-deploy will modify and delete files below
+  STAGE-DIR.
+
+- DEPLOY-DIR: The location of a symbolic link which will be updated
+  to the rendered site. This location should either not exist, or
+  already be a symbolic link, otherwise cobalt-git-deploy will fail.
+
+  This is the directory you probably want to point the document root
+  of your webserver to.
+
+# Mode of operation
+
+cobalt-git-deploy will alternatingly use the sub-directories `left`
+and `right` of STAGE-DIR to check out the contents of the current
+master branch of the bare git repository, which must exist in the
+current working directory. It will then build the site in one of these
+directories using cobalt. If successful, DEPLOY-DIR will be updated
+with a symblic link pointing to generated `_site` directory.
+EOF
+}
+
+while [ $# -ne 0 ]; do
+    case "$1" in
+        --help) help; exit 0 ;;
+        -*) invalid_args ;;
+        *) break ;;
+    esac
+done
+
+if [ $# -ne 2 ]; then
+    invalid_args
+fi
+
+STAGE_DIR_BASE="$1"
+DEPLOY_DIR="$2"
+
+mkdir -p "${STAGE_DIR_BASE}"
+touch "${STAGE_DIR_BASE}/state"
+
+STATE=$(cat "${STAGE_DIR_BASE}/state")
+
+case "${STATE}" in
+    "left")
+        STATE="right"
+        ;;
+    "right")
+        STATE="left"
+        ;;
+    *)
+        echo "No previous state saved. First run?"
+        STATE="left"
+        ;;
+esac
+
+
+# See section 4.1 of http://gitolite.com/deploy.html
+export GIT_WORK_TREE="${STAGE_DIR_BASE}/${STATE}"
+export GIT_DIR="$(pwd)"
+
+mkdir -p "${GIT_WORK_TREE}"
+
+echo "Checking out master to ${GIT_WORK_TREE}"
+git checkout --force master
+git reset --hard HEAD
+git clean -dxf
+
+# Let cobalt build the website into ./_site/
+echo "Building site"
+cd ${GIT_WORK_TREE}
+cobalt build
+
+echo "Deploying site in ${DEPLOY_DIR}"
+ln -s -f -n "${GIT_WORK_TREE}/_site" "${DEPLOY_DIR}"
+# We successfully deployed the site
+echo "${STATE}" > "${STAGE_DIR_BASE}/state"
