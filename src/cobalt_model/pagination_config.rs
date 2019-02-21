@@ -13,6 +13,7 @@ pub enum Include {
     None,
     All,
     Tags,
+    Categories,
 }
 
 impl Into<&'static str> for Include {
@@ -21,6 +22,7 @@ impl Into<&'static str> for Include {
             Include::None => "",
             Include::All => "all",
             Include::Tags => "tags",
+            Include::Categories => "categories",
         }
     }
 }

@@ -190,6 +190,7 @@ pub fn generate_paginators(
             create_all_paginators(&all_posts, &doc, &config, None)
         }
         Include::Tags => create_tags_paginators(&all_posts, &doc, &config),
+        Include::Categories => create_categories_paginators(&all_posts, &doc, &config),
         Include::None => {
             unreachable!("PaginationConfigBuilder should have lead to a None for pagination.")
         }
@@ -207,6 +208,10 @@ fn extract_scalar<'a>(a: &'a liquid::value::Value, key: &str) -> Option<&'a liqu
 
 fn extract_tags<'a>(value: &'a liquid::value::Value) -> Option<&'a liquid::value::Array> {
     extract_value(value, "tags").and_then(|tags| tags.as_array())
+}
+
+fn extract_categories<'a>(value: &'a liquid::value::Value) -> Option<&'a liquid::value::Array> {
+    extract_value(value, "categories").and_then(|categories| categories.as_array())
 }
 
 // sort posts by multiple criteria
@@ -242,6 +247,152 @@ fn sort_posts(posts: &mut Vec<&liquid::value::Value>, config: &PaginationConfig)
     })
 }
 
+// Categories
+
+#[derive(Debug)]
+struct Category<'a> {
+    cat_path: liquid::value::Array,
+    posts: Vec<&'a liquid::value::Value>,
+    sub_cats: Vec<Category<'a>>,
+}
+
+impl<'a> Category<'a> {
+    fn new(path: &liquid::value::Array) -> Self {
+        Category {
+            cat_path: path.to_vec(),
+            posts: vec![],
+            sub_cats: vec![],
+        }
+    }
+
+    fn add_post(&mut self, post: &'a liquid::value::Value) {
+        self.posts.push(&post)
+    }
+}
+
+fn compare_category_path(cur_path: &liquid::value::Array, seek: &liquid::value::Array) -> Ordering {
+    cur_path
+        .iter()
+        .partial_cmp(seek.iter())
+        .expect("Arrays of same hierarchy level should be fully comparable")
+}
+
+fn is_leaf_category(cur_idx: usize, categories: &[liquid::value::Value]) -> bool {
+    cur_idx == categories.len()
+}
+
+fn construct_cat_full_path(
+    cur_idx: usize,
+    categories: &[liquid::value::Value],
+) -> liquid::value::Array {
+    categories[..cur_idx].to_vec()
+}
+
+fn next_category(cur_idx: usize) -> usize {
+    cur_idx + 1
+}
+
+// construct a hierarchy of Categories with their posts from a list of categories
+fn parse_categories_list<'a, 'b>(
+    parent: &'b mut Category<'a>,
+    cur_idx: usize,
+    cur_post_categories: &[liquid::value::Value],
+    post: &'a liquid::value::Value,
+) -> Result<()> {
+    if cur_idx <= cur_post_categories.len() {
+        let cat_full_path = construct_cat_full_path(cur_idx, &cur_post_categories);
+        let mut cur_cat = if let Ok(idx) = parent
+            .sub_cats
+            .binary_search_by(|c| compare_category_path(&c.cat_path, &cat_full_path))
+        {
+            &mut parent.sub_cats[idx]
+        } else {
+            let last_idx = parent.sub_cats.len();
+            parent.sub_cats.push(Category::new(&cat_full_path));
+            // need to sort for binary_search_by
+            parent
+                .sub_cats
+                .sort_by(|c1, c2| compare_category_path(&c1.cat_path, &c2.cat_path));
+            &mut parent.sub_cats[last_idx]
+        };
+
+        if is_leaf_category(cur_idx, &cur_post_categories) {
+            cur_cat.add_post(&post);
+        } else {
+            parse_categories_list(
+                &mut cur_cat,
+                next_category(cur_idx),
+                &cur_post_categories,
+                &post,
+            )?;
+        }
+    }
+    Ok(())
+}
+
+fn distribute_posts_by_categories<'a>(
+    all_posts: &[&'a liquid::value::Value],
+) -> Result<Category<'a>> {
+    let mut root = Category::new(&vec![]);
+    for post in all_posts {
+        if let Some(categories) = extract_categories(post) {
+            parse_categories_list(&mut root, 1, categories.as_slice(), &post)?;
+        }
+    }
+    Ok(root)
+}
+
+// walk the categories tree and construct Paginator for each node,
+// filling `pages` and `indexes` accordingly
+fn walk_categories<'a, 'b>(
+    category: &'b mut Category<'a>,
+    config: &PaginationConfig,
+    doc: &Document,
+) -> Result<Vec<Paginator>> {
+    let mut cur_cat_paginators_holder: Vec<Paginator> = vec![];
+    if !category.cat_path.is_empty() {
+        sort_posts(&mut category.posts, &config);
+        let cur_cat_paginators = create_all_paginators(
+            &category.posts,
+            doc,
+            &config,
+            Some(&liquid::value::Value::array(category.cat_path.clone())),
+        )?;
+        if !cur_cat_paginators.is_empty() {
+            cur_cat_paginators_holder.extend(cur_cat_paginators.into_iter());
+        } else {
+            let mut p = Paginator::default();
+            p.index_title = Some(liquid::value::Value::array(category.cat_path.clone()));
+            cur_cat_paginators_holder.push(p);
+        }
+    } else {
+        cur_cat_paginators_holder.push(Paginator::default());
+    }
+    for mut c in &mut category.sub_cats {
+        let mut sub_paginators_holder = walk_categories(&mut c, &config, doc)?;
+
+        if let Some(indexes) = cur_cat_paginators_holder[0].indexes.as_mut() {
+            indexes.push(sub_paginators_holder[0].clone());
+        } else {
+            cur_cat_paginators_holder[0].indexes = Some(vec![sub_paginators_holder[0].clone()]);
+        }
+        cur_cat_paginators_holder.append(&mut sub_paginators_holder);
+    }
+    Ok(cur_cat_paginators_holder)
+}
+
+fn create_categories_paginators(
+    all_posts: &[&liquid::value::Value],
+    doc: &Document,
+    pagination_cfg: &PaginationConfig,
+) -> Result<Vec<Paginator>> {
+    let mut root_cat = distribute_posts_by_categories(&all_posts)?;
+    let paginators_holder = walk_categories(&mut root_cat, &pagination_cfg, doc)?;
+    Ok(paginators_holder)
+}
+
+// Tags
+
 fn distribute_posts_by_tags<'a>(
     all_posts: &[&'a liquid::value::Value],
 ) -> Result<HashMap<String, Vec<&'a liquid::value::Value>>> {
@@ -253,7 +404,6 @@ fn distribute_posts_by_tags<'a>(
                     .as_scalar()
                     .ok_or_else(|| failure::err_msg("Should have string tags"))?
                     .to_str();
-                // add_to_tag(&tag.to_string(), post, &mut per_tags)
                 let cur_tag = per_tags.entry(tag.to_string()).or_insert(vec![]);
                 cur_tag.push(post);
             }
@@ -362,6 +512,23 @@ fn pagination_attributes(page_num: i32, include: String) -> liquid::value::Objec
     attributes
 }
 
+fn index_to_string(index: &liquid::value::Value) -> String {
+    if let Some(index) = index.as_array() {
+        let mut s: String = index
+            .iter()
+            .map(|i| {
+                let mut s = slug::slugify(i.to_str().to_string());
+                s.push('/');
+                s
+            })
+            .collect();
+        s.pop(); // remove last '/'
+        s
+    } else {
+        slug::slugify(index.to_str().to_string())
+    }
+}
+
 fn interpret_permalink(
     config: &PaginationConfig,
     doc: &Document,
@@ -371,7 +538,7 @@ fn interpret_permalink(
     Ok(if page_num == 1 {
         if let Some(index) = index {
             let include: &str = config.include.into();
-            format!("{}/{}", include, slug::slugify(index.to_str()))
+            format!("{}/{}", include, index_to_string(&index))
         } else {
             doc.url_path.clone()
         }
@@ -379,7 +546,7 @@ fn interpret_permalink(
         let mut attributes = document::permalink_attributes(&doc.front, &doc.file_path);
         let include: &str = config.include.into();
         let include: String = if let Some(index) = index {
-            format!("{}/{}", include, slug::slugify(index.to_str()))
+            format!("{}/{}", include, index_to_string(&index))
         } else {
             include.to_owned()
         };
@@ -387,4 +554,21 @@ fn interpret_permalink(
         attributes.extend(pagination_attr.into_iter());
         permalink::explode_permalink(&config.permalink, &attributes)?
     })
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn compare_category_path_test() {
+        let a = vec![liquid::value::Value::scalar("A")];
+        let b = vec![liquid::value::Value::scalar("B")];
+        let ar = liquid::value::Value::array(a);
+        let ar = ar.as_array().unwrap();
+        let br = liquid::value::Value::array(b);
+        let br = br.as_array().unwrap();
+        assert_eq!(Ordering::Less, compare_category_path(&ar, &br));
+        assert_eq!(Ordering::Greater, compare_category_path(&br, &ar));
+    }
 }
