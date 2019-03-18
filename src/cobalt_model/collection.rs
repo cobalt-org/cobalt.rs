@@ -66,8 +66,8 @@ impl CollectionBuilder {
             rss,
             jsonfeed,
             base_url,
-            publish_date_in_filename: _,
             default,
+            ..
         } = self;
 
         let title = title.ok_or_else(|| failure::err_msg("Collection is missing a `title`"))?;
