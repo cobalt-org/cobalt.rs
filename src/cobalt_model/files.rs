@@ -248,7 +248,7 @@ fn find_project_file_internal(dir: path::PathBuf, name: &str) -> Option<path::Pa
 }
 
 pub fn cleanup_path(path: &str) -> String {
-    let stripped = path.trim_left_matches("./");
+    let stripped = path.trim_start_matches("./");
     if stripped == "." {
         String::new()
     } else {
