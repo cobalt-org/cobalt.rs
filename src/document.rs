@@ -232,7 +232,7 @@ impl Document {
             .value(link.clone())
             .permalink(true)
             .build()
-            .map_err(|e| failure::err_msg(e))?;
+            .map_err(failure::err_msg)?;
 
         let item = rss::ItemBuilder::default()
             .title(Some(self.front.title.clone()))
@@ -241,7 +241,7 @@ impl Document {
             .pub_date(self.front.published_date.map(|date| date.to_rfc2822()))
             .description(self.description_to_str())
             .build()
-            .map_err(|e| failure::err_msg(e))?;
+            .map_err(failure::err_msg)?;
         Ok(item)
     }
 

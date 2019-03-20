@@ -444,7 +444,7 @@ impl FrontmatterBuilder {
             description,
             excerpt,
             categories: categories.unwrap_or_else(|| vec![]),
-            tags: tags,
+            tags,
             excerpt_separator: excerpt_separator.unwrap_or_else(|| "\n\n".to_owned()),
             published_date,
             format: format.unwrap_or_else(SourceFormat::default),

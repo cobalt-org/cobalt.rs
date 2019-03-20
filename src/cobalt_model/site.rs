@@ -103,8 +103,7 @@ fn deep_insert(
         _ => Err(failure::format_err!(
             "The data from {:?} can't be loaded: the key already exists",
             file_path
-        )
-        .into()),
+        )),
     }
 }
 
