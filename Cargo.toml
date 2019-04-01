@@ -31,7 +31,7 @@ log = "0.4"
 env_logger = "0.6"
 rss = "1.7"
 jsonfeed = "0.2"
-pulldown-cmark = {version="0.2", default-features = false}
+pulldown-cmark = {version="0.3", default-features = false}
 notify = "4.0"
 ghp = "0.1"
 regex = "1.1"
