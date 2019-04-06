@@ -436,8 +436,8 @@ impl FrontmatterBuilder {
         } else {
             tags
         };
-
         let fm = Frontmatter {
+            pagination: pagination.and_then(|p| p.build(&permalink)),
             permalink,
             slug: slug.ok_or_else(|| failure::err_msg("No slug"))?,
             title: title.ok_or_else(|| failure::err_msg("No title"))?,
@@ -452,7 +452,6 @@ impl FrontmatterBuilder {
             is_draft: is_draft.unwrap_or(false),
             collection,
             data,
-            pagination: pagination.and_then(|p| p.build()),
         };
 
         if !cfg!(feature = "pagination-unstable") && fm.pagination.is_some() {
