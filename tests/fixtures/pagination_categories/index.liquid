@@ -1,7 +1,9 @@
 ---
+permalink: /categories.html
 layout: default.liquid
 pagination:
   include: Categories
+  permalink_suffix: ./_p/{{num}}
 ---
 {% if paginator.index_title %}
   <div>Category: {% for category in paginator.index_title %}{{ category | prepend: "/" }}{% endfor %}</div>

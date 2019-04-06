@@ -103,18 +103,17 @@ fn sort_posts(posts: &mut Vec<&liquid::value::Value>, config: &PaginationConfig)
     })
 }
 
-fn pagination_attributes(page_num: i32, include: String) -> liquid::value::Object {
-    let attributes: liquid::value::Object = vec![
-        ("num".into(), liquid::value::Value::scalar(page_num)),
-        ("include".into(), liquid::value::Value::scalar(include)),
-    ]
-    .into_iter()
-    .collect();
+fn pagination_attributes(page_num: i32) -> liquid::value::Object {
+    let attributes: liquid::value::Object =
+        vec![("num".into(), liquid::value::Value::scalar(page_num))]
+            .into_iter()
+            .collect();
     attributes
 }
 
 fn index_to_string(index: &liquid::value::Value) -> String {
     if let Some(index) = index.as_array() {
+        // categories
         let mut s: String = index
             .iter()
             .map(|i| {
@@ -136,23 +135,41 @@ fn interpret_permalink(
     page_num: usize,
     index: Option<&liquid::value::Value>,
 ) -> Result<String> {
-    Ok(if page_num == 1 {
-        if let Some(index) = index {
-            let include: &str = config.include.into();
-            format!("{}/{}", include, index_to_string(&index))
-        } else {
-            doc.url_path.clone()
-        }
+    let mut attributes = document::permalink_attributes(&doc.front, &doc.file_path);
+    let permalink = permalink::explode_permalink(&config.front_permalink, &attributes)?;
+    let permalink_path = std::path::Path::new(&permalink);
+    let mut pagination_root = permalink_path.extension().map_or_else(
+        || permalink.clone(),
+        |os_str| {
+            permalink
+                .trim_end_matches(&format!(".{}", os_str.to_string_lossy()))
+                .to_string()
+        },
+    );
+    let interpreted_permalink = if page_num == 1 {
+        index.map_or_else(
+            || doc.url_path.clone(),
+            |index| format!("{}/{}", pagination_root, index_to_string(&index)),
+        )
     } else {
-        let mut attributes = document::permalink_attributes(&doc.front, &doc.file_path);
-        let include: &str = config.include.into();
-        let include: String = if let Some(index) = index {
-            format!("{}/{}", include, index_to_string(&index))
-        } else {
-            include.to_owned()
-        };
-        let pagination_attr = pagination_attributes(page_num as i32, include);
+        let pagination_attr = pagination_attributes(page_num as i32);
         attributes.extend(pagination_attr.into_iter());
-        permalink::explode_permalink(&config.permalink, &attributes)?
-    })
+        let index = index.map_or_else(
+            || {
+                if config.include != Include::All {
+                    unreachable!("Include is not `All` and no index");
+                }
+                "all".to_string()
+            },
+            |index| index_to_string(&index),
+        );
+        format!(
+            "{}/{}/{}",
+            pagination_root,
+            index,
+            permalink::explode_permalink(&config.permalink_suffix, &attributes)?
+        )
+    };
+
+    Ok(interpreted_permalink)
 }

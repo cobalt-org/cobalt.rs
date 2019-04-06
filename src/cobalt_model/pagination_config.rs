@@ -3,7 +3,7 @@ use std::vec::Vec;
 
 use super::SortOrder;
 
-pub const DEFAULT_PERMALINK: &str = "{{parent}}/{{include}}/_p/{{num}}/";
+pub const DEFAULT_PERMALINK_SUFFIX: &str = "{{num}}/";
 pub const DEFAULT_SORT: &str = "published_date";
 pub const DEFAULT_PER_PAGE: i32 = 10;
 
@@ -41,7 +41,7 @@ pub struct PaginationConfigBuilder {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub per_page: Option<i32>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub permalink: Option<String>,
+    pub permalink_suffix: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub order: Option<SortOrder>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -67,9 +67,9 @@ impl PaginationConfigBuilder {
         }
     }
 
-    pub fn set_permalink<S: Into<Option<String>>>(self, permalink: S) -> Self {
+    pub fn set_permalink_suffix<S: Into<Option<String>>>(self, permalink_suffix: S) -> Self {
         Self {
-            permalink: permalink.into(),
+            permalink_suffix: permalink_suffix.into(),
             ..self
         }
     }
@@ -95,8 +95,8 @@ impl PaginationConfigBuilder {
         if self.per_page.is_none() {
             self.per_page = secondary.per_page;
         }
-        if self.permalink.is_none() {
-            self.permalink = secondary.permalink.clone();
+        if self.permalink_suffix.is_none() {
+            self.permalink_suffix = secondary.permalink_suffix.clone();
         }
         if self.order.is_none() {
             self.order = secondary.order;
@@ -107,11 +107,11 @@ impl PaginationConfigBuilder {
         self
     }
 
-    pub fn build(self) -> Option<PaginationConfig> {
+    pub fn build(self, permalink: &str) -> Option<PaginationConfig> {
         let Self {
             include,
             per_page,
-            permalink,
+            permalink_suffix,
             order,
             sort_by,
         } = self;
@@ -121,13 +121,15 @@ impl PaginationConfigBuilder {
             return None;
         }
         let per_page = per_page.unwrap_or(DEFAULT_PER_PAGE);
-        let permalink = permalink.unwrap_or_else(|| DEFAULT_PERMALINK.to_owned());
+        let permalink_suffix =
+            permalink_suffix.unwrap_or_else(|| DEFAULT_PERMALINK_SUFFIX.to_owned());
         let order = order.unwrap_or(SortOrder::Desc);
         let sort_by = sort_by.unwrap_or_else(|| vec![DEFAULT_SORT.to_owned()]);
         Some(PaginationConfig {
             include,
             per_page,
-            permalink,
+            front_permalink: permalink.to_owned(),
+            permalink_suffix,
             order,
             sort_by,
         })
@@ -139,7 +141,8 @@ impl PaginationConfigBuilder {
 pub struct PaginationConfig {
     pub include: Include,
     pub per_page: i32,
-    pub permalink: String,
+    pub front_permalink: String,
+    pub permalink_suffix: String,
     pub order: SortOrder,
     pub sort_by: Vec<String>,
 }
@@ -149,7 +152,8 @@ impl Default for PaginationConfig {
         PaginationConfig {
             include: Default::default(),
             per_page: DEFAULT_PER_PAGE,
-            permalink: DEFAULT_PERMALINK.to_owned(),
+            permalink_suffix: DEFAULT_PERMALINK_SUFFIX.to_owned(),
+            front_permalink: Default::default(),
             order: SortOrder::Desc,
             sort_by: vec![DEFAULT_SORT.to_owned()],
         }
