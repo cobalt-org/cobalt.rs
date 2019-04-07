@@ -1,4 +1,3 @@
-use std::borrow::Cow::Owned;
 use std::io::Write;
 
 use itertools::Itertools;
@@ -164,7 +163,7 @@ impl<'a> Iterator for DecoratedParser<'a> {
                         let highlighted = &h.highlight(&text, &SETUP.syntax_set);
                         let html =
                             styled_line_to_highlighted_html(highlighted, IncludeBackground::Yes);
-                        Some(Html(Owned(html)))
+                        Some(Html(pulldown_cmark::CowStr::Boxed(html.into_boxed_str())))
                     } else {
                         Some(Text(text))
                     }
@@ -179,13 +178,17 @@ impl<'a> Iterator for DecoratedParser<'a> {
                             .unwrap_or_else(|| SETUP.syntax_set.find_syntax_plain_text());
                         self.h = Some(HighlightLines::new(cur_syntax, self.theme));
                         let snippet = start_highlighted_html_snippet(self.theme);
-                        return Some(Html(Owned(snippet.0)));
+                        return Some(Html(pulldown_cmark::CowStr::Boxed(
+                            snippet.0.into_boxed_str(),
+                        )));
                     }
                     if let End(cmark::Tag::CodeBlock(_)) = item {
                         // reset highlighter
                         self.h = None;
                         // close the code block
-                        return Some(Html(Owned("</pre>".to_owned())));
+                        return Some(Html(pulldown_cmark::CowStr::Boxed(
+                            "</pre>".to_owned().into_boxed_str(),
+                        )));
                     }
 
                     Some(item)
@@ -248,24 +251,16 @@ mod test {
     const MARKDOWN_RENDERED: &str =
         "<pre style=\"background-color:#2b303b;\">\n\
          <span style=\"background-color:#2b303b;color:#b48ead;\">mod </span>\
-         <span style=\"background-color:#2b303b;color:#c0c5ce;\">test {\n\
-         </span><span style=\"background-color:#2b303b;color:#c0c5ce;\">        </span>\
+         <span style=\"background-color:#2b303b;color:#c0c5ce;\">test {\n        </span>\
          <span style=\"background-color:#2b303b;color:#b48ead;\">fn </span>\
          <span style=\"background-color:#2b303b;color:#8fa1b3;\">hello</span>\
          <span style=\"background-color:#2b303b;color:#c0c5ce;\">(</span>\
          <span style=\"background-color:#2b303b;color:#bf616a;\">arg</span>\
          <span style=\"background-color:#2b303b;color:#c0c5ce;\">: int) -&gt; </span>\
          <span style=\"background-color:#2b303b;color:#b48ead;\">bool </span>\
-         <span style=\"background-color:#2b303b;color:#c0c5ce;\">{\n\
-         </span><span style=\"background-color:#2b303b;color:#c0c5ce;\">            </span>\
-         <span style=\"background-color:#2b303b;color:#d08770;\">true\n\
-         </span><span style=\"background-color:#2b303b;color:#c0c5ce;\">        </span>\
-         <span style=\"background-color:#2b303b;color:#c0c5ce;\">}\n\
-         </span><span style=\"background-color:#2b303b;color:#c0c5ce;\">    </span>\
-         <span style=\"background-color:#2b303b;color:#c0c5ce;\">}\n\
-         </span><span style=\"background-color:#2b303b;color:#c0c5ce;\">    </span>\
-         <span style=\"background-color:#2b303b;color:#c0c5ce;\">\n\
-         </span></pre>";
+         <span style=\"background-color:#2b303b;color:#c0c5ce;\">{\n            </span>\
+         <span style=\"background-color:#2b303b;color:#d08770;\">true\n        </span>\
+         <span style=\"background-color:#2b303b;color:#c0c5ce;\">}\n    }\n    \n</span></pre>";
 
     #[test]
     fn markdown_renders_rust() {
