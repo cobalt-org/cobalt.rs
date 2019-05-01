@@ -22,7 +22,7 @@ name = "cobalt"
 doc = false
 
 [dependencies]
-clap = "2.32"
+clap = "2.33"
 liquid = { version = "0.18.2", features = ["jekyll-filters"] }
 deunicode = "1.0.0"
 walkdir = "2.2"
