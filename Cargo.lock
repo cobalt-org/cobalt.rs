@@ -228,7 +228,7 @@ dependencies = [
  "pulldown-cmark 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "regex 1.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "rss 1.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "sass-rs 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "sass-rs 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde 1.0.89 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_json 1.0.39 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_yaml 0.8.8 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1252,7 +1252,7 @@ dependencies = [
 
 [[package]]
 name = "sass-rs"
-version = "0.2.1"
+version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "libc 0.2.48 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1802,7 +1802,7 @@ dependencies = [
 "checksum ryu 0.2.7 (registry+https://github.com/rust-lang/crates.io-index)" = "eb9e9b8cde282a9fe6a42dd4681319bfb63f121b8a8ee9439c6f4107e58a46f7"
 "checksum safemem 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)" = "8dca453248a96cb0749e36ccdfe2b0b4e54a61bfef89fb97ec621eb8e0a93dd9"
 "checksum same-file 1.0.4 (registry+https://github.com/rust-lang/crates.io-index)" = "8f20c4be53a8a1ff4c1f1b2bd14570d2f634628709752f0702ecdd2b3f9a5267"
-"checksum sass-rs 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)" = "90f8cf6e645aa843ffffcbdc1e8752b1f221dfa314c81895aeb229a77aea7e05"
+"checksum sass-rs 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)" = "cabcf7c6e55053f359911187ac401409aad2dc14338cae972dec266fee486abd"
 "checksum sass-sys 0.4.7 (registry+https://github.com/rust-lang/crates.io-index)" = "173ac202b4585ecfb1521159491175a787584fcc346457d53a099b240c69cd41"
 "checksum semver 0.9.0 (registry+https://github.com/rust-lang/crates.io-index)" = "1d7eb9ef2c18661902cc47e535f9bc51b78acd254da71d375c2f6720d9a40403"
 "checksum semver-parser 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)" = "388a1df253eca08550bef6c72392cfe7c30914bf41df5269b68cbd6ff8f570a3"
