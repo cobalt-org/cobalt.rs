@@ -55,7 +55,7 @@ pub fn create_tags_paginators(
             acc.paginators.extend(cur_tag_paginators.into_iter());
             Ok(acc)
         })
-        .or_else(std::result::Result::<_, Error>::Err)?;
+        .or_else(std::result::Result::<_, failure::Error>::Err)?;
 
     tag_paginators.firsts_of_tags.sort_unstable_by_key(|p| {
         if let Some(ref index_title) = p.index_title {

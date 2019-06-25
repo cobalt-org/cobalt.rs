@@ -1,0 +1,44 @@
+---
+permalink: /dates.html
+layout: default.liquid
+pagination:
+  include: Dates
+  permalink_suffix: ./_p/{{num}}
+---
+{% if paginator.index_title %}
+  {% capture date_title %}{% for field in paginator.index_title %}{{ field | prepend: "-" }}{% endfor %}{% endcapture %}
+  {% capture date_clean %}{{ date_title | remove_first: "-" }}{% endcapture %}
+  <div>Date: {{ date_clean | date: "%Y/%B" }}</div>
+  {% if paginator.indexes %}
+    <div>Sub-dates:</div>
+  {% endif %}
+{% endif %}
+{% if paginator.indexes %}
+All years:
+<ul>
+  {% for pdate in paginator.indexes %}
+    <li><a href="/{{ pdate.index_permalink }}/">{{ pdate.index_title | last }} ({{ pdate.total_pages }})</a>
+  {% endfor %}
+</ul>
+{% endif %}
+
+{% if paginator.pages %}
+<div>Posts in this date:</div>
+<ul>
+  {% for page in paginator.pages %}
+  <li><a href="/{{ page.permalink }}">{{ page.title }}</a>
+    {% endfor %}
+</ul>
+<div>
+  {% if paginator.previous_index %}
+    <a href="{{ paginator.previous_index_permalink }}"
+    class="left arrow">&#8592;</a>
+  {% endif %}
+  {% if paginator.next_index %}
+    <a href="{{ paginator.next_index_permalink }}"
+    class="right arrow">&#8594;</a>
+  {% endif %}
+
+  <span>{{ paginator.index }} / {{ paginator.total_indexes }}</span>
+</div>
+{% endif %}
