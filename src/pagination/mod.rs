@@ -138,7 +138,7 @@ fn interpret_permalink(
     let mut attributes = document::permalink_attributes(&doc.front, &doc.file_path);
     let permalink = permalink::explode_permalink(&config.front_permalink, &attributes)?;
     let permalink_path = std::path::Path::new(&permalink);
-    let mut pagination_root = permalink_path.extension().map_or_else(
+    let pagination_root = permalink_path.extension().map_or_else(
         || permalink.clone(),
         |os_str| {
             permalink
@@ -149,7 +149,13 @@ fn interpret_permalink(
     let interpreted_permalink = if page_num == 1 {
         index.map_or_else(
             || doc.url_path.clone(),
-            |index| format!("{}/{}", pagination_root, index_to_string(&index)),
+            |index| {
+                if pagination_root.is_empty() {
+                    index_to_string(&index)
+                } else {
+                    format!("{}/{}", pagination_root, index_to_string(&index))
+                }
+            },
         )
     } else {
         let pagination_attr = pagination_attributes(page_num as i32);
@@ -157,19 +163,26 @@ fn interpret_permalink(
         let index = index.map_or_else(
             || {
                 if config.include != Include::All {
-                    unreachable!("Include is not `All` and no index");
+                    unreachable!("Include is not All and no index");
                 }
                 "all".to_string()
             },
             |index| index_to_string(&index),
         );
-        format!(
-            "{}/{}/{}",
-            pagination_root,
-            index,
-            permalink::explode_permalink(&config.permalink_suffix, &attributes)?
-        )
+        if pagination_root.is_empty() {
+            format!(
+                "{}/{}",
+                index,
+                permalink::explode_permalink(&config.permalink_suffix, &attributes)?
+            )
+        } else {
+            format!(
+                "{}/{}/{}",
+                pagination_root,
+                index,
+                permalink::explode_permalink(&config.permalink_suffix, &attributes)?
+            )
+        }
     };
-
     Ok(interpreted_permalink)
 }

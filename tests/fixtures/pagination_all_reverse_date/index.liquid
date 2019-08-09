@@ -15,11 +15,11 @@ This is my Index page!
 
 <div>
   {% if paginator.previous_index %}
-    <a href="{{ paginator.previous_index_permalink }}"
+    <a href="/{{ paginator.previous_index_permalink }}"
     class="left arrow">&#8592;</a>
   {% endif %}
   {% if paginator.next_index %}
-    <a href="{{ paginator.next_index_permalink }}"
+    <a href="/{{ paginator.next_index_permalink }}"
     class="right arrow">&#8594;</a>
   {% endif %}
 
