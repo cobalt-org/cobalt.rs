@@ -46,7 +46,7 @@ impl LiquidBuilder {
         Ok(Liquid { parser })
     }
 
-    fn highlight(theme: String) -> Result<Box<liquid::compiler::ParseBlock>> {
+    fn highlight(theme: String) -> Result<Box<dyn liquid::compiler::ParseBlock>> {
         let result: Result<()> = match syntax_highlight::has_syntax_theme(&theme) {
             Ok(true) => Ok(()),
             Ok(false) => Err(failure::format_err!(
