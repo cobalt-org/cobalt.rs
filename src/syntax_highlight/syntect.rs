@@ -70,7 +70,7 @@ struct CodeBlock {
 }
 
 impl Renderable for CodeBlock {
-    fn render_to(&self, writer: &mut Write, _context: &mut Context) -> Result<(), liquid::Error> {
+    fn render_to(&self, writer: &mut dyn Write, _context: &mut Context) -> Result<(), liquid::Error> {
         let syntax = match self.lang {
             Some(ref lang) => SETUP.syntax_set.find_syntax_by_token(lang),
             _ => None,
@@ -106,7 +106,7 @@ impl liquid::compiler::ParseBlock for CodeBlockParser {
         mut arguments: TagTokenIter,
         mut tokens: TagBlock,
         _options: &Language,
-    ) -> Result<Box<Renderable>, liquid::Error> {
+    ) -> Result<Box<dyn Renderable>, liquid::Error> {
         let lang = arguments
             .expect_next("Identifier or literal expected.")
             .ok()

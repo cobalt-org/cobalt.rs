@@ -84,7 +84,7 @@ impl FilesBuilder {
 }
 
 pub struct FilesIterator<'a> {
-    inner: Box<Iterator<Item = path::PathBuf> + 'a>,
+    inner: Box<dyn Iterator<Item = path::PathBuf> + 'a>,
 }
 
 impl<'a> FilesIterator<'a> {
