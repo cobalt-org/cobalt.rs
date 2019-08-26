@@ -5,11 +5,13 @@ use crate::cobalt_model::pagination_config::PaginationConfig;
 use crate::cobalt_model::permalink;
 use crate::cobalt_model::slug;
 use crate::cobalt_model::SortOrder;
+
 use crate::document;
 use crate::document::Document;
-use crate::error::*;
+use crate::error::Result;
 
 mod categories;
+mod dates;
 mod helpers;
 mod paginator;
 mod tags;
@@ -33,6 +35,7 @@ pub fn generate_paginators(
         }
         Include::Tags => tags::create_tags_paginators(&all_posts, &doc, &config),
         Include::Categories => categories::create_categories_paginators(&all_posts, &doc, &config),
+        Include::Dates => dates::create_dates_paginators(&all_posts, &doc, &config),
         Include::None => {
             unreachable!("PaginationConfigBuilder should have lead to a None for pagination.")
         }
