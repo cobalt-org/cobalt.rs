@@ -11,8 +11,7 @@ license = "MIT"
 edition = "2018"
 
 [badges]
-travis-ci = { repository = "cobalt-org/cobalt.rs" }
-appveyor = { repository = "cobalt-org/cobalt.rs" }
+azure-devops = { project = "cobalt-org", pipeline = "cobalt.rs" }
 
 [lib]
 name="cobalt"
