@@ -4,15 +4,87 @@ schedules:
   branches:
     include:
     - master
+variables:
+  windows_vm: vs2017-win2016
+  mac_vm: macos-10.14
+  linux_vm: ubuntu-16.04
+  rust_style: 1.35.0
 
 stages:
+- stage: check
+  displayName: Compilation Check
+  jobs:
+  - job: cargo_check
+    displayName: cargo check
+    pool:
+      vmImage: ${{ variables.linux_vm }}
+    steps:
+    - template: azure/install-rust.yml@templates
+      parameters:
+        rust: stable
+    - script: cargo check --all --locked
+      displayName: Check that Cargo.lock is satisfiable
+    - script: cargo check --all --bins --examples --tests
+      displayName: Default features
+    - script: cargo check --all --bins --examples --tests --no-default-features
+      displayName: No features
+    - script: cargo check --all --bins --examples --tests --all-features
+      displayName: All features
+- stage: test
+  displayName: Test
+  jobs:
+  - job: test
+    displayName: Test
+    strategy:
+      matrix:
+        windows:
+          imageName: ${{ variables.windows_vm }}
+          target: 'x86_64-pc-windows-msvc'
+          channel: stable
+        windows_beta:
+          imageName: ${{ variables.windows_vm }}
+          channel: beta
+        windows_nightly:
+          imageName: ${{ variables.windows_vm }}
+          channel: nightly
+        mac:
+          imageName: ${{ variables.mac_vm }}
+          channel: stable
+        mac_beta:
+          imageName: ${{ variables.mac_vm }}
+          channel: beta
+        mac_nightly:
+          imageName: ${{ variables.mac_vm }}
+          channel: nightly
+        linux:
+          imageName: ${{ variables.linux_vm }}
+          channel: stable
+        linux_beta:
+          imageName: ${{ variables.linux_vm }}
+          channel: beta
+        linux_nightly:
+          imageName: ${{ variables.linux_vm }}
+          channel: nightly
+    continueOnError: ${{ eq(variables.channel, 'nightly') }}
+    pool:
+      vmImage: $(imageName)
+    steps:
+    - template: azure/install-rust.yml@templates
+      parameters:
+        rust: $(channel)
+    - script: cargo test --all
+      displayName: Default features
+    - script: cargo test --all --no-default-features
+      displayName: No features
+    - script: cargo test --all --all-features
+      displayName: All features
 - stage: style
   displayName: Style checks
   dependsOn: []
   jobs:
   - job: "Committed"
     pool:
-     vmImage: 'ubuntu-16.04'
+      vmImage: ${{ variables.linux_vm }}
     steps:
     - checkout: self
     - template: v1/azdo-step.yml@gh-install
@@ -23,6 +95,32 @@ stages:
     - script: $(Build.StagingDirectory)/tools/committed HEAD~..HEAD^2 --no-merge-commit -vv
       displayName: Committed
     condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'))
+  - job: rust_style
+    displayName: Rust Style
+    strategy:
+      matrix:
+        current:
+          channel: ${{ variables.rust_style }}
+        next:
+          channel: stable
+    continueOnError: ${{ eq(variables.channel, 'stable') }}
+    pool:
+      vmImage: ${{ variables.linux_vm }}
+    steps:
+    - template: azure/install-rust.yml@templates
+      parameters:
+        rust: stable
+        components:
+          - rustfmt
+          - clippy
+    - script: cargo fmt --all -- --check
+      displayName: rustfmt
+    - script: cargo check --all --bins --examples --tests --all-features
+      displayName: Warnings
+      env:
+        RUSTFLAGS: "-D warnings"
+    - script:  cargo clippy --all
+      displayName: clippy
 
 resources:
   repositories:
