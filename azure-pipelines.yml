@@ -121,6 +121,13 @@ stages:
         RUSTFLAGS: "-D warnings"
     - script:  cargo clippy --all
       displayName: clippy
+- stage: coverage
+  displayName: Code coverage
+  dependsOn: test
+  jobs:
+    - template: azure/coverage.yml@templates
+      parameters:
+        codecov_token: $(CODECOV_TOKEN_SECRET)
 
 resources:
   repositories:
