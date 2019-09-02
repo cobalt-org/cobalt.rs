@@ -143,6 +143,7 @@ fn document_attributes(
         ),
         ("categories".into(), categories),
         ("is_draft".into(), Value::scalar(front.is_draft)),
+        ("weight".into(), Value::scalar(front.weight)),
         ("file".into(), Value::Object(file)),
         ("collection".into(), Value::scalar(front.collection.clone())),
         ("data".into(), Value::Object(front.data.clone())),

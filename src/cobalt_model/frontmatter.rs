@@ -82,6 +82,8 @@ pub struct FrontmatterBuilder {
     pub layout: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub is_draft: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub weight: Option<i32>,
     #[serde(skip_serializing_if = "liquid::value::Object::is_empty")]
     pub data: liquid::value::Object,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -195,6 +197,13 @@ impl FrontmatterBuilder {
         }
     }
 
+    pub fn set_weight<I: Into<Option<i32>>>(self, weight: I) -> Self {
+        Self {
+            weight: weight.into(),
+            ..self
+        }
+    }
+
     pub fn set_collection<S: Into<Option<String>>>(self, collection: S) -> Self {
         Self {
             collection: collection.into(),
@@ -261,6 +270,10 @@ impl FrontmatterBuilder {
         self.merge(Self::new().set_draft(draft.into()))
     }
 
+    pub fn merge_weight<I: Into<Option<i32>>>(self, weight: I) -> Self {
+        self.merge(Self::new().set_weight(weight.into()))
+    }
+
     #[cfg(test)]
     pub fn merge_collection<S: Into<Option<String>>>(self, collection: S) -> Self {
         self.merge(Self::new().set_collection(collection.into()))
@@ -280,6 +293,7 @@ impl FrontmatterBuilder {
             format,
             layout,
             is_draft,
+            weight,
             collection,
             data,
             pagination,
@@ -297,6 +311,7 @@ impl FrontmatterBuilder {
             format,
             layout,
             is_draft,
+            weight,
             collection,
             data: merge_objects(data, other_data),
             pagination,
@@ -317,6 +332,7 @@ impl FrontmatterBuilder {
             format,
             layout,
             is_draft,
+            weight,
             collection,
             data,
             pagination,
@@ -334,6 +350,7 @@ impl FrontmatterBuilder {
             format: other_format,
             layout: other_layout,
             is_draft: other_is_draft,
+            weight: other_weight,
             collection: other_collection,
             data: other_data,
             pagination: other_pagination,
@@ -351,6 +368,7 @@ impl FrontmatterBuilder {
             format: format.or_else(|| other_format),
             layout: layout.or_else(|| other_layout),
             is_draft: is_draft.or_else(|| other_is_draft),
+            weight: weight.or_else(|| other_weight),
             collection: collection.or_else(|| other_collection),
             data: merge_objects(data, other_data),
             pagination: merge_pagination(pagination, other_pagination),
@@ -409,6 +427,7 @@ impl FrontmatterBuilder {
             format,
             layout,
             is_draft,
+            weight,
             collection,
             data,
             pagination,
@@ -450,6 +469,7 @@ impl FrontmatterBuilder {
             format: format.unwrap_or_else(SourceFormat::default),
             layout,
             is_draft: is_draft.unwrap_or(false),
+            weight: weight.unwrap_or(0),
             collection,
             data,
         };
@@ -491,6 +511,7 @@ pub struct Frontmatter {
     pub format: SourceFormat,
     pub layout: Option<String>,
     pub is_draft: bool,
+    pub weight: i32,
     pub collection: String,
     pub data: liquid::value::Object,
     pub pagination: Option<pagination_config::PaginationConfig>,
@@ -752,6 +773,7 @@ mod test {
             format: Some(SourceFormat::Markdown),
             layout: Some("layout a".to_owned()),
             is_draft: Some(true),
+            weight: Some(0),
             collection: Some("pages".to_owned()),
             data: liquid::value::Object::new(),
             pagination: Some(Default::default()),
@@ -769,6 +791,7 @@ mod test {
             format: Some(SourceFormat::Raw),
             layout: Some("layout b".to_owned()),
             is_draft: Some(true),
+            weight: Some(0),
             collection: Some("posts".to_owned()),
             data: liquid::value::Object::new(),
             pagination: Some(Default::default()),
@@ -799,6 +822,7 @@ mod test {
             format: Some(SourceFormat::Markdown),
             layout: Some("layout a".to_owned()),
             is_draft: Some(true),
+            weight: Some(0),
             collection: Some("pages".to_owned()),
             data: liquid::value::Object::new(),
             pagination: Some(Default::default()),
@@ -817,6 +841,7 @@ mod test {
             .merge_format(SourceFormat::Raw)
             .merge_layout("layout b".to_owned())
             .merge_draft(true)
+            .merge_weight(0)
             .merge_collection("posts".to_owned());
         assert_eq!(merge_b_into_a, a);
 
@@ -833,6 +858,7 @@ mod test {
             .merge_format(None)
             .merge_layout(None)
             .merge_draft(None)
+            .merge_weight(None)
             .merge_collection(None);
         assert_eq!(merge_empty_into_a, a);
 
@@ -848,6 +874,7 @@ mod test {
             .merge_format(SourceFormat::Markdown)
             .merge_layout("layout a".to_owned())
             .merge_draft(true)
+            .merge_weight(0)
             .merge_collection("pages".to_owned())
             .merge_pagination(Some(Default::default()));
         assert_eq!(merge_a_into_empty, a);

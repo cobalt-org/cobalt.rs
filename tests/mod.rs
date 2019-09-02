@@ -304,3 +304,15 @@ pub fn pagination_tags() {
 pub fn pagination_categories() {
     run_test("pagination_categories").expect("Build error");
 }
+
+#[cfg(feature = "pagination-unstable")]
+#[test]
+pub fn pagination_sort_by_weight() {
+    run_test("pagination_sort_by_weight").expect("Build error");
+}
+
+#[cfg(feature = "pagination-unstable")]
+#[test]
+pub fn pagination_dates() {
+    run_test("pagination_dates").expect("Build error");
+}
