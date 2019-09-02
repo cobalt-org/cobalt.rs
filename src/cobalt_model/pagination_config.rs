@@ -4,8 +4,11 @@ use std::vec::Vec;
 use super::SortOrder;
 
 pub const DEFAULT_PERMALINK_SUFFIX: &str = "{{num}}/";
-pub const DEFAULT_SORT: &str = "published_date";
+
 pub const DEFAULT_PER_PAGE: i32 = 10;
+lazy_static! {
+    static ref DEFAULT_SORT: Vec<String> = vec!["weight".to_string(), "published_date".to_string()];
+}
 
 lazy_static! {
     static ref DEFAULT_DATE_INDEX: Vec<DateIndex> = vec![DateIndex::Year, DateIndex::Month];
@@ -150,7 +153,7 @@ impl PaginationConfigBuilder {
         let permalink_suffix =
             permalink_suffix.unwrap_or_else(|| DEFAULT_PERMALINK_SUFFIX.to_owned());
         let order = order.unwrap_or(SortOrder::Desc);
-        let sort_by = sort_by.unwrap_or_else(|| vec![DEFAULT_SORT.to_owned()]);
+        let sort_by = sort_by.unwrap_or_else(|| DEFAULT_SORT.to_vec());
         let date_index = date_index.unwrap_or_else(|| DEFAULT_DATE_INDEX.to_vec());
         Some(PaginationConfig {
             include,
@@ -184,7 +187,7 @@ impl Default for PaginationConfig {
             permalink_suffix: DEFAULT_PERMALINK_SUFFIX.to_owned(),
             front_permalink: Default::default(),
             order: SortOrder::Desc,
-            sort_by: vec![DEFAULT_SORT.to_owned()],
+            sort_by: DEFAULT_SORT.to_vec(),
             date_index: DEFAULT_DATE_INDEX.to_vec(),
         }
     }
