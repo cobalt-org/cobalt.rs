@@ -221,7 +221,7 @@ dependencies = [
  "normalize-line-endings 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "notify 4.0.12 (registry+https://github.com/rust-lang/crates.io-index)",
  "predicates 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "pulldown-cmark 0.5.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "pulldown-cmark 0.5.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "regex 1.1.7 (registry+https://github.com/rust-lang/crates.io-index)",
  "rss 1.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "sass-rs 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1056,7 +1056,7 @@ dependencies = [
 
 [[package]]
 name = "pulldown-cmark"
-version = "0.5.2"
+version = "0.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "bitflags 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1732,7 +1732,7 @@ dependencies = [
 "checksum predicates-core 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)" = "06075c3a3e92559ff8929e7a280684489ea27fe44805174c3ebd9328dcb37178"
 "checksum predicates-tree 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)" = "8e63c4859013b38a76eca2414c64911fba30def9e3202ac461a2d22831220124"
 "checksum proc-macro2 0.4.30 (registry+https://github.com/rust-lang/crates.io-index)" = "cf3d2011ab5c909338f7887f4fc896d35932e29146c12c8d01da6b22a80ba759"
-"checksum pulldown-cmark 0.5.2 (registry+https://github.com/rust-lang/crates.io-index)" = "051e60ace841b3bfecd402fe5051c06cb3bec4a6e6fdd060a37aa8eb829a1db3"
+"checksum pulldown-cmark 0.5.3 (registry+https://github.com/rust-lang/crates.io-index)" = "77043da1282374688ee212dc44b3f37ff929431de9c9adc3053bd3cee5630357"
 "checksum quick-error 1.2.2 (registry+https://github.com/rust-lang/crates.io-index)" = "9274b940887ce9addde99c4eee6b5c44cc494b182b97e73dc8ffdcb3397fd3f0"
 "checksum quick-xml 0.14.0 (registry+https://github.com/rust-lang/crates.io-index)" = "0a8b2062cd4735d683121dbd525f5961226936229b0ac6bbbc40b34155744a41"
 "checksum quote 0.6.12 (registry+https://github.com/rust-lang/crates.io-index)" = "faf4799c5d274f3868a4aae320a0a182cbd2baee377b378f080e16a23e9d80db"
