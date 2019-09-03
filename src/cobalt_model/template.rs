@@ -41,7 +41,7 @@ impl LiquidBuilder {
             .extra_filters()
             .jekyll_filters()
             .partials(load_partials_from_path(self.includes_dir)?)
-            .block("highlight", highlight)
+            .block(highlight)
             .build()?;
         Ok(Liquid { parser })
     }

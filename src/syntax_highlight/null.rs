@@ -90,10 +90,23 @@ impl CodeBlockParser {
     }
 }
 
+impl liquid::compiler::BlockReflection for CodeBlockParser {
+    fn start_tag(&self) -> &'static str {
+        "highlight"
+    }
+
+    fn end_tag(&self) -> &'static str {
+        "endhighlight"
+    }
+
+    fn description(&self) -> &'static str {
+        "Syntax highlight code using HTML"
+    }
+}
+
 impl liquid::compiler::ParseBlock for CodeBlockParser {
     fn parse(
         &self,
-        _tag_name: &str,
         mut arguments: TagTokenIter,
         mut tokens: TagBlock,
         _options: &Language,
@@ -157,7 +170,7 @@ mod test {
         let highlight: Box<liquid::compiler::ParseBlock> =
             Box::new(CodeBlockParser::new("base16-ocean.dark".to_owned()));
         let parser = liquid::ParserBuilder::new()
-            .block("highlight", highlight)
+            .block(highlight)
             .build()
             .unwrap();
         let template = parser
