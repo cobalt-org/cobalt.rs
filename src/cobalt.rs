@@ -133,15 +133,40 @@ fn generate_doc(
 ) -> Result<()> {
     // Everything done with `globals` is terrible for performance.  liquid#95 allows us to
     // improve this.
-    let mut globals: liquid::value::Object = vec![
-        (
-            "site".into(),
-            liquid::value::Value::Object(context.site.clone()),
-        ),
-        global_collection,
-    ]
-    .into_iter()
-    .collect();
+    let mut globals: liquid::value::Object =
+        if doc.front.pagination.is_some() || doc.front.pagination_compat {
+            warn!(
+            "`collections.posts` is deprecated. Please transition to `paginator` and then disable \
+            support for `collections.posts` by setting `pagination_compat` to `false`"
+            );
+            let collections_posts: liquid::value::Object =
+                vec![("posts".into(), global_collection.1.clone())]
+                    .into_iter()
+                    .collect();
+            vec![
+                (
+                    "site".into(),
+                    liquid::value::Value::Object(context.site.clone()),
+                ),
+                (
+                    "collections".into(),
+                    liquid::value::Value::Object(collections_posts),
+                ),
+                global_collection,
+            ]
+            .into_iter()
+            .collect()
+        } else {
+            vec![
+                (
+                    "site".into(),
+                    liquid::value::Value::Object(context.site.clone()),
+                ),
+                global_collection,
+            ]
+            .into_iter()
+            .collect()
+        };
     globals.insert(
         "page".into(),
         liquid::value::Value::Object(doc.attributes.clone()),

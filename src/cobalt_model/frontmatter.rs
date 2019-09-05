@@ -88,6 +88,8 @@ pub struct FrontmatterBuilder {
     pub data: liquid::value::Object,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub pagination: Option<pagination_config::PaginationConfigBuilder>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub pagination_compat: Option<bool>,
     // Controlled by where the file is found.  We might allow control over the type at a later
     // point but we need to first define those semantics.
     #[serde(skip)]
@@ -154,6 +156,13 @@ impl FrontmatterBuilder {
     ) -> Self {
         Self {
             pagination: pagination.into(),
+            ..self
+        }
+    }
+
+    pub fn set_pagination_compat<B: Into<Option<bool>>>(self, pagination_compat: B) -> Self {
+        Self {
+            pagination_compat: pagination_compat.into(),
             ..self
         }
     }
@@ -257,6 +266,10 @@ impl FrontmatterBuilder {
         self.merge(Self::new().set_pagination(secondary.into()))
     }
 
+    pub fn merge_pagination_compat<B: Into<Option<bool>>>(self, pagination_compat: B) -> Self {
+        self.merge(Self::new().set_pagination_compat(pagination_compat.into()))
+    }
+
     #[cfg(test)]
     pub fn merge_format<S: Into<Option<SourceFormat>>>(self, format: S) -> Self {
         self.merge(Self::new().set_format(format.into()))
@@ -297,6 +310,7 @@ impl FrontmatterBuilder {
             collection,
             data,
             pagination,
+            pagination_compat,
         } = self;
         Self {
             permalink,
@@ -315,6 +329,7 @@ impl FrontmatterBuilder {
             collection,
             data: merge_objects(data, other_data),
             pagination,
+            pagination_compat,
         }
     }
 
@@ -336,6 +351,7 @@ impl FrontmatterBuilder {
             collection,
             data,
             pagination,
+            pagination_compat,
         } = self;
         let Self {
             permalink: other_permalink,
@@ -354,6 +370,7 @@ impl FrontmatterBuilder {
             collection: other_collection,
             data: other_data,
             pagination: other_pagination,
+            pagination_compat: other_pagination_compat,
         } = other;
         Self {
             permalink: permalink.or_else(|| other_permalink),
@@ -372,6 +389,7 @@ impl FrontmatterBuilder {
             collection: collection.or_else(|| other_collection),
             data: merge_objects(data, other_data),
             pagination: merge_pagination(pagination, other_pagination),
+            pagination_compat: pagination_compat.or_else(|| other_pagination_compat),
         }
     }
 
@@ -431,6 +449,7 @@ impl FrontmatterBuilder {
             collection,
             data,
             pagination,
+            pagination_compat,
         } = self;
 
         let collection = collection.unwrap_or_else(|| "".to_owned());
@@ -457,6 +476,7 @@ impl FrontmatterBuilder {
         };
         let fm = Frontmatter {
             pagination: pagination.and_then(|p| p.build(&permalink)),
+            pagination_compat: pagination_compat.unwrap_or(true),
             permalink,
             slug: slug.ok_or_else(|| failure::err_msg("No slug"))?,
             title: title.ok_or_else(|| failure::err_msg("No title"))?,
@@ -515,6 +535,7 @@ pub struct Frontmatter {
     pub collection: String,
     pub data: liquid::value::Object,
     pub pagination: Option<pagination_config::PaginationConfig>,
+    pub pagination_compat: bool,
 }
 
 impl Front for Frontmatter {}
