@@ -133,40 +133,35 @@ fn generate_doc(
 ) -> Result<()> {
     // Everything done with `globals` is terrible for performance.  liquid#95 allows us to
     // improve this.
-    let mut globals: liquid::value::Object =
-        if doc.front.pagination.is_some() || doc.front.pagination_compat {
-            warn!(
-            "`collections.posts` is deprecated. Please transition to `paginator` and then disable \
-            support for `collections.posts` by setting `pagination_compat` to `false`"
-            );
-            let collections_posts: liquid::value::Object =
-                vec![("posts".into(), global_collection.1.clone())]
-                    .into_iter()
-                    .collect();
-            vec![
-                (
-                    "site".into(),
-                    liquid::value::Value::Object(context.site.clone()),
-                ),
-                (
-                    "collections".into(),
-                    liquid::value::Value::Object(collections_posts),
-                ),
-                global_collection,
-            ]
-            .into_iter()
-            .collect()
-        } else {
-            vec![
-                (
-                    "site".into(),
-                    liquid::value::Value::Object(context.site.clone()),
-                ),
-                global_collection,
-            ]
-            .into_iter()
-            .collect()
-        };
+    let mut globals: liquid::value::Object = if doc.front.pagination_compat {
+        let collections_posts: liquid::value::Object =
+            vec![("posts".into(), global_collection.1.clone())]
+                .into_iter()
+                .collect();
+        vec![
+            (
+                "site".into(),
+                liquid::value::Value::Object(context.site.clone()),
+            ),
+            (
+                "collections".into(),
+                liquid::value::Value::Object(collections_posts),
+            ),
+            global_collection,
+        ]
+        .into_iter()
+        .collect()
+    } else {
+        vec![
+            (
+                "site".into(),
+                liquid::value::Value::Object(context.site.clone()),
+            ),
+            global_collection,
+        ]
+        .into_iter()
+        .collect()
+    };
     globals.insert(
         "page".into(),
         liquid::value::Value::Object(doc.attributes.clone()),
@@ -206,13 +201,21 @@ fn generate_pages(posts: Vec<Document>, documents: Vec<Document>, context: &Cont
     trace!("Generating other documents");
     for mut doc in documents {
         trace!("Generating {}", doc.url_path);
-        if doc.front.pagination.is_some() {
-            let paginators = pagination::generate_paginators(&mut doc, &posts_data)?;
-            // page 1 uses frontmatter.permalink instead of paginator.permalink
-            let mut paginators = paginators.into_iter();
-            let paginator = paginators
-                .next()
-                .expect("We detected pagination enabled but we have no paginator");
+        if doc.front.pagination.order == SortOrder::None {
+            // "inherit" sort order from frontmatter if none set in `pagination` section
+            doc.front.pagination.order = context.posts.order;
+        }
+        let paginators = pagination::generate_paginators(&mut doc, &posts_data)?;
+        // page 1 uses frontmatter.permalink instead of paginator.permalink
+        let mut paginators = paginators.into_iter();
+        if let Some(paginator) = paginators.next() {
+            if doc.front.pagination_compat {
+                warn!(
+                    "`collections.posts` is deprecated. Please transition to `paginator` and then \
+                     disable support for `collections.posts` by setting `pagination_compat` to \
+                     `false`"
+                );
+            }
             generate_doc(
                 &mut doc,
                 context,
@@ -234,12 +237,13 @@ fn generate_pages(posts: Vec<Document>, documents: Vec<Document>, context: &Cont
                 )?;
             }
         } else {
+            // Create empty `collections.posts.pages`
             generate_doc(
                 &mut doc,
                 context,
                 generate_collections_var(&posts_data, &context),
             )?;
-        };
+        }
     }
     Ok(())
 }

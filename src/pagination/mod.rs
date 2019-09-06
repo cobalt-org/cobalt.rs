@@ -22,11 +22,7 @@ pub fn generate_paginators(
     doc: &mut Document,
     posts_data: &[liquid::value::Value],
 ) -> Result<Vec<Paginator>> {
-    let config = doc
-        .front
-        .pagination
-        .as_ref()
-        .expect("Front should have pagination here.");
+    let config = &doc.front.pagination;
     let mut all_posts: Vec<_> = posts_data.iter().collect();
     match config.include {
         Include::All => {
@@ -36,9 +32,6 @@ pub fn generate_paginators(
         Include::Tags => tags::create_tags_paginators(&all_posts, &doc, &config),
         Include::Categories => categories::create_categories_paginators(&all_posts, &doc, &config),
         Include::Dates => dates::create_dates_paginators(&all_posts, &doc, &config),
-        Include::None => {
-            unreachable!("PaginationConfigBuilder should have lead to a None for pagination.")
-        }
     }
 }
 
@@ -95,8 +88,8 @@ fn sort_posts(posts: &mut Vec<&liquid::value::Value>, config: &PaginationConfig)
             ) {
                 (Some(a), Some(b)) => order(a, b),
                 (None, None) => Ordering::Equal,
-                (_, None) => Ordering::Greater,
-                (None, _) => Ordering::Less,
+                (_, None) => Ordering::Less,
+                (None, _) => Ordering::Greater,
             };
             if cmp != Ordering::Equal {
                 return cmp;

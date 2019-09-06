@@ -316,3 +316,16 @@ pub fn pagination_sort_by_weight() {
 pub fn pagination_dates() {
     run_test("pagination_dates").expect("Build error");
 }
+
+#[cfg(feature = "pagination-unstable")]
+#[test]
+pub fn pagination_compat() {
+    run_test("pagination_compat").expect("Build error");
+}
+
+#[cfg(feature = "pagination-unstable")]
+#[test]
+pub fn pagination_compat_deactivated() {
+    let err = run_test("pagination_compat_deactivated");
+    assert!(err.is_err());
+}

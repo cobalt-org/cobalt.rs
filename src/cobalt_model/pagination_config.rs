@@ -17,7 +17,6 @@ lazy_static! {
 #[derive(Copy, Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(deny_unknown_fields)]
 pub enum Include {
-    None,
     All,
     Tags,
     Categories,
@@ -27,7 +26,6 @@ pub enum Include {
 impl Into<&'static str> for Include {
     fn into(self) -> &'static str {
         match self {
-            Include::None => "",
             Include::All => "all",
             Include::Tags => "tags",
             Include::Categories => "categories",
@@ -38,7 +36,7 @@ impl Into<&'static str> for Include {
 
 impl Default for Include {
     fn default() -> Include {
-        Include::None
+        Include::All
     }
 }
 
@@ -135,7 +133,7 @@ impl PaginationConfigBuilder {
         self
     }
 
-    pub fn build(self, permalink: &str) -> Option<PaginationConfig> {
+    pub fn build(self, permalink: &str) -> PaginationConfig {
         let Self {
             include,
             per_page,
@@ -145,17 +143,14 @@ impl PaginationConfigBuilder {
             date_index,
         } = self;
 
-        let include = include.unwrap_or(Include::None);
-        if include == Include::None {
-            return None;
-        }
+        let include = include.unwrap_or(Include::All);
         let per_page = per_page.unwrap_or(DEFAULT_PER_PAGE);
         let permalink_suffix =
             permalink_suffix.unwrap_or_else(|| DEFAULT_PERMALINK_SUFFIX.to_owned());
-        let order = order.unwrap_or(SortOrder::Desc);
+        let order = order.unwrap_or(SortOrder::None);
         let sort_by = sort_by.unwrap_or_else(|| DEFAULT_SORT.to_vec());
         let date_index = date_index.unwrap_or_else(|| DEFAULT_DATE_INDEX.to_vec());
-        Some(PaginationConfig {
+        PaginationConfig {
             include,
             per_page,
             front_permalink: permalink.to_owned(),
@@ -163,7 +158,7 @@ impl PaginationConfigBuilder {
             order,
             sort_by,
             date_index,
-        })
+        }
     }
 }
 
@@ -186,7 +181,7 @@ impl Default for PaginationConfig {
             per_page: DEFAULT_PER_PAGE,
             permalink_suffix: DEFAULT_PERMALINK_SUFFIX.to_owned(),
             front_permalink: Default::default(),
-            order: SortOrder::Desc,
+            order: SortOrder::None,
             sort_by: DEFAULT_SORT.to_vec(),
             date_index: DEFAULT_DATE_INDEX.to_vec(),
         }

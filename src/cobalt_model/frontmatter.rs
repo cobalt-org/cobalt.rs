@@ -475,7 +475,10 @@ impl FrontmatterBuilder {
             tags
         };
         let fm = Frontmatter {
-            pagination: pagination.and_then(|p| p.build(&permalink)),
+            pagination: pagination.map_or_else(
+                || pagination_config::PaginationConfig::default(),
+                |p| p.build(&permalink),
+            ),
             pagination_compat: pagination_compat.unwrap_or(true),
             permalink,
             slug: slug.ok_or_else(|| failure::err_msg("No slug"))?,
@@ -494,16 +497,11 @@ impl FrontmatterBuilder {
             data,
         };
 
-        if !cfg!(feature = "pagination-unstable") && fm.pagination.is_some() {
-            failure::bail!("Unsupported `pagination` field");
-        } else {
-            if let Some(pagination) = &fm.pagination {
-                if !pagination_config::is_date_index_sorted(&pagination.date_index) {
-                    failure::bail!("date_index is not correctly sorted: Year > Month > Day...");
-                }
-            }
-            Ok(fm)
+        if !pagination_config::is_date_index_sorted(&fm.pagination.date_index) {
+            failure::bail!("date_index is not correctly sorted: Year > Month > Day...");
         }
+
+        Ok(fm)
     }
 }
 
@@ -534,7 +532,7 @@ pub struct Frontmatter {
     pub weight: i32,
     pub collection: String,
     pub data: liquid::value::Object,
-    pub pagination: Option<pagination_config::PaginationConfig>,
+    pub pagination: pagination_config::PaginationConfig,
     pub pagination_compat: bool,
 }
 
@@ -798,6 +796,7 @@ mod test {
             collection: Some("pages".to_owned()),
             data: liquid::value::Object::new(),
             pagination: Some(Default::default()),
+            pagination_compat: None,
         };
         let b = FrontmatterBuilder {
             permalink: Some("permalink b".to_owned()),
@@ -816,6 +815,7 @@ mod test {
             collection: Some("posts".to_owned()),
             data: liquid::value::Object::new(),
             pagination: Some(Default::default()),
+            pagination_compat: None,
         };
 
         let merge_b_into_a = a.clone().merge(b.clone());
@@ -847,6 +847,7 @@ mod test {
             collection: Some("pages".to_owned()),
             data: liquid::value::Object::new(),
             pagination: Some(Default::default()),
+            pagination_compat: None,
         };
 
         let merge_b_into_a = a
