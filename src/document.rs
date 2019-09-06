@@ -264,6 +264,21 @@ impl Document {
         }
     }
 
+    pub fn to_sitemap<T: std::io::Write>(
+        &self,
+        root_url: &str,
+        writer: &mut sitemap::writer::UrlSetWriter<T>,
+    ) -> Result<()> {
+        let link = format!("{}/{}", root_url, &self.url_path);
+        let mut url = sitemap::structs::UrlEntry::builder();
+        url = url.loc(link);
+        if let Some(date) = self.front.published_date {
+            url = url.lastmod(*date);
+        }
+        writer.url(url)?;
+        Ok(())
+    }
+
     fn description_to_str(&self) -> Option<String> {
         self.front
             .description

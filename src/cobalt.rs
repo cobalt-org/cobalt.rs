@@ -9,6 +9,7 @@ use jsonfeed;
 use jsonfeed::Feed;
 use liquid;
 use rss;
+use sitemap::writer::SiteMapWriter;
 
 use crate::cobalt_model;
 use crate::cobalt_model::files;
@@ -29,6 +30,7 @@ struct Context {
     pub liquid: cobalt_model::Liquid,
     pub markdown: cobalt_model::Markdown,
     pub assets: cobalt_model::Assets,
+    pub sitemap: Option<String>,
 }
 
 impl Context {
@@ -43,6 +45,7 @@ impl Context {
             liquid,
             markdown,
             assets,
+            sitemap,
         } = config;
 
         let pages = pages.build()?;
@@ -65,6 +68,7 @@ impl Context {
             liquid,
             markdown,
             assets,
+            sitemap,
         };
         Ok(context)
     }
@@ -94,6 +98,16 @@ pub fn build(config: Config) -> Result<()> {
     // check if we should create an jsonfeed file and create it!
     if let Some(ref path) = context.posts.jsonfeed {
         create_jsonfeed(path, &context.destination, &context.posts, &posts)?;
+    }
+    if let Some(ref path) = context.sitemap {
+        let sitemap_path = &context.destination.join(path);
+        create_sitemap(
+            &sitemap_path,
+            &context.posts,
+            &posts,
+            &context.pages,
+            &documents,
+        )?;
     }
 
     generate_pages(posts, documents, &context)?;
@@ -447,6 +461,38 @@ fn create_jsonfeed(
 
     let jsonfeed_string = jsonfeed::to_string(&feed).unwrap();
     files::write_document_file(jsonfeed_string, jsonfeed_path)?;
+
+    Ok(())
+}
+fn create_sitemap(
+    sitemap_path: &path::Path,
+    collection: &Collection,
+    documents: &[Document],
+    collection_pages: &Collection,
+    documents_pages: &[Document],
+) -> Result<()> {
+    debug!("Creating sitemap file at {}", sitemap_path.display());
+    let mut buff = Vec::new();
+    let writer = SiteMapWriter::new(&mut buff);
+    let link = collection
+        .base_url
+        .as_ref()
+        .ok_or_else(|| failure::err_msg("`base_url` is required for sitemap support"))?;
+    let mut urls = writer.start_urlset()?;
+    for doc in documents {
+        doc.to_sitemap(link, &mut urls)?;
+    }
+
+    let link = collection_pages
+        .base_url
+        .as_ref()
+        .ok_or_else(|| failure::err_msg("`base_url` is required for sitemap support"))?;
+    for doc in documents_pages {
+        doc.to_sitemap(link, &mut urls)?;
+    }
+    urls.end()?;
+
+    files::write_document_file(String::from_utf8(buff)?, sitemap_path)?;
 
     Ok(())
 }

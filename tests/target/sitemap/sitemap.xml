@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>http://example.com/posts/my-fifth-blogpost.html</loc>
+    <lastmod>2016-02-16T10:00:00+01:00</lastmod>
+  </url>
+  <url>
+    <loc>http://example.com/posts/my-first-blogpost.html</loc>
+    <lastmod>2016-01-01T21:00:00+01:00</lastmod>
+  </url>
+  <url>
+    <loc>http://example.com/posts/my-fourth-blogpost.html</loc>
+    <lastmod>2015-05-29T23:00:00+01:00</lastmod>
+  </url>
+  <url>
+    <loc>http://example.com/posts/my-third-blogpost.html</loc>
+    <lastmod>2015-05-27T23:00:00+01:00</lastmod>
+  </url>
+  <url>
+    <loc>http://example.com/posts/my-second-blogpost.html</loc>
+    <lastmod>2015-01-02T10:00:00+01:00</lastmod>
+  </url>
+  <url>
+    <loc>http://example.com/index.html</loc>
+  </url>
+  <url>
+    <loc>http://example.com/other_page.html</loc>
+  </url>
+</urlset>
