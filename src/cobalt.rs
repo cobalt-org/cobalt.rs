@@ -208,40 +208,34 @@ fn generate_pages(posts: Vec<Document>, documents: Vec<Document>, context: &Cont
         let paginators = pagination::generate_paginators(&mut doc, &posts_data)?;
         // page 1 uses frontmatter.permalink instead of paginator.permalink
         let mut paginators = paginators.into_iter();
-        if let Some(paginator) = paginators.next() {
-            if doc.front.pagination_compat {
-                warn!(
-                    "`collections.posts` is deprecated. Please transition to `paginator` and then \
-                     disable support for `collections.posts` by setting `pagination_compat` to \
-                     `false`"
-                );
-            }
+        let paginator = paginators
+            .next()
+            .expect("Should have at least one paginator.");
+        if doc.front.pagination_compat {
+            warn!(
+                "`collections.posts` is deprecated. Please transition to `paginator` and then \
+                 disable support for `collections.posts` by setting `pagination_compat` to \
+                 `false`"
+            );
+        }
+        generate_doc(
+            &mut doc,
+            context,
+            (
+                "paginator".into(),
+                liquid::value::Value::Object(paginator.into()),
+            ),
+        )?;
+        for paginator in paginators {
+            let mut doc_page = doc.clone();
+            doc_page.file_path = permalink::format_url_as_file(&paginator.index_permalink);
             generate_doc(
-                &mut doc,
+                &mut doc_page,
                 context,
                 (
                     "paginator".into(),
                     liquid::value::Value::Object(paginator.into()),
                 ),
-            )?;
-            for paginator in paginators {
-                let mut doc_page = doc.clone();
-                doc_page.file_path = permalink::format_url_as_file(&paginator.index_permalink);
-                generate_doc(
-                    &mut doc_page,
-                    context,
-                    (
-                        "paginator".into(),
-                        liquid::value::Value::Object(paginator.into()),
-                    ),
-                )?;
-            }
-        } else {
-            // Create empty `collections.posts.pages`
-            generate_doc(
-                &mut doc,
-                context,
-                generate_collections_var(&posts_data, &context),
             )?;
         }
     }

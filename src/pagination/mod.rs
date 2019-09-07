@@ -24,14 +24,20 @@ pub fn generate_paginators(
 ) -> Result<Vec<Paginator>> {
     let config = &doc.front.pagination;
     let mut all_posts: Vec<_> = posts_data.iter().collect();
-    match config.include {
-        Include::All => {
-            sort_posts(&mut all_posts, &config);
-            create_all_paginators(&all_posts, &doc, &config, None)
+    if all_posts.is_empty() {
+        Ok(vec![Paginator::new(1, 0)])
+    } else {
+        match config.include {
+            Include::All => {
+                sort_posts(&mut all_posts, &config);
+                create_all_paginators(&all_posts, &doc, &config, None)
+            }
+            Include::Tags => tags::create_tags_paginators(&all_posts, &doc, &config),
+            Include::Categories => {
+                categories::create_categories_paginators(&all_posts, &doc, &config)
+            }
+            Include::Dates => dates::create_dates_paginators(&all_posts, &doc, &config),
         }
-        Include::Tags => tags::create_tags_paginators(&all_posts, &doc, &config),
-        Include::Categories => categories::create_categories_paginators(&all_posts, &doc, &config),
-        Include::Dates => dates::create_dates_paginators(&all_posts, &doc, &config),
     }
 }
 
