@@ -269,6 +269,11 @@ pub fn published_date() {
     run_test("published_date").expect("Build error");
 }
 
+#[test]
+pub fn sitemap() {
+    run_test("sitemap").expect("Build error");
+}
+
 #[cfg(feature = "pagination-unstable")]
 #[test]
 pub fn pagination_all() {
