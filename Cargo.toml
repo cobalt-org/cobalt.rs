@@ -55,7 +55,7 @@ version = "0.10"
 default-features = false
 
 [dependencies.syntect]
-version = "3.2"
+version = "3.3"
 optional = true
 default-features = false
 features =  ["parsing", "assets", "html", "dump-load-rs"]
