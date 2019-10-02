@@ -109,7 +109,7 @@ pub fn get_logging(
     builder.filter(None, level);
 
     if level == log::LevelFilter::Trace {
-        builder.default_format_timestamp(false);
+        builder.format_timestamp_secs();
     } else {
         builder.format(|f, record| {
             writeln!(
