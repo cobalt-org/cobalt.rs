@@ -751,5 +751,4 @@ mod tests {
     fn cleanup_path_current_dir_child() {
         assert_eq!(cleanup_path("./build/file.txt"), "build/file.txt");
     }
-
 }
