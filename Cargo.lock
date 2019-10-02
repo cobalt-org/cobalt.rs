@@ -174,7 +174,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "chrono"
-version = "0.4.7"
+version = "0.4.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "libc 0.2.58 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -188,7 +188,7 @@ name = "chrono_utils"
 version = "0.1.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "chrono 0.4.7 (registry+https://github.com/rust-lang/crates.io-index)",
+ "chrono 0.4.9 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -211,7 +211,7 @@ version = "0.15.4"
 dependencies = [
  "assert_cmd 0.11.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "assert_fs 0.11.3 (registry+https://github.com/rust-lang/crates.io-index)",
- "chrono 0.4.7 (registry+https://github.com/rust-lang/crates.io-index)",
+ "chrono 0.4.9 (registry+https://github.com/rust-lang/crates.io-index)",
  "clap 2.33.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "deunicode 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "difference 2.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -722,7 +722,7 @@ name = "liquid"
 version = "0.19.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "chrono 0.4.7 (registry+https://github.com/rust-lang/crates.io-index)",
+ "chrono 0.4.9 (registry+https://github.com/rust-lang/crates.io-index)",
  "deunicode 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "doc-comment 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "itertools 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -786,7 +786,7 @@ name = "liquid-value"
 version = "0.19.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "chrono 0.4.7 (registry+https://github.com/rust-lang/crates.io-index)",
+ "chrono 0.4.9 (registry+https://github.com/rust-lang/crates.io-index)",
  "itertools 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "liquid-error 0.19.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "num-traits 0.2.8 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1375,7 +1375,7 @@ name = "sitemap"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "chrono 0.4.7 (registry+https://github.com/rust-lang/crates.io-index)",
+ "chrono 0.4.9 (registry+https://github.com/rust-lang/crates.io-index)",
  "chrono_utils 0.1.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "url 1.7.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "xml-rs 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1740,7 +1740,7 @@ dependencies = [
 "checksum c2-chacha 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)" = "7d64d04786e0f528460fc884753cf8dddcc466be308f6026f8e355c41a0e4101"
 "checksum cc 1.0.37 (registry+https://github.com/rust-lang/crates.io-index)" = "39f75544d7bbaf57560d2168f28fd649ff9c76153874db88bdbdfd839b1a7e7d"
 "checksum cfg-if 0.1.9 (registry+https://github.com/rust-lang/crates.io-index)" = "b486ce3ccf7ffd79fdeb678eac06a9e6c09fc88d33836340becb8fffe87c5e33"
-"checksum chrono 0.4.7 (registry+https://github.com/rust-lang/crates.io-index)" = "77d81f58b7301084de3b958691458a53c3f7e0b1d702f77e550b6a88e3a88abe"
+"checksum chrono 0.4.9 (registry+https://github.com/rust-lang/crates.io-index)" = "e8493056968583b0193c1bb04d6f7684586f3726992d6c573261941a895dbd68"
 "checksum chrono_utils 0.1.3 (registry+https://github.com/rust-lang/crates.io-index)" = "7f69ed74e2117892a1a4e05d31f6612178e8e827bfbd83bbf8ca8c1bcfbda710"
 "checksum clap 2.33.0 (registry+https://github.com/rust-lang/crates.io-index)" = "5067f5bb2d80ef5d68b4c87db81601f0b75bca627bc2ef76b141d7b846a3c6d9"
 "checksum crc32fast 1.2.0 (registry+https://github.com/rust-lang/crates.io-index)" = "ba125de2af0df55319f41944744ad91c71113bf74a4646efff39afe1f6842db1"
