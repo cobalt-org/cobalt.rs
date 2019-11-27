@@ -1,3 +1,26 @@
+<a name="0.15.5"></a>
+## 0.15.5 (2019-11-27)
+
+
+#### Bug Fixes
+
+* **liquid:**  Upgrade to 0.19 ([95c85bbb](https://github.com/cobalt-org/cobalt.rs/commit/95c85bbb40e19c9cda30f9f205b78fae69f3a361), closes [#656](https://github.com/cobalt-org/cobalt.rs/issues/656))
+* **md:**  Be more conformant ([3841da3d](https://github.com/cobalt-org/cobalt.rs/commit/3841da3db6a85b0568b608679948036c64c650a4))
+* **pagination:** 
+  * revamp pagination permalink management ([e041aad2](https://github.com/cobalt-org/cobalt.rs/commit/e041aad29214a77d4e2326af4755ba2169908eb8))
+  * fixes #666 and adjust tests ([9621b31a](https://github.com/cobalt-org/cobalt.rs/commit/9621b31a7cacb2ba3aa4d16c5e552c955d0778c1))
+
+#### Features
+
+*   Add support for sitemap generation ([9b6272d6](https://github.com/cobalt-org/cobalt.rs/commit/9b6272d6b494a7ef4a10990f170b247e48de3399))
+* **liquid-jekyll-filter:**  activate jekyll filters ([5c7c568f](https://github.com/cobalt-org/cobalt.rs/commit/5c7c568fe3f4c48a5cbf4621ab3e8468689020f7))
+* **pagination:**
+  *  Sort by weight ([d197c652](https://github.com/cobalt-org/cobalt.rs/commit/d197c652ec1cff98a8521114448cb1d2320ed01a))
+  *  pagination on dates ([4327ec1a](https://github.com/cobalt-org/cobalt.rs/commit/4327ec1a7b8096ce0b07a79576825b5f41efb3cb))
+  *  indexation by categories ([2c116ae9](https://github.com/cobalt-org/cobalt.rs/commit/2c116ae922274f5496ec9a0c1770a11bcb35a23f))
+
+
+
 <a name="0.15.3"></a>
 ## 0.15.3 (2019-01-31)
 
