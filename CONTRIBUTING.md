@@ -23,6 +23,4 @@ When we're ready to release, a project owner should do the following
   - Run `clog --setversion <X>.<Y>.<Z>`, touch up the log
   - Update the version in `Cargo.toml`
   - Run `cargo check` to update `Cargo.lock`
-- Tag the commit via `git tag -a v<X>.<Y>.<Z>`
-- `git push upstream master --tag v<X>.<Y>.<Z>`
-- Run `cargo publish` (run `cargo login` first if needed)
+- Run `cargo release <level>`
