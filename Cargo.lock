@@ -244,7 +244,7 @@ dependencies = [
 
 [[package]]
 name = "cobalt-bin"
-version = "0.15.4"
+version = "0.15.5"
 dependencies = [
  "assert_cmd 0.11.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "assert_fs 0.11.3 (registry+https://github.com/rust-lang/crates.io-index)",
