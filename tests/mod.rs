@@ -72,6 +72,23 @@ fn run_test(name: &str) -> Result<(), cobalt::Error> {
     let mut config = cobalt::ConfigBuilder::from_cwd(target.path())?;
     config.destination = "./_dest".into();
     let config = config.build()?;
+    let result = cobalt::build(config);
+
+    // Always explicitly close to catch errors, especially on Windows.
+    target.close()?;
+
+    result
+}
+
+fn test_with_expected(name: &str) -> Result<(), cobalt::Error> {
+    let target = assert_fs::TempDir::new().unwrap();
+    target
+        .copy_from(format!("tests/fixtures/{}", name), &["*"])
+        .unwrap();
+
+    let mut config = cobalt::ConfigBuilder::from_cwd(target.path())?;
+    config.destination = "./_dest".into();
+    let config = config.build()?;
     let destination = config.destination.clone();
     let result = cobalt::build(config);
 
@@ -88,66 +105,66 @@ fn run_test(name: &str) -> Result<(), cobalt::Error> {
 
 #[test]
 pub fn copy_files() {
-    run_test("copy_files").expect("Build error");
+    test_with_expected("copy_files").expect("Build error");
 }
 
 #[test]
 pub fn custom_paths() {
-    run_test("custom_paths").expect("Build error");
+    test_with_expected("custom_paths").expect("Build error");
 }
 
 #[test]
 pub fn custom_posts_folder() {
-    run_test("custom_posts_folder").expect("Build error");
+    test_with_expected("custom_posts_folder").expect("Build error");
 }
 
 #[test]
 pub fn custom_post_path() {
-    run_test("custom_post_path").expect("Build error");
+    test_with_expected("custom_post_path").expect("Build error");
 }
 
 #[test]
 pub fn dotfiles() {
-    run_test("dotfiles").expect("Build error");
+    test_with_expected("dotfiles").expect("Build error");
 }
 
 #[test]
 pub fn drafts() {
-    run_test("drafts").expect("Build error");
+    test_with_expected("drafts").expect("Build error");
 }
 
 #[test]
 pub fn drafts_not_shown_by_default() {
-    run_test("drafts_not_shown_by_default").expect("Build error");
+    test_with_expected("drafts_not_shown_by_default").expect("Build error");
 }
 
 #[test]
 pub fn example() {
-    run_test("example").expect("Build error");
+    test_with_expected("example").expect("Build error");
 }
 
 #[test]
 pub fn hidden_posts_folder() {
-    run_test("hidden_posts_folder").expect("Build error");
+    test_with_expected("hidden_posts_folder").expect("Build error");
 }
 
 #[test]
 pub fn custom_template_extensions() {
-    run_test("custom_template_extensions").expect("Build error");
+    test_with_expected("custom_template_extensions").expect("Build error");
 }
 
 #[cfg(feature = "syntax-highlight")]
 #[test]
 pub fn syntax_highlight() {
     // Syntect isn't thread safe, for now run everything in the same test.
-    run_test("syntax_highlight").expect("Build error");
+    test_with_expected("syntax_highlight").expect("Build error");
 
-    run_test("syntax_highlight_theme").expect("Build error");
+    test_with_expected("syntax_highlight_theme").expect("Build error");
 }
 
 #[test]
 pub fn incomplete_rss() {
-    let err = run_test("incomplete_rss");
+    let err = test_with_expected("incomplete_rss");
     assert!(err.is_err());
     let err: exitfailure::ExitFailure = err.unwrap_err().into();
     let error_message = format!("{:?}", err);
@@ -156,18 +173,18 @@ pub fn incomplete_rss() {
 
 #[test]
 pub fn liquid_error() {
-    let err = run_test("liquid_error");
+    let err = test_with_expected("liquid_error");
     assert!(err.is_err());
 }
 
 #[test]
 pub fn liquid_raw() {
-    run_test("liquid_escaped").expect("Build error");
+    test_with_expected("liquid_escaped").expect("Build error");
 }
 
 #[test]
 pub fn no_extends_error() {
-    let err = run_test("no_extends_error");
+    let err = test_with_expected("no_extends_error");
     assert!(err.is_err());
     let err: exitfailure::ExitFailure = err.unwrap_err().into();
     let error_message = format!("{:?}", err);
@@ -180,17 +197,17 @@ pub fn no_extends_error() {
 
 #[test]
 pub fn sort_posts() {
-    run_test("sort_posts").expect("Build error");
+    test_with_expected("sort_posts").expect("Build error");
 }
 
 #[test]
 pub fn post_order() {
-    run_test("post_order").expect("Build error");
+    test_with_expected("post_order").expect("Build error");
 }
 
 #[test]
 pub fn previous_next() {
-    run_test("previous_next").expect("Build error");
+    test_with_expected("previous_next").expect("Build error");
 }
 
 #[test]
@@ -205,12 +222,12 @@ pub fn jsonfeed() {
 
 #[test]
 pub fn ignore_files() {
-    run_test("ignore_files").unwrap();
+    test_with_expected("ignore_files").unwrap();
 }
 
 #[test]
 pub fn yaml_error() {
-    let err = run_test("yaml_error");
+    let err = test_with_expected("yaml_error");
     assert!(err.is_err());
     let err: exitfailure::ExitFailure = err.unwrap_err().into();
     let error_message = format!("{:?}", err);
@@ -219,105 +236,105 @@ pub fn yaml_error() {
 
 #[test]
 pub fn excerpts() {
-    run_test("excerpts").unwrap();
+    test_with_expected("excerpts").unwrap();
 }
 
 #[test]
 pub fn excerpts_crlf() {
-    run_test("excerpts_CRLF").unwrap();
+    test_with_expected("excerpts_CRLF").unwrap();
 }
 
 #[test]
 pub fn posts_in_subfolder() {
-    run_test("posts_in_subfolder").unwrap();
+    test_with_expected("posts_in_subfolder").unwrap();
 }
 
 #[test]
 pub fn empty_frontmatter() {
-    run_test("empty_frontmatter").expect("Build error");
+    test_with_expected("empty_frontmatter").expect("Build error");
 }
 
 #[test]
 pub fn querystrings() {
-    run_test("querystrings").expect("Build error");
+    test_with_expected("querystrings").expect("Build error");
 }
 
 #[test]
 pub fn markdown_table() {
-    run_test("markdown_table").expect("Build error");
+    test_with_expected("markdown_table").expect("Build error");
 }
 
 #[cfg(feature = "sass")]
 #[test]
 pub fn sass() {
-    run_test("sass").expect("Build error");
+    test_with_expected("sass").expect("Build error");
 }
 
 #[cfg(feature = "sass")]
 #[test]
 pub fn sass_custom_config() {
-    run_test("sass_custom_config").expect("Build error");
+    test_with_expected("sass_custom_config").expect("Build error");
 }
 
 #[test]
 pub fn data_files() {
-    run_test("data_files").expect("Build error");
+    test_with_expected("data_files").expect("Build error");
 }
 
 #[test]
 pub fn published_date() {
-    run_test("published_date").expect("Build error");
+    test_with_expected("published_date").expect("Build error");
 }
 
 #[test]
 pub fn sitemap() {
-    run_test("sitemap").expect("Build error");
+    test_with_expected("sitemap").expect("Build error");
 }
 
 #[cfg(feature = "pagination-unstable")]
 #[test]
 pub fn pagination_all() {
-    run_test("pagination_all").expect("Build error");
+    test_with_expected("pagination_all").expect("Build error");
 }
 
 #[cfg(feature = "pagination-unstable")]
 #[test]
 pub fn pagination_all_reverse_date() {
-    run_test("pagination_all_reverse_date").expect("Build error");
+    test_with_expected("pagination_all_reverse_date").expect("Build error");
 }
 
 #[cfg(feature = "pagination-unstable")]
 #[test]
 pub fn pagination_less_per_page() {
-    run_test("pagination_less_per_page").expect("Build error");
+    test_with_expected("pagination_less_per_page").expect("Build error");
 }
 
 #[cfg(feature = "pagination-unstable")]
 #[test]
 pub fn pagination_all_sort_by_title() {
-    run_test("pagination_all_sort_by_title").expect("Build error");
+    test_with_expected("pagination_all_sort_by_title").expect("Build error");
 }
 
 #[cfg(feature = "pagination-unstable")]
 #[test]
 pub fn pagination_tags() {
-    run_test("pagination_tags").expect("Build error");
+    test_with_expected("pagination_tags").expect("Build error");
 }
 
 #[cfg(feature = "pagination-unstable")]
 #[test]
 pub fn pagination_categories() {
-    run_test("pagination_categories").expect("Build error");
+    test_with_expected("pagination_categories").expect("Build error");
 }
 
 #[cfg(feature = "pagination-unstable")]
 #[test]
 pub fn pagination_sort_by_weight() {
-    run_test("pagination_sort_by_weight").expect("Build error");
+    test_with_expected("pagination_sort_by_weight").expect("Build error");
 }
 
 #[cfg(feature = "pagination-unstable")]
 #[test]
 pub fn pagination_dates() {
-    run_test("pagination_dates").expect("Build error");
+    test_with_expected("pagination_dates").expect("Build error");
 }
