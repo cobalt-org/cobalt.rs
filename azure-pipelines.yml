@@ -144,7 +144,7 @@ stages:
         codecov_token: $(CODECOV_TOKEN_SECRET)
 - stage: release
   displayName: Release
-  dependsOn: test
+  dependsOn: []
   condition: startsWith(variables['Build.SourceBranch'], 'refs/tags/')
   jobs:
   - job:
