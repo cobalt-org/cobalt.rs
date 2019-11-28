@@ -473,7 +473,7 @@ dependencies = [
 
 [[package]]
 name = "cobalt-bin"
-version = "0.15.5"
+version = "0.15.6"
 dependencies = [
  "actix-files 0.1.7 (registry+https://github.com/rust-lang/crates.io-index)",
  "actix-web 1.0.9 (registry+https://github.com/rust-lang/crates.io-index)",
