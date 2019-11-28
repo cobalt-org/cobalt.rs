@@ -31,7 +31,6 @@ env_logger = "0.7"
 rss = "1.8"
 jsonfeed = "0.2"
 pulldown-cmark = {version="0.6", default-features = false}
-notify = "4.0"
 ghp = "0.1"
 regex = "1.1"
 failure = "0.1"
@@ -46,13 +45,11 @@ toml = "0.5.3"
 normalize-line-endings = "0.3.0"
 sitemap = "0.3"
 
-[dependencies.sass-rs]
-version = "0.2"
-optional = true
+actix-files = { version = "0.1", optional = true }
+actix-web = { version = "1.0", default-features = false, optional = true }
+notify = { version = "4", optional = true }
 
-[dependencies.hyper]
-version = "0.10"
-default-features = false
+sass-rs = { version = "0.2", optional = true }
 
 [dependencies.syntect]
 # Pinning the version because onig_sys 69.2 forces clang on all platforms (even windows)
@@ -68,9 +65,10 @@ predicates = "1.0"
 difference = "2.0"
 
 [features]
-default = ["syntax-highlight", "sass"]
+default = ["syntax-highlight", "sass", "serve"]
 unstable = []
 
+serve = ["actix-files", "actix-web", "notify"]
 syntax-highlight = ["syntect"]
 sass = ['sass-rs']
 pagination-unstable = []

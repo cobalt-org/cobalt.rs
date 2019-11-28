@@ -6,12 +6,12 @@ use std::sync::mpsc::channel;
 use std::thread;
 use std::time;
 
+use actix_files;
+use actix_web::middleware::errhandlers::{ErrorHandlerResponse, ErrorHandlers};
+use actix_web::{dev, http, App, HttpResponse, HttpServer};
 use clap;
 use cobalt::cobalt_model;
 use failure::ResultExt;
-use hyper;
-use hyper::server::{Request, Response, Server};
-use hyper::uri::RequestUri;
 use notify;
 use notify::Watcher;
 
@@ -76,95 +76,6 @@ pub fn serve_command(matches: &clap::ArgMatches) -> Result<()> {
     Ok(())
 }
 
-fn static_file_handler(dest: &path::Path, req: Request, mut res: Response) -> Result<()> {
-    // grab the requested path
-    let mut req_path = match req.uri {
-        RequestUri::AbsolutePath(p) => p,
-        _ => {
-            // return a 400 and exit from this request
-            *res.status_mut() = hyper::status::StatusCode::BadRequest;
-            let body = b"<h1> <center> 400: Bad request </center> </h1>";
-            res.send(body)?;
-            return Ok(());
-        }
-    };
-
-    // strip off any querystrings so path.is_file() matches
-    // and doesn't stick index.html on the end of the path
-    // (querystrings often used for cachebusting)
-    if let Some(position) = req_path.rfind('?') {
-        req_path.truncate(position);
-    }
-
-    // find the path of the file in the local system
-    // (this gets rid of the '/' in `p`, so the `join()` will not replace the
-    // path)
-    let path = dest.to_path_buf().join(&req_path[1..]);
-
-    let serve_path = if path.is_file() {
-        // try to point the serve path to `path` if it corresponds to a file
-        path
-    } else {
-        // try to point the serve path into a "index.html" file in the requested
-        // path
-        path.join("index.html")
-    };
-
-    // if the request points to a file and it exists, read and serve it
-    if serve_path.exists() {
-        let mut file = fs::File::open(serve_path)?;
-
-        // buffer to store the file
-        let mut buffer: Vec<u8> = vec![];
-
-        file.read_to_end(&mut buffer)?;
-
-        res.send(&buffer)?;
-    } else {
-        // return a 404 status
-        *res.status_mut() = hyper::status::StatusCode::NotFound;
-
-        // write a simple body for the 404 page
-        let body = b"<h1> <center> 404: Page not found </center> </h1>";
-
-        res.send(body)?;
-    }
-
-    Ok(())
-}
-
-fn serve(dest: &path::Path, ip: &str) -> Result<()> {
-    info!("Serving {:?} through static file server", dest);
-
-    info!("Server Listening on http://{}", &ip);
-    info!("Ctrl-c to stop the server");
-
-    // attempts to create a server
-    let http_server = match Server::http(&*ip) {
-        Ok(server) => server,
-        Err(e) => {
-            error!("{}", e);
-            return Err(e.into());
-        }
-    };
-
-    // need a clone because of closure's lifetime
-    let dest_clone = dest.to_owned();
-
-    // bind the handle function and start serving
-    if let Err(e) = http_server.handle(move |req: Request, res: Response| {
-        if let Err(e) = static_file_handler(&dest_clone, req, res) {
-            error!("{}", e);
-            process::exit(1);
-        }
-    }) {
-        error!("{}", e);
-        return Err(e.into());
-    };
-
-    Ok(())
-}
-
 fn watch(config: &cobalt_model::Config) -> Result<()> {
     // canonicalize is to ensure there is no question that `watcher`s paths come back safe for
     // Files::includes_file
@@ -216,4 +127,58 @@ fn watch(config: &cobalt_model::Config) -> Result<()> {
             }
         }
     }
+}
+
+fn serve(dest: &path::Path, ip: &str) -> Result<()> {
+    let dest = dest.to_owned();
+    info!("Serving {:?} through static file server", dest);
+
+    info!("Server Listening on http://{}", &ip);
+    info!("Ctrl-c to stop the server");
+
+    let s = HttpServer::new(move || {
+        let error_handlers = ErrorHandlers::new().handler(http::StatusCode::NOT_FOUND, not_found);
+
+        App::new()
+            .data(ErrorFilePaths {
+                not_found: dest.join("404.html"),
+            })
+            .wrap(error_handlers)
+            // Start a webserver that serves the `output_dir` directory
+            .service(actix_files::Files::new("/", &dest).index_file("index.html"))
+    })
+    .bind(&ip)
+    .expect("Can't start the webserver")
+    .shutdown_timeout(20);
+    s.run()?;
+
+    Ok(())
+}
+
+struct ErrorFilePaths {
+    not_found: path::PathBuf,
+}
+
+fn not_found<B>(
+    res: dev::ServiceResponse<B>,
+) -> std::result::Result<ErrorHandlerResponse<B>, actix_web::Error> {
+    let buf: Vec<u8> = {
+        let error_files: &ErrorFilePaths = res.request().app_data().unwrap();
+
+        let mut fh = fs::File::open(&error_files.not_found)?;
+        let mut buf: Vec<u8> = vec![];
+        let _ = fh.read_to_end(&mut buf)?;
+        buf
+    };
+
+    let new_resp = HttpResponse::build(http::StatusCode::NOT_FOUND)
+        .header(
+            http::header::CONTENT_TYPE,
+            http::header::HeaderValue::from_static("text/html"),
+        )
+        .body(buf);
+
+    Ok(ErrorHandlerResponse::Response(
+        res.into_response(new_resp.into_body()),
+    ))
 }
