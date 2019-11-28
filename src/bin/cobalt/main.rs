@@ -14,6 +14,7 @@ mod build;
 mod debug;
 mod error;
 mod new;
+#[cfg(feature = "serve")]
 mod serve;
 
 use std::alloc;
@@ -45,9 +46,10 @@ fn run() -> Result<()> {
         .subcommand(new::publish_command_args())
         .subcommand(build::build_command_args())
         .subcommand(build::clean_command_args())
-        .subcommand(serve::serve_command_args())
         .subcommand(build::import_command_args())
         .subcommand(debug::debug_command_args());
+    #[cfg(feature = "serve")]
+    let app_cli = app_cli.subcommand(serve::serve_command_args());
 
     let global_matches = app_cli.get_matches();
 
@@ -66,6 +68,7 @@ fn run() -> Result<()> {
         "publish" => new::publish_command(matches),
         "build" => build::build_command(matches),
         "clean" => build::clean_command(matches),
+        #[cfg(feature = "serve")]
         "serve" => serve::serve_command(matches),
         "import" => build::import_command(matches),
         "debug" => debug::debug_command(matches),
