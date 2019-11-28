@@ -1,3 +1,14 @@
+<a name="0.15.6"></a>
+## 0.15.6 (2019-11-28)
+
+
+#### Bug Fixes
+
+*   Fix windows support ([e5686a07](https://github.com/cobalt-org/cobalt.rs/commit/e5686a07afdbcdb75456be3831e031085f00acdf))
+* **serve:**  All new implementation ([eb454576](https://github.com/cobalt-org/cobalt.rs/commit/eb454576f5ef0000e9ad2b4bba491b1a3116f13a))
+
+
+
 <a name="0.15.5"></a>
 ## 0.15.5 (2019-11-27)
 
