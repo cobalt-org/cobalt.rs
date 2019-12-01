@@ -300,10 +300,11 @@ dependencies = [
 
 [[package]]
 name = "assert_fs"
-version = "0.11.3"
+version = "0.13.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "globwalk 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "doc-comment 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "globwalk 0.7.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "predicates 1.0.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "predicates-core 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "predicates-tree 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -478,7 +479,7 @@ dependencies = [
  "actix-files 0.1.7 (registry+https://github.com/rust-lang/crates.io-index)",
  "actix-web 1.0.9 (registry+https://github.com/rust-lang/crates.io-index)",
  "assert_cmd 0.11.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "assert_fs 0.11.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "assert_fs 0.13.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "chrono 0.4.10 (registry+https://github.com/rust-lang/crates.io-index)",
  "clap 2.33.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "deunicode 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -876,7 +877,7 @@ dependencies = [
 
 [[package]]
 name = "globwalk"
-version = "0.5.0"
+version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "ignore 0.4.10 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -2537,7 +2538,7 @@ dependencies = [
 "checksum anymap 0.12.1 (registry+https://github.com/rust-lang/crates.io-index)" = "33954243bd79057c2de7338850b85983a44588021f8a5fee574a8888c6de4344"
 "checksum arc-swap 0.4.4 (registry+https://github.com/rust-lang/crates.io-index)" = "d7b8a9123b8027467bce0099fe556c628a53c8d83df0507084c31e9ba2e39aff"
 "checksum assert_cmd 0.11.1 (registry+https://github.com/rust-lang/crates.io-index)" = "2dc477793bd82ec39799b6f6b3df64938532fdf2ab0d49ef817eac65856a5a1e"
-"checksum assert_fs 0.11.3 (registry+https://github.com/rust-lang/crates.io-index)" = "4ce6ba957da497523c08f8e0bd0f2e038d23ad6a3f7a391ed9d4afa9314838c0"
+"checksum assert_fs 0.13.1 (registry+https://github.com/rust-lang/crates.io-index)" = "815b47a19f74a89ba726736cdac88c9fba28a655b16ea01225adae328b26f1bf"
 "checksum atty 0.2.13 (registry+https://github.com/rust-lang/crates.io-index)" = "1803c647a3ec87095e7ae7acfca019e98de5ec9a7d01343f611cf3152ed71a90"
 "checksum autocfg 0.1.7 (registry+https://github.com/rust-lang/crates.io-index)" = "1d49d90015b3c36167a20fe2810c5cd875ad504b39cff3d4eae7977e6b7c1cb2"
 "checksum backtrace 0.3.40 (registry+https://github.com/rust-lang/crates.io-index)" = "924c76597f0d9ca25d762c25a4d369d51267536465dc5064bdf0eb073ed477ea"
@@ -2601,7 +2602,7 @@ dependencies = [
 "checksum getrandom 0.1.13 (registry+https://github.com/rust-lang/crates.io-index)" = "e7db7ca94ed4cd01190ceee0d8a8052f08a247aa1b469a7f68c6a3b71afcf407"
 "checksum ghp 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)" = "2381a505873cc9b3bc814214150a0da3193db84cdaf3c9eb2145c7a369d337f0"
 "checksum globset 0.4.4 (registry+https://github.com/rust-lang/crates.io-index)" = "925aa2cac82d8834e2b2a4415b6f6879757fb5c0928fc445ae76461a12eed8f2"
-"checksum globwalk 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)" = "89fa2e29859da05acd066bd45996f05c271b271d7ec4a781f909682328f65d25"
+"checksum globwalk 0.7.1 (registry+https://github.com/rust-lang/crates.io-index)" = "53cbcf0368596897b0a3b8ff2110acf2400e80ffad4ca9238b52ff282a9b267b"
 "checksum h2 0.1.26 (registry+https://github.com/rust-lang/crates.io-index)" = "a5b34c246847f938a410a03c5458c7fee2274436675e76d8b903c08efc29c462"
 "checksum hashbrown 0.6.3 (registry+https://github.com/rust-lang/crates.io-index)" = "8e6073d0ca812575946eb5f35ff68dbe519907b25c42530389ff946dc84c6ead"
 "checksum hermit-abi 0.1.3 (registry+https://github.com/rust-lang/crates.io-index)" = "307c3c9f937f38e3534b1d6447ecf090cafcc9744e4a6360e8b037b2cf5af120"
