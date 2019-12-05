@@ -69,9 +69,9 @@ fn run_test(name: &str) -> Result<(), cobalt::Error> {
         .copy_from(format!("tests/fixtures/{}", name), &["**"])
         .unwrap();
 
-    let mut config = cobalt::ConfigBuilder::from_cwd(target.path())?;
+    let mut config = cobalt_config::Config::from_cwd(target.path())?;
     config.destination = "./_dest".into();
-    let config = config.build()?;
+    let config = cobalt::cobalt_model::Config::from_config(config)?;
     let result = cobalt::build(config);
 
     // Always explicitly close to catch errors, especially on Windows.
@@ -86,9 +86,9 @@ fn test_with_expected(name: &str) -> Result<(), cobalt::Error> {
         .copy_from(format!("tests/fixtures/{}", name), &["**"])
         .unwrap();
 
-    let mut config = cobalt::ConfigBuilder::from_cwd(target.path())?;
+    let mut config = cobalt_config::Config::from_cwd(target.path())?;
     config.destination = "./_dest".into();
-    let config = config.build()?;
+    let config = cobalt::cobalt_model::Config::from_config(config)?;
     let destination = config.destination.clone();
     let result = cobalt::build(config);
 
@@ -229,7 +229,6 @@ pub fn ignore_files() {
 pub fn yaml_error() {
     let err = test_with_expected("yaml_error");
     assert!(err.is_err());
-    let err: exitfailure::ExitFailure = err.unwrap_err().into();
     let error_message = format!("{:?}", err);
     assert_contains!(error_message, "unexpected character");
 }
