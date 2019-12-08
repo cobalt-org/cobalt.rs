@@ -1,26 +1,12 @@
 use std::ffi;
 use std::path;
 
+use cobalt_config::SassOutputStyle;
 #[cfg(feature = "sass")]
 use sass_rs;
 
 use super::files;
 use crate::error::*;
-
-#[derive(Debug, Clone, Copy, Eq, PartialEq, Hash, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub enum SassOutputStyle {
-    Nested,
-    Expanded,
-    Compact,
-    Compressed,
-}
-
-impl Default for SassOutputStyle {
-    fn default() -> Self {
-        SassOutputStyle::Nested
-    }
-}
 
 #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
 #[serde(deny_unknown_fields, default)]
@@ -30,8 +16,15 @@ pub struct SassBuilder {
 }
 
 impl SassBuilder {
-    pub fn new() -> Self {
-        Default::default()
+    pub fn from_config(config: cobalt_config::Sass, source: &path::Path) -> Self {
+        Self {
+            style: config.style,
+            import_dir: source
+                .join(config.import_dir)
+                .into_os_string()
+                .into_string()
+                .ok(),
+        }
     }
 
     pub fn build(self) -> SassCompiler {

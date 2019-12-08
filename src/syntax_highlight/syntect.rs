@@ -249,7 +249,7 @@ mod test {
 
     #[test]
     fn highlight_block_renders_rust() {
-        let highlight: Box<liquid::compiler::ParseBlock> =
+        let highlight: Box<dyn liquid::compiler::ParseBlock> =
             Box::new(CodeBlockParser::new("base16-ocean.dark".to_owned()));
         let parser = liquid::ParserBuilder::new()
             .block(highlight)

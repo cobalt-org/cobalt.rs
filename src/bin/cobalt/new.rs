@@ -62,7 +62,7 @@ pub fn new_command_args() -> clap::App<'static, 'static> {
 
 pub fn new_command(matches: &clap::ArgMatches) -> Result<()> {
     let config = args::get_config(matches)?;
-    let config = config.build()?;
+    let config = cobalt::cobalt_model::Config::from_config(config)?;
 
     let title = matches.value_of("TITLE").unwrap();
 
@@ -107,7 +107,7 @@ pub fn rename_command_args() -> clap::App<'static, 'static> {
 
 pub fn rename_command(matches: &clap::ArgMatches) -> Result<()> {
     let config = args::get_config(matches)?;
-    let config = config.build()?;
+    let config = cobalt::cobalt_model::Config::from_config(config)?;
 
     let source = path::PathBuf::from(matches.value_of("SRC").unwrap());
 
@@ -144,7 +144,7 @@ pub fn publish_command(matches: &clap::ArgMatches) -> Result<()> {
     file.push(path::Path::new(filename));
     let file = file;
     let config = args::get_config(matches)?;
-    let config = config.build()?;
+    let config = cobalt::cobalt_model::Config::from_config(config)?;
 
     publish_document(&config, &file)
         .with_context(|_| failure::format_err!("Could not publish `{:?}`", file))?;
@@ -310,11 +310,10 @@ pub fn create_new_document(
         DEFAULT.get(file_type).unwrap_or(&POST_MD).to_string()
     };
 
-    let doc = cobalt_model::DocumentBuilder::<cobalt_model::FrontmatterBuilder>::parse(&source)?;
-    let (front, content) = doc.parts();
-    let front = front.set_title(title.to_owned());
-    let doc =
-        cobalt_model::DocumentBuilder::<cobalt_model::FrontmatterBuilder>::new(front, content);
+    let doc = cobalt_model::Document::parse(&source)?;
+    let (mut front, content) = doc.into_parts();
+    front.title = Some(title.to_owned());
+    let doc = cobalt_model::Document::new(front, content);
     let doc = doc.to_string();
 
     create_file(&file, &doc)?;
@@ -358,8 +357,8 @@ pub fn rename_document(
     };
 
     let doc = cobalt_model::files::read_file(&source)?;
-    let doc = cobalt_model::DocumentBuilder::<cobalt_model::FrontmatterBuilder>::parse(&doc)?;
-    let (front, content) = doc.parts();
+    let doc = cobalt_model::Document::parse(&doc)?;
+    let (mut front, content) = doc.into_parts();
 
     let pages = config.pages.clone().build()?;
     let posts = config.posts.clone().build()?;
@@ -373,10 +372,7 @@ pub fn rename_document(
         let rel_src = target
             .strip_prefix(&config.source)
             .expect("file was found under the root");
-        front
-            .clone()
-            .merge_path(rel_src)
-            .merge(posts.default.clone())
+        front.clone().merge_path(rel_src).merge(&posts.default)
     } else if pages.pages.includes_file(&target)
         || pages
             .drafts
@@ -387,21 +383,17 @@ pub fn rename_document(
         let rel_src = target
             .strip_prefix(&config.source)
             .expect("file was found under the root");
-        front
-            .clone()
-            .merge_path(rel_src)
-            .merge(pages.default.clone())
+        front.clone().merge_path(rel_src).merge(&pages.default)
     } else {
         failure::bail!(
             "Target file wouldn't be a member of any collection: {:?}",
             target
         );
     };
-    let full_front = full_front.build()?;
+    let full_front = cobalt_model::Frontmatter::from_config(full_front)?;
 
-    let new_front = front.set_title(Some(title.to_string()));
-    let doc =
-        cobalt_model::DocumentBuilder::<cobalt_model::FrontmatterBuilder>::new(new_front, content);
+    front.title = Some(title.to_string());
+    let doc = cobalt_model::Document::new(front, content);
     let doc = doc.to_string();
     cobalt_model::files::write_document_file(doc, target)?;
 
@@ -420,8 +412,8 @@ fn prepend_date_to_filename(
 ) -> Result<()> {
     // avoid prepend to existing date prefix
 
-    let file_stem = cobalt_model::file_stem(file);
-    let (_, file_stem) = cobalt_model::parse_file_stem(file_stem);
+    let file_stem = cobalt_config::path::file_stem(file);
+    let (_, file_stem) = cobalt_config::path::parse_file_stem(file_stem);
     let file_name = format!(
         "{}{}.{}",
         (**date).format("%Y-%m-%d-"),
@@ -475,14 +467,14 @@ fn move_from_drafts_to_posts(
 
 pub fn publish_document(config: &cobalt_model::Config, file: &path::Path) -> Result<()> {
     let doc = cobalt_model::files::read_file(file)?;
-    let doc = cobalt_model::DocumentBuilder::<cobalt_model::FrontmatterBuilder>::parse(&doc)?;
-    let (front, content) = doc.parts();
+    let doc = cobalt_model::Document::parse(&doc)?;
+    let (mut front, content) = doc.into_parts();
 
     let date = cobalt_model::DateTime::now();
-    let front = front.set_draft(false).set_published_date(date);
+    front.is_draft = Some(false);
+    front.published_date = Some(date);
 
-    let doc =
-        cobalt_model::DocumentBuilder::<cobalt_model::FrontmatterBuilder>::new(front, content);
+    let doc = cobalt_model::Document::new(front, content);
     let doc = doc.to_string();
     cobalt_model::files::write_document_file(doc, file)?;
 

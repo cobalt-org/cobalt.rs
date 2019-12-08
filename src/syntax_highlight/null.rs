@@ -66,7 +66,11 @@ struct CodeBlock {
 }
 
 impl Renderable for CodeBlock {
-    fn render_to(&self, writer: &mut Write, _context: &mut Context) -> Result<(), liquid::Error> {
+    fn render_to(
+        &self,
+        writer: &mut dyn Write,
+        _context: &mut Context,
+    ) -> Result<(), liquid::Error> {
         if let Some(ref lang) = self.lang {
             write!(
                 writer,
@@ -110,7 +114,7 @@ impl liquid::compiler::ParseBlock for CodeBlockParser {
         mut arguments: TagTokenIter,
         mut tokens: TagBlock,
         _options: &Language,
-    ) -> Result<Box<Renderable>, liquid::Error> {
+    ) -> Result<Box<dyn Renderable>, liquid::Error> {
         let lang = arguments
             .expect_next("Identifier or literal expected.")
             .ok()
@@ -167,7 +171,7 @@ mod test {
 
     #[test]
     fn codeblock_renders_rust() {
-        let highlight: Box<liquid::compiler::ParseBlock> =
+        let highlight: Box<dyn liquid::compiler::ParseBlock> =
             Box::new(CodeBlockParser::new("base16-ocean.dark".to_owned()));
         let parser = liquid::ParserBuilder::new()
             .block(highlight)

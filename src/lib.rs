@@ -15,7 +15,6 @@ extern crate difference;
 
 pub use crate::cobalt::build;
 pub use crate::cobalt_model::Config;
-pub use crate::cobalt_model::ConfigBuilder;
 pub use crate::error::Error;
 
 pub mod cobalt_model;
