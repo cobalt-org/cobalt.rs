@@ -200,9 +200,7 @@ impl Document {
         let content = files::read_file(src_path)?;
         let builder = cobalt_config::Document::parse(&content)?;
         let (front, content) = builder.into_parts();
-        let front = front
-            .merge(&cobalt_config::Frontmatter::from_path(rel_path))
-            .merge(&default_front);
+        let front = front.merge_path(rel_path).merge(&default_front);
 
         let front = cobalt_model::Frontmatter::from_config(front)?;
 

@@ -372,10 +372,7 @@ pub fn rename_document(
         let rel_src = target
             .strip_prefix(&config.source)
             .expect("file was found under the root");
-        front
-            .clone()
-            .merge(&cobalt_config::Frontmatter::from_path(rel_src))
-            .merge(&posts.default)
+        front.clone().merge_path(rel_src).merge(&posts.default)
     } else if pages.pages.includes_file(&target)
         || pages
             .drafts
@@ -386,10 +383,7 @@ pub fn rename_document(
         let rel_src = target
             .strip_prefix(&config.source)
             .expect("file was found under the root");
-        front
-            .clone()
-            .merge(&cobalt_config::Frontmatter::from_path(rel_src))
-            .merge(&pages.default)
+        front.clone().merge_path(rel_src).merge(&pages.default)
     } else {
         failure::bail!(
             "Target file wouldn't be a member of any collection: {:?}",

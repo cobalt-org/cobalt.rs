@@ -50,32 +50,32 @@ impl Frontmatter {
         Self::default()
     }
 
-    pub fn from_path<P: AsRef<path::Path>>(relpath: P) -> Self {
-        Self::from_path_inner(relpath.as_ref())
-    }
-
-    fn from_path_inner(relpath: &path::Path) -> Self {
-        let ext = relpath.extension().and_then(|os| os.to_str()).unwrap_or("");
-        let format = match ext {
-            "md" => SourceFormat::Markdown,
-            _ => SourceFormat::Raw,
-        };
-        let format = Some(format);
-
-        let file_stem = crate::path::file_stem(relpath);
-        let (file_date, file_stem) = crate::path::parse_file_stem(file_stem);
-        let published_date = file_date;
-        let slug = crate::path::slugify(file_stem);
-        let title = Some(crate::path::titleize_slug(&slug));
-        let slug = Some(slug);
-
-        Self {
-            format,
-            published_date,
-            slug,
-            title,
-            ..Default::default()
+    pub fn merge_path(mut self, relpath: &path::Path) -> Self {
+        if self.format.is_none() {
+            let ext = relpath.extension().and_then(|os| os.to_str()).unwrap_or("");
+            let format = match ext {
+                "md" => SourceFormat::Markdown,
+                _ => SourceFormat::Raw,
+            };
+            self.format = Some(format);
         }
+
+        if self.published_date.is_none() || self.slug.is_none() {
+            let file_stem = crate::path::file_stem(relpath);
+            let (file_date, file_stem) = crate::path::parse_file_stem(file_stem);
+            if self.published_date.is_none() {
+                self.published_date = file_date;
+            }
+            if self.slug.is_none() {
+                let slug = crate::path::slugify(file_stem);
+                if self.title.is_none() {
+                    self.title = Some(crate::path::titleize_slug(&slug));
+                }
+                self.slug = Some(slug);
+            }
+        }
+
+        self
     }
 
     pub fn merge(self, other: &Self) -> Self {
