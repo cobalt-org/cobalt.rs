@@ -1,7 +1,6 @@
 use std::fmt;
 use std::path;
 
-use liquid;
 use serde;
 
 use super::*;
@@ -35,8 +34,8 @@ pub struct Frontmatter {
     pub is_draft: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub weight: Option<i32>,
-    #[serde(skip_serializing_if = "liquid::value::Object::is_empty")]
-    pub data: liquid::value::Object,
+    #[serde(skip_serializing_if = "liquid_value::Object::is_empty")]
+    pub data: liquid_value::Object,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub pagination: Option<Pagination>,
     // Controlled by where the file is found.  We might allow control over the type at a later
@@ -182,11 +181,11 @@ impl Default for SourceFormat {
     }
 }
 
-/// Shallow merge of `liquid::value::Object`'s
+/// Shallow merge of `liquid_value::Object`'s
 fn merge_objects(
-    mut primary: liquid::value::Object,
-    secondary: &liquid::value::Object,
-) -> liquid::value::Object {
+    mut primary: liquid_value::Object,
+    secondary: &liquid_value::Object,
+) -> liquid_value::Object {
     for (key, value) in secondary {
         primary
             .entry(key.to_owned())
