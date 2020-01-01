@@ -33,7 +33,7 @@ stages:
     pool:
       vmImage: ${{ variables.linux_vm }}
     steps:
-    - template: azure/install-rust.yml@templates
+    - template: install-rust.yml@templates
       parameters:
         rust: stable
     - script: cargo check --all --locked
@@ -83,7 +83,7 @@ stages:
     pool:
       vmImage: $(imageName)
     steps:
-    - template: azure/install-rust.yml@templates
+    - template: install-rust.yml@templates
       parameters:
         rust: $(channel)
     - script: cargo test --all
@@ -121,7 +121,7 @@ stages:
     pool:
       vmImage: ${{ variables.linux_vm }}
     steps:
-    - template: azure/install-rust.yml@templates
+    - template: install-rust.yml@templates
       parameters:
         rust: stable
         components:
@@ -139,7 +139,7 @@ stages:
   displayName: Code coverage
   dependsOn: test
   jobs:
-    - template: azure/coverage.yml@templates
+    - template: coverage.yml@templates
       parameters:
         codecov_token: $(CODECOV_TOKEN_SECRET)
 - stage: release
@@ -165,7 +165,7 @@ stages:
     pool:
       vmImage: $(imageName)
     steps:
-    - template: azure/install-rust.yml@templates
+    - template: install-rust.yml@templates
     - script: |
         cargo rustc --target $(TARGET) --release --bin $(CRATE_NAME) -- -C lto
       displayName: Build
