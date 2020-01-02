@@ -1,5 +1,4 @@
 use std::fs;
-use std::io::prelude::*;
 use std::path;
 use std::process;
 use std::sync::mpsc::channel;
@@ -63,10 +62,11 @@ pub fn serve_command(matches: &clap::ArgMatches) -> Result<()> {
     build::build(config.clone())?;
 
     if matches.is_present("no-watch") {
-        serve(&dest, &ip)?;
+        serve(dest, ip)?;
     } else {
+        info!("Watching {:?} for changes", &config.source);
         thread::spawn(move || {
-            if serve(&dest, &ip).is_err() {
+            if serve(dest, ip).is_err() {
                 process::exit(1)
             }
         });
@@ -89,7 +89,6 @@ fn watch(config: &cobalt_model::Config) -> Result<()> {
     watcher
         .watch(&source, notify::RecursiveMode::Recursive)
         .with_context(|_| failure::err_msg("Notify error"))?;
-    info!("Watching {:?} for changes", &config.source);
 
     loop {
         let event = rx
@@ -129,19 +128,24 @@ fn watch(config: &cobalt_model::Config) -> Result<()> {
     }
 }
 
-fn serve(dest: &path::Path, ip: &str) -> Result<()> {
-    let dest = dest.to_owned();
+#[actix_rt::main]
+async fn serve(dest: path::PathBuf, ip: String) -> Result<()> {
     info!("Serving {:?} through static file server", dest);
 
     info!("Server Listening on http://{}", &ip);
     info!("Ctrl-c to stop the server");
 
     let s = HttpServer::new(move || {
-        let error_handlers = ErrorHandlers::new().handler(http::StatusCode::NOT_FOUND, not_found);
+        let not_found_path = dest.join("404.html");
+        let error_handlers = if not_found_path.is_file() {
+            ErrorHandlers::new().handler(http::StatusCode::NOT_FOUND, not_found)
+        } else {
+            ErrorHandlers::new()
+        };
 
         App::new()
             .data(ErrorFilePaths {
-                not_found: dest.join("404.html"),
+                not_found: not_found_path,
             })
             .wrap(error_handlers)
             // Start a webserver that serves the `output_dir` directory
@@ -150,7 +154,7 @@ fn serve(dest: &path::Path, ip: &str) -> Result<()> {
     .bind(&ip)
     .expect("Can't start the webserver")
     .shutdown_timeout(20);
-    s.run()?;
+    s.run().await?;
 
     Ok(())
 }
@@ -165,10 +169,7 @@ fn not_found<B>(
     let buf: Vec<u8> = {
         let error_files: &ErrorFilePaths = res.request().app_data().unwrap();
 
-        let mut fh = fs::File::open(&error_files.not_found)?;
-        let mut buf: Vec<u8> = vec![];
-        let _ = fh.read_to_end(&mut buf)?;
-        buf
+        fs::read(&error_files.not_found)?
     };
 
     let new_resp = HttpResponse::build(http::StatusCode::NOT_FOUND)
