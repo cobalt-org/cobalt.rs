@@ -66,9 +66,11 @@ pub fn serve_command(matches: &clap::ArgMatches) -> Result<()> {
     } else {
         info!("Watching {:?} for changes", &config.source);
         thread::spawn(move || {
-            if serve(dest, ip).is_err() {
-                process::exit(1)
+            let e = serve(dest, ip);
+            if let Some(e) = e.err() {
+                error!("{}", e);
             }
+            process::exit(1)
         });
 
         watch(&config)?;
