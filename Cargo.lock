@@ -239,7 +239,7 @@ dependencies = [
  "sitemap 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "syntect 3.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "tiny_http 0.6.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "toml 0.5.5 (registry+https://github.com/rust-lang/crates.io-index)",
+ "toml 0.5.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "walkdir 2.2.9 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
@@ -1501,7 +1501,7 @@ dependencies = [
 
 [[package]]
 name = "toml"
-version = "0.5.5"
+version = "0.5.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "serde 1.0.104 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1857,7 +1857,7 @@ dependencies = [
 "checksum thread_local 0.3.6 (registry+https://github.com/rust-lang/crates.io-index)" = "c6b53e329000edc2b34dbe8545fd20e55a333362d0a321909685a19bd28c3f1b"
 "checksum time 0.1.42 (registry+https://github.com/rust-lang/crates.io-index)" = "db8dcfca086c1143c9270ac42a2bbd8a7ee477b78ac8e45b19abfb0cbede4b6f"
 "checksum tiny_http 0.6.2 (registry+https://github.com/rust-lang/crates.io-index)" = "1661fa0a44c95d01604bd05c66732a446c657efb62b5164a7a083a3b552b4951"
-"checksum toml 0.5.5 (registry+https://github.com/rust-lang/crates.io-index)" = "01d1404644c8b12b16bfcffa4322403a91a451584daaaa7c28d3152e6cbc98cf"
+"checksum toml 0.5.6 (registry+https://github.com/rust-lang/crates.io-index)" = "ffc92d160b1eef40665be3a05630d003936a3bc7da7421277846c2613e92c71a"
 "checksum treeline 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "a7f741b240f1a48843f9b8e0444fb55fb2a4ff67293b50a9179dfd5ea67f8d41"
 "checksum typenum 1.11.2 (registry+https://github.com/rust-lang/crates.io-index)" = "6d2783fe2d6b8c1101136184eb41be8b1ad379e4657050b8aaff0c79ee7575f9"
 "checksum ucd-trie 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)" = "8f00ed7be0c1ff1e24f46c3d2af4859f7e863672ba3a6e92e7cff702bf9f06c2"
