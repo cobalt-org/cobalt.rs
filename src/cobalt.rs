@@ -309,11 +309,7 @@ fn parse_drafts(
             .expect("file was found under the root");
         let new_path = rel_real.join(rel_src);
 
-        let default_front = cobalt_config::Frontmatter {
-            is_draft: Some(true),
-            ..Default::default()
-        }
-        .merge(&collection.default);
+        let default_front = collection.default.clone().set_draft(true);
 
         let doc = Document::parse(&file_path, &new_path, default_front)
             .with_context(|_| failure::format_err!("Failed to parse {}", rel_src.display()))?;

@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::cobalt_model::pagination::PaginationConfig;
+use crate::cobalt_model::pagination_config::PaginationConfig;
 use crate::cobalt_model::slug;
 use crate::document::Document;
 

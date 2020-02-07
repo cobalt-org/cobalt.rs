@@ -21,7 +21,6 @@ name = "cobalt"
 doc = false
 
 [dependencies]
-cobalt-config = { version = "0.16", path = "crates/config" }
 clap = "2.33"
 liquid = { version = "0.19.0", features = ["jekyll-filters"] }
 deunicode = "1.0.0"

@@ -3,7 +3,7 @@ use pulldown_cmark as cmark;
 use crate::error::*;
 use crate::syntax_highlight::decorate_markdown;
 
-#[derive(Debug, Clone, PartialEq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct MarkdownBuilder {
     pub theme: String,

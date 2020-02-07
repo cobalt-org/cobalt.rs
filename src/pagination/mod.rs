@@ -1,7 +1,7 @@
 use std::cmp::Ordering;
 
-use crate::cobalt_model::pagination::Include;
-use crate::cobalt_model::pagination::PaginationConfig;
+use crate::cobalt_model::pagination_config::Include;
+use crate::cobalt_model::pagination_config::PaginationConfig;
 use crate::cobalt_model::permalink;
 use crate::cobalt_model::slug;
 use crate::cobalt_model::SortOrder;
@@ -139,7 +139,7 @@ fn interpret_permalink(
     index: Option<&liquid::value::Value>,
 ) -> Result<String> {
     let mut attributes = document::permalink_attributes(&doc.front, &doc.file_path);
-    let permalink = permalink::explode_permalink(config.front_permalink.as_str(), &attributes)?;
+    let permalink = permalink::explode_permalink(&config.front_permalink, &attributes)?;
     let permalink_path = std::path::Path::new(&permalink);
     let pagination_root = permalink_path.extension().map_or_else(
         || permalink.clone(),

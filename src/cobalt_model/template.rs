@@ -27,7 +27,7 @@ fn load_partials_from_path(root: path::PathBuf) -> Result<liquid::Partials> {
     Ok(source)
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct LiquidBuilder {
     pub includes_dir: path::PathBuf,
