@@ -249,7 +249,7 @@ mod test {
 
     #[test]
     fn highlight_block_renders_rust() {
-        let highlight: Box<dyn liquid::compiler::ParseBlock> =
+        let highlight: Box<liquid::compiler::ParseBlock> =
             Box::new(CodeBlockParser::new("base16-ocean.dark".to_owned()));
         let parser = liquid::ParserBuilder::new()
             .block(highlight)
@@ -265,7 +265,8 @@ mod test {
         assert_diff!(CODEBLOCK_RENDERED, &output.unwrap(), "\n", 0);
     }
 
-    const MARKDOWN_RENDERED: &str = "<pre style=\"background-color:#2b303b;\">\n\
+    const MARKDOWN_RENDERED: &str =
+        "<pre style=\"background-color:#2b303b;\">\n\
          <span style=\"background-color:#2b303b;color:#b48ead;\">mod </span>\
          <span style=\"background-color:#2b303b;color:#c0c5ce;\">test {\n        </span>\
          <span style=\"background-color:#2b303b;color:#b48ead;\">fn </span>\

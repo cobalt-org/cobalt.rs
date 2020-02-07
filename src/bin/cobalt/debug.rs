@@ -30,7 +30,7 @@ pub fn debug_command(matches: &clap::ArgMatches) -> Result<()> {
     match matches.subcommand() {
         ("config", _) => {
             let config = args::get_config(matches)?;
-            let config = cobalt::cobalt_model::Config::from_config(config)?;
+            let config = config.build()?;
             println!("{}", config);
         }
         ("highlight", Some(matches)) => match matches.subcommand() {
@@ -48,7 +48,7 @@ pub fn debug_command(matches: &clap::ArgMatches) -> Result<()> {
         },
         ("files", Some(matches)) => {
             let config = args::get_config(matches)?;
-            let config = cobalt::cobalt_model::Config::from_config(config)?;
+            let config = config.build()?;
             let collection = matches.value_of("COLLECTION");
             match collection {
                 Some("assets") => {

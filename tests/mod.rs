@@ -66,12 +66,12 @@ fn assert_dirs_eq(expected: &Path, actual: &Path) {
 fn run_test(name: &str) -> Result<(), cobalt::Error> {
     let target = assert_fs::TempDir::new().unwrap();
     target
-        .copy_from(format!("tests/fixtures/{}", name), &["**"])
+        .copy_from(format!("tests/fixtures/{}", name), &["*"])
         .unwrap();
 
-    let mut config = cobalt_config::Config::from_cwd(target.path())?;
+    let mut config = cobalt::ConfigBuilder::from_cwd(target.path())?;
     config.destination = "./_dest".into();
-    let config = cobalt::cobalt_model::Config::from_config(config)?;
+    let config = config.build()?;
     let result = cobalt::build(config);
 
     // Always explicitly close to catch errors, especially on Windows.
@@ -83,12 +83,12 @@ fn run_test(name: &str) -> Result<(), cobalt::Error> {
 fn test_with_expected(name: &str) -> Result<(), cobalt::Error> {
     let target = assert_fs::TempDir::new().unwrap();
     target
-        .copy_from(format!("tests/fixtures/{}", name), &["**"])
+        .copy_from(format!("tests/fixtures/{}", name), &["*"])
         .unwrap();
 
-    let mut config = cobalt_config::Config::from_cwd(target.path())?;
+    let mut config = cobalt::ConfigBuilder::from_cwd(target.path())?;
     config.destination = "./_dest".into();
-    let config = cobalt::cobalt_model::Config::from_config(config)?;
+    let config = config.build()?;
     let destination = config.destination.clone();
     let result = cobalt::build(config);
 
@@ -229,6 +229,7 @@ pub fn ignore_files() {
 pub fn yaml_error() {
     let err = test_with_expected("yaml_error");
     assert!(err.is_err());
+    let err: exitfailure::ExitFailure = err.unwrap_err().into();
     let error_message = format!("{:?}", err);
     assert_contains!(error_message, "unexpected character");
 }

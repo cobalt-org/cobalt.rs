@@ -7,6 +7,7 @@ use env_logger;
 use failure::ResultExt;
 
 use crate::error::*;
+use cobalt;
 
 pub fn get_config_args() -> Vec<clap::Arg<'static, 'static>> {
     [
@@ -35,16 +36,16 @@ pub fn get_config_args() -> Vec<clap::Arg<'static, 'static>> {
     .to_vec()
 }
 
-pub fn get_config(matches: &clap::ArgMatches) -> Result<cobalt_config::Config> {
+pub fn get_config(matches: &clap::ArgMatches) -> Result<cobalt::ConfigBuilder> {
     let config_path = matches.value_of("config");
 
     // Fetch config information if available
     let mut config = if let Some(config_path) = config_path {
-        cobalt_config::Config::from_file(config_path)
+        cobalt::ConfigBuilder::from_file(config_path)
             .with_context(|_| failure::format_err!("Error reading config file {:?}", config_path))?
     } else {
         let cwd = env::current_dir().expect("How does this fail?");
-        cobalt_config::Config::from_cwd(cwd)?
+        cobalt::ConfigBuilder::from_cwd(cwd)?
     };
 
     config.abs_dest = matches.value_of("destination").map(path::PathBuf::from);

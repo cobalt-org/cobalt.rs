@@ -1,7 +1,7 @@
 use chrono::Datelike;
 use chrono::Timelike;
 
-use crate::cobalt_model::pagination::DateIndex;
+use crate::cobalt_model::pagination_config::DateIndex;
 
 use crate::cobalt_model::DateTime;
 use crate::document::Document;

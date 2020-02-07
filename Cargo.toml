@@ -21,7 +21,6 @@ name = "cobalt"
 doc = false
 
 [dependencies]
-cobalt-config = { version = "0.16", path = "crates/config" }
 clap = "2.33"
 liquid = { version = "0.19.0", features = ["jekyll-filters"] }
 deunicode = "1.0.0"
@@ -44,9 +43,10 @@ serde_yaml = "0.8"
 serde_json = "1.0"
 toml = "0.5.3"
 normalize-line-endings = "0.3.0"
-sitemap = "0.4"
+sitemap = "0.3"
 
-tiny_http = { version = "0.6.2", optional = true }
+actix-files = { version = "0.1", optional = true }
+actix-web = { version = "1.0", default-features = false, optional = true }
 notify = { version = "4", optional = true }
 
 sass-rs = { version = "0.2", optional = true }
@@ -59,8 +59,8 @@ default-features = false
 features =  ["parsing", "assets", "html", "dump-load-rs"]
 
 [dev-dependencies]
-assert_cmd = "0.12"
-assert_fs = "0.13"
+assert_cmd = "0.11"
+assert_fs = "0.11"
 predicates = "1.0"
 difference = "2.0"
 
@@ -68,7 +68,7 @@ difference = "2.0"
 default = ["syntax-highlight", "sass", "serve"]
 unstable = []
 
-serve = ["tiny_http", "notify"]
+serve = ["actix-files", "actix-web", "notify"]
 syntax-highlight = ["syntect"]
 sass = ['sass-rs']
 pagination-unstable = []
