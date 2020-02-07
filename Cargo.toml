@@ -43,7 +43,7 @@ serde_yaml = "0.8"
 serde_json = "1.0"
 toml = "0.5.3"
 normalize-line-endings = "0.3.0"
-sitemap = "0.3"
+sitemap = "0.4"
 
 actix-files = { version = "0.1", optional = true }
 actix-web = { version = "1.0", default-features = false, optional = true }
@@ -59,8 +59,8 @@ default-features = false
 features =  ["parsing", "assets", "html", "dump-load-rs"]
 
 [dev-dependencies]
-assert_cmd = "0.11"
-assert_fs = "0.11"
+assert_cmd = "0.12"
+assert_fs = "0.13"
 predicates = "1.0"
 difference = "2.0"
 

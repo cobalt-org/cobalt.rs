@@ -66,7 +66,7 @@ fn assert_dirs_eq(expected: &Path, actual: &Path) {
 fn run_test(name: &str) -> Result<(), cobalt::Error> {
     let target = assert_fs::TempDir::new().unwrap();
     target
-        .copy_from(format!("tests/fixtures/{}", name), &["*"])
+        .copy_from(format!("tests/fixtures/{}", name), &["**"])
         .unwrap();
 
     let mut config = cobalt::ConfigBuilder::from_cwd(target.path())?;
@@ -83,7 +83,7 @@ fn run_test(name: &str) -> Result<(), cobalt::Error> {
 fn test_with_expected(name: &str) -> Result<(), cobalt::Error> {
     let target = assert_fs::TempDir::new().unwrap();
     target
-        .copy_from(format!("tests/fixtures/{}", name), &["*"])
+        .copy_from(format!("tests/fixtures/{}", name), &["**"])
         .unwrap();
 
     let mut config = cobalt::ConfigBuilder::from_cwd(target.path())?;

@@ -28,7 +28,7 @@ pub fn invalid_calls() {
 pub fn log_levels_trace() {
     let project_root = assert_fs::TempDir::new().unwrap();
     project_root
-        .copy_from("tests/fixtures/example", &["*"])
+        .copy_from("tests/fixtures/example", &["**"])
         .unwrap();
 
     process::Command::cargo_bin("cobalt")
@@ -48,7 +48,7 @@ pub fn log_levels_trace() {
 pub fn log_levels_trace_alias() {
     let project_root = assert_fs::TempDir::new().unwrap();
     project_root
-        .copy_from("tests/fixtures/example", &["*"])
+        .copy_from("tests/fixtures/example", &["**"])
         .unwrap();
 
     process::Command::cargo_bin("cobalt")
@@ -68,7 +68,7 @@ pub fn log_levels_trace_alias() {
 pub fn log_levels_debug() {
     let project_root = assert_fs::TempDir::new().unwrap();
     project_root
-        .copy_from("tests/fixtures/example", &["*"])
+        .copy_from("tests/fixtures/example", &["**"])
         .unwrap();
 
     process::Command::cargo_bin("cobalt")
@@ -88,7 +88,7 @@ pub fn log_levels_debug() {
 pub fn log_levels_info() {
     let project_root = assert_fs::TempDir::new().unwrap();
     project_root
-        .copy_from("tests/fixtures/example", &["*"])
+        .copy_from("tests/fixtures/example", &["**"])
         .unwrap();
 
     process::Command::cargo_bin("cobalt")
@@ -108,7 +108,7 @@ pub fn log_levels_info() {
 pub fn log_levels_silent() {
     let project_root = assert_fs::TempDir::new().unwrap();
     project_root
-        .copy_from("tests/fixtures/example", &["*"])
+        .copy_from("tests/fixtures/example", &["**"])
         .unwrap();
 
     process::Command::cargo_bin("cobalt")
@@ -127,7 +127,7 @@ pub fn log_levels_silent() {
 pub fn clean() {
     let project_root = assert_fs::TempDir::new().unwrap();
     project_root
-        .copy_from("tests/fixtures/example", &["*"])
+        .copy_from("tests/fixtures/example", &["**"])
         .unwrap();
     let dest = project_root.child("_dest");
     dest.assert(predicate::path::missing());
@@ -155,7 +155,7 @@ pub fn clean() {
 pub fn clean_empty() {
     let project_root = assert_fs::TempDir::new().unwrap();
     project_root
-        .copy_from("tests/fixtures/example", &["*"])
+        .copy_from("tests/fixtures/example", &["**"])
         .unwrap();
     let dest = project_root.child("_dest");
     dest.assert(predicate::path::missing());
