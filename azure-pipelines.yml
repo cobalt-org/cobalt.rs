@@ -1,6 +1,6 @@
 trigger:
   branches:
-    include: ['master']
+    include: ['master', 'next']
   tags:
     include: ['v*']
 pr:
