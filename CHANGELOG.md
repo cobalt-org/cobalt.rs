@@ -1,3 +1,10 @@
+<a name="0.15.7"></a>
+## 0.15.7 (2020-02-10)
+
+#### Bug Fixes
+
+* Fixed "ctrl-c" during `cobalt serve` so that it will not hang.
+
 <a name="0.15.6"></a>
 ## 0.15.6 (2019-11-28)
 
@@ -17,7 +24,7 @@
 
 * **liquid:**  Upgrade to 0.19 ([95c85bbb](https://github.com/cobalt-org/cobalt.rs/commit/95c85bbb40e19c9cda30f9f205b78fae69f3a361), closes [#656](https://github.com/cobalt-org/cobalt.rs/issues/656))
 * **md:**  Be more conformant ([3841da3d](https://github.com/cobalt-org/cobalt.rs/commit/3841da3db6a85b0568b608679948036c64c650a4))
-* **pagination:** 
+* **pagination:**
   * revamp pagination permalink management ([e041aad2](https://github.com/cobalt-org/cobalt.rs/commit/e041aad29214a77d4e2326af4755ba2169908eb8))
   * fixes #666 and adjust tests ([9621b31a](https://github.com/cobalt-org/cobalt.rs/commit/9621b31a7cacb2ba3aa4d16c5e552c955d0778c1))
 
