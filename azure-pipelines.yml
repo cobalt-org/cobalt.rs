@@ -166,6 +166,8 @@ stages:
       vmImage: $(imageName)
     steps:
     - template: install-rust.yml@templates
+      parameters:
+        rust: stable
     - script: |
         cargo rustc --target $(TARGET) --release --bin $(CRATE_NAME) -- -C lto
       displayName: Build
