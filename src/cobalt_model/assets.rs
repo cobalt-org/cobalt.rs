@@ -1,5 +1,7 @@
 use std::path;
 
+use legion::query::IntoQuery;
+
 use super::files;
 use super::sass;
 
@@ -69,19 +71,42 @@ impl Assets {
         &self.files
     }
 
-    pub fn populate<P: AsRef<path::Path>>(&self, dest: P) -> Result<()> {
-        self.populate_path(dest.as_ref())
+    pub fn populate(&self, dest: &path::Path, world: &mut legion::world::World) -> Result<()> {
+        #[cfg(feature = "sass")]
+        let is_sass_enabled = true;
+        #[cfg(not(feature = "sass"))]
+        let is_sass_enabled = false;
+
+        world.insert(
+            (cobalt_model::assets::AssetTag,),
+            self.files().files().map(|file_path| {
+                cobalt_model::assets::derive_component(
+                    self.files.root(),
+                    dest,
+                    file_path,
+                    is_sass_enabled,
+                )
+            }),
+        );
+
+        Ok(())
     }
 
-    fn populate_path(&self, dest: &path::Path) -> Result<()> {
-        for file_path in self.files() {
-            if sass::is_sass_file(file_path.as_path()) {
-                self.sass.compile_file(self.source(), dest, file_path)?;
-            } else {
-                let rel_src = file_path
-                    .strip_prefix(self.source())
-                    .expect("file was found under the root");
-                files::copy_file(&file_path, dest.join(rel_src).as_path())?;
+    pub fn process(&self, world: &legion::world::World) -> Result<()> {
+        let query = <(
+            legion::query::Read<cobalt_model::assets::Source>,
+            legion::query::Read<cobalt_model::assets::Dest>,
+            legion::query::Read<cobalt_model::assets::AssetType>,
+        )>::query()
+        .filter(legion::prelude::tag::<cobalt_model::assets::AssetTag>());
+        for (source, dest, type_) in query.iter_immutable(world) {
+            match *type_ {
+                cobalt_model::assets::AssetType::Sass => {
+                    self.sass.compile_file(&source.fs_path, &dest.fs_path)?
+                }
+                cobalt_model::assets::AssetType::Raw => {
+                    files::copy_file(&source.fs_path, &dest.fs_path)?
+                }
             }
         }
 

@@ -114,7 +114,10 @@ pub fn build(config: Config) -> Result<()> {
 
     // copy all remaining files in the source to the destination
     // compile SASS along the way
-    context.assets.populate(&context.destination)?;
+    let universe = legion::world::Universe::new();
+    let mut world = universe.create_world();
+    context.assets.populate(&context.destination, &mut world)?;
+    context.assets.process(&world)?;
 
     Ok(())
 }
