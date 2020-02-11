@@ -57,27 +57,35 @@ stages:
           channel: stable
         windows_beta:
           imageName: ${{ variables.windows_vm }}
+          target: 'x86_64-pc-windows-msvc'
           channel: beta
         windows_nightly:
           imageName: ${{ variables.windows_vm }}
+          target: 'x86_64-pc-windows-msvc'
           channel: nightly
         mac:
           imageName: ${{ variables.mac_vm }}
+          target: 'x86_64-apple-darwin'
           channel: stable
         mac_beta:
           imageName: ${{ variables.mac_vm }}
+          target: 'x86_64-apple-darwin'
           channel: beta
         mac_nightly:
           imageName: ${{ variables.mac_vm }}
+          target: 'x86_64-apple-darwin'
           channel: nightly
         linux:
           imageName: ${{ variables.linux_vm }}
+          target: 'x86_64-unknown-linux-gnu'
           channel: stable
         linux_beta:
           imageName: ${{ variables.linux_vm }}
+          target: 'x86_64-unknown-linux-gnu'
           channel: beta
         linux_nightly:
           imageName: ${{ variables.linux_vm }}
+          target: 'x86_64-unknown-linux-gnu'
           channel: nightly
     continueOnError: ${{ eq(variables.channel, 'nightly') }}
     pool:
@@ -86,11 +94,12 @@ stages:
     - template: install-rust.yml@templates
       parameters:
         rust: $(channel)
-    - script: cargo test --all
+        targets: ["$(TARGET)"]
+    - script: cargo test --target $(TARGET) --all
       displayName: Default features
-    - script: cargo test --all --no-default-features
+    - script: cargo test --target $(TARGET) --all --no-default-features
       displayName: No features
-    - script: cargo test --all --all-features
+    - script: cargo test --target $(TARGET) --all --all-features
       displayName: All features
 - stage: style
   displayName: Style checks
@@ -168,6 +177,7 @@ stages:
     - template: install-rust.yml@templates
       parameters:
         rust: stable
+        targets: ["$(TARGET)"]
     - script: |
         cargo rustc --target $(TARGET) --release --bin $(CRATE_NAME) -- -C lto
       displayName: Build
