@@ -1,3 +1,10 @@
+<a name="0.15.9"></a>
+## 0.15.9 (2020-02-11)
+
+#### Bug Fixes
+
+* Provide a pre-built windows binary
+
 <a name="0.15.7"></a>
 ## 0.15.7 (2020-02-10)
 
