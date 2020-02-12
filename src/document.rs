@@ -220,7 +220,7 @@ impl Document {
         Ok(Document::new(
             url_path,
             file_path,
-            content.to_string(),
+            content,
             doc_attributes,
             front,
         ))
@@ -363,7 +363,7 @@ impl Document {
     ) -> Result<()> {
         let content_html = self.render_html(&self.content, globals, parser, markdown)?;
         self.attributes
-            .insert("content".into(), Value::scalar(content_html.clone()));
+            .insert("content".into(), Value::scalar(content_html));
         Ok(())
     }
 
