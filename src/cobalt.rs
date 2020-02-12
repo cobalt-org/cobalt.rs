@@ -397,11 +397,7 @@ fn create_rss(
     debug!("Creating RSS file at {}", rss_path.display());
 
     let title = &collection.title;
-    let description = collection
-        .description
-        .as_ref()
-        .map(|s| s.as_str())
-        .unwrap_or("");
+    let description = collection.description.as_deref().unwrap_or("");
     let link = collection
         .base_url
         .as_ref()
@@ -446,11 +442,7 @@ fn create_jsonfeed(
     debug!("Creating jsonfeed file at {}", jsonfeed_path.display());
 
     let title = &collection.title;
-    let description = collection
-        .description
-        .as_ref()
-        .map(|s| s.as_str())
-        .unwrap_or("");
+    let description = collection.description.as_deref().unwrap_or("");
     let link = collection
         .base_url
         .as_ref()
