@@ -103,7 +103,8 @@ pub fn get_logging(
             Some("debug") => log::LevelFilter::Debug,
             Some("trace") => log::LevelFilter::Trace,
             Some("off") => log::LevelFilter::Off,
-            Some("info") | _ => log::LevelFilter::Info,
+            Some("info") => log::LevelFilter::Info,
+            _ => log::LevelFilter::Info,
         }
     };
     builder.filter(None, level);
