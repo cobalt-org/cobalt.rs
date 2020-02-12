@@ -284,9 +284,13 @@ impl Document {
             .description
             .clone()
             .or_else(|| {
-                self.attributes
-                    .get("excerpt")
-                    .map(|s| s.render().to_string())
+                self.attributes.get("excerpt").and_then(|excerpt| {
+                    if excerpt.is_nil() {
+                        None
+                    } else {
+                        Some(excerpt.render().to_string())
+                    }
+                })
             })
             .or_else(|| {
                 self.attributes
@@ -317,7 +321,12 @@ impl Document {
         Ok(html.to_owned())
     }
 
-    /// Renders excerpt and adds it to attributes of the document.
+    /// Renders the excerpt and adds it to attributes of the document.
+    ///
+    /// The excerpt is either taken from the `excerpt` frontmatter setting, if
+    /// given, or extracted from the content, if `excerpt_separator` is not
+    /// empty. When neither condition applies, the excerpt is set to the `Nil`
+    /// value.
     pub fn render_excerpt(
         &mut self,
         globals: &Object,
