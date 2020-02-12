@@ -400,7 +400,7 @@ impl ConfigBuilder {
         let layouts_dir = source.join(layouts_dir);
 
         let liquid = template::LiquidBuilder {
-            includes_dir: includes_dir.clone(),
+            includes_dir,
             theme: syntax_highlight.theme.clone(),
         };
         let markdown = mark::MarkdownBuilder {

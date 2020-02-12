@@ -19,7 +19,7 @@ pub fn build_command(matches: &clap::ArgMatches) -> Result<()> {
     let config = args::get_config(matches)?;
     let config = config.build()?;
 
-    build(config.clone())?;
+    build(config)?;
     info!("Build successful");
 
     Ok(())

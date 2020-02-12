@@ -797,13 +797,13 @@ mod test {
             pagination: Some(Default::default()),
         };
 
-        let merge_b_into_a = a.clone().merge(b.clone());
+        let merge_b_into_a = a.clone().merge(b);
         assert_eq!(merge_b_into_a, a);
 
         let merge_empty_into_a = a.clone().merge(empty.clone());
         assert_eq!(merge_empty_into_a, a);
 
-        let merge_a_into_empty = empty.clone().merge(a.clone());
+        let merge_a_into_empty = empty.merge(a.clone());
         assert_eq!(merge_a_into_empty, a);
     }
 

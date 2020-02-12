@@ -307,7 +307,8 @@ pub fn create_new_document(
             );
         }
         // For custom collections, use a post default.
-        DEFAULT.get(file_type).unwrap_or(&POST_MD).to_string()
+        let default = *DEFAULT.get(file_type).unwrap_or(&POST_MD);
+        default.to_string()
     };
 
     let doc = cobalt_model::DocumentBuilder::<cobalt_model::FrontmatterBuilder>::parse(&source)?;

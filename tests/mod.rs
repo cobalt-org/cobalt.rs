@@ -55,11 +55,14 @@ fn assert_dirs_eq(expected: &Path, actual: &Path) {
         let extra_file = entry.path().strip_prefix(actual).expect("Comparison error");
         let src_file = Path::new(expected).join(&extra_file);
 
-        File::open(&src_file).expect(&format!(
-            "File {:?} does not exist in reference ({:?}).",
-            entry.path(),
-            src_file
-        ));
+        File::open(&src_file).unwrap_or_else(|e| {
+            panic!(
+                "File {:?} does not exist in reference ({:?}): {}",
+                entry.path(),
+                src_file,
+                e
+            )
+        });
     }
 }
 
