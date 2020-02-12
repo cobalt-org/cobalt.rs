@@ -132,14 +132,7 @@ fn document_attributes(
         ("slug".into(), Value::scalar(front.slug.clone())),
         (
             "description".into(),
-            Value::scalar(
-                front
-                    .description
-                    .as_ref()
-                    .map(|s| s.as_str())
-                    .unwrap_or("")
-                    .to_owned(),
-            ),
+            Value::scalar(front.description.as_deref().unwrap_or("").to_owned()),
         ),
         ("categories".into(), categories),
         ("is_draft".into(), Value::scalar(front.is_draft)),
