@@ -16,3 +16,6 @@ appveyor = { repository = "cobalt-org/cobalt.rs" }
 
 [dependencies]
 cobalt-config = { version = "0.16", path = "../config" }
+liquid-value = "0.19.0"
+status = { version = "0.0.10", features = ["send_sync"] }
+normalize-line-endings = "0.3.0"
