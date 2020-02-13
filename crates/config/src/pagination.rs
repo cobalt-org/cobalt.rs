@@ -37,7 +37,6 @@ impl Pagination {
             order: Some(SortOrder::Desc),
             sort_by: Some(vec![DEFAULT_SORT.to_owned()]),
             date_index: Some(vec![DateIndex::Year, DateIndex::Month]),
-            ..Default::default()
         }
     }
 

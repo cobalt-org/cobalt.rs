@@ -111,12 +111,12 @@ impl CollectionBuilder {
             default,
         } = config;
         Self {
-            title: title,
+            title,
             slug: Some(slug.to_owned()),
-            description: description,
+            description,
             source: Some(source.to_owned()),
-            dir: dir,
-            drafts_dir: drafts_dir,
+            dir,
+            drafts_dir,
             include_drafts,
             template_extensions: template_extensions.to_vec(),
             ignore,
