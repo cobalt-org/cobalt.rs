@@ -84,14 +84,14 @@ pub struct RawContent {
 pub fn derive_component(
     src_path: &path::Path,
     rel_path: &path::Path,
-    default_front: cobalt_config::Frontmatter,
+    default_front: &cobalt_config::Frontmatter,
 ) -> Result<(Frontmatter, Option<Pagination>, RawContent)> {
     let content = std::fs::read_to_string(src_path)
         .map_err(|e| crate::Status::new("Failed to read page").with_internal(e))?;
     let content = String::from_iter(normalize_line_endings::normalized(content.chars()));
     let builder = cobalt_config::Document::parse(&content)?;
     let (front, content) = builder.into_parts();
-    let front = front.merge_path(rel_path).merge(&default_front);
+    let front = front.merge_path(rel_path).merge(default_front);
 
     let (front, pagination) = convert_frontmatter(front)?;
 
