@@ -1,4 +1,3 @@
-use std::ffi;
 use std::path;
 
 use cobalt_config::SassOutputStyle;
@@ -46,22 +45,8 @@ impl Default for SassCompiler {
 }
 
 impl SassCompiler {
-    pub fn compile_file<S: AsRef<path::Path>, D: AsRef<path::Path>, F: AsRef<path::Path>>(
-        &self,
-        source: S,
-        dest: D,
-        file_path: F,
-    ) -> Result<()> {
-        self.compile_sass_internal(source.as_ref(), dest.as_ref(), file_path.as_ref())
-    }
-
     #[cfg(feature = "sass")]
-    fn compile_sass_internal(
-        &self,
-        source: &path::Path,
-        dest: &path::Path,
-        file_path: &path::Path,
-    ) -> Result<()> {
+    pub fn compile_file(&self, source: &path::Path, dest: &path::Path) -> Result<()> {
         let mut sass_opts = sass_rs::Options::default();
         sass_opts.include_paths = self.import_dir.iter().cloned().collect();
         sass_opts.output_style = match self.style {
@@ -70,33 +55,13 @@ impl SassCompiler {
             SassOutputStyle::Compact => sass_rs::OutputStyle::Compact,
             SassOutputStyle::Compressed => sass_rs::OutputStyle::Compressed,
         };
-        let content = sass_rs::compile_file(file_path, sass_opts).map_err(failure::err_msg)?;
+        let content = sass_rs::compile_file(source, sass_opts).map_err(failure::err_msg)?;
 
-        let rel_src = file_path
-            .strip_prefix(source)
-            .expect("file was found under the root");
-        let mut dest_file = dest.join(rel_src);
-        dest_file.set_extension("css");
-
-        files::write_document_file(content, dest_file)
+        files::write_document_file(content, dest)
     }
 
     #[cfg(not(feature = "sass"))]
-    fn compile_sass_internal(
-        &self,
-        source: &path::Path,
-        dest: &path::Path,
-        file_path: &path::Path,
-    ) -> Result<()> {
-        let rel_src = file_path
-            .strip_prefix(source)
-            .expect("file was found under the root");
-        let dest_file = dest.join(rel_src);
-        files::copy_file(file_path, &dest_file)
+    pub fn compile_file(&self, _source: &path::Path, _dest: &path::Path) -> Result<()> {
+        failure::bail!("Cannot compile sass files");
     }
-}
-
-pub fn is_sass_file(file_path: &path::Path) -> bool {
-    file_path.extension() == Some(ffi::OsStr::new("scss"))
-        || file_path.extension() == Some(ffi::OsStr::new("sass"))
 }

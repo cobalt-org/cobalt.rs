@@ -1,3 +1,6 @@
+[workspace]
+members = ["crates/config", "crates/model"]
+
 [package]
 name = "cobalt-bin"
 version = "0.15.6"
@@ -22,6 +25,8 @@ doc = false
 
 [dependencies]
 cobalt-config = { version = "0.16", path = "crates/config" }
+cobalt-model = { version = "0.16", path = "crates/model" }
+legion = "0.2"
 clap = "2.33"
 liquid = { version = "0.19.0", features = ["jekyll-filters"] }
 deunicode = "1.0.0"

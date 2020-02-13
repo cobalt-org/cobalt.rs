@@ -1,0 +1,18 @@
+[package]
+name = "cobalt-model"
+version = "0.16.0"
+authors = ["Ed Page <eopage@gmail.com>"]
+description = "Static site generator written in Rust"
+repository = "https://github.com/cobalt-org/cobalt.rs"
+readme = "../README.md"
+keywords = ["static", "site", "generator"]
+categories = ["command-line-utilities"]
+license = "MIT OR Apache-2.0"
+edition = "2018"
+
+[badges]
+travis-ci = { repository = "cobalt-org/cobalt.rs" }
+appveyor = { repository = "cobalt-org/cobalt.rs" }
+
+[dependencies]
+cobalt-config = { version = "0.16", path = "../config" }

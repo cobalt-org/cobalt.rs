@@ -114,7 +114,10 @@ pub fn build(config: Config) -> Result<()> {
 
     // copy all remaining files in the source to the destination
     // compile SASS along the way
-    context.assets.populate(&context.destination)?;
+    let universe = legion::world::Universe::new();
+    let mut world = universe.create_world();
+    context.assets.populate(&context.destination, &mut world)?;
+    context.assets.process(&world)?;
 
     Ok(())
 }
@@ -291,37 +294,6 @@ fn sort_pages(posts: &mut Vec<Document>, collection: &Collection) -> Result<()> 
     Ok(())
 }
 
-fn parse_drafts(
-    drafts_root: &path::Path,
-    draft_files: &files::Files,
-    documents: &mut Vec<Document>,
-    collection: &Collection,
-) -> Result<()> {
-    let rel_real = collection
-        .pages
-        .subtree()
-        .strip_prefix(collection.pages.root())
-        .expect("subtree is under root");
-    for file_path in draft_files.files() {
-        // Provide a fake path as if it was not a draft
-        let rel_src = file_path
-            .strip_prefix(&drafts_root)
-            .expect("file was found under the root");
-        let new_path = rel_real.join(rel_src);
-
-        let default_front = cobalt_config::Frontmatter {
-            is_draft: Some(true),
-            ..Default::default()
-        }
-        .merge(&collection.default);
-
-        let doc = Document::parse(&file_path, &new_path, default_front)
-            .with_context(|_| failure::format_err!("Failed to parse {}", rel_src.display()))?;
-        documents.push(doc);
-    }
-    Ok(())
-}
-
 fn find_layouts(layouts: &path::Path) -> Result<files::Files> {
     let mut files = files::FilesBuilder::new(layouts)?;
     files.ignore_hidden(false)?;
@@ -359,6 +331,37 @@ fn parse_layouts(files: &files::Files) -> HashMap<String, String> {
         .into_iter()
         .map(|entry| entry.expect("partition to filter out errors"))
         .collect()
+}
+
+fn parse_drafts(
+    drafts_root: &path::Path,
+    draft_files: &files::Files,
+    documents: &mut Vec<Document>,
+    collection: &Collection,
+) -> Result<()> {
+    let rel_real = collection
+        .pages
+        .subtree()
+        .strip_prefix(collection.pages.root())
+        .expect("subtree is under root");
+    for file_path in draft_files.files() {
+        // Provide a fake path as if it was not a draft
+        let rel_src = file_path
+            .strip_prefix(&drafts_root)
+            .expect("file was found under the root");
+        let new_path = rel_real.join(rel_src);
+
+        let default_front = cobalt_config::Frontmatter {
+            is_draft: Some(true),
+            ..Default::default()
+        }
+        .merge(&collection.default);
+
+        let doc = Document::parse(&file_path, &new_path, default_front)
+            .with_context(|_| failure::format_err!("Failed to parse {}", rel_src.display()))?;
+        documents.push(doc);
+    }
+    Ok(())
 }
 
 fn parse_pages(
