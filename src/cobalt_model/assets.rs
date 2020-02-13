@@ -80,12 +80,14 @@ impl Assets {
         world.insert(
             (cobalt_model::assets::AssetTag,),
             self.files().files().map(|file_path| {
-                cobalt_model::assets::derive_component(
+                let (dest, type_) = cobalt_model::assets::derive_component(
                     self.files.root(),
                     dest,
-                    file_path,
+                    &file_path,
                     is_sass_enabled,
-                )
+                );
+                let source = cobalt_model::fs::Source { fs_path: file_path };
+                (source, dest, type_)
             }),
         );
 
@@ -94,8 +96,8 @@ impl Assets {
 
     pub fn process(&self, world: &legion::world::World) -> Result<()> {
         let query = <(
-            legion::query::Read<cobalt_model::assets::Source>,
-            legion::query::Read<cobalt_model::assets::Dest>,
+            legion::query::Read<cobalt_model::fs::Source>,
+            legion::query::Read<cobalt_model::fs::Dest>,
             legion::query::Read<cobalt_model::assets::AssetType>,
         )>::query()
         .filter(legion::prelude::tag::<cobalt_model::assets::AssetTag>());
