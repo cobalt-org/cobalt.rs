@@ -27,84 +27,10 @@ pub struct Frontmatter {
     pub weight: i32,
     pub collection: String,
     pub data: liquid_value::Object,
-    pub pagination: Option<PaginationConfig>,
-}
-
-impl Frontmatter {
-    pub fn from_config(config: cobalt_config::Frontmatter) -> Result<Frontmatter> {
-        let cobalt_config::Frontmatter {
-            permalink,
-            slug,
-            title,
-            description,
-            excerpt,
-            categories,
-            tags,
-            excerpt_separator,
-            published_date,
-            format,
-            layout,
-            is_draft,
-            weight,
-            collection,
-            data,
-            pagination,
-        } = config;
-
-        let collection = collection.unwrap_or_default();
-
-        let permalink = permalink.unwrap_or_default();
-        if let cobalt_config::Permalink::Explicit(permalink) = &permalink {
-            if !permalink.starts_with('/') {
-                return Err(crate::Status::new("Unsupported permalink alias")
-                    .context_with(|c| c.insert("alias", permalink.to_owned())));
-            }
-        }
-
-        if let Some(ref tags) = tags {
-            if tags.iter().any(|x| x.trim().is_empty()) {
-                status::bail!("Empty strings are not allowed in tags");
-            }
-        }
-        let tags = if tags.as_ref().map(|t| t.len()).unwrap_or(0) == 0 {
-            None
-        } else {
-            tags
-        };
-        let fm = Frontmatter {
-            pagination: pagination.and_then(|p| PaginationConfig::from_config(p, &permalink)),
-            permalink,
-            slug: slug.ok_or_else(|| crate::Status::new("No slug"))?,
-            title: title.ok_or_else(|| crate::Status::new("No title"))?,
-            description,
-            excerpt,
-            categories: categories.unwrap_or_else(|| vec![]),
-            tags,
-            excerpt_separator: excerpt_separator.unwrap_or_else(|| "\n\n".to_owned()),
-            published_date,
-            format: format.unwrap_or_else(SourceFormat::default),
-            layout,
-            is_draft: is_draft.unwrap_or(false),
-            weight: weight.unwrap_or(0),
-            collection,
-            data,
-        };
-
-        if !cfg!(feature = "pagination-unstable") && fm.pagination.is_some() {
-            status::bail!("Unsupported `pagination` field");
-        } else {
-            if let Some(pagination) = &fm.pagination {
-                if !is_date_index_sorted(&pagination.date_index) {
-                    status::bail!("date_index is not correctly sorted: Year > Month > Day...");
-                }
-            }
-            Ok(fm)
-        }
-    }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct PaginationConfig {
+pub struct Pagination {
     pub include: Include,
     pub per_page: i32,
     pub front_permalink: cobalt_config::Permalink,
@@ -114,8 +40,8 @@ pub struct PaginationConfig {
     pub date_index: Vec<DateIndex>,
 }
 
-impl PaginationConfig {
-    pub fn from_config(
+impl Pagination {
+    fn from_config(
         config: cobalt_config::Pagination,
         permalink: &cobalt_config::Permalink,
     ) -> Option<Self> {
@@ -150,13 +76,6 @@ impl PaginationConfig {
     }
 }
 
-// TODO to be replaced by a call to `is_sorted()` once it's stabilized
-fn is_date_index_sorted(v: &Vec<DateIndex>) -> bool {
-    let mut copy = v.clone();
-    copy.sort_unstable();
-    copy.eq(v)
-}
-
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct RawContent {
     pub content: String,
@@ -166,7 +85,7 @@ pub fn derive_component(
     src_path: &path::Path,
     rel_path: &path::Path,
     default_front: cobalt_config::Frontmatter,
-) -> Result<(Frontmatter, RawContent)> {
+) -> Result<(Frontmatter, Option<Pagination>, RawContent)> {
     let content = std::fs::read_to_string(src_path)
         .map_err(|e| crate::Status::new("Failed to read page").with_internal(e))?;
     let content = String::from_iter(normalize_line_endings::normalized(content.chars()));
@@ -174,9 +93,87 @@ pub fn derive_component(
     let (front, content) = builder.into_parts();
     let front = front.merge_path(rel_path).merge(&default_front);
 
-    let front = Frontmatter::from_config(front)?;
+    let (front, pagination) = convert_frontmatter(front)?;
 
     let content = RawContent { content };
 
-    Ok((front, content))
+    Ok((front, pagination, content))
+}
+
+fn convert_frontmatter(
+    config: cobalt_config::Frontmatter,
+) -> Result<(Frontmatter, Option<Pagination>)> {
+    let cobalt_config::Frontmatter {
+        permalink,
+        slug,
+        title,
+        description,
+        excerpt,
+        categories,
+        tags,
+        excerpt_separator,
+        published_date,
+        format,
+        layout,
+        is_draft,
+        weight,
+        collection,
+        data,
+        pagination,
+    } = config;
+
+    let collection = collection.unwrap_or_default();
+
+    let permalink = permalink.unwrap_or_default();
+    if let cobalt_config::Permalink::Explicit(permalink) = &permalink {
+        if !permalink.starts_with('/') {
+            return Err(crate::Status::new("Unsupported permalink alias")
+                .context_with(|c| c.insert("alias", permalink.to_owned())));
+        }
+    }
+
+    if let Some(ref tags) = tags {
+        if tags.iter().any(|x| x.trim().is_empty()) {
+            status::bail!("Empty strings are not allowed in tags");
+        }
+    }
+    let tags = if tags.as_ref().map(|t| t.len()).unwrap_or(0) == 0 {
+        None
+    } else {
+        tags
+    };
+
+    let pagination = pagination.and_then(|p| Pagination::from_config(p, &permalink));
+    if let Some(pagination) = pagination.as_ref() {
+        if !is_date_index_sorted(&pagination.date_index) {
+            status::bail!("date_index is not correctly sorted: Year > Month > Day...");
+        }
+    }
+
+    let fm = Frontmatter {
+        permalink,
+        slug: slug.ok_or_else(|| crate::Status::new("No slug"))?,
+        title: title.ok_or_else(|| crate::Status::new("No title"))?,
+        description,
+        excerpt,
+        categories: categories.unwrap_or_else(|| vec![]),
+        tags,
+        excerpt_separator: excerpt_separator.unwrap_or_else(|| "\n\n".to_owned()),
+        published_date,
+        format: format.unwrap_or_else(SourceFormat::default),
+        layout,
+        is_draft: is_draft.unwrap_or(false),
+        weight: weight.unwrap_or(0),
+        collection,
+        data,
+    };
+
+    Ok((fm, pagination))
+}
+
+// TODO to be replaced by a call to `is_sorted()` once it's stabilized
+fn is_date_index_sorted(v: &Vec<DateIndex>) -> bool {
+    let mut copy = v.clone();
+    copy.sort_unstable();
+    copy.eq(v)
 }
