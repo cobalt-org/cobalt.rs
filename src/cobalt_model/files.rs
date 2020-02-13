@@ -127,8 +127,7 @@ impl Files {
 
     pub fn subtree(&self) -> &path::Path {
         self.subtree
-            .as_ref()
-            .map(path::PathBuf::as_path)
+            .as_deref()
             .unwrap_or_else(|| self.root_dir.as_path())
     }
 

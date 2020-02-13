@@ -140,11 +140,11 @@ stages:
           - clippy
     - script: cargo fmt --all -- --check
       displayName: rustfmt
-    - script: cargo check --all --bins --examples --tests --all-features
+    - script: cargo check --workspace --all-targets --all-features
       displayName: Warnings
       env:
         RUSTFLAGS: "-D warnings"
-    - script:  cargo clippy --all
+    - script:  cargo clippy --workspace --all-features --all-targets -- -D warnings
       displayName: clippy
 - stage: coverage
   displayName: Code coverage

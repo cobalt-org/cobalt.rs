@@ -105,7 +105,7 @@ impl Frontmatter {
             categories: categories.or_else(|| other.categories.clone()),
             tags: tags.or_else(|| other.tags.clone()),
             excerpt_separator: excerpt_separator.or_else(|| other.excerpt_separator.clone()),
-            published_date: published_date.or_else(|| other.published_date.clone()),
+            published_date: published_date.or_else(|| other.published_date),
             format: format.or(other.format),
             layout: layout.or_else(|| other.layout.clone()),
             is_draft: is_draft.or(other.is_draft),

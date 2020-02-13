@@ -30,11 +30,12 @@ pub fn derive_component(
         .strip_prefix(source_root)
         .expect("file was found under the root");
     let mut dest_file_path = dest_root.join(rel_src);
-    let mut type_ = AssetType::Raw;
-    if is_sass_enabled && is_sass_file(rel_src) {
+    let type_ = if is_sass_enabled && is_sass_file(rel_src) {
         dest_file_path.set_extension("css");
-        type_ = AssetType::Sass;
-    }
+        AssetType::Sass
+    } else {
+        AssetType::Raw
+    };
 
     let source = Source { fs_path: file_path };
     let dest = Dest {
