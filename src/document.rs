@@ -132,14 +132,7 @@ fn document_attributes(
         ("slug".into(), Value::scalar(front.slug.clone())),
         (
             "description".into(),
-            Value::scalar(
-                front
-                    .description
-                    .as_ref()
-                    .map(|s| s.as_str())
-                    .unwrap_or("")
-                    .to_owned(),
-            ),
+            Value::scalar(front.description.as_deref().unwrap_or("").to_owned()),
         ),
         ("categories".into(), categories),
         ("is_draft".into(), Value::scalar(front.is_draft)),
@@ -220,7 +213,7 @@ impl Document {
         Ok(Document::new(
             url_path,
             file_path,
-            content.to_string(),
+            content,
             doc_attributes,
             front,
         ))
@@ -318,7 +311,7 @@ impl Document {
             cobalt_model::SourceFormat::Raw => html,
             cobalt_model::SourceFormat::Markdown => markdown.parse(&html)?,
         };
-        Ok(html.to_owned())
+        Ok(html)
     }
 
     /// Renders the excerpt and adds it to attributes of the document.
@@ -363,7 +356,7 @@ impl Document {
     ) -> Result<()> {
         let content_html = self.render_html(&self.content, globals, parser, markdown)?;
         self.attributes
-            .insert("content".into(), Value::scalar(content_html.clone()));
+            .insert("content".into(), Value::scalar(content_html));
         Ok(())
     }
 

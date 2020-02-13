@@ -227,6 +227,8 @@ mod tests {
     use super::*;
     use chrono::{Datelike, Timelike};
 
+    const HOUR_SECS: i32 = 60 * 60;
+
     #[test]
     fn format() {
         let d = DateTime::default()
@@ -234,7 +236,7 @@ mod tests {
             .and_then(|d| d.with_month(1))
             .and_then(|d| d.with_day(1))
             .and_then(|d| d.with_hour(20))
-            .and_then(|d| d.with_offset(1 * 60 * 60))
+            .and_then(|d| d.with_offset(HOUR_SECS))
             .unwrap();
         assert_eq!(d.format(), "2016-01-01 21:00:00 +0100");
     }
@@ -246,7 +248,7 @@ mod tests {
             .and_then(|d| d.with_month(1))
             .and_then(|d| d.with_day(1))
             .and_then(|d| d.with_hour(3))
-            .and_then(|d| d.with_offset(1 * 60 * 60))
+            .and_then(|d| d.with_offset(HOUR_SECS))
             .unwrap();
         assert_eq!(DateTime::parse("2016-1-1 4:00:00 +0100").unwrap(), expected);
     }
@@ -258,7 +260,7 @@ mod tests {
             .and_then(|d| d.with_month(1))
             .and_then(|d| d.with_day(1))
             .and_then(|d| d.with_hour(3))
-            .and_then(|d| d.with_offset(1 * 60 * 60))
+            .and_then(|d| d.with_offset(HOUR_SECS))
             .unwrap();
         assert_eq!(
             DateTime::parse("2016-01-01 04:00:00 +0100").unwrap(),
