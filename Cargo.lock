@@ -316,9 +316,12 @@ dependencies = [
 name = "cobalt-model"
 version = "0.16.0"
 dependencies = [
+ "chrono",
  "cobalt-config",
- "liquid-value",
+ "itertools",
+ "liquid",
  "normalize-line-endings 0.3.0",
+ "once_cell",
  "status",
 ]
 

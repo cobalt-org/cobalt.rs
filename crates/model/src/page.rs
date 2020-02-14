@@ -26,7 +26,7 @@ pub struct Frontmatter {
     pub is_draft: bool,
     pub weight: i32,
     pub collection: String,
-    pub data: liquid_value::Object,
+    pub data: liquid::value::Object,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
