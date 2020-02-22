@@ -11,10 +11,12 @@ use liquid;
 use rss;
 use sitemap::writer::SiteMapWriter;
 
-use crate::cobalt_model;
 use crate::cobalt_model::files;
 use crate::cobalt_model::permalink;
+use crate::cobalt_model::Assets;
 use crate::cobalt_model::Collection;
+use crate::cobalt_model::Liquid;
+use crate::cobalt_model::Markdown;
 use crate::cobalt_model::{Config, SortOrder};
 use crate::document::Document;
 use crate::error::*;
@@ -23,13 +25,13 @@ use crate::pagination;
 struct Context {
     pub source: path::PathBuf,
     pub destination: path::PathBuf,
-    pub pages: cobalt_model::Collection,
-    pub posts: cobalt_model::Collection,
+    pub pages: Collection,
+    pub posts: Collection,
     pub site: liquid::value::Object,
     pub layouts: HashMap<String, String>,
-    pub liquid: cobalt_model::Liquid,
-    pub markdown: cobalt_model::Markdown,
-    pub assets: cobalt_model::Assets,
+    pub liquid: Liquid,
+    pub markdown: Markdown,
+    pub assets: Assets,
     pub sitemap: Option<String>,
 }
 
@@ -275,7 +277,7 @@ fn generate_posts(posts: &mut Vec<Document>, context: &Context) -> Result<()> {
 
 fn sort_pages(posts: &mut Vec<Document>, collection: &Collection) -> Result<()> {
     // January 1, 1970 0:00:00 UTC, the beginning of time
-    let default_date = cobalt_model::DateTime::default();
+    let default_date = cobalt_config::DateTime::default();
 
     // sort documents by date, if there's no date (none was provided or it couldn't be read) then
     // fall back to the default date

@@ -13,10 +13,12 @@ use liquid::value::Value;
 use regex::Regex;
 use rss;
 
-use crate::cobalt_model;
 use crate::cobalt_model::files;
 use crate::cobalt_model::permalink;
 use crate::cobalt_model::slug;
+use crate::cobalt_model::Frontmatter;
+use crate::cobalt_model::Liquid;
+use crate::cobalt_model::Markdown;
 use crate::error::*;
 
 /// Convert the source file's relative path into a format useful for generating permalinks that
@@ -37,7 +39,7 @@ fn format_path_variable(source_file: &Path) -> String {
     path
 }
 
-pub fn permalink_attributes(front: &cobalt_model::Frontmatter, dest_file: &Path) -> Object {
+pub fn permalink_attributes(front: &Frontmatter, dest_file: &Path) -> Object {
     let mut attributes = Object::new();
 
     attributes.insert(
@@ -92,11 +94,7 @@ pub fn permalink_attributes(front: &cobalt_model::Frontmatter, dest_file: &Path)
     attributes
 }
 
-fn document_attributes(
-    front: &cobalt_model::Frontmatter,
-    source_file: &Path,
-    url_path: &str,
-) -> Object {
+fn document_attributes(front: &Frontmatter, source_file: &Path, url_path: &str) -> Object {
     let categories = Value::Array(
         front
             .categories
@@ -164,7 +162,7 @@ pub struct Document {
     pub file_path: PathBuf,
     pub content: String,
     pub attributes: Object,
-    pub front: cobalt_model::Frontmatter,
+    pub front: Frontmatter,
 }
 
 impl Document {
@@ -173,7 +171,7 @@ impl Document {
         file_path: PathBuf,
         content: String,
         attributes: Object,
-        front: cobalt_model::Frontmatter,
+        front: Frontmatter,
     ) -> Document {
         Document {
             url_path,
@@ -195,7 +193,7 @@ impl Document {
         let (front, content) = builder.into_parts();
         let front = front.merge_path(rel_path).merge(&default_front);
 
-        let front = cobalt_model::Frontmatter::from_config(front)?;
+        let front = Frontmatter::from_config(front)?;
 
         let (file_path, url_path) = {
             let perma_attributes = permalink_attributes(&front, rel_path);
@@ -301,15 +299,15 @@ impl Document {
         &self,
         content: &str,
         globals: &Object,
-        parser: &cobalt_model::Liquid,
-        markdown: &cobalt_model::Markdown,
+        parser: &Liquid,
+        markdown: &Markdown,
     ) -> Result<String> {
         let template = parser.parse(content)?;
         let html = template.render(globals)?;
 
         let html = match self.front.format {
-            cobalt_model::SourceFormat::Raw => html,
-            cobalt_model::SourceFormat::Markdown => markdown.parse(&html)?,
+            cobalt_config::SourceFormat::Raw => html,
+            cobalt_config::SourceFormat::Markdown => markdown.parse(&html)?,
         };
         Ok(html)
     }
@@ -323,8 +321,8 @@ impl Document {
     pub fn render_excerpt(
         &mut self,
         globals: &Object,
-        parser: &cobalt_model::Liquid,
-        markdown: &cobalt_model::Markdown,
+        parser: &Liquid,
+        markdown: &Markdown,
     ) -> Result<()> {
         let value = if let Some(excerpt_str) = self.front.excerpt.as_ref() {
             let excerpt = self.render_html(excerpt_str, globals, parser, markdown)?;
@@ -351,8 +349,8 @@ impl Document {
     pub fn render_content(
         &mut self,
         globals: &Object,
-        parser: &cobalt_model::Liquid,
-        markdown: &cobalt_model::Markdown,
+        parser: &Liquid,
+        markdown: &Markdown,
     ) -> Result<()> {
         let content_html = self.render_html(&self.content, globals, parser, markdown)?;
         self.attributes
@@ -368,7 +366,7 @@ impl Document {
     pub fn render(
         &mut self,
         globals: &Object,
-        parser: &cobalt_model::Liquid,
+        parser: &Liquid,
         layouts: &HashMap<String, String>,
     ) -> Result<String> {
         if let Some(ref layout) = self.front.layout {
@@ -427,14 +425,14 @@ fn extract_excerpt_markdown(content: &str, excerpt_separator: &str) -> String {
 
 fn extract_excerpt(
     content: &str,
-    format: cobalt_model::SourceFormat,
+    format: cobalt_config::SourceFormat,
     excerpt_separator: &str,
 ) -> String {
     match format {
-        cobalt_model::SourceFormat::Markdown => {
+        cobalt_config::SourceFormat::Markdown => {
             extract_excerpt_markdown(content, excerpt_separator)
         }
-        cobalt_model::SourceFormat::Raw => extract_excerpt_raw(content, excerpt_separator),
+        cobalt_config::SourceFormat::Raw => extract_excerpt_raw(content, excerpt_separator),
     }
 }
 
