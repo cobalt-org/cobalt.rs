@@ -53,6 +53,7 @@ sitemap = "0.4"
 
 tiny_http = { version = "0.6.2", optional = true }
 notify = { version = "4", optional = true }
+mime_guess = { version = "2", optional = true }
 
 sass-rs = { version = "0.2", optional = true }
 
@@ -73,7 +74,7 @@ difference = "2.0"
 default = ["syntax-highlight", "sass", "serve"]
 unstable = []
 
-serve = ["tiny_http", "notify"]
+serve = ["tiny_http", "notify", "mime_guess"]
 syntax-highlight = ["syntect"]
 sass = ['sass-rs']
 pagination-unstable = []

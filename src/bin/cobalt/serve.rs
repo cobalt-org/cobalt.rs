@@ -1,6 +1,7 @@
 use std::fs;
 use std::path;
 use std::process;
+use std::str::FromStr;
 use std::sync::mpsc::channel;
 use std::thread;
 use std::time;
@@ -101,8 +102,15 @@ fn static_file_handler(dest: &path::Path, req: Request) -> Result<()> {
 
     // if the request points to a file and it exists, read and serve it
     if serve_path.exists() {
-        let file = fs::File::open(serve_path)?;
-        req.respond(Response::from_file(file))?;
+        let file = fs::File::open(&serve_path)?;
+        let mut response = Response::from_file(file);
+        if let Some(mime) = mime_guess::MimeGuess::from_path(&serve_path).first_raw() {
+            let content_type = format!("Content-Type:{}", mime);
+            let content_type =
+                tiny_http::Header::from_str(&content_type).expect("formatted correctly");
+            response.add_header(content_type);
+        }
+        req.respond(response)?;
     } else {
         // write a simple body for the 404 page
         req.respond(
