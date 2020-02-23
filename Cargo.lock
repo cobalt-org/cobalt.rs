@@ -290,6 +290,7 @@ dependencies = [
  "serde_json",
  "serde_yaml",
  "sitemap",
+ "status",
  "syntect",
  "tiny_http",
  "toml",

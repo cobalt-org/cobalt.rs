@@ -3,9 +3,7 @@ use std::collections::HashMap;
 use std::default::Default;
 use std::path::{Path, PathBuf};
 
-use chrono::{Datelike, Timelike};
 use failure::ResultExt;
-use itertools;
 use jsonfeed;
 use liquid;
 use liquid::value::Object;
@@ -13,88 +11,15 @@ use liquid::value::Value;
 use regex::Regex;
 use rss;
 
-use crate::cobalt_model::files;
-use crate::cobalt_model::permalink;
-use crate::cobalt_model::slug;
-use crate::cobalt_model::Frontmatter;
 use crate::cobalt_model::Liquid;
 use crate::cobalt_model::Markdown;
 use crate::error::*;
 
-/// Convert the source file's relative path into a format useful for generating permalinks that
-/// mirror the source directory hierarchy.
-fn format_path_variable(source_file: &Path) -> String {
-    let parent = source_file
-        .parent()
-        .and_then(|p| p.to_str())
-        .unwrap_or("")
-        .to_owned();
-    let mut path = parent.replace("\\", "/");
-    if path.starts_with("./") {
-        path.remove(0);
-    }
-    if path.starts_with('/') {
-        path.remove(0);
-    }
-    path
-}
-
-pub fn permalink_attributes(front: &Frontmatter, dest_file: &Path) -> Object {
-    let mut attributes = Object::new();
-
-    attributes.insert(
-        "parent".into(),
-        Value::scalar(format_path_variable(dest_file)),
-    );
-
-    let filename = dest_file
-        .file_stem()
-        .and_then(|s| s.to_str())
-        .unwrap_or("")
-        .to_owned();
-    attributes.insert("name".into(), Value::scalar(filename));
-
-    attributes.insert("ext".into(), Value::scalar(".html"));
-
-    // TODO(epage): Add `collection` (the collection's slug), see #257
-    // or `parent.slug`, see #323
-
-    attributes.insert("slug".into(), Value::scalar(front.slug.clone()));
-
-    attributes.insert(
-        "categories".into(),
-        Value::scalar(itertools::join(
-            front.categories.iter().map(slug::slugify),
-            "/",
-        )),
-    );
-
-    if let Some(ref date) = front.published_date {
-        attributes.insert("year".into(), Value::scalar(date.year().to_string()));
-        attributes.insert(
-            "month".into(),
-            Value::scalar(format!("{:02}", &date.month())),
-        );
-        attributes.insert("i_month".into(), Value::scalar(date.month().to_string()));
-        attributes.insert("day".into(), Value::scalar(format!("{:02}", &date.day())));
-        attributes.insert("i_day".into(), Value::scalar(date.day().to_string()));
-        attributes.insert("hour".into(), Value::scalar(format!("{:02}", &date.hour())));
-        attributes.insert(
-            "minute".into(),
-            Value::scalar(format!("{:02}", &date.minute())),
-        );
-        attributes.insert(
-            "second".into(),
-            Value::scalar(format!("{:02}", &date.second())),
-        );
-    }
-
-    attributes.insert("data".into(), Value::Object(front.data.clone()));
-
-    attributes
-}
-
-fn document_attributes(front: &Frontmatter, source_file: &Path, url_path: &str) -> Object {
+fn document_attributes(
+    front: &cobalt_model::page::Frontmatter,
+    source_file: &Path,
+    url_path: &str,
+) -> Object {
     let categories = Value::Array(
         front
             .categories
@@ -162,7 +87,8 @@ pub struct Document {
     pub file_path: PathBuf,
     pub content: String,
     pub attributes: Object,
-    pub front: Frontmatter,
+    pub front: cobalt_model::page::Frontmatter,
+    pub pagination: Option<cobalt_model::page::Pagination>,
 }
 
 impl Document {
@@ -171,7 +97,8 @@ impl Document {
         file_path: PathBuf,
         content: String,
         attributes: Object,
-        front: Frontmatter,
+        front: cobalt_model::page::Frontmatter,
+        pagination: Option<cobalt_model::page::Pagination>,
     ) -> Document {
         Document {
             url_path,
@@ -179,41 +106,31 @@ impl Document {
             content,
             attributes,
             front,
+            pagination,
         }
     }
 
     pub fn parse(
         src_path: &Path,
         rel_path: &Path,
-        default_front: cobalt_config::Frontmatter,
+        dest_root: &Path,
+        default_front: &cobalt_config::Frontmatter,
     ) -> Result<Document> {
         trace!("Parsing {:?}", rel_path);
-        let content = files::read_file(src_path)?;
-        let builder = cobalt_config::Document::parse(&content)?;
-        let (front, content) = builder.into_parts();
-        let front = front.merge_path(rel_path).merge(&default_front);
+        let (front, pagination, content) =
+            cobalt_model::page::derive_component(src_path, rel_path, default_front)?;
+        let url = cobalt_model::url::derive_page_url(&front, rel_path)?;
+        let dest = cobalt_model::url::derive_dest(dest_root, &url);
 
-        let front = Frontmatter::from_config(front)?;
-
-        let (file_path, url_path) = {
-            let perma_attributes = permalink_attributes(&front, rel_path);
-            let url_path =
-                permalink::explode_permalink(front.permalink.as_str(), &perma_attributes)
-                    .with_context(|_| {
-                        failure::format_err!("Failed to create permalink `{}`", front.permalink)
-                    })?;
-            let file_path = permalink::format_url_as_file(&url_path);
-            (file_path, url_path)
-        };
-
-        let doc_attributes = document_attributes(&front, rel_path, url_path.as_ref());
+        let doc_attributes = document_attributes(&front, rel_path, &url.url);
 
         Ok(Document::new(
-            url_path,
-            file_path,
-            content,
+            url.url,
+            dest.fs_path,
+            content.content,
             doc_attributes,
             front,
+            pagination,
         ))
     }
 
@@ -433,28 +350,5 @@ fn extract_excerpt(
             extract_excerpt_markdown(content, excerpt_separator)
         }
         cobalt_config::SourceFormat::Raw => extract_excerpt_raw(content, excerpt_separator),
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use super::*;
-
-    #[test]
-    fn format_path_variable_file() {
-        let input = Path::new("/hello/world/file.liquid");
-        let actual = format_path_variable(input);
-        assert_eq!(actual, "hello/world");
-    }
-
-    #[test]
-    fn format_path_variable_relative() {
-        let input = Path::new("hello/world/file.liquid");
-        let actual = format_path_variable(input);
-        assert_eq!(actual, "hello/world");
-
-        let input = Path::new("./hello/world/file.liquid");
-        let actual = format_path_variable(input);
-        assert_eq!(actual, "hello/world");
     }
 }

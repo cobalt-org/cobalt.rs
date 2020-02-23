@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 
-use crate::cobalt_model::pagination::PaginationConfig;
 use crate::cobalt_model::slug;
 use crate::document::Document;
 
@@ -36,7 +35,7 @@ struct TagPaginators {
 pub fn create_tags_paginators(
     all_posts: &[&liquid::value::Value],
     doc: &Document,
-    pagination_cfg: &PaginationConfig,
+    pagination_cfg: &cobalt_model::page::Pagination,
 ) -> Result<Vec<Paginator>> {
     let mut per_tags = distribute_posts_by_tags(&all_posts)?;
 
