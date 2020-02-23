@@ -1,5 +1,4 @@
 use std::fs;
-use std::io::Read;
 use std::path;
 use std::process;
 use std::sync::mpsc::channel;
@@ -102,11 +101,8 @@ fn static_file_handler(dest: &path::Path, req: Request) -> Result<()> {
 
     // if the request points to a file and it exists, read and serve it
     if serve_path.exists() {
-        let mut file = fs::File::open(serve_path)?;
-        // buffer to store the file
-        let mut buffer: Vec<u8> = vec![];
-        file.read_to_end(&mut buffer)?;
-        req.respond(Response::from_data(buffer))?;
+        let file = fs::File::open(serve_path)?;
+        req.respond(Response::from_file(file))?;
     } else {
         // write a simple body for the 404 page
         req.respond(
