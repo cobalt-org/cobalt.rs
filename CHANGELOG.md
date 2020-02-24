@@ -1,3 +1,11 @@
+<a name="0.15.10"></a>
+## 0.15.10 (2020-02-24)
+
+#### Bug Fixes
+
+* Report mime-type with `cobalt serve` (closes [#732](https://github.com/cobalt-org/cobalt.rs/issues/732)).
+* Fix RSS content when excerpts are disabled (closes [#724](https://github.com/cobalt-org/cobalt.rs/issues/724)).
+
 <a name="0.15.9"></a>
 ## 0.15.9 (2020-02-11)
 
