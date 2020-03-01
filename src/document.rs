@@ -84,7 +84,9 @@ fn document_attributes(
 #[derive(Debug, Clone)]
 pub struct Document {
     pub url_path: String,
-    pub file_path: PathBuf,
+    pub src_path: PathBuf,
+    pub dest_path: PathBuf,
+    pub rel_path: PathBuf,
     pub content: String,
     pub attributes: Object,
     pub front: cobalt_model::page::Frontmatter,
@@ -94,7 +96,9 @@ pub struct Document {
 impl Document {
     pub fn new(
         url_path: String,
-        file_path: PathBuf,
+        src_path: PathBuf,
+        dest_path: PathBuf,
+        rel_path: PathBuf,
         content: String,
         attributes: Object,
         front: cobalt_model::page::Frontmatter,
@@ -102,7 +106,9 @@ impl Document {
     ) -> Document {
         Document {
             url_path,
-            file_path,
+            src_path,
+            dest_path,
+            rel_path,
             content,
             attributes,
             front,
@@ -126,7 +132,9 @@ impl Document {
 
         Ok(Document::new(
             url.url,
+            src_path.to_owned(),
             dest.fs_path,
+            rel_path.to_owned(),
             content.content,
             doc_attributes,
             front,
@@ -291,7 +299,7 @@ impl Document {
                 failure::format_err!(
                     "Layout {} does not exist (referenced in {}).",
                     layout,
-                    self.file_path.display()
+                    self.src_path.display()
                 )
             })?;
 

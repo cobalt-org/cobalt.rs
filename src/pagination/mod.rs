@@ -134,7 +134,7 @@ fn interpret_permalink(
     page_num: usize,
     index: Option<&liquid::value::Value>,
 ) -> Result<String> {
-    let mut attributes = cobalt_model::url::page_attributes(&doc.front, &doc.file_path);
+    let mut attributes = cobalt_model::url::page_attributes(&doc.front, &doc.rel_path);
     let permalink =
         cobalt_model::url::explode_permalink(config.front_permalink.as_str(), &attributes)?;
     let permalink_path = std::path::Path::new(&permalink);

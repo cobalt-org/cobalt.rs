@@ -183,11 +183,11 @@ fn generate_doc(
 
     doc.render_excerpt(&globals, &context.liquid, &context.markdown)
         .with_context(|_| {
-            failure::format_err!("Failed to render excerpt for {}", doc.file_path.display())
+            failure::format_err!("Failed to render excerpt for {}", doc.src_path.display())
         })?;
     doc.render_content(&globals, &context.liquid, &context.markdown)
         .with_context(|_| {
-            failure::format_err!("Failed to render content for {}", doc.file_path.display())
+            failure::format_err!("Failed to render content for {}", doc.src_path.display())
         })?;
 
     // Refresh `page` with the `excerpt` / `content` attribute
@@ -198,9 +198,9 @@ fn generate_doc(
     let doc_html = doc
         .render(&globals, &context.liquid, &context.layouts)
         .with_context(|_| {
-            failure::format_err!("Failed to render for {}", doc.file_path.display())
+            failure::format_err!("Failed to render for {}", doc.src_path.display())
         })?;
-    files::write_document_file(doc_html, &doc.file_path)?;
+    files::write_document_file(doc_html, &doc.dest_path)?;
     Ok(())
 }
 
@@ -232,8 +232,9 @@ fn generate_pages(posts: Vec<Document>, documents: Vec<Document>, context: &Cont
             )?;
             for paginator in paginators {
                 let mut doc_page = doc.clone();
-                doc_page.file_path =
+                doc_page.rel_path =
                     cobalt_model::url::format_url_as_file(&paginator.index_permalink);
+                doc_page.dest_path = context.destination.join(&doc_page.rel_path);
                 generate_doc(
                     &mut doc_page,
                     context,
