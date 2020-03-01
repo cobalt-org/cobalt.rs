@@ -172,8 +172,8 @@ fn convert_frontmatter(
 }
 
 // TODO to be replaced by a call to `is_sorted()` once it's stabilized
-fn is_date_index_sorted(v: &Vec<DateIndex>) -> bool {
-    let mut copy = v.clone();
+fn is_date_index_sorted(v: &[DateIndex]) -> bool {
+    let mut copy = v.to_vec();
     copy.sort_unstable();
-    copy.eq(v)
+    copy.as_slice().eq(v)
 }

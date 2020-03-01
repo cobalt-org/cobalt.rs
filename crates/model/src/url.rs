@@ -22,7 +22,7 @@ pub fn derive_dest(dest_root: &path::Path, url: &Url) -> crate::fs::Dest {
 }
 
 static PERMALINK_PARSER: once_cell::sync::Lazy<liquid::Parser> =
-    once_cell::sync::Lazy::new(|| liquid::Parser::new());
+    once_cell::sync::Lazy::new(liquid::Parser::new);
 
 pub fn explode_permalink(permalink: &str, attributes: &liquid::value::Object) -> Result<String> {
     let p = PERMALINK_PARSER.parse(permalink).map_err(|e| {
