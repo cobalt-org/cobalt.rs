@@ -71,5 +71,4 @@ unstable = []
 serve = ["tiny_http", "notify", "mime_guess"]
 syntax-highlight = ["syntect"]
 sass = ['sass-rs']
-pagination-unstable = []
 
