@@ -9,7 +9,6 @@ mod template;
 
 pub mod files;
 pub mod pagination;
-pub mod permalink;
 pub mod slug;
 
 pub use cobalt_config::DateTime;

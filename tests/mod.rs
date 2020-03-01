@@ -193,8 +193,7 @@ pub fn no_extends_error() {
     let error_message = format!("{:?}", err);
     assert_contains!(
         error_message,
-        "Layout default_nonexistent.liquid does not exist (referenced in \
-         index.html)"
+        "Layout default_nonexistent.liquid does not exist"
     );
 }
 

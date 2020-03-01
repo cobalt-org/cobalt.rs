@@ -41,7 +41,7 @@ impl Paginator {
     pub fn set_first_last(
         &mut self,
         doc: &Document,
-        config: &PaginationConfig,
+        config: &cobalt_model::page::Pagination,
         total_pages: usize,
         index_title: Option<&liquid::value::Value>,
     ) -> Result<()> {
@@ -54,7 +54,7 @@ impl Paginator {
         &mut self,
         index: usize,
         all_pages: &[&liquid::value::Value],
-        config: &PaginationConfig,
+        config: &cobalt_model::page::Pagination,
         doc: &Document,
         index_title: Option<&liquid::value::Value>,
     ) -> Result<()> {
@@ -70,7 +70,7 @@ impl Paginator {
         index: usize,
         total_indexes: usize,
         doc: &Document,
-        config: &PaginationConfig,
+        config: &cobalt_model::page::Pagination,
         index_title: Option<&liquid::value::Value>,
     ) -> Result<()> {
         if index > 1 {
@@ -94,7 +94,7 @@ pub fn create_paginator(
     i: usize,
     total_indexes: usize,
     total_pages: usize,
-    config: &PaginationConfig,
+    config: &cobalt_model::page::Pagination,
     doc: &Document,
     all_posts: &[&liquid::value::Value],
     index_title: Option<&liquid::value::Value>,

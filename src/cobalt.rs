@@ -11,10 +11,11 @@ use liquid;
 use rss;
 use sitemap::writer::SiteMapWriter;
 
-use crate::cobalt_model;
 use crate::cobalt_model::files;
-use crate::cobalt_model::permalink;
+use crate::cobalt_model::Assets;
 use crate::cobalt_model::Collection;
+use crate::cobalt_model::Liquid;
+use crate::cobalt_model::Markdown;
 use crate::cobalt_model::{Config, SortOrder};
 use crate::document::Document;
 use crate::error::*;
@@ -23,13 +24,13 @@ use crate::pagination;
 struct Context {
     pub source: path::PathBuf,
     pub destination: path::PathBuf,
-    pub pages: cobalt_model::Collection,
-    pub posts: cobalt_model::Collection,
+    pub pages: Collection,
+    pub posts: Collection,
     pub site: liquid::value::Object,
     pub layouts: HashMap<String, String>,
-    pub liquid: cobalt_model::Liquid,
-    pub markdown: cobalt_model::Markdown,
-    pub assets: cobalt_model::Assets,
+    pub liquid: Liquid,
+    pub markdown: Markdown,
+    pub assets: Assets,
     pub sitemap: Option<String>,
 }
 
@@ -79,14 +80,30 @@ pub fn build(config: Config) -> Result<()> {
     let context = Context::with_config(config)?;
 
     let post_files = &context.posts.pages;
-    let mut posts = parse_pages(post_files, &context.posts, &context.source)?;
+    let mut posts = parse_pages(
+        post_files,
+        &context.posts,
+        &context.source,
+        &context.destination,
+    )?;
     if let Some(ref drafts) = context.posts.drafts {
         let drafts_root = drafts.subtree();
-        parse_drafts(drafts_root, drafts, &mut posts, &context.posts)?;
+        parse_drafts(
+            drafts_root,
+            drafts,
+            &context.destination,
+            &mut posts,
+            &context.posts,
+        )?;
     }
 
     let page_files = &context.pages.pages;
-    let documents = parse_pages(page_files, &context.pages, &context.source)?;
+    let documents = parse_pages(
+        page_files,
+        &context.pages,
+        &context.source,
+        &context.destination,
+    )?;
 
     sort_pages(&mut posts, &context.posts)?;
     generate_posts(&mut posts, &context)?;
@@ -166,11 +183,11 @@ fn generate_doc(
 
     doc.render_excerpt(&globals, &context.liquid, &context.markdown)
         .with_context(|_| {
-            failure::format_err!("Failed to render excerpt for {}", doc.file_path.display())
+            failure::format_err!("Failed to render excerpt for {}", doc.src_path.display())
         })?;
     doc.render_content(&globals, &context.liquid, &context.markdown)
         .with_context(|_| {
-            failure::format_err!("Failed to render content for {}", doc.file_path.display())
+            failure::format_err!("Failed to render content for {}", doc.src_path.display())
         })?;
 
     // Refresh `page` with the `excerpt` / `content` attribute
@@ -181,9 +198,9 @@ fn generate_doc(
     let doc_html = doc
         .render(&globals, &context.liquid, &context.layouts)
         .with_context(|_| {
-            failure::format_err!("Failed to render for {}", doc.file_path.display())
+            failure::format_err!("Failed to render for {}", doc.src_path.display())
         })?;
-    files::write_document_file(doc_html, context.destination.join(&doc.file_path))?;
+    files::write_document_file(doc_html, &doc.dest_path)?;
     Ok(())
 }
 
@@ -198,7 +215,7 @@ fn generate_pages(posts: Vec<Document>, documents: Vec<Document>, context: &Cont
     trace!("Generating other documents");
     for mut doc in documents {
         trace!("Generating {}", doc.url_path);
-        if doc.front.pagination.is_some() {
+        if doc.pagination.is_some() {
             let paginators = pagination::generate_paginators(&mut doc, &posts_data)?;
             // page 1 uses frontmatter.permalink instead of paginator.permalink
             let mut paginators = paginators.into_iter();
@@ -215,7 +232,9 @@ fn generate_pages(posts: Vec<Document>, documents: Vec<Document>, context: &Cont
             )?;
             for paginator in paginators {
                 let mut doc_page = doc.clone();
-                doc_page.file_path = permalink::format_url_as_file(&paginator.index_permalink);
+                doc_page.rel_path =
+                    cobalt_model::url::format_url_as_file(&paginator.index_permalink);
+                doc_page.dest_path = context.destination.join(&doc_page.rel_path);
                 generate_doc(
                     &mut doc_page,
                     context,
@@ -275,7 +294,7 @@ fn generate_posts(posts: &mut Vec<Document>, context: &Context) -> Result<()> {
 
 fn sort_pages(posts: &mut Vec<Document>, collection: &Collection) -> Result<()> {
     // January 1, 1970 0:00:00 UTC, the beginning of time
-    let default_date = cobalt_model::DateTime::default();
+    let default_date = cobalt_config::DateTime::default();
 
     // sort documents by date, if there's no date (none was provided or it couldn't be read) then
     // fall back to the default date
@@ -336,6 +355,7 @@ fn parse_layouts(files: &files::Files) -> HashMap<String, String> {
 fn parse_drafts(
     drafts_root: &path::Path,
     draft_files: &files::Files,
+    dest_root: &path::Path,
     documents: &mut Vec<Document>,
     collection: &Collection,
 ) -> Result<()> {
@@ -357,7 +377,7 @@ fn parse_drafts(
         }
         .merge(&collection.default);
 
-        let doc = Document::parse(&file_path, &new_path, default_front)
+        let doc = Document::parse(&file_path, &new_path, dest_root, &default_front)
             .with_context(|_| failure::format_err!("Failed to parse {}", rel_src.display()))?;
         documents.push(doc);
     }
@@ -368,6 +388,7 @@ fn parse_pages(
     page_files: &files::Files,
     collection: &Collection,
     source: &path::Path,
+    dest_root: &path::Path,
 ) -> Result<Vec<Document>> {
     let mut documents = vec![];
     for file_path in page_files.files() {
@@ -375,9 +396,9 @@ fn parse_pages(
             .strip_prefix(source)
             .expect("file was found under the root");
 
-        let default_front = collection.default.clone();
+        let default_front = &collection.default;
 
-        let doc = Document::parse(&file_path, rel_src, default_front)
+        let doc = Document::parse(&file_path, rel_src, dest_root, default_front)
             .with_context(|_| failure::format_err!("Failed to parse {}", rel_src.display()))?;
         if !doc.front.is_draft || collection.include_drafts {
             documents.push(doc);

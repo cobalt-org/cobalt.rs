@@ -1,12 +1,9 @@
 use std::cmp::Ordering;
 
 use crate::cobalt_model::pagination::Include;
-use crate::cobalt_model::pagination::PaginationConfig;
-use crate::cobalt_model::permalink;
 use crate::cobalt_model::slug;
 use crate::cobalt_model::SortOrder;
 
-use crate::document;
 use crate::document::Document;
 use crate::error::Result;
 
@@ -23,7 +20,6 @@ pub fn generate_paginators(
     posts_data: &[liquid::value::Value],
 ) -> Result<Vec<Paginator>> {
     let config = doc
-        .front
         .pagination
         .as_ref()
         .expect("Front should have pagination here.");
@@ -36,16 +32,16 @@ pub fn generate_paginators(
         Include::Tags => tags::create_tags_paginators(&all_posts, &doc, &config),
         Include::Categories => categories::create_categories_paginators(&all_posts, &doc, &config),
         Include::Dates => dates::create_dates_paginators(&all_posts, &doc, &config),
-        Include::None => {
-            unreachable!("PaginationConfigBuilder should have lead to a None for pagination.")
-        }
+        Include::None => unreachable!(
+            "cobalt_model::page::PaginationBuilder should have lead to a None for pagination."
+        ),
     }
 }
 
 fn create_all_paginators(
     all_posts: &[&liquid::value::Value],
     doc: &Document,
-    pagination_cfg: &PaginationConfig,
+    pagination_cfg: &cobalt_model::page::Pagination,
     index_title: Option<&liquid::value::Value>,
 ) -> Result<Vec<Paginator>> {
     let total_pages = all_posts.len();
@@ -71,7 +67,7 @@ fn create_all_paginators(
 }
 
 // sort posts by multiple criteria
-fn sort_posts(posts: &mut Vec<&liquid::value::Value>, config: &PaginationConfig) {
+fn sort_posts(posts: &mut Vec<&liquid::value::Value>, config: &cobalt_model::page::Pagination) {
     let order: fn(&liquid::value::Scalar, &liquid::value::Scalar) -> Ordering = match config.order {
         SortOrder::Desc => {
             |a, b: &liquid::value::Scalar| b.partial_cmp(a).unwrap_or(Ordering::Equal)
@@ -82,7 +78,7 @@ fn sort_posts(posts: &mut Vec<&liquid::value::Value>, config: &PaginationConfig)
         SortOrder::None => {
             // when built, order is set like this:
             // `order.unwrap_or(SortOrder::Desc);` so it's unreachable
-            unreachable!("Sort order should have default value when constructing PaginationConfig")
+            unreachable!("Sort order should have default value when constructing Pagination")
         }
     };
     posts.sort_by(|a, b| {
@@ -133,13 +129,14 @@ fn index_to_string(index: &liquid::value::Value) -> String {
 }
 
 fn interpret_permalink(
-    config: &PaginationConfig,
+    config: &cobalt_model::page::Pagination,
     doc: &Document,
     page_num: usize,
     index: Option<&liquid::value::Value>,
 ) -> Result<String> {
-    let mut attributes = document::permalink_attributes(&doc.front, &doc.file_path);
-    let permalink = permalink::explode_permalink(config.front_permalink.as_str(), &attributes)?;
+    let mut attributes = cobalt_model::url::page_attributes(&doc.front, &doc.rel_path);
+    let permalink =
+        cobalt_model::url::explode_permalink(config.front_permalink.as_str(), &attributes)?;
     let permalink_path = std::path::Path::new(&permalink);
     let pagination_root = permalink_path.extension().map_or_else(
         || permalink.clone(),
@@ -176,14 +173,14 @@ fn interpret_permalink(
             format!(
                 "{}/{}",
                 index,
-                permalink::explode_permalink(&config.permalink_suffix, &attributes)?
+                cobalt_model::url::explode_permalink(&config.permalink_suffix, &attributes)?
             )
         } else {
             format!(
                 "{}/{}/{}",
                 pagination_root,
                 index,
-                permalink::explode_permalink(&config.permalink_suffix, &attributes)?
+                cobalt_model::url::explode_permalink(&config.permalink_suffix, &attributes)?
             )
         }
     };

@@ -106,7 +106,7 @@ fn distribute_posts_by_categories<'a>(
 // filling `pages` and `indexes` accordingly
 fn walk_categories<'a, 'b>(
     category: &'b mut Category<'a>,
-    config: &PaginationConfig,
+    config: &cobalt_model::page::Pagination,
     doc: &Document,
 ) -> Result<Vec<Paginator>> {
     let mut cur_cat_paginators_holder: Vec<Paginator> = vec![];
@@ -144,7 +144,7 @@ fn walk_categories<'a, 'b>(
 pub fn create_categories_paginators(
     all_posts: &[&liquid::value::Value],
     doc: &Document,
-    pagination_cfg: &PaginationConfig,
+    pagination_cfg: &cobalt_model::page::Pagination,
 ) -> Result<Vec<Paginator>> {
     let mut root_cat = distribute_posts_by_categories(&all_posts)?;
     let paginators_holder = walk_categories(&mut root_cat, &pagination_cfg, doc)?;

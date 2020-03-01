@@ -40,7 +40,7 @@ fn extract_published_date(value: &liquid::value::Value) -> Option<DateTime> {
 pub fn create_dates_paginators(
     all_posts: &[&liquid::value::Value],
     doc: &Document,
-    pagination_cfg: &PaginationConfig,
+    pagination_cfg: &cobalt_model::page::Pagination,
 ) -> Result<Vec<Paginator>> {
     let mut root_date = distribute_posts_by_dates(&all_posts, &pagination_cfg)?;
     walk_dates(&mut root_date, &pagination_cfg, &doc, None)
@@ -63,7 +63,7 @@ fn date_fields_to_array(date: &[DateIndexHolder]) -> liquid::value::Array {
 
 fn walk_dates(
     date_holder: &mut DateIndexHolder,
-    config: &PaginationConfig,
+    config: &cobalt_model::page::Pagination,
     doc: &Document,
     parent_dates: Option<Vec<DateIndexHolder>>,
 ) -> Result<Vec<Paginator>> {
@@ -158,7 +158,7 @@ fn get_date_field_value(date: &DateTime, field: DateIndex) -> u32 {
 
 fn distribute_posts_by_dates<'a>(
     all_posts: &[&'a liquid::value::Value],
-    pagination_cfg: &PaginationConfig,
+    pagination_cfg: &cobalt_model::page::Pagination,
 ) -> Result<DateIndexHolder<'a>> {
     let date_index = &pagination_cfg.date_index;
     let mut root = DateIndexHolder::new(0u32, None);
