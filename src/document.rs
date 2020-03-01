@@ -94,28 +94,6 @@ pub struct Document {
 }
 
 impl Document {
-    pub fn new(
-        url_path: String,
-        src_path: PathBuf,
-        dest_path: PathBuf,
-        rel_path: PathBuf,
-        content: String,
-        attributes: Object,
-        front: cobalt_model::page::Frontmatter,
-        pagination: Option<cobalt_model::page::Pagination>,
-    ) -> Document {
-        Document {
-            url_path,
-            src_path,
-            dest_path,
-            rel_path,
-            content,
-            attributes,
-            front,
-            pagination,
-        }
-    }
-
     pub fn parse(
         src_path: &Path,
         rel_path: &Path,
@@ -130,16 +108,16 @@ impl Document {
 
         let doc_attributes = document_attributes(&front, rel_path, &url.url);
 
-        Ok(Document::new(
-            url.url,
-            src_path.to_owned(),
-            dest.fs_path,
-            rel_path.to_owned(),
-            content.content,
-            doc_attributes,
+        Ok(Document {
+            url_path: url.url,
+            src_path: src_path.to_owned(),
+            dest_path: dest.fs_path,
+            rel_path: rel_path.to_owned(),
+            content: content.content,
+            attributes: doc_attributes,
             front,
             pagination,
-        ))
+        })
     }
 
     /// Metadata for generating RSS feeds
