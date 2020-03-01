@@ -88,16 +88,12 @@ impl Frontmatter {
             data,
         };
 
-        if !cfg!(feature = "pagination-unstable") && fm.pagination.is_some() {
-            failure::bail!("Unsupported `pagination` field");
-        } else {
-            if let Some(pagination) = &fm.pagination {
-                if !pagination::is_date_index_sorted(&pagination.date_index) {
-                    failure::bail!("date_index is not correctly sorted: Year > Month > Day...");
-                }
+        if let Some(pagination) = &fm.pagination {
+            if !pagination::is_date_index_sorted(&pagination.date_index) {
+                failure::bail!("date_index is not correctly sorted: Year > Month > Day...");
             }
-            Ok(fm)
         }
+        Ok(fm)
     }
 }
 

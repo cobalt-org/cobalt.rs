@@ -292,49 +292,41 @@ pub fn sitemap() {
     test_with_expected("sitemap").expect("Build error");
 }
 
-#[cfg(feature = "pagination-unstable")]
 #[test]
 pub fn pagination_all() {
     test_with_expected("pagination_all").expect("Build error");
 }
 
-#[cfg(feature = "pagination-unstable")]
 #[test]
 pub fn pagination_all_reverse_date() {
     test_with_expected("pagination_all_reverse_date").expect("Build error");
 }
 
-#[cfg(feature = "pagination-unstable")]
 #[test]
 pub fn pagination_less_per_page() {
     test_with_expected("pagination_less_per_page").expect("Build error");
 }
 
-#[cfg(feature = "pagination-unstable")]
 #[test]
 pub fn pagination_all_sort_by_title() {
     test_with_expected("pagination_all_sort_by_title").expect("Build error");
 }
 
-#[cfg(feature = "pagination-unstable")]
 #[test]
 pub fn pagination_tags() {
     test_with_expected("pagination_tags").expect("Build error");
 }
 
-#[cfg(feature = "pagination-unstable")]
 #[test]
 pub fn pagination_categories() {
     test_with_expected("pagination_categories").expect("Build error");
 }
 
-#[cfg(feature = "pagination-unstable")]
 #[test]
 pub fn pagination_sort_by_weight() {
     test_with_expected("pagination_sort_by_weight").expect("Build error");
 }
 
-#[cfg(feature = "pagination-unstable")]
 #[test]
 pub fn pagination_dates() {
     test_with_expected("pagination_dates").expect("Build error");
