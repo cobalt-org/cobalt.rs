@@ -218,7 +218,7 @@ dependencies = [
  "assert_fs 0.13.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "chrono 0.4.10 (registry+https://github.com/rust-lang/crates.io-index)",
  "clap 2.33.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "deunicode 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "deunicode 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "difference 2.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "env_logger 0.7.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "exitfailure 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -331,7 +331,7 @@ dependencies = [
 
 [[package]]
 name = "deunicode"
-version = "1.0.0"
+version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
@@ -707,7 +707,7 @@ version = "0.19.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "chrono 0.4.10 (registry+https://github.com/rust-lang/crates.io-index)",
- "deunicode 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "deunicode 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "doc-comment 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "itertools 0.8.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "lazy_static 1.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1661,7 +1661,7 @@ dependencies = [
 "checksum darling_macro 0.10.2 (registry+https://github.com/rust-lang/crates.io-index)" = "d9b5a2f4ac4969822c62224815d069952656cadc7084fdca9751e6d959189b72"
 "checksum derive_builder 0.9.0 (registry+https://github.com/rust-lang/crates.io-index)" = "a2658621297f2cf68762a6f7dc0bb7e1ff2cfd6583daef8ee0fed6f7ec468ec0"
 "checksum derive_builder_core 0.9.0 (registry+https://github.com/rust-lang/crates.io-index)" = "2791ea3e372c8495c0bc2033991d76b512cd799d07491fbd6890124db9458bef"
-"checksum deunicode 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)" = "ca8a0f5bbdedde60605d0719b998e282af68e2b1c50203110211fe4abe857560"
+"checksum deunicode 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "307dde1a517939465bc4042b47377284a56cee6160f8066f1f5035eb7b25a3fc"
 "checksum difference 2.0.0 (registry+https://github.com/rust-lang/crates.io-index)" = "524cbf6897b527295dff137cec09ecf3a05f4fddffd7dfcd1585403449e74198"
 "checksum digest 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)" = "f3d0c8c8752312f9713efd397ff63acb9f85585afbf179282e720e7704954dd5"
 "checksum doc-comment 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)" = "923dea538cea0aa3025e8685b20d6ee21ef99c4f77e954a30febbaac5ec73a97"
