@@ -51,6 +51,7 @@ toml = "0.5.3"
 normalize-line-endings = "0.3.0"
 sitemap = "0.4"
 status = { version = "0.0.10", features = ["send_sync"] }
+open = "1.4.0"
 
 tiny_http = { version = "0.6.2", optional = true }
 notify = { version = "4", optional = true }
