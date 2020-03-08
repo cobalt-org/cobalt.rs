@@ -11,6 +11,7 @@ use cobalt::cobalt_model;
 use failure::ResultExt;
 use notify;
 use notify::Watcher;
+use open;
 use tiny_http::{Request, Response, Server};
 
 use crate::args;
@@ -45,12 +46,20 @@ pub fn serve_command_args() -> clap::App<'static, 'static> {
                 .conflicts_with("drafts")
                 .takes_value(false),
         )
+        .arg(
+            clap::Arg::with_name("open")
+                .long("open")
+                .help("Open in browser")
+                .takes_value(false),
+        )
 }
 
 pub fn serve_command(matches: &clap::ArgMatches) -> Result<()> {
     let host = matches.value_of("host").unwrap().to_string();
     let port = matches.value_of("port").unwrap().to_string();
     let ip = format!("{}:{}", host, port);
+    let open_in_browser = matches.is_present("open");
+    let url = format!("http://{}", ip);
 
     let mut config = args::get_config(matches)?;
     debug!("Overriding config `site.base_url` with `{}`", ip);
@@ -59,6 +68,10 @@ pub fn serve_command(matches: &clap::ArgMatches) -> Result<()> {
     let dest = path::Path::new(&config.destination).to_owned();
 
     build::build(config.clone())?;
+
+    if open_in_browser {
+        open_browser(url)?;
+    }
 
     if matches.is_present("no-watch") {
         serve(&dest, &ip)?;
@@ -118,6 +131,7 @@ fn static_file_handler(dest: &path::Path, req: Request) -> Result<()> {
                 .with_status_code(404),
         )?;
     }
+
     Ok(())
 }
 
@@ -133,6 +147,23 @@ fn serve(dest: &path::Path, ip: &str) -> Result<()> {
         if let Err(e) = static_file_handler(&dest, request) {
             error!("{}", e);
         }
+    }
+    Ok(())
+}
+
+fn open_browser(url: String) -> Result<()> {
+    match open::that(url) {
+        Ok(exit_status) => {
+            if exit_status.success() {
+                info!("Please check your browser!");
+            } else {
+                info!(
+                    "Command returned non-zero exit status {:?}",
+                    exit_status.code()
+                );
+            }
+        }
+        Err(why) => println!("Failure to execute command: {}", why),
     }
     Ok(())
 }
