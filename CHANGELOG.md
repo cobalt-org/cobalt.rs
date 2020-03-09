@@ -1,3 +1,10 @@
+<a name="0.15.11"></a>
+## 0.15.11 (2020-03-09)
+
+#### Features
+
+* Support opening the page in the browser with `cobalt serve --open`.
+
 <a name="0.15.10"></a>
 ## 0.15.10 (2020-02-24)
 
