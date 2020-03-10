@@ -174,44 +174,41 @@ impl<'a> Iterator for DecoratedParser<'a> {
 
     fn next(&mut self) -> Option<Event<'a>> {
         match self.parser.next() {
-            Some(item) => {
-                if let Text(text) = item {
-                    if let Some(ref mut h) = self.h {
-                        let highlighted = &h.highlight(&text, &SETUP.syntax_set);
-                        let html =
-                            styled_line_to_highlighted_html(highlighted, IncludeBackground::Yes);
-                        Some(Html(pulldown_cmark::CowStr::Boxed(html.into_boxed_str())))
-                    } else {
-                        Some(Text(text))
-                    }
+            Some(Text(text)) => {
+                if let Some(ref mut h) = self.h {
+                    let highlighted = &h.highlight(&text, &SETUP.syntax_set);
+                    let html = styled_line_to_highlighted_html(highlighted, IncludeBackground::Yes);
+                    Some(Html(pulldown_cmark::CowStr::Boxed(html.into_boxed_str())))
                 } else {
-                    if let Start(cmark::Tag::CodeBlock(ref info)) = item {
-                        // set local highlighter, if found
-                        let cur_syntax = info
-                            .clone()
-                            .split(' ')
-                            .next()
-                            .and_then(|lang| SETUP.syntax_set.find_syntax_by_token(lang))
-                            .unwrap_or_else(|| SETUP.syntax_set.find_syntax_plain_text());
-                        self.h = Some(HighlightLines::new(cur_syntax, self.theme));
-                        let snippet = start_highlighted_html_snippet(self.theme);
-                        return Some(Html(pulldown_cmark::CowStr::Boxed(
-                            snippet.0.into_boxed_str(),
-                        )));
-                    }
-                    if let End(cmark::Tag::CodeBlock(_)) = item {
-                        // reset highlighter
-                        self.h = None;
-                        // close the code block
-                        return Some(Html(pulldown_cmark::CowStr::Boxed(
-                            "</pre>".to_owned().into_boxed_str(),
-                        )));
-                    }
-
-                    Some(item)
+                    Some(Text(text))
                 }
             }
-            None => None,
+            Some(Start(cmark::Tag::CodeBlock(info))) => {
+                let tag = match info {
+                    pulldown_cmark::CodeBlockKind::Indented => "",
+                    pulldown_cmark::CodeBlockKind::Fenced(ref tag) => tag.as_ref(),
+                };
+                // set local highlighter, if found
+                let cur_syntax = tag
+                    .split(' ')
+                    .next()
+                    .and_then(|lang| SETUP.syntax_set.find_syntax_by_token(lang))
+                    .unwrap_or_else(|| SETUP.syntax_set.find_syntax_plain_text());
+                self.h = Some(HighlightLines::new(cur_syntax, self.theme));
+                let snippet = start_highlighted_html_snippet(self.theme);
+                Some(Html(pulldown_cmark::CowStr::Boxed(
+                    snippet.0.into_boxed_str(),
+                )))
+            }
+            Some(End(cmark::Tag::CodeBlock(_))) => {
+                // reset highlighter
+                self.h = None;
+                // close the code block
+                Some(Html(pulldown_cmark::CowStr::Boxed(
+                    "</pre>".to_owned().into_boxed_str(),
+                )))
+            }
+            item => item,
         }
     }
 }
