@@ -8,43 +8,52 @@ use paginator::Paginator;
 
 #[derive(Debug)]
 struct Category<'a> {
-    cat_path: liquid::value::Array,
-    posts: Vec<&'a liquid::value::Value>,
+    cat_path: liquid::model::Array,
+    posts: Vec<&'a liquid::model::Value>,
     sub_cats: Vec<Category<'a>>,
 }
 
 impl<'a> Category<'a> {
-    fn new(path: &[liquid::value::Value]) -> Self {
+    fn new() -> Self {
         Category {
-            cat_path: path.to_vec(),
+            cat_path: vec![],
             posts: vec![],
             sub_cats: vec![],
         }
     }
 
-    fn add_post(&mut self, post: &'a liquid::value::Value) {
+    fn with_path<'v>(path: impl Iterator<Item = &'v dyn liquid::ValueView>) -> Self {
+        Category {
+            cat_path: path.map(|v| v.to_value()).collect(),
+            posts: vec![],
+            sub_cats: vec![],
+        }
+    }
+
+    fn add_post(&mut self, post: &'a liquid::model::Value) {
         self.posts.push(&post)
     }
 }
 
-fn compare_category_path(
-    cur_path: &[liquid::value::Value],
-    seek: &[liquid::value::Value],
-) -> Ordering {
+fn compare_category_path<'a, C, S>(cur_path: C, seek: S) -> Ordering
+where
+    C: Iterator<Item = &'a dyn liquid::ValueView>,
+    S: Iterator<Item = &'a dyn liquid::ValueView>,
+{
     cur_path
-        .iter()
-        .partial_cmp(seek.iter())
+        .map(liquid::model::value::ValueViewCmp::new)
+        .partial_cmp(seek.map(liquid::model::value::ValueViewCmp::new))
         .expect("Arrays of same hierarchy level should be fully comparable")
 }
 
-fn is_leaf_category(cur_idx: usize, categories: &[liquid::value::Value]) -> bool {
+fn is_leaf_category(cur_idx: usize, categories: &[&dyn liquid::ValueView]) -> bool {
     cur_idx == categories.len()
 }
 
-fn construct_cat_full_path(
+fn construct_cat_full_path<'v>(
     cur_idx: usize,
-    categories: &[liquid::value::Value],
-) -> liquid::value::Array {
+    categories: &[&'v dyn liquid::model::ValueView],
+) -> Vec<&'v dyn liquid::model::ValueView> {
     categories[..cur_idx].to_vec()
 }
 
@@ -56,27 +65,34 @@ fn next_category(cur_idx: usize) -> usize {
 fn parse_categories_list<'a, 'b>(
     parent: &'b mut Category<'a>,
     cur_idx: usize,
-    cur_post_categories: &[liquid::value::Value],
-    post: &'a liquid::value::Value,
+    cur_post_categories: &[&dyn liquid::ValueView],
+    post: &'a liquid::model::Value,
 ) -> Result<()> {
     if cur_idx <= cur_post_categories.len() {
-        let cat_full_path = construct_cat_full_path(cur_idx, &cur_post_categories);
-        let mut cur_cat = if let Ok(idx) = parent
-            .sub_cats
-            .binary_search_by(|c| compare_category_path(&c.cat_path, &cat_full_path))
-        {
+        let cat_full_path = construct_cat_full_path(cur_idx, cur_post_categories);
+        let mut cur_cat = if let Ok(idx) = parent.sub_cats.binary_search_by(|c| {
+            compare_category_path(
+                c.cat_path.iter().map(|v| v.as_view()),
+                cat_full_path.iter().map(|v| *v),
+            )
+        }) {
             &mut parent.sub_cats[idx]
         } else {
             let last_idx = parent.sub_cats.len();
-            parent.sub_cats.push(Category::new(&cat_full_path));
-            // need to sort for binary_search_by
             parent
                 .sub_cats
-                .sort_by(|c1, c2| compare_category_path(&c1.cat_path, &c2.cat_path));
+                .push(Category::with_path(cat_full_path.into_iter()));
+            // need to sort for binary_search_by
+            parent.sub_cats.sort_by(|c1, c2| {
+                compare_category_path(
+                    c1.cat_path.iter().map(|v| v.as_view()),
+                    c2.cat_path.iter().map(|v| v.as_view()),
+                )
+            });
             &mut parent.sub_cats[last_idx]
         };
 
-        if is_leaf_category(cur_idx, &cur_post_categories) {
+        if is_leaf_category(cur_idx, cur_post_categories) {
             cur_cat.add_post(&post);
         } else {
             parse_categories_list(
@@ -91,11 +107,12 @@ fn parse_categories_list<'a, 'b>(
 }
 
 fn distribute_posts_by_categories<'a>(
-    all_posts: &[&'a liquid::value::Value],
+    all_posts: &[&'a liquid::model::Value],
 ) -> Result<Category<'a>> {
-    let mut root = Category::new(&[]);
+    let mut root = Category::new();
     for post in all_posts {
-        if let Some(categories) = extract_categories(post) {
+        if let Some(categories) = extract_categories(post.as_view()) {
+            let categories: Vec<_> = categories.values().collect();
             parse_categories_list(&mut root, 1, categories.as_slice(), &post)?;
         }
     }
@@ -116,13 +133,13 @@ fn walk_categories<'a, 'b>(
             &category.posts,
             doc,
             &config,
-            Some(&liquid::value::Value::array(category.cat_path.clone())),
+            Some(&liquid::model::Value::array(category.cat_path.clone())),
         )?;
         if !cur_cat_paginators.is_empty() {
             cur_cat_paginators_holder.extend(cur_cat_paginators.into_iter());
         } else {
             let mut p = Paginator::default();
-            p.index_title = Some(liquid::value::Value::array(category.cat_path.clone()));
+            p.index_title = Some(liquid::model::Value::array(category.cat_path.clone()));
             cur_cat_paginators_holder.push(p);
         }
     } else {
@@ -142,7 +159,7 @@ fn walk_categories<'a, 'b>(
 }
 
 pub fn create_categories_paginators(
-    all_posts: &[&liquid::value::Value],
+    all_posts: &[&liquid::model::Value],
     doc: &Document,
     pagination_cfg: &PaginationConfig,
 ) -> Result<Vec<Paginator>> {
@@ -155,15 +172,19 @@ pub fn create_categories_paginators(
 mod test {
     use super::*;
 
+    use liquid::model::ArrayView;
+
     #[test]
     fn compare_category_path_test() {
-        let a = vec![liquid::value::Value::scalar("A")];
-        let b = vec![liquid::value::Value::scalar("B")];
-        let ar = liquid::value::Value::array(a);
-        let ar = ar.as_array().unwrap();
-        let br = liquid::value::Value::array(b);
-        let br = br.as_array().unwrap();
-        assert_eq!(Ordering::Less, compare_category_path(&ar, &br));
-        assert_eq!(Ordering::Greater, compare_category_path(&br, &ar));
+        let a = liquid::model::array!(["A"]);
+        let b = liquid::model::array!(["B"]);
+        assert_eq!(
+            Ordering::Less,
+            compare_category_path(a.values(), b.values())
+        );
+        assert_eq!(
+            Ordering::Greater,
+            compare_category_path(b.values(), a.values())
+        );
     }
 }

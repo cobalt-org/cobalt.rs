@@ -1,13 +1,13 @@
 use std::io::Write;
 
 use itertools::Itertools;
-use liquid;
-use liquid::compiler::Language;
-use liquid::compiler::TagBlock;
-use liquid::compiler::TagTokenIter;
-use liquid::compiler::TryMatchToken;
-use liquid::error::ResultLiquidReplaceExt;
-use liquid::interpreter::{Context, Renderable};
+use liquid_core::error::ResultLiquidReplaceExt;
+use liquid_core::parser::TryMatchToken;
+use liquid_core::Language;
+use liquid_core::TagBlock;
+use liquid_core::TagTokenIter;
+use liquid_core::ValueView;
+use liquid_core::{Renderable, Runtime};
 use pulldown_cmark as cmark;
 use pulldown_cmark::Event::{self, End, Html, Start, Text};
 use syntect::easy::HighlightLines;
@@ -73,8 +73,8 @@ impl Renderable for CodeBlock {
     fn render_to(
         &self,
         writer: &mut dyn Write,
-        _context: &mut Context,
-    ) -> Result<(), liquid::Error> {
+        _context: &mut Runtime,
+    ) -> Result<(), liquid_core::Error> {
         let syntax = match self.lang {
             Some(ref lang) => SETUP.syntax_set.find_syntax_by_token(lang),
             _ => None,
@@ -103,7 +103,7 @@ impl CodeBlockParser {
     }
 }
 
-impl liquid::compiler::BlockReflection for CodeBlockParser {
+impl liquid_core::BlockReflection for CodeBlockParser {
     fn start_tag(&self) -> &'static str {
         "highlight"
     }
@@ -117,13 +117,17 @@ impl liquid::compiler::BlockReflection for CodeBlockParser {
     }
 }
 
-impl liquid::compiler::ParseBlock for CodeBlockParser {
+impl liquid_core::ParseBlock for CodeBlockParser {
+    fn reflection(&self) -> &dyn liquid_core::BlockReflection {
+        self
+    }
+
     fn parse(
         &self,
         mut arguments: TagTokenIter,
         mut tokens: TagBlock,
         _options: &Language,
-    ) -> Result<Box<dyn Renderable>, liquid::Error> {
+    ) -> Result<Box<dyn Renderable>, liquid_core::Error> {
         let lang = arguments
             .expect_next("Identifier or literal expected.")
             .ok()
@@ -132,7 +136,7 @@ impl liquid::compiler::ParseBlock for CodeBlockParser {
                 // Those inputs would fail anyway by there being not a path with those langs so they are not a big concern.
                 match lang.expect_literal() {
                     // Using `to_str()` on literals ensures `Strings` will have their quotes trimmed.
-                    TryMatchToken::Matches(lang) => lang.to_str().to_string(),
+                    TryMatchToken::Matches(lang) => lang.to_kstr().into_string(),
                     TryMatchToken::Fails(lang) => lang.as_str().to_string(),
                 }
             });
@@ -246,7 +250,7 @@ mod test {
 
     #[test]
     fn highlight_block_renders_rust() {
-        let highlight: Box<dyn liquid::compiler::ParseBlock> =
+        let highlight: Box<dyn liquid_core::ParseBlock> =
             Box::new(CodeBlockParser::new("base16-ocean.dark".to_owned()));
         let parser = liquid::ParserBuilder::new()
             .block(highlight)
@@ -258,8 +262,8 @@ mod test {
                 CODE_BLOCK
             ))
             .unwrap();
-        let output = template.render(&liquid::value::Object::new());
-        assert_diff!(CODEBLOCK_RENDERED, &output.unwrap(), "\n", 0);
+        let output = template.render(&liquid::Object::new());
+        difference::assert_diff!(CODEBLOCK_RENDERED, &output.unwrap(), "\n", 0);
     }
 
     const MARKDOWN_RENDERED: &str = "<pre style=\"background-color:#2b303b;\">\n\
@@ -287,6 +291,6 @@ mod test {
         let mut buf = String::new();
         let parser = cmark::Parser::new(&html);
         cmark::html::push_html(&mut buf, decorate_markdown(parser, "base16-ocean.dark"));
-        assert_diff!(MARKDOWN_RENDERED, &buf, "\n", 0);
+        difference::assert_diff!(MARKDOWN_RENDERED, &buf, "\n", 0);
     }
 }
