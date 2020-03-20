@@ -28,8 +28,11 @@ cobalt-config = { version = "0.16", path = "crates/config" }
 cobalt-model = { version = "0.16", path = "crates/model" }
 legion = "0.2"
 clap = "2.33"
-liquid = { version = "0.19.0", features = ["jekyll-filters"] }
-deunicode = "1.0.0"
+kstring = "0.1.0"
+liquid = "0.20.0"
+liquid-core = "0.20.0"
+liquid-lib = { version = "0.20.0", features = ["jekyll", "shopify", "extra"] }
+deunicode = "1.1.0"
 walkdir = "2.2"
 chrono = "0.4"
 log = "0.4"

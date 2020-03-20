@@ -1,7 +1,6 @@
 use std::path;
 
 use chrono::{Datelike, Timelike};
-use liquid;
 
 use crate::Result;
 
@@ -24,7 +23,7 @@ pub fn derive_dest(dest_root: &path::Path, url: &Url) -> crate::fs::Dest {
 static PERMALINK_PARSER: once_cell::sync::Lazy<liquid::Parser> =
     once_cell::sync::Lazy::new(liquid::Parser::new);
 
-pub fn explode_permalink(permalink: &str, attributes: &liquid::value::Object) -> Result<String> {
+pub fn explode_permalink(permalink: &str, attributes: &liquid::Object) -> Result<String> {
     let p = PERMALINK_PARSER.parse(permalink).map_err(|e| {
         crate::Status::new("Failed to parse permalink")
             .with_source(e)
@@ -47,15 +46,12 @@ pub fn explode_permalink(permalink: &str, attributes: &liquid::value::Object) ->
     Ok(p)
 }
 
-pub fn page_attributes(
-    front: &crate::page::Frontmatter,
-    rel_path: &path::Path,
-) -> liquid::value::Object {
-    let mut attributes = liquid::value::Object::new();
+pub fn page_attributes(front: &crate::page::Frontmatter, rel_path: &path::Path) -> liquid::Object {
+    let mut attributes = liquid::Object::new();
 
     attributes.insert(
         "parent".into(),
-        liquid::value::Value::scalar(format_path_variable(rel_path)),
+        liquid::model::Value::scalar(format_path_variable(rel_path)),
     );
 
     let filename = rel_path
@@ -63,21 +59,21 @@ pub fn page_attributes(
         .and_then(|s| s.to_str())
         .unwrap_or("")
         .to_owned();
-    attributes.insert("name".into(), liquid::value::Value::scalar(filename));
+    attributes.insert("name".into(), liquid::model::Value::scalar(filename));
 
-    attributes.insert("ext".into(), liquid::value::Value::scalar(".html"));
+    attributes.insert("ext".into(), liquid::model::Value::scalar(".html"));
 
     // TODO(epage): Add `collection` (the collection's slug), see #257
     // or `parent.slug`, see #323
 
     attributes.insert(
         "slug".into(),
-        liquid::value::Value::scalar(front.slug.clone()),
+        liquid::model::Value::scalar(front.slug.clone()),
     );
 
     attributes.insert(
         "categories".into(),
-        liquid::value::Value::scalar(itertools::join(
+        liquid::model::Value::scalar(itertools::join(
             front.categories.iter().map(cobalt_config::path::slugify),
             "/",
         )),
@@ -86,41 +82,41 @@ pub fn page_attributes(
     if let Some(ref date) = front.published_date {
         attributes.insert(
             "year".into(),
-            liquid::value::Value::scalar(date.year().to_string()),
+            liquid::model::Value::scalar(date.year().to_string()),
         );
         attributes.insert(
             "month".into(),
-            liquid::value::Value::scalar(format!("{:02}", &date.month())),
+            liquid::model::Value::scalar(format!("{:02}", &date.month())),
         );
         attributes.insert(
             "i_month".into(),
-            liquid::value::Value::scalar(date.month().to_string()),
+            liquid::model::Value::scalar(date.month().to_string()),
         );
         attributes.insert(
             "day".into(),
-            liquid::value::Value::scalar(format!("{:02}", &date.day())),
+            liquid::model::Value::scalar(format!("{:02}", &date.day())),
         );
         attributes.insert(
             "i_day".into(),
-            liquid::value::Value::scalar(date.day().to_string()),
+            liquid::model::Value::scalar(date.day().to_string()),
         );
         attributes.insert(
             "hour".into(),
-            liquid::value::Value::scalar(format!("{:02}", &date.hour())),
+            liquid::model::Value::scalar(format!("{:02}", &date.hour())),
         );
         attributes.insert(
             "minute".into(),
-            liquid::value::Value::scalar(format!("{:02}", &date.minute())),
+            liquid::model::Value::scalar(format!("{:02}", &date.minute())),
         );
         attributes.insert(
             "second".into(),
-            liquid::value::Value::scalar(format!("{:02}", &date.second())),
+            liquid::model::Value::scalar(format!("{:02}", &date.second())),
         );
     }
 
     attributes.insert(
         "data".into(),
-        liquid::value::Value::Object(front.data.clone()),
+        liquid::model::Value::Object(front.data.clone()),
     );
 
     attributes
@@ -170,21 +166,21 @@ mod test {
 
     #[test]
     fn explode_permalink_relative() {
-        let attributes = liquid::value::Object::new();
+        let attributes = liquid::Object::new();
         let actual = explode_permalink("relative/path", &attributes).unwrap();
         assert_eq!(actual, "relative/path");
     }
 
     #[test]
     fn explode_permalink_absolute() {
-        let attributes = liquid::value::Object::new();
+        let attributes = liquid::Object::new();
         let actual = explode_permalink("/abs/path", &attributes).unwrap();
         assert_eq!(actual, "abs/path");
     }
 
     #[test]
     fn explode_permalink_blank_substitution() {
-        let attributes = liquid::value::Object::new();
+        let attributes = liquid::Object::new();
         let actual = explode_permalink("//path/middle//end", &attributes).unwrap();
         assert_eq!(actual, "path/middle/end");
     }

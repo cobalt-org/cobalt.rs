@@ -14,7 +14,7 @@ use paginator::Paginator;
 struct DateIndexHolder<'a> {
     value: u32,
     field: Option<DateIndex>,
-    posts: Vec<&'a liquid::value::Value>,
+    posts: Vec<&'a liquid::model::Value>,
     sub_date: Vec<DateIndexHolder<'a>>,
 }
 
@@ -29,16 +29,13 @@ impl<'a> DateIndexHolder<'a> {
     }
 }
 
-fn extract_published_date(value: &liquid::value::Value) -> Option<DateTime> {
-    if let Some(published_date) = extract_scalar(&value, "published_date") {
-        published_date.to_date().map(|d| d.into())
-    } else {
-        None
-    }
+fn extract_published_date<'a>(value: &'a dyn liquid::ValueView) -> Option<DateTime> {
+    let published_date = extract_scalar(value, "published_date")?;
+    published_date.to_date_time()
 }
 
 pub fn create_dates_paginators(
-    all_posts: &[&liquid::value::Value],
+    all_posts: &[&liquid::model::Value],
     doc: &Document,
     pagination_cfg: &cobalt_model::page::Pagination,
 ) -> Result<Vec<Paginator>> {
@@ -46,7 +43,7 @@ pub fn create_dates_paginators(
     walk_dates(&mut root_date, &pagination_cfg, &doc, None)
 }
 
-fn format_date_holder(d: &DateIndexHolder) -> liquid::value::Value {
+fn format_date_holder(d: &DateIndexHolder) -> liquid::model::Value {
     let field = d
         .field
         .expect("Should not be called with the root DateIndexHolder");
@@ -54,10 +51,10 @@ fn format_date_holder(d: &DateIndexHolder) -> liquid::value::Value {
         DateIndex::Year => d.value.to_string(),
         _ => format!("{:02}", d.value),
     };
-    liquid::value::Value::scalar(formatted)
+    liquid::model::Value::scalar(formatted)
 }
 
-fn date_fields_to_array(date: &[DateIndexHolder]) -> liquid::value::Array {
+fn date_fields_to_array(date: &[DateIndexHolder]) -> liquid::model::Array {
     date.iter().map(|d| format_date_holder(&d)).collect()
 }
 
@@ -76,7 +73,7 @@ fn walk_dates(
     if let Some(_field) = date_holder.field {
         sort_posts(&mut date_holder.posts, &config);
         current_date.push(date_holder.clone());
-        let index_title = liquid::value::Value::array(date_fields_to_array(&current_date));
+        let index_title = liquid::model::Value::array(date_fields_to_array(&current_date));
         let cur_date_paginators =
             create_all_paginators(&date_holder.posts, &doc, &config, Some(&index_title))?;
         if !cur_date_paginators.is_empty() {
@@ -107,7 +104,7 @@ fn find_or_create_date_holder_and_put_post<'a, 'b>(
     date_holder: &'b mut DateIndexHolder<'a>,
     published_date: &DateTime,
     wanted_field: DateIndex,
-    post: &'a liquid::value::Value,
+    post: &'a liquid::model::Value,
 ) {
     let value = get_date_field_value(&published_date, wanted_field);
     let mut not_found = true;
@@ -157,13 +154,13 @@ fn get_date_field_value(date: &DateTime, field: DateIndex) -> u32 {
 }
 
 fn distribute_posts_by_dates<'a>(
-    all_posts: &[&'a liquid::value::Value],
+    all_posts: &[&'a liquid::model::Value],
     pagination_cfg: &cobalt_model::page::Pagination,
 ) -> Result<DateIndexHolder<'a>> {
     let date_index = &pagination_cfg.date_index;
     let mut root = DateIndexHolder::new(0u32, None);
     for post in all_posts {
-        if let Some(published_date) = extract_published_date(&post) {
+        if let Some(published_date) = extract_published_date(post.as_view()) {
             for idx in date_index {
                 find_or_create_date_holder_and_put_post(&mut root, &published_date, *idx, &post);
             }

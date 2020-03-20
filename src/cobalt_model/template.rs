@@ -6,8 +6,10 @@ use crate::error::*;
 use crate::syntax_highlight;
 use liquid;
 
-fn load_partials_from_path(root: path::PathBuf) -> Result<liquid::Partials> {
-    let mut source = liquid::Partials::empty();
+type Partials = liquid::partials::EagerCompiler<liquid::partials::InMemorySource>;
+
+fn load_partials_from_path(root: path::PathBuf) -> Result<Partials> {
+    let mut source = Partials::empty();
 
     debug!("Loading snippets from {:?}", root);
     let template_files = files::FilesBuilder::new(root)?
@@ -37,16 +39,23 @@ pub struct LiquidBuilder {
 impl LiquidBuilder {
     pub fn build(self) -> Result<Liquid> {
         let highlight = Self::highlight(self.theme)?;
-        let parser = liquid::ParserBuilder::with_liquid()
-            .extra_filters()
-            .jekyll_filters()
+        let parser = liquid::ParserBuilder::with_stdlib()
+            .filter(liquid_lib::extra::DateInTz)
+            .filter(liquid_lib::shopify::Pluralize)
+            // Intentionally staying with `stdlib::IncludeTag` rather than `jekyll::IncludeTag`
+            .filter(liquid_lib::jekyll::Slugify)
+            .filter(liquid_lib::jekyll::Pop)
+            .filter(liquid_lib::jekyll::Push)
+            .filter(liquid_lib::jekyll::Shift)
+            .filter(liquid_lib::jekyll::Unshift)
+            .filter(liquid_lib::jekyll::ArrayToSentenceString)
             .partials(load_partials_from_path(self.includes_dir)?)
             .block(highlight)
             .build()?;
         Ok(Liquid { parser })
     }
 
-    fn highlight(theme: String) -> Result<Box<dyn liquid::compiler::ParseBlock>> {
+    fn highlight(theme: String) -> Result<Box<dyn liquid_core::ParseBlock>> {
         let result: Result<()> = match syntax_highlight::has_syntax_theme(&theme) {
             Ok(true) => Ok(()),
             Ok(false) => Err(failure::format_err!(
