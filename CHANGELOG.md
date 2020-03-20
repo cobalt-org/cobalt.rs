@@ -1,3 +1,20 @@
+<a name="0.16.0"></a>
+## 0.16.0 (2020-??-??)
+
+#### Features
+
+- `where` filter
+
+#### Bug Fixes
+
+- Fixed liquid corner cases to be more conformant
+
+#### Breaking Changes
+
+- `{% include %}` is now strictly Liquid-style rather
+  than Jekyll-style. It takes an expression rather than a bare-word for
+  the path to include.
+
 <a name="0.15.11"></a>
 ## 0.15.11 (2020-03-09)
 

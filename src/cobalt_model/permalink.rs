@@ -6,12 +6,12 @@ use crate::error::*;
 
 pub fn explode_permalink<S: AsRef<str>>(
     permalink: S,
-    attributes: &liquid::value::Object,
+    attributes: &liquid::Object,
 ) -> Result<String> {
     explode_permalink_string(permalink.as_ref(), attributes)
 }
 
-fn explode_permalink_string(permalink: &str, attributes: &liquid::value::Object) -> Result<String> {
+fn explode_permalink_string(permalink: &str, attributes: &liquid::Object) -> Result<String> {
     lazy_static! {
         static ref PERMALINK_PARSER: liquid::Parser = liquid::Parser::new();
     }
@@ -61,21 +61,21 @@ mod test {
 
     #[test]
     fn explode_permalink_relative() {
-        let attributes = liquid::value::Object::new();
+        let attributes = liquid::Object::new();
         let actual = explode_permalink("relative/path", &attributes).unwrap();
         assert_eq!(actual, "relative/path");
     }
 
     #[test]
     fn explode_permalink_absolute() {
-        let attributes = liquid::value::Object::new();
+        let attributes = liquid::Object::new();
         let actual = explode_permalink("/abs/path", &attributes).unwrap();
         assert_eq!(actual, "abs/path");
     }
 
     #[test]
     fn explode_permalink_blank_substitution() {
-        let attributes = liquid::value::Object::new();
+        let attributes = liquid::Object::new();
         let actual = explode_permalink("//path/middle//end", &attributes).unwrap();
         assert_eq!(actual, "path/middle/end");
     }

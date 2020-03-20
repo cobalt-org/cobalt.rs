@@ -84,8 +84,8 @@ pub struct FrontmatterBuilder {
     pub is_draft: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub weight: Option<i32>,
-    #[serde(skip_serializing_if = "liquid::value::Object::is_empty")]
-    pub data: liquid::value::Object,
+    #[serde(skip_serializing_if = "liquid::Object::is_empty")]
+    pub data: liquid::Object,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub pagination: Option<pagination_config::PaginationConfigBuilder>,
     // Controlled by where the file is found.  We might allow control over the type at a later
@@ -279,7 +279,7 @@ impl FrontmatterBuilder {
         self.merge(Self::new().set_collection(collection.into()))
     }
 
-    pub fn merge_data(self, other_data: liquid::value::Object) -> Self {
+    pub fn merge_data(self, other_data: liquid::Object) -> Self {
         let Self {
             permalink,
             slug,
@@ -509,7 +509,7 @@ pub struct Frontmatter {
     pub is_draft: bool,
     pub weight: i32,
     pub collection: String,
-    pub data: liquid::value::Object,
+    pub data: liquid::Object,
     pub pagination: Option<pagination_config::PaginationConfig>,
 }
 
@@ -522,11 +522,8 @@ impl fmt::Display for Frontmatter {
     }
 }
 
-/// Shallow merge of `liquid::value::Object`'s
-fn merge_objects(
-    mut primary: liquid::value::Object,
-    secondary: liquid::value::Object,
-) -> liquid::value::Object {
+/// Shallow merge of `liquid::Object`'s
+fn merge_objects(mut primary: liquid::Object, secondary: liquid::Object) -> liquid::Object {
     for (key, value) in secondary {
         primary
             .entry(key.to_owned())
@@ -771,7 +768,7 @@ mod test {
             is_draft: Some(true),
             weight: Some(0),
             collection: Some("pages".to_owned()),
-            data: liquid::value::Object::new(),
+            data: liquid::Object::new(),
             pagination: Some(Default::default()),
         };
         let b = FrontmatterBuilder {
@@ -789,7 +786,7 @@ mod test {
             is_draft: Some(true),
             weight: Some(0),
             collection: Some("posts".to_owned()),
-            data: liquid::value::Object::new(),
+            data: liquid::Object::new(),
             pagination: Some(Default::default()),
         };
 
@@ -820,7 +817,7 @@ mod test {
             is_draft: Some(true),
             weight: Some(0),
             collection: Some("pages".to_owned()),
-            data: liquid::value::Object::new(),
+            data: liquid::Object::new(),
             pagination: Some(Default::default()),
         };
 

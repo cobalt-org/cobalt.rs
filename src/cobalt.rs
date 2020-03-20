@@ -1,4 +1,3 @@
-use std::borrow;
 use std::collections::HashMap;
 use std::fs;
 use std::io::Write;
@@ -25,7 +24,7 @@ struct Context {
     pub destination: path::PathBuf,
     pub pages: cobalt_model::Collection,
     pub posts: cobalt_model::Collection,
-    pub site: liquid::value::Object,
+    pub site: liquid::Object,
     pub layouts: HashMap<String, String>,
     pub liquid: cobalt_model::Liquid,
     pub markdown: cobalt_model::Markdown,
@@ -120,37 +119,37 @@ pub fn build(config: Config) -> Result<()> {
 }
 
 fn generate_collections_var(
-    posts_data: &[liquid::value::Value],
+    posts_data: &[liquid::model::Value],
     context: &Context,
-) -> (borrow::Cow<'static, str>, liquid::value::Value) {
+) -> (kstring::KString, liquid::model::Value) {
     let mut posts_variable = context.posts.attributes.clone();
     posts_variable.insert(
         "pages".into(),
-        liquid::value::Value::Array(posts_data.to_vec()),
+        liquid::model::Value::Array(posts_data.to_vec()),
     );
-    let global_collection: liquid::value::Object = vec![(
+    let global_collection: liquid::Object = vec![(
         context.posts.slug.clone().into(),
-        liquid::value::Value::Object(posts_variable),
+        liquid::model::Value::Object(posts_variable),
     )]
     .into_iter()
     .collect();
     (
         "collections".into(),
-        liquid::value::Value::Object(global_collection),
+        liquid::model::Value::Object(global_collection),
     )
 }
 
 fn generate_doc(
     doc: &mut Document,
     context: &Context,
-    global_collection: (borrow::Cow<'static, str>, liquid::value::Value),
+    global_collection: (kstring::KString, liquid::model::Value),
 ) -> Result<()> {
     // Everything done with `globals` is terrible for performance.  liquid#95 allows us to
     // improve this.
-    let mut globals: liquid::value::Object = vec![
+    let mut globals: liquid::Object = vec![
         (
             "site".into(),
-            liquid::value::Value::Object(context.site.clone()),
+            liquid::model::Value::Object(context.site.clone()),
         ),
         global_collection,
     ]
@@ -158,7 +157,7 @@ fn generate_doc(
     .collect();
     globals.insert(
         "page".into(),
-        liquid::value::Value::Object(doc.attributes.clone()),
+        liquid::model::Value::Object(doc.attributes.clone()),
     );
 
     doc.render_excerpt(&globals, &context.liquid, &context.markdown)
@@ -173,7 +172,7 @@ fn generate_doc(
     // Refresh `page` with the `excerpt` / `content` attribute
     globals.insert(
         "page".into(),
-        liquid::value::Value::Object(doc.attributes.clone()),
+        liquid::model::Value::Object(doc.attributes.clone()),
     );
     let doc_html = doc
         .render(&globals, &context.liquid, &context.layouts)
@@ -187,9 +186,9 @@ fn generate_doc(
 fn generate_pages(posts: Vec<Document>, documents: Vec<Document>, context: &Context) -> Result<()> {
     // during post rendering additional attributes such as content were
     // added to posts. collect them so that non-post documents can access them
-    let posts_data: Vec<liquid::value::Value> = posts
+    let posts_data: Vec<liquid::model::Value> = posts
         .into_iter()
-        .map(|x| liquid::value::Value::Object(x.attributes))
+        .map(|x| liquid::model::Value::Object(x.attributes))
         .collect();
 
     trace!("Generating other documents");
@@ -207,7 +206,7 @@ fn generate_pages(posts: Vec<Document>, documents: Vec<Document>, context: &Cont
                 context,
                 (
                     "paginator".into(),
-                    liquid::value::Value::Object(paginator.into()),
+                    liquid::model::Value::Object(paginator.into()),
                 ),
             )?;
             for paginator in paginators {
@@ -218,7 +217,7 @@ fn generate_pages(posts: Vec<Document>, documents: Vec<Document>, context: &Cont
                     context,
                     (
                         "paginator".into(),
-                        liquid::value::Value::Object(paginator.into()),
+                        liquid::model::Value::Object(paginator.into()),
                     ),
                 )?;
             }
@@ -235,9 +234,9 @@ fn generate_pages(posts: Vec<Document>, documents: Vec<Document>, context: &Cont
 
 fn generate_posts(posts: &mut Vec<Document>, context: &Context) -> Result<()> {
     // collect all posts attributes to pass them to other posts for rendering
-    let simple_posts_data: Vec<liquid::value::Value> = posts
+    let simple_posts_data: Vec<liquid::model::Value> = posts
         .iter()
-        .map(|x| liquid::value::Value::Object(x.attributes.clone()))
+        .map(|x| liquid::model::Value::Object(x.attributes.clone()))
         .collect();
 
     trace!("Generating posts");
@@ -248,7 +247,7 @@ fn generate_posts(posts: &mut Vec<Document>, context: &Context) -> Result<()> {
         let previous = simple_posts_data
             .get(i + 1)
             .cloned()
-            .unwrap_or(liquid::value::Value::Nil);
+            .unwrap_or(liquid::model::Value::Nil);
         post.attributes.insert("previous".into(), previous);
 
         let next = if i >= 1 {
@@ -257,7 +256,7 @@ fn generate_posts(posts: &mut Vec<Document>, context: &Context) -> Result<()> {
             None
         }
         .cloned()
-        .unwrap_or(liquid::value::Value::Nil);
+        .unwrap_or(liquid::model::Value::Nil);
         post.attributes.insert("next".into(), next);
 
         generate_doc(

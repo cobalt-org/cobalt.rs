@@ -8,8 +8,9 @@ use failure::ResultExt;
 use itertools;
 use jsonfeed;
 use liquid;
-use liquid::value::Object;
-use liquid::value::Value;
+use liquid::model::Value;
+use liquid::Object;
+use liquid::ValueView;
 use regex::Regex;
 use rss;
 
@@ -151,7 +152,7 @@ fn document_attributes(
     if let Some(ref published_date) = front.published_date {
         attributes.insert(
             "published_date".into(),
-            Value::scalar(liquid::value::Date::from(*published_date)),
+            Value::scalar(liquid::model::scalar::DateTime::from(*published_date)),
         );
     }
 
@@ -388,11 +389,12 @@ impl Document {
                 .with_context(|_| failure::format_err!("Failed to render layout {:?}", layout))?;
             Ok(content_html)
         } else {
-            let content_html = globals
-                .get("page")
+            let path = &[
+                kstring::KStringCow::from_static("page").into(),
+                kstring::KStringCow::from_static("content").into(),
+            ];
+            let content_html = liquid::model::find::try_find(globals, path)
                 .ok_or_else(|| failure::err_msg("Internal error: page isn't in globals"))?
-                .get(&liquid::value::Scalar::new("content"))
-                .ok_or_else(|| failure::err_msg("Internal error: page.content isn't in globals"))?
                 .render()
                 .to_string();
 

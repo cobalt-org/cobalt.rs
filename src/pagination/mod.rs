@@ -1,5 +1,7 @@
 use std::cmp::Ordering;
 
+use liquid::ValueView;
+
 use crate::cobalt_model::pagination_config::Include;
 use crate::cobalt_model::pagination_config::PaginationConfig;
 use crate::cobalt_model::permalink;
@@ -20,7 +22,7 @@ use paginator::Paginator;
 
 pub fn generate_paginators(
     doc: &mut Document,
-    posts_data: &[liquid::value::Value],
+    posts_data: &[liquid::model::Value],
 ) -> Result<Vec<Paginator>> {
     let config = doc
         .front
@@ -43,10 +45,10 @@ pub fn generate_paginators(
 }
 
 fn create_all_paginators(
-    all_posts: &[&liquid::value::Value],
+    all_posts: &[&liquid::model::Value],
     doc: &Document,
     pagination_cfg: &PaginationConfig,
-    index_title: Option<&liquid::value::Value>,
+    index_title: Option<&liquid::model::Value>,
 ) -> Result<Vec<Paginator>> {
     let total_pages = all_posts.len();
     // f32 used here in order to not lose information to ceil the result,
@@ -71,27 +73,30 @@ fn create_all_paginators(
 }
 
 // sort posts by multiple criteria
-fn sort_posts(posts: &mut Vec<&liquid::value::Value>, config: &PaginationConfig) {
-    let order: fn(&liquid::value::Scalar, &liquid::value::Scalar) -> Ordering = match config.order {
-        SortOrder::Desc => {
-            |a, b: &liquid::value::Scalar| b.partial_cmp(a).unwrap_or(Ordering::Equal)
-        }
-        SortOrder::Asc => {
-            |a: &liquid::value::Scalar, b| a.partial_cmp(b).unwrap_or(Ordering::Equal)
-        }
-        SortOrder::None => {
-            // when built, order is set like this:
-            // `order.unwrap_or(SortOrder::Desc);` so it's unreachable
-            unreachable!("Sort order should have default value when constructing PaginationConfig")
-        }
-    };
+fn sort_posts(posts: &mut Vec<&liquid::model::Value>, config: &PaginationConfig) {
+    let order: fn(liquid::model::ScalarCow<'_>, liquid::model::ScalarCow<'_>) -> Ordering =
+        match config.order {
+            SortOrder::Desc => {
+                |a, b: liquid::model::ScalarCow<'_>| b.partial_cmp(&a).unwrap_or(Ordering::Equal)
+            }
+            SortOrder::Asc => {
+                |a: liquid::model::ScalarCow<'_>, b| a.partial_cmp(&b).unwrap_or(Ordering::Equal)
+            }
+            SortOrder::None => {
+                // when built, order is set like this:
+                // `order.unwrap_or(SortOrder::Desc);` so it's unreachable
+                unreachable!(
+                    "Sort order should have default value when constructing PaginationConfig"
+                )
+            }
+        };
     posts.sort_by(|a, b| {
         let keys = &config.sort_by;
         let mut cmp = Ordering::Less;
         for k in keys {
             cmp = match (
-                helpers::extract_scalar(a, &k),
-                helpers::extract_scalar(b, &k),
+                helpers::extract_scalar(a.as_view(), &k),
+                helpers::extract_scalar(b.as_view(), &k),
             ) {
                 (Some(a), Some(b)) => order(a, b),
                 (None, None) => Ordering::Equal,
@@ -106,21 +111,20 @@ fn sort_posts(posts: &mut Vec<&liquid::value::Value>, config: &PaginationConfig)
     })
 }
 
-fn pagination_attributes(page_num: i32) -> liquid::value::Object {
-    let attributes: liquid::value::Object =
-        vec![("num".into(), liquid::value::Value::scalar(page_num))]
-            .into_iter()
-            .collect();
+fn pagination_attributes(page_num: i32) -> liquid::Object {
+    let attributes: liquid::Object = vec![("num".into(), liquid::model::Value::scalar(page_num))]
+        .into_iter()
+        .collect();
     attributes
 }
 
-fn index_to_string(index: &liquid::value::Value) -> String {
+fn index_to_string(index: &liquid::model::Value) -> String {
     if let Some(index) = index.as_array() {
         // categories
         let mut s: String = index
-            .iter()
+            .values()
             .map(|i| {
-                let mut s = slug::slugify(i.to_str().to_string());
+                let mut s = slug::slugify(i.to_kstr().into_string());
                 s.push('/');
                 s
             })
@@ -128,7 +132,7 @@ fn index_to_string(index: &liquid::value::Value) -> String {
         s.pop(); // remove last '/'
         s
     } else {
-        slug::slugify(index.to_str().to_string())
+        slug::slugify(index.to_kstr().into_string())
     }
 }
 
@@ -136,7 +140,7 @@ fn interpret_permalink(
     config: &PaginationConfig,
     doc: &Document,
     page_num: usize,
-    index: Option<&liquid::value::Value>,
+    index: Option<&liquid::model::Value>,
 ) -> Result<String> {
     let mut attributes = document::permalink_attributes(&doc.front, &doc.file_path);
     let permalink = permalink::explode_permalink(&config.front_permalink, &attributes)?;
