@@ -120,7 +120,7 @@ impl Frontmatter {
 impl fmt::Display for Frontmatter {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let converted = serde_yaml::to_string(self).ok();
-        if converted.as_ref().map(|s| s.as_str()) == Some("---\n{}") {
+        if converted.as_deref() == Some("---\n{}") {
             Ok(())
         } else {
             write!(f, "{}", &converted.unwrap()[4..])

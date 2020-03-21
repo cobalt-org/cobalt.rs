@@ -142,7 +142,7 @@ impl liquid_core::ParseBlock for CodeBlockParser {
         tokens.assert_empty();
 
         Ok(Box::new(CodeBlock {
-            lang: lang,
+            lang,
             code: content,
         }))
     }

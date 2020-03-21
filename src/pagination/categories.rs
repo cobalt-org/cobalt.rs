@@ -73,7 +73,7 @@ fn parse_categories_list<'a, 'b>(
         let mut cur_cat = if let Ok(idx) = parent.sub_cats.binary_search_by(|c| {
             compare_category_path(
                 c.cat_path.iter().map(|v| v.as_view()),
-                cat_full_path.iter().map(|v| *v),
+                cat_full_path.iter().copied(),
             )
         }) {
             &mut parent.sub_cats[idx]

@@ -29,7 +29,7 @@ impl<'a> DateIndexHolder<'a> {
     }
 }
 
-fn extract_published_date<'a>(value: &'a dyn liquid::ValueView) -> Option<DateTime> {
+fn extract_published_date(value: &'_ dyn liquid::ValueView) -> Option<DateTime> {
     let published_date = extract_scalar(value, "published_date")?;
     published_date.to_date_time()
 }
