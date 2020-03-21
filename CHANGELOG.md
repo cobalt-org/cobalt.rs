@@ -1,3 +1,49 @@
+<a name="0.16.0"></a>
+## 0.16.0 (2020-??-??)
+
+#### Features
+
+- `where` filter
+
+#### Bug Fixes
+
+- Fixed liquid corner cases to be more conformant
+
+#### Breaking Changes
+
+- `{% include %}` is now strictly Liquid-style rather
+  than Jekyll-style. It takes an expression rather than a bare-word for
+  the path to include.
+
+<a name="0.15.11"></a>
+## 0.15.11 (2020-03-09)
+
+#### Features
+
+* Support opening the page in the browser with `cobalt serve --open`.
+
+<a name="0.15.10"></a>
+## 0.15.10 (2020-02-24)
+
+#### Bug Fixes
+
+* Report mime-type with `cobalt serve` (closes [#732](https://github.com/cobalt-org/cobalt.rs/issues/732)).
+* Fix RSS content when excerpts are disabled (closes [#724](https://github.com/cobalt-org/cobalt.rs/issues/724)).
+
+<a name="0.15.9"></a>
+## 0.15.9 (2020-02-11)
+
+#### Bug Fixes
+
+* Provide a pre-built windows binary
+
+<a name="0.15.7"></a>
+## 0.15.7 (2020-02-10)
+
+#### Bug Fixes
+
+* Fixed "ctrl-c" during `cobalt serve` so that it will not hang.
+
 <a name="0.15.6"></a>
 ## 0.15.6 (2019-11-28)
 

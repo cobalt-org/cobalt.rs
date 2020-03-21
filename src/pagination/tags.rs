@@ -8,17 +8,18 @@ use helpers::extract_tags;
 use paginator::Paginator;
 
 fn distribute_posts_by_tags<'a>(
-    all_posts: &[&'a liquid::value::Value],
-) -> Result<HashMap<String, Vec<&'a liquid::value::Value>>> {
-    let mut per_tags: HashMap<String, Vec<&'a liquid::value::Value>> = HashMap::new();
+    all_posts: &[&'a liquid::model::Value],
+) -> Result<HashMap<String, Vec<&'a liquid::model::Value>>> {
+    let mut per_tags: HashMap<String, Vec<&'a liquid::model::Value>> = HashMap::new();
     for post in all_posts {
-        if let Some(tags) = extract_tags(post) {
-            for tag in tags {
+        if let Some(tags) = extract_tags(post.as_view()) {
+            for tag in tags.values() {
                 let tag = tag
                     .as_scalar()
                     .ok_or_else(|| failure::err_msg("Should have string tags"))?
-                    .to_str();
-                let cur_tag = per_tags.entry(tag.to_string()).or_insert_with(|| vec![]);
+                    .to_kstr()
+                    .into_string();
+                let cur_tag = per_tags.entry(tag).or_insert_with(|| vec![]);
                 cur_tag.push(post);
             }
         }
@@ -33,7 +34,7 @@ struct TagPaginators {
 }
 
 pub fn create_tags_paginators(
-    all_posts: &[&liquid::value::Value],
+    all_posts: &[&liquid::model::Value],
     doc: &Document,
     pagination_cfg: &cobalt_model::page::Pagination,
 ) -> Result<Vec<Paginator>> {
@@ -48,7 +49,7 @@ pub fn create_tags_paginators(
                 posts,
                 doc,
                 &pagination_cfg,
-                Some(&liquid::value::Value::scalar(tag.to_owned())),
+                Some(&liquid::model::Value::scalar(tag.to_owned())),
             )?;
             acc.firsts_of_tags.push(cur_tag_paginators[0].clone());
             acc.paginators.extend(cur_tag_paginators.into_iter());
@@ -58,7 +59,7 @@ pub fn create_tags_paginators(
 
     tag_paginators.firsts_of_tags.sort_unstable_by_key(|p| {
         if let Some(ref index_title) = p.index_title {
-            Some(slug::slugify(index_title.to_str()).to_lowercase())
+            Some(slug::slugify(index_title.to_kstr()).to_lowercase())
         } else {
             None
         }

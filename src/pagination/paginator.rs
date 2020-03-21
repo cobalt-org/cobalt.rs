@@ -4,10 +4,10 @@ use super::*;
 
 #[derive(Default, Clone, Debug)]
 pub struct Paginator {
-    pub pages: Option<Vec<liquid::value::Value>>,
+    pub pages: Option<Vec<liquid::model::Value>>,
     pub indexes: Option<Vec<Paginator>>,
     pub index: usize,
-    pub index_title: Option<liquid::value::Value>,
+    pub index_title: Option<liquid::model::Value>,
     pub index_permalink: String,
     pub previous_index: usize,
     pub previous_index_permalink: Option<String>,
@@ -43,7 +43,7 @@ impl Paginator {
         doc: &Document,
         config: &cobalt_model::page::Pagination,
         total_pages: usize,
-        index_title: Option<&liquid::value::Value>,
+        index_title: Option<&liquid::model::Value>,
     ) -> Result<()> {
         self.first_index_permalink = doc.url_path.to_string();
         self.last_index_permalink = interpret_permalink(&config, &doc, total_pages, index_title)?;
@@ -53,10 +53,10 @@ impl Paginator {
     pub fn set_current_index_info(
         &mut self,
         index: usize,
-        all_pages: &[&liquid::value::Value],
+        all_pages: &[&liquid::model::Value],
         config: &cobalt_model::page::Pagination,
         doc: &Document,
-        index_title: Option<&liquid::value::Value>,
+        index_title: Option<&liquid::model::Value>,
     ) -> Result<()> {
         self.index = index;
         self.pages = Some(all_pages.iter().map(|p| (*p).clone()).collect());
@@ -71,7 +71,7 @@ impl Paginator {
         total_indexes: usize,
         doc: &Document,
         config: &cobalt_model::page::Pagination,
-        index_title: Option<&liquid::value::Value>,
+        index_title: Option<&liquid::model::Value>,
     ) -> Result<()> {
         if index > 1 {
             // we have a previous index
@@ -96,8 +96,8 @@ pub fn create_paginator(
     total_pages: usize,
     config: &cobalt_model::page::Pagination,
     doc: &Document,
-    all_posts: &[&liquid::value::Value],
-    index_title: Option<&liquid::value::Value>,
+    all_posts: &[&liquid::model::Value],
+    index_title: Option<&liquid::model::Value>,
 ) -> Result<Paginator> {
     let index = i + 1;
     let mut paginator = Paginator::new(total_indexes, total_pages);
@@ -109,23 +109,23 @@ pub fn create_paginator(
     Ok(paginator)
 }
 
-impl Into<liquid::value::Object> for Paginator {
-    fn into(self) -> liquid::value::Object {
-        let mut object = liquid::value::Object::new();
+impl Into<liquid::Object> for Paginator {
+    fn into(self) -> liquid::Object {
+        let mut object = liquid::Object::new();
         // if no pages, means we have indexes instead, `tags` like cases for exemple
         if let Some(pages) = self.pages {
-            object.insert("pages".into(), liquid::value::Value::Array(pages));
+            object.insert("pages".into(), liquid::model::Value::Array(pages));
         }
         // list of available indexes, in `tags` like cases
         if let Some(indexes) = self.indexes {
             object.insert(
                 "indexes".into(),
-                liquid::value::Value::Array(
+                liquid::model::Value::Array(
                     indexes
                         .into_iter()
                         .map(|paginator| {
-                            let v: liquid::value::Object = paginator.into();
-                            liquid::value::Value::Object(v)
+                            let v: liquid::Object = paginator.into();
+                            liquid::model::Value::Object(v)
                         })
                         .collect(),
                 ),
@@ -133,11 +133,11 @@ impl Into<liquid::value::Object> for Paginator {
         }
         object.insert(
             "index".into(),
-            liquid::value::Value::scalar(self.index as i32),
+            liquid::model::Value::scalar(self.index as i32),
         );
         object.insert(
             "index_permalink".into(),
-            liquid::value::Value::scalar(self.index_permalink),
+            liquid::model::Value::scalar(self.index_permalink),
         );
         if let Some(index_title) = self.index_title {
             object.insert("index_title".into(), index_title);
@@ -145,38 +145,38 @@ impl Into<liquid::value::Object> for Paginator {
         if let Some(previous_index_permalink) = self.previous_index_permalink {
             object.insert(
                 "previous_index".into(),
-                liquid::value::Value::scalar(self.previous_index as i32),
+                liquid::model::Value::scalar(self.previous_index as i32),
             );
             object.insert(
                 "previous_index_permalink".into(),
-                liquid::value::Value::scalar(previous_index_permalink),
+                liquid::model::Value::scalar(previous_index_permalink),
             );
         }
         if let Some(next_index_permalink) = self.next_index_permalink {
             object.insert(
                 "next_index".into(),
-                liquid::value::Value::scalar(self.next_index as i32),
+                liquid::model::Value::scalar(self.next_index as i32),
             );
             object.insert(
                 "next_index_permalink".into(),
-                liquid::value::Value::scalar(next_index_permalink),
+                liquid::model::Value::scalar(next_index_permalink),
             );
         }
         object.insert(
             "first_index_permalink".into(),
-            liquid::value::Value::scalar(self.first_index_permalink),
+            liquid::model::Value::scalar(self.first_index_permalink),
         );
         object.insert(
             "last_index_permalink".into(),
-            liquid::value::Value::scalar(self.last_index_permalink),
+            liquid::model::Value::scalar(self.last_index_permalink),
         );
         object.insert(
             "total_indexes".into(),
-            liquid::value::Value::scalar(self.total_indexes as i32),
+            liquid::model::Value::scalar(self.total_indexes as i32),
         );
         object.insert(
             "total_pages".into(),
-            liquid::value::Value::scalar(self.total_pages as i32),
+            liquid::model::Value::scalar(self.total_pages as i32),
         );
         object
     }

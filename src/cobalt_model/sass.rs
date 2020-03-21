@@ -4,6 +4,7 @@ use cobalt_config::SassOutputStyle;
 #[cfg(feature = "sass")]
 use sass_rs;
 
+#[cfg(feature = "sass")]
 use super::files;
 use crate::error::*;
 

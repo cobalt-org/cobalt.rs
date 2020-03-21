@@ -1,12 +1,12 @@
 use std::io::Write;
 
-use liquid;
-use liquid::compiler::Language;
-use liquid::compiler::TagBlock;
-use liquid::compiler::TagTokenIter;
-use liquid::compiler::TryMatchToken;
-use liquid::error::ResultLiquidReplaceExt;
-use liquid::interpreter::{Context, Renderable};
+use liquid_core::error::ResultLiquidReplaceExt;
+use liquid_core::parser::TryMatchToken;
+use liquid_core::Language;
+use liquid_core::TagBlock;
+use liquid_core::TagTokenIter;
+use liquid_core::ValueView;
+use liquid_core::{Renderable, Runtime};
 use pulldown_cmark as cmark;
 
 use crate::error;
@@ -69,8 +69,8 @@ impl Renderable for CodeBlock {
     fn render_to(
         &self,
         writer: &mut dyn Write,
-        _context: &mut Context,
-    ) -> Result<(), liquid::Error> {
+        _context: &mut Runtime,
+    ) -> Result<(), liquid_core::Error> {
         if let Some(ref lang) = self.lang {
             write!(
                 writer,
@@ -94,7 +94,7 @@ impl CodeBlockParser {
     }
 }
 
-impl liquid::compiler::BlockReflection for CodeBlockParser {
+impl liquid_core::BlockReflection for CodeBlockParser {
     fn start_tag(&self) -> &'static str {
         "highlight"
     }
@@ -108,13 +108,17 @@ impl liquid::compiler::BlockReflection for CodeBlockParser {
     }
 }
 
-impl liquid::compiler::ParseBlock for CodeBlockParser {
+impl liquid_core::ParseBlock for CodeBlockParser {
+    fn reflection(&self) -> &dyn liquid_core::BlockReflection {
+        self
+    }
+
     fn parse(
         &self,
         mut arguments: TagTokenIter,
         mut tokens: TagBlock,
         _options: &Language,
-    ) -> Result<Box<dyn Renderable>, liquid::Error> {
+    ) -> Result<Box<dyn Renderable>, liquid_core::Error> {
         let lang = arguments
             .expect_next("Identifier or literal expected.")
             .ok()
@@ -123,7 +127,7 @@ impl liquid::compiler::ParseBlock for CodeBlockParser {
                 // Those inputs would fail anyway by there being not a path with those langs so they are not a big concern.
                 match lang.expect_literal() {
                     // Using `to_str()` on literals ensures `Strings` will have their quotes trimmed.
-                    TryMatchToken::Matches(lang) => lang.to_str().to_string(),
+                    TryMatchToken::Matches(lang) => lang.to_kstr().into_string(),
                     TryMatchToken::Fails(lang) => lang.as_str().to_string(),
                 }
             });
@@ -138,7 +142,7 @@ impl liquid::compiler::ParseBlock for CodeBlockParser {
         tokens.assert_empty();
 
         Ok(Box::new(CodeBlock {
-            lang: lang,
+            lang,
             code: content,
         }))
     }
@@ -171,7 +175,7 @@ mod test {
 
     #[test]
     fn codeblock_renders_rust() {
-        let highlight: Box<dyn liquid::compiler::ParseBlock> =
+        let highlight: Box<dyn liquid_core::ParseBlock> =
             Box::new(CodeBlockParser::new("base16-ocean.dark".to_owned()));
         let parser = liquid::ParserBuilder::new()
             .block(highlight)
@@ -183,7 +187,7 @@ mod test {
                 CODE_BLOCK
             ))
             .unwrap();
-        let output = template.render(&liquid::value::Object::new());
+        let output = template.render(&liquid::Object::new());
         assert_eq!(output.unwrap(), CODEBLOCK_RENDERED.to_string());
     }
 

@@ -15,7 +15,7 @@ travis-ci = { repository = "cobalt-org/cobalt.rs" }
 appveyor = { repository = "cobalt-org/cobalt.rs" }
 
 [dependencies]
-liquid-value = "0.19"
+liquid-core = "0.20.0"
 chrono = "0.4"
 log = "0.4"
 regex = "1.1"
