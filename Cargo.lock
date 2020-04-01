@@ -237,7 +237,7 @@ dependencies = [
  "failure",
  "ghp",
  "ignore",
- "itertools",
+ "itertools 0.9.0",
  "jsonfeed",
  "kstring",
  "lazy_static",
@@ -713,6 +713,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "itertools"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "284f18f85651fe11e8a991b2adb42cb078325c996ed026d994719efcfca1d54b"
+dependencies = [
+ "either",
+]
+
+[[package]]
 name = "itoa"
 version = "0.4.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -804,7 +813,7 @@ checksum = "3a922402825d7fd1965364e1d289f909076bcf580e5ae4a5edaf82af1fe7a9dc"
 dependencies = [
  "anymap",
  "chrono",
- "itertools",
+ "itertools 0.8.2",
  "kstring",
  "liquid-derive",
  "num-traits",
@@ -832,7 +841,7 @@ checksum = "0629fbd25a919496d2e621e8a3af892bc438273d0f446eb4f0d66ce45117d15d"
 dependencies = [
  "chrono",
  "deunicode",
- "itertools",
+ "itertools 0.8.2",
  "kstring",
  "liquid-core",
  "once_cell",
