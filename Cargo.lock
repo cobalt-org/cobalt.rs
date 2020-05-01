@@ -371,9 +371,9 @@ dependencies = [
 
 [[package]]
 name = "deunicode"
-version = "1.1.0"
+version = "1.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "307dde1a517939465bc4042b47377284a56cee6160f8066f1f5035eb7b25a3fc"
+checksum = "80115a2dfde04491e181c2440a39e4be26e52d9ca4e92bed213f65b94e0b8db1"
 
 [[package]]
 name = "difference"
