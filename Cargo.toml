@@ -26,7 +26,7 @@ kstring = "0.1.0"
 liquid = "0.20.0"
 liquid-core = "0.20.0"
 liquid-lib = { version = "0.20.0", features = ["jekyll", "shopify", "extra"] }
-deunicode = "1.1.0"
+deunicode = "1.1.1"
 walkdir = "2.2"
 chrono = "0.4"
 log = "0.4"
