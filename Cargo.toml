@@ -23,7 +23,7 @@ doc = false
 [dependencies]
 clap = "2.33"
 kstring = "0.1.0"
-liquid = "0.20.0"
+liquid = "0.20.1"
 liquid-core = "0.20.0"
 liquid-lib = { version = "0.20.0", features = ["jekyll", "shopify", "extra"] }
 deunicode = "1.1.1"
