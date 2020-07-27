@@ -128,7 +128,11 @@ fn static_file_handler(dest: &path::Path, req: Request) -> Result<()> {
         // write a simple body for the 404 page
         req.respond(
             Response::from_string("<h1> <center> 404: Page not found </center> </h1>")
-                .with_status_code(404),
+                .with_status_code(404)
+                .with_header(
+                    tiny_http::Header::from_str("Content-Type: text/html")
+                        .expect("formatted correctly"),
+                ),
         )?;
     }
 
