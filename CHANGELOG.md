@@ -1,3 +1,10 @@
+<a name="0.16.1"></a>
+## 0.16.1 (2020-07-28)
+
+#### Bug Fixes
+
+- **serv**: Provide content type for 404
+
 <a name="0.16.0"></a>
 ## 0.16.0 (2020-07-15)
 
