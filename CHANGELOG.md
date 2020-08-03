@@ -1,3 +1,10 @@
+<a name="0.16.2"></a>
+## 0.16.2 (2020-08-03)
+
+#### Bug Fixes
+
+- **new**: Create a valid `published_date`
+
 <a name="0.16.1"></a>
 ## 0.16.1 (2020-07-28)
 
