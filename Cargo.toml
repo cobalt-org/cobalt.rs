@@ -1,6 +1,6 @@
 [package]
 name = "cobalt-bin"
-version = "0.16.2"
+version = "0.16.3"
 authors = ["Benny Klotz <r3qnbenni@gmail.com>", "Johann Hofmann <mail@johann-hofmann.com>"]
 description = "Static site generator written in Rust"
 repository = "https://github.com/cobalt-org/cobalt.rs"
