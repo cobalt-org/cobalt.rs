@@ -179,7 +179,7 @@ stages:
         rust: stable
         targets: ["$(TARGET)"]
     - script: |
-        cargo rustc --target $(TARGET) --release --bin $(CRATE_NAME) -- -C lto
+        cargo build --target $(TARGET) --release --bin $(CRATE_NAME)
       displayName: Build
     - task: CopyFiles@2
       displayName: Stage assets
