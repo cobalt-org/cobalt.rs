@@ -798,9 +798,9 @@ checksum = "8dd5a6d5999d9907cda8ed67bbd137d3af8085216c2ac62de5be860bd41f304a"
 
 [[package]]
 name = "liquid"
-version = "0.21.1"
+version = "0.21.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c714dfaa5913b7564ead0cabfcee54138982945880a9a9a9a8d7c9b679ec7660"
+checksum = "9f3d2ea80af5c2da5b2984fd98613db331dc9ad098782847b090a6a2405e5592"
 dependencies = [
  "doc-comment",
  "kstring",
