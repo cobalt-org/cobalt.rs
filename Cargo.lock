@@ -812,9 +812,9 @@ dependencies = [
 
 [[package]]
 name = "liquid-core"
-version = "0.21.1"
+version = "0.21.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1b3bcfd8f48ba334558e4f47028dc98f9c28c68b5ec780afc33144cfa3cc9843"
+checksum = "d683508a7bb9565349c3610408188dc6c743c66d1add07097f1dbd0ebb8bc35d"
 dependencies = [
  "anymap",
  "chrono",
