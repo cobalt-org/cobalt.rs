@@ -156,15 +156,6 @@ pub fn custom_template_extensions() {
     test_with_expected("custom_template_extensions").expect("Build error");
 }
 
-#[cfg(feature = "syntax-highlight")]
-#[test]
-pub fn syntax_highlight() {
-    // Syntect isn't thread safe, for now run everything in the same test.
-    test_with_expected("syntax_highlight").expect("Build error");
-
-    test_with_expected("syntax_highlight_theme").expect("Build error");
-}
-
 #[test]
 pub fn incomplete_rss() {
     let err = test_with_expected("incomplete_rss");

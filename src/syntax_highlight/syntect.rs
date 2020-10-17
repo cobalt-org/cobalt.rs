@@ -13,8 +13,7 @@ use pulldown_cmark::Event::{self, End, Html, Start, Text};
 use syntect::easy::HighlightLines;
 use syntect::highlighting::{Theme, ThemeSet};
 use syntect::html::{
-    highlighted_html_for_string, start_highlighted_html_snippet, styled_line_to_highlighted_html,
-    IncludeBackground,
+    highlighted_html_for_string, start_highlighted_html_snippet, IncludeBackground,
 };
 use syntect::parsing::{SyntaxReference, SyntaxSet};
 
@@ -180,8 +179,15 @@ impl<'a> Iterator for DecoratedParser<'a> {
         match self.parser.next() {
             Some(Text(text)) => {
                 if let Some(ref mut h) = self.h {
-                    let highlighted = &h.highlight(&text, &SETUP.syntax_set);
-                    let html = styled_line_to_highlighted_html(highlighted, IncludeBackground::Yes);
+                    let mut html = String::new();
+                    for line in syntect::util::LinesWithEndings::from(&text) {
+                        let regions = h.highlight(line, &SETUP.syntax_set);
+                        syntect::html::append_highlighted_html_for_styled_line(
+                            &regions[..],
+                            IncludeBackground::No,
+                            &mut html,
+                        );
+                    }
                     Some(Html(pulldown_cmark::CowStr::Boxed(html.into_boxed_str())))
                 } else {
                     Some(Text(text))
@@ -266,18 +272,21 @@ mod test {
         difference::assert_diff!(CODEBLOCK_RENDERED, &output.unwrap(), "\n", 0);
     }
 
-    const MARKDOWN_RENDERED: &str = "<pre style=\"background-color:#2b303b;\">\n\
-         <span style=\"background-color:#2b303b;color:#b48ead;\">mod </span>\
-         <span style=\"background-color:#2b303b;color:#c0c5ce;\">test {\n        </span>\
-         <span style=\"background-color:#2b303b;color:#b48ead;\">fn </span>\
-         <span style=\"background-color:#2b303b;color:#8fa1b3;\">hello</span>\
-         <span style=\"background-color:#2b303b;color:#c0c5ce;\">(</span>\
-         <span style=\"background-color:#2b303b;color:#bf616a;\">arg</span>\
-         <span style=\"background-color:#2b303b;color:#c0c5ce;\">: int) -&gt; </span>\
-         <span style=\"background-color:#2b303b;color:#b48ead;\">bool </span>\
-         <span style=\"background-color:#2b303b;color:#c0c5ce;\">{\n            </span>\
-         <span style=\"background-color:#2b303b;color:#d08770;\">true\n        </span>\
-         <span style=\"background-color:#2b303b;color:#c0c5ce;\">}\n    }\n    \n</span></pre>";
+    const MARKDOWN_RENDERED: &str =
+        "<pre style=\"background-color:#2b303b;\">\n\
+         <span style=\"color:#b48ead;\">mod </span>\
+         <span style=\"color:#c0c5ce;\">test {\n\
+         </span><span style=\"color:#c0c5ce;\">        </span>\
+         <span style=\"color:#b48ead;\">fn \
+         </span><span style=\"color:#8fa1b3;\">hello</span><span style=\"color:#c0c5ce;\">(\
+         </span><span style=\"color:#bf616a;\">arg</span><span style=\"color:#c0c5ce;\">: int) -&gt; \
+         </span><span style=\"color:#b48ead;\">bool </span><span style=\"color:#c0c5ce;\">{\n\
+         </span><span style=\"color:#c0c5ce;\">            \
+         </span><span style=\"color:#d08770;\">true\n\
+         </span><span style=\"color:#c0c5ce;\">        }\n\
+         </span><span style=\"color:#c0c5ce;\">    }\n\
+         </span><span style=\"color:#c0c5ce;\">    \n\
+         </span></pre>";
 
     #[test]
     fn markdown_renders_rust() {
