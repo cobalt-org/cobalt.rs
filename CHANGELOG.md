@@ -1,3 +1,10 @@
+<a name="0.16.4"></a>
+## 0.16.4 (2020-10-17)
+
+#### Bug Fixes
+
+- Invalid syntax highlighting in some cases (#802)
+
 <a name="0.16.2"></a>
 ## 0.16.2 (2020-08-03)
 
