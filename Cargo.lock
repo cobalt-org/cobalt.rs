@@ -1409,9 +1409,9 @@ dependencies = [
 
 [[package]]
 name = "sitemap"
-version = "0.4.0"
+version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5c95c7e58b4461fec85bdd58f271bcd416ecc4d630c3ac280b60efa3421016b7"
+checksum = "7c697e1d88854f66d7d805e8b532e341661a4b8f49fab419be8e82b0cafdeb4d"
 dependencies = [
  "chrono",
  "chrono_utils",
