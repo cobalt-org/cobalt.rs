@@ -770,9 +770,9 @@ dependencies = [
 
 [[package]]
 name = "kstring"
-version = "1.0.0"
+version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c57805476d785f188945321cb408a1f240b62240d1f930096c1abcf08a00b4b4"
+checksum = "1167388385b43067bd74f967def6c93b969284f14f41e2ab6035b715d9343215"
 dependencies = [
  "serde",
 ]
