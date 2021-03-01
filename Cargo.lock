@@ -263,8 +263,8 @@ dependencies = [
  "kstring",
  "lazy_static",
  "liquid",
- "liquid-core",
- "liquid-lib",
+ "liquid-core 0.21.2",
+ "liquid-lib 0.21.1",
  "log",
  "mime_guess",
  "normalize-line-endings",
@@ -812,15 +812,15 @@ checksum = "8dd5a6d5999d9907cda8ed67bbd137d3af8085216c2ac62de5be860bd41f304a"
 
 [[package]]
 name = "liquid"
-version = "0.21.4"
+version = "0.22.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9f3d2ea80af5c2da5b2984fd98613db331dc9ad098782847b090a6a2405e5592"
+checksum = "c09860255f7e7ab76fe682f8d46c1b8b0b4c4330d64136056f650d0e2d49c144"
 dependencies = [
  "doc-comment",
  "kstring",
- "liquid-core",
- "liquid-derive",
- "liquid-lib",
+ "liquid-core 0.22.0",
+ "liquid-derive 0.22.0",
+ "liquid-lib 0.22.0",
  "serde",
 ]
 
@@ -834,7 +834,24 @@ dependencies = [
  "chrono",
  "itertools 0.9.0",
  "kstring",
- "liquid-derive",
+ "liquid-derive 0.21.0",
+ "num-traits",
+ "pest",
+ "pest_derive",
+ "serde",
+]
+
+[[package]]
+name = "liquid-core"
+version = "0.22.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "be5a88630d73ac78b46277169f92ef135fb09ad50af039f76ccfc35264796cc5"
+dependencies = [
+ "anymap",
+ "chrono",
+ "itertools 0.10.0",
+ "kstring",
+ "liquid-derive 0.22.0",
  "num-traits",
  "pest",
  "pest_derive",
@@ -853,6 +870,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "liquid-derive"
+version = "0.22.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "88408698b7c2a426811369778ed472e219888aa4934f4de69568cc5bf05c8bc9"
+dependencies = [
+ "proc-macro2",
+ "proc-quote",
+ "syn",
+]
+
+[[package]]
 name = "liquid-lib"
 version = "0.21.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -862,7 +890,23 @@ dependencies = [
  "deunicode",
  "itertools 0.9.0",
  "kstring",
- "liquid-core",
+ "liquid-core 0.21.2",
+ "once_cell",
+ "percent-encoding",
+ "regex",
+ "unicode-segmentation",
+]
+
+[[package]]
+name = "liquid-lib"
+version = "0.22.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "10c14f535f61c4263e57cd4f6ad9701b97459f026420347ed978c4ab0d2512cc"
+dependencies = [
+ "chrono",
+ "itertools 0.10.0",
+ "kstring",
+ "liquid-core 0.22.0",
  "once_cell",
  "percent-encoding",
  "regex",
