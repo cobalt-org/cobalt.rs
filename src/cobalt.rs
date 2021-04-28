@@ -15,7 +15,7 @@ use crate::cobalt_model::files;
 use crate::cobalt_model::permalink;
 use crate::cobalt_model::Collection;
 use crate::cobalt_model::{Config, SortOrder};
-use crate::document::Document;
+use crate::document::{Document, RenderContex};
 use crate::error::*;
 use crate::pagination;
 
@@ -30,6 +30,7 @@ struct Context {
     pub markdown: cobalt_model::Markdown,
     pub assets: cobalt_model::Assets,
     pub sitemap: Option<String>,
+    pub minify: bool,
 }
 
 impl Context {
@@ -45,6 +46,7 @@ impl Context {
             markdown,
             assets,
             sitemap,
+            minify,
         } = config;
 
         let pages = pages.build()?;
@@ -68,6 +70,7 @@ impl Context {
             markdown,
             assets,
             sitemap,
+            minify,
         };
         Ok(context)
     }
@@ -159,23 +162,35 @@ fn generate_doc(
         "page".into(),
         liquid::model::Value::Object(doc.attributes.clone()),
     );
+    {
+        let render_context = RenderContex {
+            parser: &context.liquid,
+            markdown: &context.markdown,
+            globals: &globals,
+            minify: context.minify,
+        };
 
-    doc.render_excerpt(&globals, &context.liquid, &context.markdown)
-        .with_context(|_| {
+        doc.render_excerpt(&render_context).with_context(|_| {
             failure::format_err!("Failed to render excerpt for {}", doc.file_path.display())
         })?;
-    doc.render_content(&globals, &context.liquid, &context.markdown)
-        .with_context(|_| {
+        doc.render_content(&render_context).with_context(|_| {
             failure::format_err!("Failed to render content for {}", doc.file_path.display())
         })?;
+    }
 
     // Refresh `page` with the `excerpt` / `content` attribute
     globals.insert(
         "page".into(),
         liquid::model::Value::Object(doc.attributes.clone()),
     );
+    let render_context = RenderContex {
+        parser: &context.liquid,
+        markdown: &context.markdown,
+        globals: &globals,
+        minify: context.minify,
+    };
     let doc_html = doc
-        .render(&globals, &context.liquid, &context.layouts)
+        .render(&render_context, &context.layouts)
         .with_context(|_| {
             failure::format_err!("Failed to render for {}", doc.file_path.display())
         })?;

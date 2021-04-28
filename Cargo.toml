@@ -55,6 +55,8 @@ mime_guess = { version = "2", optional = true }
 
 sass-rs = { version = "0.2", optional = true }
 
+html-minifier = {version="3.0", optional = true }
+
 [dependencies.syntect]
 version = "4.5.0"
 optional = true
@@ -68,7 +70,7 @@ predicates = "1.0"
 difference = "2.0"
 
 [features]
-default = ["syntax-highlight", "sass", "serve"]
+default = ["syntax-highlight", "sass", "serve", "html-minifier"]
 unstable = []
 
 serve = ["tiny_http", "notify", "mime_guess"]

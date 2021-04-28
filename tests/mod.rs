@@ -147,6 +147,11 @@ pub fn example() {
 }
 
 #[test]
+pub fn example_minified() {
+    test_with_expected("example_minified").expect("Build error");
+}
+
+#[test]
 pub fn hidden_posts_folder() {
     test_with_expected("hidden_posts_folder").expect("Build error");
 }

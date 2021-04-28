@@ -265,6 +265,7 @@ pub struct ConfigBuilder {
     #[serde(skip)]
     pub includes_dir: &'static str,
     pub assets: AssetsConfig,
+    pub minify: bool,
 }
 
 impl Default for ConfigBuilder {
@@ -285,6 +286,7 @@ impl Default for ConfigBuilder {
             layouts_dir: "_layouts",
             includes_dir: "_includes",
             assets: AssetsConfig::default(),
+            minify: false,
         }
     }
 }
@@ -349,6 +351,7 @@ impl ConfigBuilder {
             layouts_dir,
             includes_dir,
             assets,
+            minify,
         } = self;
 
         if include_drafts {
@@ -419,6 +422,7 @@ impl ConfigBuilder {
             markdown,
             assets,
             sitemap,
+            minify,
         };
 
         Ok(config)
@@ -446,6 +450,7 @@ pub struct Config {
     pub markdown: mark::MarkdownBuilder,
     pub assets: assets::AssetsBuilder,
     pub sitemap: Option<String>,
+    pub minify: bool,
 }
 
 impl Default for Config {
