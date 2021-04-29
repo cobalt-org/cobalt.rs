@@ -1,0 +1,24 @@
+version: 2
+updates:
+- package-ecosystem: cargo
+  directory: "/"
+  schedule:
+    interval: monthly
+    time: "07:00"
+  open-pull-requests-limit: 10
+  ignore:
+  - dependency-name: clippy
+    versions:
+    - "< 1, > 0.0.192"
+  - dependency-name: hyper
+    versions:
+    - ">= 0.12.a, < 0.13"
+  - dependency-name: regex
+    versions:
+    - "< 1.0.4, >= 1.0.3.a"
+  - dependency-name: walkdir
+    versions:
+    - "< 2.2.7, >= 2.2.6.a"
+  - dependency-name: serde_yaml
+    versions:
+    - 0.8.15
