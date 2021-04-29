@@ -1,1 +1,1 @@
-pub use liquid::model::scalar::DateTime;
+pub use liquid::model::DateTime;

@@ -69,7 +69,7 @@ impl Renderable for CodeBlock {
     fn render_to(
         &self,
         writer: &mut dyn Write,
-        _context: &mut Runtime,
+        _context: &dyn Runtime,
     ) -> Result<(), liquid_core::Error> {
         if let Some(ref lang) = self.lang {
             write!(

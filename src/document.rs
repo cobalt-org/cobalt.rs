@@ -152,7 +152,7 @@ fn document_attributes(
     if let Some(ref published_date) = front.published_date {
         attributes.insert(
             "published_date".into(),
-            Value::scalar(liquid::model::scalar::DateTime::from(*published_date)),
+            Value::scalar(liquid::model::DateTime::from(*published_date)),
         );
     }
 
@@ -393,7 +393,7 @@ impl Document {
                 kstring::KStringCow::from_static("page").into(),
                 kstring::KStringCow::from_static("content").into(),
             ];
-            let content_html = liquid::model::find::try_find(globals, path)
+            let content_html = liquid::model::try_find(globals, path)
                 .ok_or_else(|| failure::err_msg("Internal error: page isn't in globals"))?
                 .render()
                 .to_string();

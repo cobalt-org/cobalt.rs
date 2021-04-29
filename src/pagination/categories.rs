@@ -41,8 +41,8 @@ where
     S: Iterator<Item = &'a dyn liquid::ValueView>,
 {
     cur_path
-        .map(liquid::model::value::ValueViewCmp::new)
-        .partial_cmp(seek.map(liquid::model::value::ValueViewCmp::new))
+        .map(liquid::model::ValueViewCmp::new)
+        .partial_cmp(seek.map(liquid::model::ValueViewCmp::new))
         .expect("Arrays of same hierarchy level should be fully comparable")
 }
 
