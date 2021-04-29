@@ -24,7 +24,7 @@ doc = false
 clap = "2.33"
 kstring = "1.0"
 liquid = "0.21.4"
-liquid-core = "0.21.2"
+liquid-core = "0.22.0"
 liquid-lib = { version = "0.21.0", features = ["jekyll", "shopify", "extra"] }
 deunicode = "1.1.1"
 walkdir = "2.2"
