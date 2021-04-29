@@ -46,11 +46,14 @@ pub trait Front:
     }
 
     fn to_string(&self) -> Result<String> {
-        let mut converted = serde_yaml::to_string(self)?;
-        converted.drain(..4);
-        if converted == "{}" {
-            converted.clear();
-        }
+        let converted = serde_yaml::to_string(self)?;
+        println!("Before: {:?}", converted);
+        let subset = converted
+            .strip_prefix("---")
+            .unwrap_or_else(|| converted.as_str())
+            .trim();
+        let converted = if subset == "{}" { "" } else { subset }.to_owned();
+        println!("After: {:?}", converted);
         Ok(converted)
     }
 }

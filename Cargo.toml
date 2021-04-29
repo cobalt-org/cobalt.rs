@@ -23,9 +23,9 @@ doc = false
 [dependencies]
 clap = "2.33"
 kstring = "1.0"
-liquid = "0.21.4"
-liquid-core = "0.21.2"
-liquid-lib = { version = "0.21.0", features = ["jekyll", "shopify", "extra"] }
+liquid = "0.22"
+liquid-core = "0.22"
+liquid-lib = { version = "0.22", features = ["jekyll", "shopify", "extra"] }
 deunicode = "1.1.1"
 walkdir = "2.2"
 chrono = "0.4"
@@ -49,7 +49,7 @@ normalize-line-endings = "0.3.0"
 sitemap = "0.4"
 open = "1.4.0"
 
-tiny_http = { version = "0.7.0", optional = true }
+tiny_http = { version = "0.8.0", optional = true }
 notify = { version = "4", optional = true }
 mime_guess = { version = "2", optional = true }
 
