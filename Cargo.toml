@@ -27,7 +27,7 @@ liquid = "0.21.4"
 liquid-core = "0.21.2"
 liquid-lib = { version = "0.21.0", features = ["jekyll", "shopify", "extra"] }
 deunicode = "1.1.1"
-walkdir = "2.2"
+walkdir = "2.3"
 chrono = "0.4"
 log = "0.4"
 env_logger = "0.8"

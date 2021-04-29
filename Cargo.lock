@@ -282,7 +282,7 @@ dependencies = [
  "syntect",
  "tiny_http",
  "toml",
- "walkdir 2.3.1",
+ "walkdir 2.3.2",
 ]
 
 [[package]]
@@ -621,7 +621,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d9db17aec586697a93219b19726b5b68307eba92898c34b170857343fe67c99d"
 dependencies = [
  "ignore",
- "walkdir 2.3.1",
+ "walkdir 2.3.2",
 ]
 
 [[package]]
@@ -679,7 +679,7 @@ dependencies = [
  "regex",
  "same-file",
  "thread_local",
- "walkdir 2.3.1",
+ "walkdir 2.3.2",
  "winapi-util",
 ]
 
@@ -995,7 +995,7 @@ dependencies = [
  "libc",
  "mio",
  "mio-extras",
- "walkdir 2.3.1",
+ "walkdir 2.3.2",
  "winapi 0.3.9",
 ]
 
@@ -1487,7 +1487,7 @@ dependencies = [
  "serde",
  "serde_derive",
  "serde_json",
- "walkdir 2.3.1",
+ "walkdir 2.3.2",
 ]
 
 [[package]]
@@ -1676,9 +1676,9 @@ dependencies = [
 
 [[package]]
 name = "walkdir"
-version = "2.3.1"
+version = "2.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "777182bc735b6424e1a57516d35ed72cb8019d85c8c9bf536dccb3445c1a2f7d"
+checksum = "808cf2735cd4b6866113f648b791c6adc5714537bc222d9347bb203386ffda56"
 dependencies = [
  "same-file",
  "winapi 0.3.9",
