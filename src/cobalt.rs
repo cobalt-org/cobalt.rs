@@ -116,7 +116,9 @@ pub fn build(config: Config) -> Result<()> {
 
     // copy all remaining files in the source to the destination
     // compile SASS along the way
-    context.assets.populate(&context.destination)?;
+    context
+        .assets
+        .populate(&context.destination, context.minify)?;
 
     Ok(())
 }
