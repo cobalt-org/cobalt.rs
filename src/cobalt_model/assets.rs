@@ -1,7 +1,7 @@
 use std::path;
 
-use super::files;
 use super::sass;
+use super::{files, Minify};
 
 use crate::error::*;
 use failure::ResultExt;
@@ -57,11 +57,11 @@ impl Assets {
         &self.files
     }
 
-    pub fn populate<P: AsRef<path::Path>>(&self, dest: P, minify: bool) -> Result<()> {
+    pub fn populate<P: AsRef<path::Path>>(&self, dest: P, minify: &Minify) -> Result<()> {
         self.populate_path(dest.as_ref(), minify)
     }
 
-    fn populate_path(&self, dest: &path::Path, minify: bool) -> Result<()> {
+    fn populate_path(&self, dest: &path::Path, minify: &Minify) -> Result<()> {
         for file_path in self.files() {
             let rel_src = file_path
                 .strip_prefix(self.source())
@@ -71,9 +71,9 @@ impl Assets {
                 self.sass
                     .compile_file(self.source(), dest, file_path.as_path())?;
             } else if file_path.extension() == Some(OsStr::new("js")) {
-                copy_and_minify_js(file_path.as_path(), dest_path.as_path(), minify)?;
+                copy_and_minify_js(file_path.as_path(), dest_path.as_path(), minify.js)?;
             } else if file_path.extension() == Some(OsStr::new("css")) {
-                copy_and_minify_css(file_path.as_path(), dest_path.as_path(), minify)?;
+                copy_and_minify_css(file_path.as_path(), dest_path.as_path(), minify.css)?;
             } else {
                 files::copy_file(&file_path, dest_path.as_path())?;
             }

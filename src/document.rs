@@ -18,13 +18,14 @@ use crate::cobalt_model;
 use crate::cobalt_model::files;
 use crate::cobalt_model::permalink;
 use crate::cobalt_model::slug;
+use crate::cobalt_model::Minify;
 use crate::error::*;
 
 pub struct RenderContex<'a> {
     pub parser: &'a cobalt_model::Liquid,
     pub markdown: &'a cobalt_model::Markdown,
     pub globals: &'a Object,
-    pub minify: bool,
+    pub minify: Minify,
 }
 
 #[cfg(not(feature = "html-minifier"))]
@@ -34,7 +35,7 @@ fn minify_if_enabled(html: String, _context: &RenderContex) -> Result<String> {
 
 #[cfg(feature = "html-minifier")]
 fn minify_if_enabled(html: String, context: &RenderContex) -> Result<String> {
-    if context.minify {
+    if context.minify.html {
         Ok(html_minifier::minify(html)?)
     } else {
         Ok(html)

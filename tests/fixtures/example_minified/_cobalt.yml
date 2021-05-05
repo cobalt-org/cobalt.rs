@@ -1,1 +1,4 @@
-minify: true
+minify: 
+  html: true
+  css: true
+  js: true

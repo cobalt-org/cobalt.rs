@@ -14,7 +14,7 @@ use crate::cobalt_model;
 use crate::cobalt_model::files;
 use crate::cobalt_model::permalink;
 use crate::cobalt_model::Collection;
-use crate::cobalt_model::{Config, SortOrder};
+use crate::cobalt_model::{Config, Minify, SortOrder};
 use crate::document::{Document, RenderContex};
 use crate::error::*;
 use crate::pagination;
@@ -30,7 +30,7 @@ struct Context {
     pub markdown: cobalt_model::Markdown,
     pub assets: cobalt_model::Assets,
     pub sitemap: Option<String>,
-    pub minify: bool,
+    pub minify: Minify,
 }
 
 impl Context {
@@ -118,7 +118,7 @@ pub fn build(config: Config) -> Result<()> {
     // compile SASS along the way
     context
         .assets
-        .populate(&context.destination, context.minify)?;
+        .populate(&context.destination, &context.minify)?;
 
     Ok(())
 }
@@ -169,7 +169,7 @@ fn generate_doc(
             parser: &context.liquid,
             markdown: &context.markdown,
             globals: &globals,
-            minify: context.minify,
+            minify: context.minify.clone(),
         };
 
         doc.render_excerpt(&render_context).with_context(|_| {
@@ -189,7 +189,7 @@ fn generate_doc(
         parser: &context.liquid,
         markdown: &context.markdown,
         globals: &globals,
-        minify: context.minify,
+        minify: context.minify.clone(),
     };
     let doc_html = doc
         .render(&render_context, &context.layouts)
