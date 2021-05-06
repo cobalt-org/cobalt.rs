@@ -146,6 +146,7 @@ pub fn example() {
     test_with_expected("example").expect("Build error");
 }
 
+#[cfg(feature = "html-minifier")]
 #[test]
 pub fn example_minified() {
     test_with_expected("example_minified").expect("Build error");
