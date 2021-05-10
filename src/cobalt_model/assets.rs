@@ -69,7 +69,7 @@ impl Assets {
             let dest_path = dest.join(rel_src);
             if sass::is_sass_file(file_path.as_path()) {
                 self.sass
-                    .compile_file(self.source(), dest, file_path.as_path())?;
+                    .compile_file(self.source(), dest, file_path.as_path(), minify)?;
             } else if file_path.extension() == Some(OsStr::new("js")) {
                 copy_and_minify_js(file_path.as_path(), dest_path.as_path(), minify.js)?;
             } else if file_path.extension() == Some(OsStr::new("css")) {
@@ -111,10 +111,6 @@ fn copy_and_minify_css(src_file: &path::Path, dest_file: &path::Path, minify: bo
 
 #[cfg(feature = "html-minifier")]
 fn copy_and_minify_js(src_file: &path::Path, dest_file: &path::Path, minify: bool) -> Result<()> {
-    debug!(
-        "pre Copying and minifying {:?} to {:?}",
-        src_file, dest_file
-    );
     if minify {
         use html_minifier::js::minify;
         // create target directories if any exist

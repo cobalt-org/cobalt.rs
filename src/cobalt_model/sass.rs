@@ -5,6 +5,7 @@ use std::path;
 use sass_rs;
 
 use super::files;
+use crate::cobalt_model::Minify;
 use crate::error::*;
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Hash, Serialize, Deserialize)]
@@ -58,8 +59,9 @@ impl SassCompiler {
         source: S,
         dest: D,
         file_path: F,
+        minify: &Minify,
     ) -> Result<()> {
-        self.compile_sass_internal(source.as_ref(), dest.as_ref(), file_path.as_ref())
+        self.compile_sass_internal(source.as_ref(), dest.as_ref(), file_path.as_ref(), minify)
     }
 
     #[cfg(feature = "sass")]
@@ -68,6 +70,7 @@ impl SassCompiler {
         source: &path::Path,
         dest: &path::Path,
         file_path: &path::Path,
+        minify: &Minify,
     ) -> Result<()> {
         let mut sass_opts = sass_rs::Options::default();
         sass_opts.include_paths = self.import_dir.iter().cloned().collect();
@@ -85,6 +88,20 @@ impl SassCompiler {
         let mut dest_file = dest.join(rel_src);
         dest_file.set_extension("css");
 
+        #[cfg(feature = "html-minifier")]
+        let content = if minify.css {
+            use html_minifier::css::minify;
+            minify(&content).map_err(|e| {
+                failure::format_err!(
+                    "Could not minify saas file {} error {}",
+                    source.to_string_lossy(),
+                    e
+                )
+            })?
+        } else {
+            content
+        };
+
         files::write_document_file(content, dest_file)
     }
 
@@ -94,6 +111,7 @@ impl SassCompiler {
         source: &path::Path,
         dest: &path::Path,
         file_path: &path::Path,
+        minify: &Minify,
     ) -> Result<()> {
         let rel_src = file_path
             .strip_prefix(source)
