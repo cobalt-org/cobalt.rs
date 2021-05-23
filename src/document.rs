@@ -29,13 +29,14 @@ pub struct RenderContex<'a> {
 }
 
 #[cfg(not(feature = "html-minifier"))]
-fn minify_if_enabled(html: String, _context: &RenderContex) -> Result<String> {
+fn minify_if_enabled(html: String, _context: &RenderContex, _file_path: &Path) -> Result<String> {
     Ok(html)
 }
 
 #[cfg(feature = "html-minifier")]
-fn minify_if_enabled(html: String, context: &RenderContex) -> Result<String> {
-    if context.minify.html {
+fn minify_if_enabled(html: String, context: &RenderContex, file_path: &Path) -> Result<String> {
+    let extension = file_path.extension().unwrap_or_else(|| Default::default());
+    if context.minify.html && (extension == "html" || extension == "htm") {
         Ok(html_minifier::minify(html)?)
     } else {
         Ok(html)
@@ -329,7 +330,7 @@ impl Document {
             cobalt_model::SourceFormat::Markdown => context.markdown.parse(&html)?,
         };
 
-        let html = minify_if_enabled(html, context)?;
+        let html = minify_if_enabled(html, context, &self.file_path)?;
         Ok(html)
     }
 
@@ -395,7 +396,7 @@ impl Document {
             let content_html = template
                 .render(context.globals)
                 .with_context(|_| failure::format_err!("Failed to render layout {:?}", layout))?;
-            let content_html = minify_if_enabled(content_html, context)?;
+            let content_html = minify_if_enabled(content_html, context, &self.file_path)?;
             Ok(content_html)
         } else {
             let path = &[
@@ -407,7 +408,7 @@ impl Document {
                 .render()
                 .to_string();
 
-            let content_html = minify_if_enabled(content_html, context)?;
+            let content_html = minify_if_enabled(content_html, context, &self.file_path)?;
             Ok(content_html)
         }
     }
