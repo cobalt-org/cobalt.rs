@@ -18,7 +18,30 @@ use crate::cobalt_model;
 use crate::cobalt_model::files;
 use crate::cobalt_model::permalink;
 use crate::cobalt_model::slug;
+use crate::cobalt_model::Minify;
 use crate::error::*;
+
+pub struct RenderContex<'a> {
+    pub parser: &'a cobalt_model::Liquid,
+    pub markdown: &'a cobalt_model::Markdown,
+    pub globals: &'a Object,
+    pub minify: Minify,
+}
+
+#[cfg(not(feature = "html-minifier"))]
+fn minify_if_enabled(html: String, _context: &RenderContex, _file_path: &Path) -> Result<String> {
+    Ok(html)
+}
+
+#[cfg(feature = "html-minifier")]
+fn minify_if_enabled(html: String, context: &RenderContex, file_path: &Path) -> Result<String> {
+    let extension = file_path.extension().unwrap_or_else(|| Default::default());
+    if context.minify.html && (extension == "html" || extension == "htm") {
+        Ok(html_minifier::minify(html)?)
+    } else {
+        Ok(html)
+    }
+}
 
 /// Convert the source file's relative path into a format useful for generating permalinks that
 /// mirror the source directory hierarchy.
@@ -298,20 +321,16 @@ impl Document {
     /// Takes `content` string and returns rendered HTML. This function doesn't
     /// take `"extends"` attribute into account. This function can be used for
     /// rendering content or excerpt.
-    fn render_html(
-        &self,
-        content: &str,
-        globals: &Object,
-        parser: &cobalt_model::Liquid,
-        markdown: &cobalt_model::Markdown,
-    ) -> Result<String> {
-        let template = parser.parse(content)?;
-        let html = template.render(globals)?;
+    fn render_html(&self, content: &str, context: &RenderContex) -> Result<String> {
+        let template = context.parser.parse(content)?;
+        let html = template.render(context.globals)?;
 
         let html = match self.front.format {
             cobalt_model::SourceFormat::Raw => html,
-            cobalt_model::SourceFormat::Markdown => markdown.parse(&html)?,
+            cobalt_model::SourceFormat::Markdown => context.markdown.parse(&html)?,
         };
+
+        let html = minify_if_enabled(html, context, &self.file_path)?;
         Ok(html)
     }
 
@@ -321,14 +340,9 @@ impl Document {
     /// given, or extracted from the content, if `excerpt_separator` is not
     /// empty. When neither condition applies, the excerpt is set to the `Nil`
     /// value.
-    pub fn render_excerpt(
-        &mut self,
-        globals: &Object,
-        parser: &cobalt_model::Liquid,
-        markdown: &cobalt_model::Markdown,
-    ) -> Result<()> {
+    pub fn render_excerpt(&mut self, context: &RenderContex) -> Result<()> {
         let value = if let Some(excerpt_str) = self.front.excerpt.as_ref() {
-            let excerpt = self.render_html(excerpt_str, globals, parser, markdown)?;
+            let excerpt = self.render_html(excerpt_str, context)?;
             Value::scalar(excerpt)
         } else if self.front.excerpt_separator.is_empty() {
             Value::Nil
@@ -338,7 +352,7 @@ impl Document {
                 self.front.format,
                 &self.front.excerpt_separator,
             );
-            let excerpt = self.render_html(&excerpt, globals, parser, markdown)?;
+            let excerpt = self.render_html(&excerpt, context)?;
             Value::scalar(excerpt)
         };
 
@@ -349,13 +363,8 @@ impl Document {
     /// Renders the content and adds it to attributes of the document.
     ///
     /// When we say "content" we mean only this document without extended layout.
-    pub fn render_content(
-        &mut self,
-        globals: &Object,
-        parser: &cobalt_model::Liquid,
-        markdown: &cobalt_model::Markdown,
-    ) -> Result<()> {
-        let content_html = self.render_html(&self.content, globals, parser, markdown)?;
+    pub fn render_content(&mut self, context: &RenderContex) -> Result<()> {
+        let content_html = self.render_html(&self.content, context)?;
         self.attributes
             .insert("content".into(), Value::scalar(content_html));
         Ok(())
@@ -368,8 +377,7 @@ impl Document {
     /// * layout may be inserted to layouts cache
     pub fn render(
         &mut self,
-        globals: &Object,
-        parser: &cobalt_model::Liquid,
+        context: &RenderContex,
         layouts: &HashMap<String, String>,
     ) -> Result<String> {
         if let Some(ref layout) = self.front.layout {
@@ -381,23 +389,26 @@ impl Document {
                 )
             })?;
 
-            let template = parser
+            let template = context
+                .parser
                 .parse(layout_data_ref)
                 .with_context(|_| failure::format_err!("Failed to parse layout {:?}", layout))?;
             let content_html = template
-                .render(globals)
+                .render(context.globals)
                 .with_context(|_| failure::format_err!("Failed to render layout {:?}", layout))?;
+            let content_html = minify_if_enabled(content_html, context, &self.file_path)?;
             Ok(content_html)
         } else {
             let path = &[
                 kstring::KStringCow::from_static("page").into(),
                 kstring::KStringCow::from_static("content").into(),
             ];
-            let content_html = liquid::model::try_find(globals, path)
+            let content_html = liquid::model::try_find(context.globals, path)
                 .ok_or_else(|| failure::err_msg("Internal error: page isn't in globals"))?
                 .render()
                 .to_string();
 
+            let content_html = minify_if_enabled(content_html, context, &self.file_path)?;
             Ok(content_html)
         }
     }

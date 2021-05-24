@@ -245,6 +245,24 @@ impl AssetsConfig {
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields, default)]
+pub struct Minify {
+    pub html: bool,
+    pub css: bool,
+    pub js: bool,
+}
+
+impl Default for Minify {
+    fn default() -> Self {
+        Minify {
+            html: false,
+            css: false,
+            js: false,
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields, default)]
 pub struct ConfigBuilder {
     #[serde(skip)]
     pub root: path::PathBuf,
@@ -265,6 +283,7 @@ pub struct ConfigBuilder {
     #[serde(skip)]
     pub includes_dir: &'static str,
     pub assets: AssetsConfig,
+    pub minify: Minify,
 }
 
 impl Default for ConfigBuilder {
@@ -285,6 +304,7 @@ impl Default for ConfigBuilder {
             layouts_dir: "_layouts",
             includes_dir: "_includes",
             assets: AssetsConfig::default(),
+            minify: Minify::default(),
         }
     }
 }
@@ -349,6 +369,7 @@ impl ConfigBuilder {
             layouts_dir,
             includes_dir,
             assets,
+            minify,
         } = self;
 
         if include_drafts {
@@ -419,6 +440,7 @@ impl ConfigBuilder {
             markdown,
             assets,
             sitemap,
+            minify,
         };
 
         Ok(config)
@@ -446,6 +468,7 @@ pub struct Config {
     pub markdown: mark::MarkdownBuilder,
     pub assets: assets::AssetsBuilder,
     pub sitemap: Option<String>,
+    pub minify: Minify,
 }
 
 impl Default for Config {
