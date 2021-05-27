@@ -28,7 +28,7 @@ pub struct Frontmatter {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub excerpt_separator: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub published_date: Option<datetime::DateTime>,
+    pub published_date: Option<DateTime>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub format: Option<SourceFormat>,
     #[serde(skip_serializing_if = "Option::is_none")]

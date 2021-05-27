@@ -1,7 +1,6 @@
 mod assets;
 mod collection;
 mod config;
-mod datetime;
 mod document;
 mod frontmatter;
 mod pagination;
@@ -12,11 +11,11 @@ pub mod path;
 pub use self::assets::*;
 pub use self::collection::*;
 pub use self::config::*;
-pub use self::datetime::*;
 pub use self::document::*;
 pub use self::frontmatter::*;
 pub use self::pagination::*;
 pub use self::site::*;
+pub use liquid_core::model::DateTime;
 
 type Status = status::Status;
 type Result<T, E = Status> = std::result::Result<T, E>;
