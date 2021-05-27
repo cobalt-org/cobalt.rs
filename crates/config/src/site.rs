@@ -8,7 +8,7 @@ pub struct Site {
     pub description: Option<String>,
     pub base_url: Option<String>,
     pub sitemap: Option<String>,
-    pub data: Option<liquid_value::Object>,
+    pub data: Option<liquid_core::Object>,
     #[serde(skip)]
     pub data_dir: &'static str,
 }

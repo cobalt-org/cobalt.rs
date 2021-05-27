@@ -39,8 +39,8 @@ pub struct Frontmatter {
     pub is_draft: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub weight: Option<i32>,
-    #[serde(skip_serializing_if = "liquid_value::Object::is_empty")]
-    pub data: liquid_value::Object,
+    #[serde(skip_serializing_if = "liquid_core::Object::is_empty")]
+    pub data: liquid_core::Object,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub pagination: Option<Pagination>,
     // Controlled by where the file is found.  We might allow control over the type at a later
@@ -213,11 +213,11 @@ impl Default for SourceFormat {
     }
 }
 
-/// Shallow merge of `liquid_value::Object`'s
+/// Shallow merge of `liquid_core::Object`'s
 fn merge_objects(
-    mut primary: liquid_value::Object,
-    secondary: &liquid_value::Object,
-) -> liquid_value::Object {
+    mut primary: liquid_core::Object,
+    secondary: &liquid_core::Object,
+) -> liquid_core::Object {
     for (key, value) in secondary {
         primary
             .entry(key.to_owned())
