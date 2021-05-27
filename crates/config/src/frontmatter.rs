@@ -125,7 +125,7 @@ impl Frontmatter {
             categories: categories.or_else(|| other.categories.clone()),
             tags: tags.or_else(|| other.tags.clone()),
             excerpt_separator: excerpt_separator.or_else(|| other.excerpt_separator.clone()),
-            published_date: published_date.or_else(|| other.published_date.clone()),
+            published_date: published_date.or_else(|| other.published_date),
             format: format.or(other.format),
             templated: templated.or(other.templated),
             layout: layout.or_else(|| other.layout.clone()),
@@ -141,7 +141,7 @@ impl Frontmatter {
 impl fmt::Display for Frontmatter {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let converted = serde_yaml::to_string(self).ok();
-        if converted.as_ref().map(|s| s.as_str()) == Some("---\n{}") {
+        if converted.as_deref() == Some("---\n{}") {
             Ok(())
         } else {
             write!(f, "{}", &converted.unwrap()[4..])
