@@ -1,26 +1,31 @@
-<a name="0.16.4"></a>
-## 0.16.4 (2020-10-17)
+# Change Log
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](http://keepachangelog.com/)
+and this project adheres to [Semantic Versioning](http://semver.org/).
+
+<!-- next-header -->
+## [Unreleased] - ReleaseDate
+
+## 0.16.4 - 2020-10-17
 
 #### Bug Fixes
 
 - Invalid syntax highlighting in some cases (#802)
 
-<a name="0.16.2"></a>
-## 0.16.2 (2020-08-03)
+## 0.16.2 - 2020-08-03
 
 #### Bug Fixes
 
 - **new**: Create a valid `published_date`
 
-<a name="0.16.1"></a>
-## 0.16.1 (2020-07-28)
+## 0.16.1 - 2020-07-28
 
 #### Bug Fixes
 
 - **serv**: Provide content type for 404
 
-<a name="0.16.0"></a>
-## 0.16.0 (2020-07-15)
+## 0.16.0 - 2020-07-15
 
 #### Features
 
@@ -36,37 +41,32 @@
   than Jekyll-style. It takes an expression rather than a bare-word for
   the path to include.
 
-<a name="0.15.11"></a>
-## 0.15.11 (2020-03-09)
+## 0.15.11 - 2020-03-09
 
 #### Features
 
 * Support opening the page in the browser with `cobalt serve --open`.
 
-<a name="0.15.10"></a>
-## 0.15.10 (2020-02-24)
+## 0.15.10 - 2020-02-24
 
 #### Bug Fixes
 
 * Report mime-type with `cobalt serve` (closes [#732](https://github.com/cobalt-org/cobalt.rs/issues/732)).
 * Fix RSS content when excerpts are disabled (closes [#724](https://github.com/cobalt-org/cobalt.rs/issues/724)).
 
-<a name="0.15.9"></a>
-## 0.15.9 (2020-02-11)
+## 0.15.9 - 2020-02-11
 
 #### Bug Fixes
 
 * Provide a pre-built windows binary
 
-<a name="0.15.7"></a>
-## 0.15.7 (2020-02-10)
+## 0.15.7 - 2020-02-10
 
 #### Bug Fixes
 
 * Fixed "ctrl-c" during `cobalt serve` so that it will not hang.
 
-<a name="0.15.6"></a>
-## 0.15.6 (2019-11-28)
+## 0.15.6 - 2019-11-28
 
 
 #### Bug Fixes
@@ -76,8 +76,7 @@
 
 
 
-<a name="0.15.5"></a>
-## 0.15.5 (2019-11-27)
+## 0.15.5 - 2019-11-27
 
 
 #### Bug Fixes
@@ -99,8 +98,7 @@
 
 
 
-<a name="0.15.3"></a>
-## 0.15.3 (2019-01-31)
+## 0.15.3 - 2019-01-31
 
 
 #### Bug Fixes
@@ -109,8 +107,7 @@
 
 
 
-<a name="0.15.2"></a>
-## 0.15.2 (2019-01-29)
+## 0.15.2 - 2019-01-29
 
 
 #### Features
@@ -120,8 +117,7 @@
 
 
 
-<a name="0.15.1"></a>
-## 0.15.1 (2019-01-24)
+## 0.15.1 - 2019-01-24
 
 
 #### Features
@@ -134,8 +130,7 @@
 
 
 
-<a name="0.15.0"></a>
-## 0.15.0 (2018-12-28)
+## 0.15.0 - 2018-12-28
 
 
 #### Bug Fixes
@@ -157,8 +152,7 @@
 
 
 
-<a name="0.14.0"></a>
-## 0.14.0 (2018-11-18)
+## 0.14.0 - 2018-11-18
 
 
 #### Performance
@@ -191,8 +185,7 @@
   * `for` looping over a range is now inclusive to align with shopify liquid
   * deeply nested array indexes work again (`a.b[0]`)
 
-<a name="0.13.2"></a>
-## 0.13.2 (2018-10-05)
+## 0.13.2 - 2018-10-05
 
 
 #### Features
@@ -201,8 +194,7 @@
 
 
 
-<a name="0.13.0"></a>
-## 0.13.0 (2018-10-04)
+## 0.13.0 - 2018-10-04
 
 
 #### Features
@@ -215,8 +207,7 @@
 
 
 
-<a name="0.12.2"></a>
-## 0.12.2 (2018-07-21)
+## 0.12.2 - 2018-07-21
 
 
 #### Features
@@ -228,14 +219,12 @@
 
 
 
-<a name="0.12.1"></a>
-## 0.12.1 (2018-03-24)
+## 0.12.1 - 2018-03-24
 
 No user-visible change; just working around CI problems.
 
 
-<a name="0.12.0"></a>
-## 0.12.0 (2018-03-22)
+## 0.12.0 - 2018-03-22
 
 This release drops support for migrating from pre-0.11.  Please use 0.11 to migrate first.
 
@@ -285,8 +274,7 @@ This release drops support for migrating from pre-0.11.  Please use 0.11 to migr
 * **config**: Bug fixes with `ignore` ([0ed5247](https://github.com/cobalt-org/cobalt.rs/commit/0ed5247e896b9b152ef3f24196e49e499fb5ddae))
 
 
-<a name="0.11.1"></a>
-## 0.11.1 (2018-01-10)
+## 0.11.1 - 2018-01-10
 
 
 #### Features
@@ -295,8 +283,7 @@ This release drops support for migrating from pre-0.11.  Please use 0.11 to migr
 
 
 
-<a name="0.11.0"></a>
-## 0.11.0 (2018-01-09)
+## 0.11.0 - 2018-01-09
 
 This release focused on unleashing a lot of breaking changes that have been
 stacking up for a while which also expose a lot of features that have been
@@ -363,8 +350,7 @@ this.
 
 
 
-<a name="0.10.0"></a>
-## 0.10.0 (2018-01-04)
+## 0.10.0 - 2018-01-04
 
 
 #### Features
@@ -384,8 +370,7 @@ this.
 
 * **error:**  Identify layout errors ([0ec3a3d0](https://github.com/cobalt-org/cobalt.rs/commit/0ec3a3d0fbab0d51e20304d3e1a5726e987e36da))
 
-<a name="0.9.0"></a>
-## 0.9.0 (2017-11-30)
+## 0.9.0 - 2017-11-30
 
 
 #### Features
@@ -398,8 +383,7 @@ this.
 
 
 
-<a name="0.8.0"></a>
-## 0.8.0 (2017-11-09)
+## 0.8.0 - 2017-11-09
 
 
 #### Bug Fixes
@@ -453,8 +437,7 @@ this.
 
 
 
-<a name="0.7.5"></a>
-## 0.7.5 (2017-10-22)
+## 0.7.5 - 2017-10-22
 
 
 #### Bug Fixes
@@ -464,8 +447,7 @@ this.
 
 
 
-<a name="0.7.4"></a>
-## 0.7.4 (2017-10-21)
+## 0.7.4 - 2017-10-21
 
 
 #### Bug Fixes
@@ -478,8 +460,7 @@ this.
 * **data-files:**  Add data file support ([bb2d7c0f](https://github.com/cobalt-org/cobalt.rs/commit/bb2d7c0f3b841a6432bb68f5ccff83d8fe40050e), closes [#256](https://github.com/cobalt-org/cobalt.rs/issues/256))
 * **scss:**  Implement compiling of SCSS files ([76b8d8ae](https://github.com/cobalt-org/cobalt.rs/commit/76b8d8ae665d597151a5386d07bebcb2418a74e6))
 
-<a name="0.7.3"></a>
-## 0.7.3 (2017-10-05)
+## 0.7.3 - 2017-10-05
 
 #### Breaking Changes
 
@@ -501,7 +482,7 @@ this.
 * **watch:**  Ignore dest rather than rebuild ([fce89368](https://github.com/cobalt-org/cobalt.rs/commit/fce8936800eb651e4234293df805a675f2a6fd0b), closes [#170](https://github.com/cobalt-org/cobalt.rs/issues/170))
 
 
-## 0.7.2 (2017-07-04)
+## 0.7.2 - 2017-07-04
 
 #### Bug Fixes
 
@@ -509,7 +490,7 @@ this.
 
 
 
-## 0.7.1 (2017-06-25)
+## 0.7.1 - 2017-06-25
 
 #### Bug Fixes
 
@@ -517,7 +498,7 @@ this.
   *  Show all build failures, not just first ([52916cd8](https://github.com/cobalt-org/cobalt.rs/commit/52916cd8b448e84c691e4d0517b53b287ff56efb))
   *  Re-enable Stable builds on Linux ([24f3b209](https://github.com/cobalt-org/cobalt.rs/commit/24f3b2093580b26a0aef5c9ed81fb53f6fc614d7))
 
-## 0.7.0 (2017-06-24)
+## 0.7.0 - 2017-06-24
 
 #### Bug Fixes
 
@@ -575,7 +556,7 @@ this.
 - Added `cobalt watch` ([@LucioFranco][])
 - Added `cobalt new` ([@LucioFranco][])
 - Added `cobalt build --import` ([@LucioFranco][])
-- Moved from _posts to posts ([@johannhof][])
+- Moved from `_posts` to `posts` ([@johannhof][])
 - Ignore underscored directories by default ([@johannhof][])
 - Added an `ignore` attribute to .cobalt.yml ([@jespino][])
 - Implemented custom paths (permalinks) ([@johannhof][])
@@ -594,3 +575,6 @@ this.
 [@nott]: https://github.com/nott
 [@rjgoldsborough]: http://github.com/rjgoldsborough
 [@tak1n]: https://github.com/tak1n
+
+<!-- next-url -->
+[Unreleased]: https://github.com/cobalt-org/cobalt.rs/compare/v0.16.4...HEAD
