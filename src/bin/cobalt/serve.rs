@@ -179,6 +179,14 @@ fn watch(config: &cobalt_model::Config) -> Result<()> {
         .canonicalize()
         .with_context(|_| failure::err_msg("Failed in processing source"))?;
 
+    // Also canonicalize the destination folder. In particular for Windows, notify-rs
+    // generates the absolute path by prepending the above source path.
+    // On Windows canonicalize() adds a \\?\ to the start of the path.
+    let destination = config
+        .destination
+        .canonicalize()
+        .with_context(|_| failure::err_msg("Failed to canonicalize destination folder"))?;
+
     let (tx, rx) = channel();
     let mut watcher = notify::watcher(tx, time::Duration::from_secs(1))
         .with_context(|_| failure::err_msg("Notify error"))?;
@@ -204,7 +212,7 @@ fn watch(config: &cobalt_model::Config) -> Result<()> {
             // Be as broad as possible in what can cause a rebuild to
             // ensure we don't miss anything (normal file walks will miss
             // `_layouts`, etc).
-            if event_path.starts_with(&config.destination) {
+            if event_path.starts_with(&destination) {
                 trace!("Ignored file changed {:?}", event);
                 false
             } else {
