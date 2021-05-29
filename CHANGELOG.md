@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 <!-- next-header -->
 ## [Unreleased] - ReleaseDate
 
+#### Bug Fixes
+
+- Fix XML syntax for RSS
+- Resolve infinite loop on Windows with `cobalt serve`
+
+#### Features
+
+- Minification support for HTML, CSS, and JS
+- Strike through and task list support in Markdown
+
+#### Performance
+
+- Speed up liquid rendering
+
 ## 0.16.4 - 2020-10-17
 
 #### Bug Fixes
