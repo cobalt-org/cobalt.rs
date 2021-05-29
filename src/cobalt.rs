@@ -433,7 +433,6 @@ fn create_rss(
     }
 
     let mut rss_file = fs::File::create(&rss_path)?;
-    rss_file.write_all(br#"<?xml version="1.0" encoding="UTF-8"?>"#)?;
     rss_file.write_all(&rss_string.into_bytes())?;
     rss_file.write_all(b"\n")?;
 
