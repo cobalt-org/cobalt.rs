@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 <!-- next-header -->
 ## [Unreleased] - ReleaseDate
 
+## [0.16.5] - 2021-05-29
+
 #### Bug Fixes
 
 - Fix XML syntax for RSS
@@ -591,4 +593,5 @@ this.
 [@tak1n]: https://github.com/tak1n
 
 <!-- next-url -->
-[Unreleased]: https://github.com/cobalt-org/cobalt.rs/compare/v0.16.4...HEAD
+[Unreleased]: https://github.com/assert-rs/predicates-rs/compare/v0.16.5...HEAD
+[0.16.5]: https://github.com/cobalt-org/cobalt.rs/compare/v0.16.4...v0.16.5
