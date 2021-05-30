@@ -30,6 +30,7 @@ pub struct Config {
     #[serde(skip)]
     pub includes_dir: &'static str,
     pub assets: Assets,
+    pub minify: Minify,
 }
 
 impl Default for Config {
@@ -50,6 +51,7 @@ impl Default for Config {
             layouts_dir: "_layouts",
             includes_dir: "_includes",
             assets: Assets::default(),
+            minify: Minify::default(),
         }
     }
 }
@@ -129,6 +131,27 @@ impl Default for SyntaxHighlight {
         Self {
             theme: "base16-ocean.dark".to_owned(),
             enabled: true,
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(default)]
+#[serde(rename_all = "snake_case")]
+#[cfg_attr(feature = "unstable", serde(deny_unknown_fields))]
+#[cfg_attr(not(feature = "unstable"), non_exhaustive)]
+pub struct Minify {
+    pub html: bool,
+    pub css: bool,
+    pub js: bool,
+}
+
+impl Default for Minify {
+    fn default() -> Self {
+        Minify {
+            html: false,
+            css: false,
+            js: false,
         }
     }
 }
