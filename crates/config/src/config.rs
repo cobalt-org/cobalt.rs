@@ -41,7 +41,7 @@ impl Default for Config {
             pages: Default::default(),
             posts: Default::default(),
             site: Default::default(),
-            template_extensions: vec!["md".to_owned(), "liquid".to_owned()],
+            template_extensions: vec!["md".to_owned(), "wiki".to_owned(), "liquid".to_owned()],
             ignore: Default::default(),
             syntax_highlight: SyntaxHighlight::default(),
             layouts_dir: "_layouts",

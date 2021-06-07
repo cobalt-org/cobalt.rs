@@ -8,6 +8,7 @@ mod mark;
 mod sass;
 mod site;
 mod template;
+mod vwiki;
 
 pub mod files;
 pub mod pagination_config;
@@ -44,3 +45,5 @@ pub use self::sass::SassOutputStyle;
 pub use self::site::SiteBuilder;
 pub use self::template::Liquid;
 pub use self::template::LiquidBuilder;
+pub use self::vwiki::Vimwiki;
+pub use self::vwiki::VimwikiBuilder;

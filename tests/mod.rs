@@ -264,6 +264,16 @@ pub fn markdown_table() {
     test_with_expected("markdown_table").expect("Build error");
 }
 
+#[test]
+pub fn vimwiki_not_templated() {
+    test_with_expected("vimwiki_not_templated").expect("Build error");
+}
+
+#[test]
+pub fn vimwiki_not_templated_no_syntax_highlighting() {
+    test_with_expected("vimwiki_not_templated_no_syntax").expect("Build error");
+}
+
 #[cfg(feature = "sass")]
 #[test]
 pub fn sass() {
