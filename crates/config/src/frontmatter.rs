@@ -54,6 +54,7 @@ impl Frontmatter {
             let ext = relpath.extension().and_then(|os| os.to_str()).unwrap_or("");
             let format = match ext {
                 "md" => SourceFormat::Markdown,
+                "wiki" => SourceFormat::Vimwiki,
                 _ => SourceFormat::Raw,
             };
             self.format = Some(format);
@@ -173,6 +174,7 @@ impl fmt::Display for Permalink {
 pub enum SourceFormat {
     Raw,
     Markdown,
+    Vimwiki,
 }
 
 impl Default for SourceFormat {

@@ -15,6 +15,7 @@ use super::mark;
 use super::sass;
 use super::site;
 use super::template;
+use super::vwiki;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields, default)]
@@ -298,7 +299,7 @@ impl Default for ConfigBuilder {
             pages: Default::default(),
             posts: Default::default(),
             site: Default::default(),
-            template_extensions: vec!["md".to_owned(), "liquid".to_owned()],
+            template_extensions: vec!["md".to_owned(), "wiki".to_owned(), "liquid".to_owned()],
             ignore: Default::default(),
             syntax_highlight: SyntaxHighlight::default(),
             layouts_dir: "_layouts",
@@ -425,6 +426,10 @@ impl ConfigBuilder {
             theme: syntax_highlight.theme.clone(),
         };
         let markdown = mark::MarkdownBuilder {
+            theme: syntax_highlight.theme.clone(),
+            syntax_highlight_enabled: syntax_highlight.enabled,
+        };
+        let vimwiki = vwiki::VimwikiBuilder {
             theme: syntax_highlight.theme,
             syntax_highlight_enabled: syntax_highlight.enabled,
         };
@@ -438,6 +443,7 @@ impl ConfigBuilder {
             layouts_dir,
             liquid,
             markdown,
+            vimwiki,
             assets,
             sitemap,
             minify,
@@ -466,6 +472,7 @@ pub struct Config {
     pub layouts_dir: path::PathBuf,
     pub liquid: template::LiquidBuilder,
     pub markdown: mark::MarkdownBuilder,
+    pub vimwiki: vwiki::VimwikiBuilder,
     pub assets: assets::AssetsBuilder,
     pub sitemap: Option<String>,
     pub minify: Minify,

@@ -1,0 +1,3 @@
+syntax_highlight:
+  theme: "base16-ocean.dark"
+  enabled: true

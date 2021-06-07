@@ -28,6 +28,7 @@ struct Context {
     pub layouts: HashMap<String, String>,
     pub liquid: cobalt_model::Liquid,
     pub markdown: cobalt_model::Markdown,
+    pub vimwiki: cobalt_model::Vimwiki,
     pub assets: cobalt_model::Assets,
     pub sitemap: Option<String>,
     pub minify: Minify,
@@ -44,6 +45,7 @@ impl Context {
             layouts_dir,
             liquid,
             markdown,
+            vimwiki,
             assets,
             sitemap,
             minify,
@@ -54,6 +56,7 @@ impl Context {
         let site = site.build()?;
         let liquid = liquid.build()?;
         let markdown = markdown.build();
+        let vimwiki = vimwiki.build();
         let assets = assets.build()?;
 
         let layouts = find_layouts(&layouts_dir)?;
@@ -68,6 +71,7 @@ impl Context {
             layouts,
             liquid,
             markdown,
+            vimwiki,
             assets,
             sitemap,
             minify,
@@ -168,6 +172,7 @@ fn generate_doc(
         let render_context = RenderContex {
             parser: &context.liquid,
             markdown: &context.markdown,
+            vimwiki: &context.vimwiki,
             globals: &globals,
             minify: context.minify.clone(),
         };
@@ -188,6 +193,7 @@ fn generate_doc(
     let render_context = RenderContex {
         parser: &context.liquid,
         markdown: &context.markdown,
+        vimwiki: &context.vimwiki,
         globals: &globals,
         minify: context.minify.clone(),
     };
