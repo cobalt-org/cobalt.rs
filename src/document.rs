@@ -330,7 +330,6 @@ impl Document {
             cobalt_model::SourceFormat::Markdown => context.markdown.parse(&html)?,
         };
 
-        let html = minify_if_enabled(html, context, &self.file_path)?;
         Ok(html)
     }
 
