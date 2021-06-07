@@ -322,8 +322,12 @@ impl Document {
     /// take `"extends"` attribute into account. This function can be used for
     /// rendering content or excerpt.
     fn render_html(&self, content: &str, context: &RenderContex) -> Result<String> {
-        let template = context.parser.parse(content)?;
-        let html = template.render(context.globals)?;
+        let html = if self.front.templated {
+            let template = context.parser.parse(content)?;
+            template.render(context.globals)?
+        } else {
+            content.to_owned()
+        };
 
         let html = match self.front.format {
             cobalt_model::SourceFormat::Raw => html,

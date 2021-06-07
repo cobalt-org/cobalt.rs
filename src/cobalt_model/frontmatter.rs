@@ -82,6 +82,8 @@ pub struct FrontmatterBuilder {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub format: Option<SourceFormat>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub templated: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub layout: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub is_draft: Option<bool>,
@@ -186,6 +188,14 @@ impl FrontmatterBuilder {
         }
     }
 
+    #[cfg(test)]
+    pub fn set_templated<S: Into<Option<bool>>>(self, templated: S) -> Self {
+        Self {
+            templated: templated.into(),
+            ..self
+        }
+    }
+
     pub fn set_layout<S: Into<Option<String>>>(self, layout: S) -> Self {
         Self {
             layout: layout.into(),
@@ -265,6 +275,11 @@ impl FrontmatterBuilder {
         self.merge(Self::new().set_format(format.into()))
     }
 
+    #[cfg(test)]
+    pub fn merge_templated<S: Into<Option<bool>>>(self, templated: S) -> Self {
+        self.merge(Self::new().set_templated(templated.into()))
+    }
+
     pub fn merge_layout<S: Into<Option<String>>>(self, layout: S) -> Self {
         self.merge(Self::new().set_layout(layout.into()))
     }
@@ -294,6 +309,7 @@ impl FrontmatterBuilder {
             excerpt_separator,
             published_date,
             format,
+            templated,
             layout,
             is_draft,
             weight,
@@ -312,6 +328,7 @@ impl FrontmatterBuilder {
             excerpt_separator,
             published_date,
             format,
+            templated,
             layout,
             is_draft,
             weight,
@@ -333,6 +350,7 @@ impl FrontmatterBuilder {
             excerpt_separator,
             published_date,
             format,
+            templated,
             layout,
             is_draft,
             weight,
@@ -351,6 +369,7 @@ impl FrontmatterBuilder {
             excerpt_separator: other_excerpt_separator,
             published_date: other_published_date,
             format: other_format,
+            templated: other_templated,
             layout: other_layout,
             is_draft: other_is_draft,
             weight: other_weight,
@@ -369,6 +388,7 @@ impl FrontmatterBuilder {
             excerpt_separator: excerpt_separator.or_else(|| other_excerpt_separator),
             published_date: published_date.or_else(|| other_published_date),
             format: format.or_else(|| other_format),
+            templated: templated.or_else(|| other_templated),
             layout: layout.or_else(|| other_layout),
             is_draft: is_draft.or_else(|| other_is_draft),
             weight: weight.or_else(|| other_weight),
@@ -428,6 +448,7 @@ impl FrontmatterBuilder {
             excerpt_separator,
             published_date,
             format,
+            templated,
             layout,
             is_draft,
             weight,
@@ -470,6 +491,7 @@ impl FrontmatterBuilder {
             excerpt_separator: excerpt_separator.unwrap_or_else(|| "\n\n".to_owned()),
             published_date,
             format: format.unwrap_or_else(SourceFormat::default),
+            templated: templated.unwrap_or(true),
             layout,
             is_draft: is_draft.unwrap_or(false),
             weight: weight.unwrap_or(0),
@@ -508,6 +530,7 @@ pub struct Frontmatter {
     pub excerpt_separator: String,
     pub published_date: Option<datetime::DateTime>,
     pub format: SourceFormat,
+    pub templated: bool,
     pub layout: Option<String>,
     pub is_draft: bool,
     pub weight: i32,
@@ -767,6 +790,7 @@ mod test {
             excerpt_separator: Some("excerpt_separator a".to_owned()),
             published_date: Some(datetime::DateTime::default()),
             format: Some(SourceFormat::Markdown),
+            templated: Some(true),
             layout: Some("layout a".to_owned()),
             is_draft: Some(true),
             weight: Some(0),
@@ -785,6 +809,7 @@ mod test {
             excerpt_separator: Some("excerpt_separator b".to_owned()),
             published_date: Some(datetime::DateTime::default()),
             format: Some(SourceFormat::Raw),
+            templated: Some(false),
             layout: Some("layout b".to_owned()),
             is_draft: Some(true),
             weight: Some(0),
@@ -816,6 +841,7 @@ mod test {
             excerpt_separator: Some("excerpt_separator a".to_owned()),
             published_date: None,
             format: Some(SourceFormat::Markdown),
+            templated: Some(true),
             layout: Some("layout a".to_owned()),
             is_draft: Some(true),
             weight: Some(0),
@@ -835,6 +861,7 @@ mod test {
             .merge_tags(vec!["a".to_owned(), "b".to_owned()])
             .merge_excerpt_separator("excerpt_separator b".to_owned())
             .merge_format(SourceFormat::Raw)
+            .merge_templated(false)
             .merge_layout("layout b".to_owned())
             .merge_draft(true)
             .merge_weight(0)
@@ -868,6 +895,7 @@ mod test {
             .merge_tags(vec!["a".to_owned(), "b".to_owned()])
             .merge_excerpt_separator("excerpt_separator a".to_owned())
             .merge_format(SourceFormat::Markdown)
+            .merge_templated(true)
             .merge_layout("layout a".to_owned())
             .merge_draft(true)
             .merge_weight(0)
