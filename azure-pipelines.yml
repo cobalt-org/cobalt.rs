@@ -106,6 +106,7 @@ stages:
   dependsOn: []
   jobs:
   - job: "Committed"
+    displayName: Linting commit history
     pool:
       vmImage: ${{ variables.linux_vm }}
     steps:
@@ -115,8 +116,17 @@ stages:
         git: crate-ci/committed
         target: 'x86_64-unknown-linux-gnu'
         to: $(Build.StagingDirectory)/tools
-    - script: $(Build.StagingDirectory)/tools/committed HEAD~..HEAD^2 --no-merge-commit -vv
-      displayName: Committed
+    - script: |
+        echo "Linting commits:"
+        git log --graph --oneline HEAD~..HEAD^2
+        echo "Against 'committed.toml':"
+        $(Build.StagingDirectory)/tools/committed --dump-config -
+        echo ""
+        echo "If this fails, don't sweat it. We're trying to encourage clear communication and not hinder contributions."
+        echo "If it is a reasonable issue and you lack time or feel uncomfortable fixing it yourself,"
+        echo "let us know and we can mentor or fix it."
+        $(Build.StagingDirectory)/tools/committed HEAD~..HEAD^2 --no-merge-commit -vv
+      displayName: Lint commit history
     condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'))
   - job: rust_style
     displayName: Rust Style
