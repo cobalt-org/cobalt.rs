@@ -20,87 +20,11 @@ schedules:
     - master
 variables:
   windows_vm: vs2017-win2016
-  mac_vm: macos-10.14
-  linux_vm: ubuntu-16.04
-  rust_style: 1.35.0
+  windows_vm: windows-latest
+  mac_vm: macOS-latest
+  linux_vm: ubuntu-latest
 
 stages:
-- stage: check
-  displayName: Compilation Check
-  jobs:
-  - job: cargo_check
-    displayName: cargo check
-    pool:
-      vmImage: ${{ variables.linux_vm }}
-    steps:
-    - template: install-rust.yml@templates
-      parameters:
-        rust: stable
-    - script: cargo check --all --locked
-      displayName: Check that Cargo.lock is satisfiable
-    - script: cargo check --all --bins --examples --tests
-      displayName: Default features
-    - script: cargo check --all --bins --examples --tests --no-default-features
-      displayName: No features
-    - script: cargo check --all --bins --examples --tests --all-features
-      displayName: All features
-- stage: test
-  displayName: Test
-  jobs:
-  - job: test
-    displayName: Test
-    strategy:
-      matrix:
-        windows:
-          imageName: ${{ variables.windows_vm }}
-          target: 'x86_64-pc-windows-msvc'
-          channel: stable
-        windows_beta:
-          imageName: ${{ variables.windows_vm }}
-          target: 'x86_64-pc-windows-msvc'
-          channel: beta
-        windows_nightly:
-          imageName: ${{ variables.windows_vm }}
-          target: 'x86_64-pc-windows-msvc'
-          channel: nightly
-        mac:
-          imageName: ${{ variables.mac_vm }}
-          target: 'x86_64-apple-darwin'
-          channel: stable
-        mac_beta:
-          imageName: ${{ variables.mac_vm }}
-          target: 'x86_64-apple-darwin'
-          channel: beta
-        mac_nightly:
-          imageName: ${{ variables.mac_vm }}
-          target: 'x86_64-apple-darwin'
-          channel: nightly
-        linux:
-          imageName: ${{ variables.linux_vm }}
-          target: 'x86_64-unknown-linux-gnu'
-          channel: stable
-        linux_beta:
-          imageName: ${{ variables.linux_vm }}
-          target: 'x86_64-unknown-linux-gnu'
-          channel: beta
-        linux_nightly:
-          imageName: ${{ variables.linux_vm }}
-          target: 'x86_64-unknown-linux-gnu'
-          channel: nightly
-    continueOnError: ${{ eq(variables.channel, 'nightly') }}
-    pool:
-      vmImage: $(imageName)
-    steps:
-    - template: install-rust.yml@templates
-      parameters:
-        rust: $(channel)
-        targets: ["$(TARGET)"]
-    - script: cargo test --target $(TARGET) --all
-      displayName: Default features
-    - script: cargo test --target $(TARGET) --all --no-default-features
-      displayName: No features
-    - script: cargo test --target $(TARGET) --all --all-features
-      displayName: All features
 - stage: style
   displayName: Style checks
   dependsOn: []
@@ -128,39 +52,6 @@ stages:
         $(Build.StagingDirectory)/tools/committed HEAD~..HEAD^2 --no-merge-commit -vv
       displayName: Lint commit history
     condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'))
-  - job: rust_style
-    displayName: Rust Style
-    strategy:
-      matrix:
-        current:
-          channel: ${{ variables.rust_style }}
-        next:
-          channel: stable
-    continueOnError: ${{ eq(variables.channel, 'stable') }}
-    pool:
-      vmImage: ${{ variables.linux_vm }}
-    steps:
-    - template: install-rust.yml@templates
-      parameters:
-        rust: stable
-        components:
-          - rustfmt
-          - clippy
-    - script: cargo fmt --all -- --check
-      displayName: rustfmt
-    - script: cargo check --workspace --all-targets --all-features
-      displayName: Warnings
-      env:
-        RUSTFLAGS: "-D warnings"
-    - script:  cargo clippy --workspace --all-features --all-targets -- -D warnings
-      displayName: clippy
-- stage: coverage
-  displayName: Code coverage
-  dependsOn: test
-  jobs:
-    - template: coverage.yml@templates
-      parameters:
-        codecov_token: $(CODECOV_TOKEN_SECRET)
 - stage: release
   displayName: Release
   dependsOn: []
