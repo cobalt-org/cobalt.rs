@@ -19,7 +19,6 @@ schedules:
     include:
     - master
 variables:
-  windows_vm: vs2017-win2016
   windows_vm: windows-latest
   mac_vm: macOS-latest
   linux_vm: ubuntu-latest
