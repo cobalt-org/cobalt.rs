@@ -8,7 +8,9 @@ const DEFAULT_PERMALINK: &str = "{{num}}/";
 const DEFAULT_SORT: &str = "published_date";
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, PartialEq, Eq, Default)]
-#[serde(deny_unknown_fields, default)]
+#[serde(default)]
+#[cfg_attr(feature = "unstable", serde(deny_unknown_fields))]
+#[cfg_attr(not(feature = "unstable"), non_exhaustive)]
 pub struct Pagination {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub include: Option<Include>,
@@ -62,14 +64,19 @@ impl Pagination {
 }
 
 #[derive(Copy, Clone, Debug, serde::Serialize, serde::Deserialize, PartialEq, Eq)]
-#[serde(deny_unknown_fields)]
 #[serde(rename_all = "kebab-case")]
+#[cfg_attr(feature = "unstable", serde(deny_unknown_fields))]
+#[cfg_attr(not(feature = "unstable"), non_exhaustive)]
 pub enum Include {
     None,
     All,
     Tags,
     Categories,
     Dates,
+    #[cfg(not(feature = "unstable"))]
+    #[doc(hidden)]
+    #[serde(other)]
+    Unknown,
 }
 
 impl Into<&'static str> for Include {
@@ -80,6 +87,8 @@ impl Into<&'static str> for Include {
             Include::Tags => "tags",
             Include::Categories => "categories",
             Include::Dates => "dates",
+            #[cfg(not(feature = "unstable"))]
+            Include::Unknown => "",
         }
     }
 }
@@ -93,12 +102,17 @@ impl Default for Include {
 #[derive(
     Copy, Clone, Debug, serde::Serialize, serde::Deserialize, PartialEq, Eq, PartialOrd, Ord,
 )]
-#[serde(deny_unknown_fields)]
 #[serde(rename_all = "kebab-case")]
+#[cfg_attr(feature = "unstable", serde(deny_unknown_fields))]
+#[cfg_attr(not(feature = "unstable"), non_exhaustive)]
 pub enum DateIndex {
     Year,
     Month,
     Day,
     Hour,
     Minute,
+    #[cfg(not(feature = "unstable"))]
+    #[doc(hidden)]
+    #[serde(other)]
+    Unknown,
 }

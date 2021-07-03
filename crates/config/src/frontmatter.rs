@@ -6,7 +6,9 @@ use serde;
 use super::*;
 
 #[derive(Debug, Eq, PartialEq, Default, Clone, serde::Serialize, serde::Deserialize)]
-#[serde(deny_unknown_fields, default)]
+#[serde(default)]
+#[cfg_attr(feature = "unstable", serde(deny_unknown_fields))]
+#[cfg_attr(not(feature = "unstable"), non_exhaustive)]
 pub struct Frontmatter {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub permalink: Option<Permalink>,
@@ -131,28 +133,32 @@ impl fmt::Display for Frontmatter {
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "kebab-case")]
+#[cfg_attr(feature = "unstable", serde(deny_unknown_fields))]
+#[cfg_attr(not(feature = "unstable"), non_exhaustive)]
 pub enum PermalinkAlias {
     Path,
+    #[cfg(not(feature = "unstable"))]
     #[doc(hidden)]
-    __NonExhaustive,
+    #[serde(other)]
+    Unknown,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
 #[serde(untagged)]
+#[cfg_attr(feature = "unstable", serde(deny_unknown_fields))]
+#[cfg_attr(not(feature = "unstable"), non_exhaustive)]
 pub enum Permalink {
     Alias(PermalinkAlias),
     Explicit(String),
-    #[doc(hidden)]
-    __NonExhaustive,
 }
 
 impl Permalink {
     pub fn as_str(&self) -> &str {
         match self {
             Permalink::Alias(PermalinkAlias::Path) => "/{{parent}}/{{name}}{{ext}}",
-            Permalink::Alias(PermalinkAlias::__NonExhaustive) => unreachable!("private variant"),
+            #[cfg(not(feature = "unstable"))]
+            Permalink::Alias(PermalinkAlias::Unknown) => unreachable!("private variant"),
             Permalink::Explicit(path) => path.as_str(),
-            Permalink::__NonExhaustive => unreachable!("private variant"),
         }
     }
 }
@@ -170,11 +176,16 @@ impl fmt::Display for Permalink {
 }
 
 #[derive(Debug, Eq, PartialEq, Hash, Copy, Clone, serde::Serialize, serde::Deserialize)]
-#[serde(deny_unknown_fields)]
+#[cfg_attr(feature = "unstable", serde(deny_unknown_fields))]
+#[cfg_attr(not(feature = "unstable"), non_exhaustive)]
 pub enum SourceFormat {
     Raw,
     Markdown,
     Vimwiki,
+    #[cfg(not(feature = "unstable"))]
+    #[doc(hidden)]
+    #[serde(other)]
+    Unknown,
 }
 
 impl Default for SourceFormat {

@@ -14,6 +14,9 @@ edition = "2018"
 travis-ci = { repository = "cobalt-org/cobalt.rs" }
 appveyor = { repository = "cobalt-org/cobalt.rs" }
 
+[features]
+unstable = []
+
 [dependencies]
 liquid-value = "0.19"
 chrono = "0.4"

@@ -6,7 +6,9 @@ use serde_yaml;
 use super::*;
 
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
-#[serde(deny_unknown_fields, default)]
+#[serde(default)]
+#[cfg_attr(feature = "unstable", serde(deny_unknown_fields))]
+#[cfg_attr(not(feature = "unstable"), non_exhaustive)]
 pub struct Config {
     #[serde(skip)]
     pub root: path::PathBuf,
@@ -112,7 +114,9 @@ impl fmt::Display for Config {
 }
 
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
-#[serde(deny_unknown_fields, default)]
+#[serde(default)]
+#[cfg_attr(feature = "unstable", serde(deny_unknown_fields))]
+#[cfg_attr(not(feature = "unstable"), non_exhaustive)]
 pub struct SyntaxHighlight {
     pub theme: String,
     pub enabled: bool,
