@@ -193,22 +193,6 @@ pub struct Document {
 }
 
 impl Document {
-    pub fn new(
-        url_path: String,
-        file_path: PathBuf,
-        content: String,
-        attributes: Object,
-        front: cobalt_model::Frontmatter,
-    ) -> Document {
-        Document {
-            url_path,
-            file_path,
-            content,
-            attributes,
-            front,
-        }
-    }
-
     pub fn parse(
         src_path: &Path,
         rel_path: &Path,
@@ -235,13 +219,13 @@ impl Document {
 
         let doc_attributes = document_attributes(&front, rel_path, url_path.as_ref());
 
-        Ok(Document::new(
+        Ok(Document {
             url_path,
             file_path,
             content,
-            doc_attributes,
+            attributes: doc_attributes,
             front,
-        ))
+        })
     }
 
     /// Metadata for generating RSS feeds
