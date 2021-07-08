@@ -9,6 +9,7 @@ const DEFAULT_SORT: &str = "published_date";
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, PartialEq, Eq, Default)]
 #[serde(default)]
+#[serde(rename_all = "snake_case")]
 #[cfg_attr(feature = "unstable", serde(deny_unknown_fields))]
 #[cfg_attr(not(feature = "unstable"), non_exhaustive)]
 pub struct Pagination {
@@ -64,7 +65,7 @@ impl Pagination {
 }
 
 #[derive(Copy, Clone, Debug, serde::Serialize, serde::Deserialize, PartialEq, Eq)]
-#[serde(rename_all = "kebab-case")]
+#[cfg_attr(feature = "preview_unstable", serde(rename_all = "snake_case"))]
 #[cfg_attr(feature = "unstable", serde(deny_unknown_fields))]
 #[cfg_attr(not(feature = "unstable"), non_exhaustive)]
 pub enum Include {
@@ -102,7 +103,7 @@ impl Default for Include {
 #[derive(
     Copy, Clone, Debug, serde::Serialize, serde::Deserialize, PartialEq, Eq, PartialOrd, Ord,
 )]
-#[serde(rename_all = "kebab-case")]
+#[cfg_attr(feature = "preview_unstable", serde(rename_all = "snake_case"))]
 #[cfg_attr(feature = "unstable", serde(deny_unknown_fields))]
 #[cfg_attr(not(feature = "unstable"), non_exhaustive)]
 pub enum DateIndex {

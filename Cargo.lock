@@ -293,6 +293,7 @@ dependencies = [
  "assert_fs",
  "chrono",
  "clap",
+ "cobalt-config",
  "deunicode",
  "difference",
  "env_logger",

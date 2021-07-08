@@ -2,6 +2,8 @@ use std::convert::Into;
 use std::vec::Vec;
 
 use super::SortOrder;
+pub use cobalt_config::DateIndex;
+pub use cobalt_config::Include;
 
 pub const DEFAULT_PERMALINK_SUFFIX: &str = "{{num}}/";
 
@@ -12,44 +14,6 @@ lazy_static! {
 
 lazy_static! {
     static ref DEFAULT_DATE_INDEX: Vec<DateIndex> = vec![DateIndex::Year, DateIndex::Month];
-}
-
-#[derive(Copy, Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
-#[serde(deny_unknown_fields)]
-pub enum Include {
-    None,
-    All,
-    Tags,
-    Categories,
-    Dates,
-}
-
-impl Into<&'static str> for Include {
-    fn into(self) -> &'static str {
-        match self {
-            Include::None => "",
-            Include::All => "all",
-            Include::Tags => "tags",
-            Include::Categories => "categories",
-            Include::Dates => "dates",
-        }
-    }
-}
-
-impl Default for Include {
-    fn default() -> Include {
-        Include::None
-    }
-}
-
-#[derive(Copy, Clone, Debug, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
-#[serde(deny_unknown_fields)]
-pub enum DateIndex {
-    Year,
-    Month,
-    Day,
-    Hour,
-    Minute,
 }
 
 // TODO to be replaced by a call to `is_sorted()` once it's stabilized

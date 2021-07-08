@@ -7,21 +7,7 @@ use sass_rs;
 use super::files;
 use crate::cobalt_model::Minify;
 use crate::error::*;
-
-#[derive(Debug, Clone, Copy, Eq, PartialEq, Hash, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub enum SassOutputStyle {
-    Nested,
-    Expanded,
-    Compact,
-    Compressed,
-}
-
-impl Default for SassOutputStyle {
-    fn default() -> Self {
-        SassOutputStyle::Nested
-    }
-}
+pub use cobalt_config::SassOutputStyle;
 
 #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
 #[serde(deny_unknown_fields, default)]

@@ -16,6 +16,7 @@ appveyor = { repository = "cobalt-org/cobalt.rs" }
 
 [features]
 unstable = []
+preview_unstable = []
 
 [dependencies]
 liquid-value = "0.19"

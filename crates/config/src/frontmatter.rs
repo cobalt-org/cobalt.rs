@@ -7,6 +7,7 @@ use super::*;
 
 #[derive(Debug, Eq, PartialEq, Default, Clone, serde::Serialize, serde::Deserialize)]
 #[serde(default)]
+#[serde(rename_all = "snake_case")]
 #[cfg_attr(feature = "unstable", serde(deny_unknown_fields))]
 #[cfg_attr(not(feature = "unstable"), non_exhaustive)]
 pub struct Frontmatter {
@@ -132,7 +133,7 @@ impl fmt::Display for Frontmatter {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "kebab-case")]
+#[serde(rename_all = "snake_case")]
 #[cfg_attr(feature = "unstable", serde(deny_unknown_fields))]
 #[cfg_attr(not(feature = "unstable"), non_exhaustive)]
 pub enum PermalinkAlias {
@@ -176,6 +177,7 @@ impl fmt::Display for Permalink {
 }
 
 #[derive(Debug, Eq, PartialEq, Hash, Copy, Clone, serde::Serialize, serde::Deserialize)]
+#[cfg_attr(feature = "preview_unstable", serde(rename_all = "snake_case"))]
 #[cfg_attr(feature = "unstable", serde(deny_unknown_fields))]
 #[cfg_attr(not(feature = "unstable"), non_exhaustive)]
 pub enum SourceFormat {
