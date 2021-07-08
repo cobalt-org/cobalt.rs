@@ -32,6 +32,8 @@ pub struct Frontmatter {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub format: Option<SourceFormat>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub templated: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub layout: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub is_draft: Option<bool>,
@@ -53,28 +55,41 @@ impl Frontmatter {
     }
 
     pub fn merge_path(mut self, relpath: &path::Path) -> Self {
-        if self.format.is_none() {
-            let ext = relpath.extension().and_then(|os| os.to_str()).unwrap_or("");
-            let format = match ext {
-                "md" => SourceFormat::Markdown,
-                "wiki" => SourceFormat::Vimwiki,
+        if let Some(name) = relpath.file_name().and_then(|f| f.to_str()) {
+            let mut split_name = crate::path::split_ext(name);
+
+            #[cfg(feature = "preview_unstable")]
+            if split_name.1 == Some("liquid") {
+                self.templated.get_or_insert(true);
+                split_name = crate::path::split_ext(split_name.0);
+            } else {
+                self.templated.get_or_insert(false);
+            }
+
+            let format = match split_name.1 {
+                Some("md") => SourceFormat::Markdown,
+                Some("wiki") => SourceFormat::Vimwiki,
                 _ => SourceFormat::Raw,
             };
-            self.format = Some(format);
-        }
+            self.format.get_or_insert(format);
 
-        if self.published_date.is_none() || self.slug.is_none() {
-            let file_stem = crate::path::file_stem(relpath);
-            let (file_date, file_stem) = crate::path::parse_file_stem(file_stem);
-            if self.published_date.is_none() {
-                self.published_date = file_date;
+            while split_name.1.is_some() {
+                split_name = crate::path::split_ext(split_name.0);
             }
-            if self.slug.is_none() {
-                let slug = crate::path::slugify(file_stem);
-                if self.title.is_none() {
-                    self.title = Some(crate::path::titleize_slug(&slug));
+
+            if self.published_date.is_none() || self.slug.is_none() {
+                let file_stem = split_name.0;
+                let (file_date, file_stem) = crate::path::parse_file_stem(file_stem);
+                if self.published_date.is_none() {
+                    self.published_date = file_date;
                 }
-                self.slug = Some(slug);
+                if self.slug.is_none() {
+                    let slug = crate::path::slugify(file_stem);
+                    if self.title.is_none() {
+                        self.title = Some(crate::path::titleize_slug(&slug));
+                    }
+                    self.slug = Some(slug);
+                }
             }
         }
 
@@ -93,6 +108,7 @@ impl Frontmatter {
             excerpt_separator,
             published_date,
             format,
+            templated,
             layout,
             is_draft,
             weight,
@@ -111,6 +127,7 @@ impl Frontmatter {
             excerpt_separator: excerpt_separator.or_else(|| other.excerpt_separator.clone()),
             published_date: published_date.or_else(|| other.published_date.clone()),
             format: format.or(other.format),
+            templated: templated.or(other.templated),
             layout: layout.or_else(|| other.layout.clone()),
             is_draft: is_draft.or(other.is_draft),
             weight: weight.or(other.weight),

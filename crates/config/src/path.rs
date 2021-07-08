@@ -1,5 +1,3 @@
-use std::path;
-
 use chrono::Datelike;
 use deunicode;
 use itertools::Itertools;
@@ -62,23 +60,18 @@ mod test_slug {
     }
 }
 
-/// The base-name without an extension.  Correlates to Jekyll's :name path tag
-pub fn file_stem<P: AsRef<path::Path>>(p: P) -> String {
-    file_stem_path(p.as_ref())
-}
-
-fn file_stem_path(p: &path::Path) -> String {
-    p.file_stem()
-        .map(|os| os.to_string_lossy().into_owned())
-        .unwrap_or_else(|| "".to_owned())
+pub fn split_ext(name: &str) -> (&str, Option<&str>) {
+    name.rsplit_once('.')
+        .map(|(n, e)| (n, Some(e)))
+        .unwrap_or_else(|| (name, None))
 }
 
 static DATE_PREFIX_REF: once_cell::sync::Lazy<regex::Regex> = once_cell::sync::Lazy::new(|| {
     regex::Regex::new(r"^(\d{4})-(\d{1,2})-(\d{1,2})[- ](.*)$").unwrap()
 });
 
-pub fn parse_file_stem(stem: String) -> (Option<crate::DateTime>, String) {
-    let parts = DATE_PREFIX_REF.captures(&stem).and_then(|caps| {
+pub fn parse_file_stem(stem: &str) -> (Option<crate::DateTime>, String) {
+    let parts = DATE_PREFIX_REF.captures(stem).and_then(|caps| {
         let year: i32 = caps
             .get(1)
             .expect("unconditional capture")
@@ -112,7 +105,7 @@ pub fn parse_file_stem(stem: String) -> (Option<crate::DateTime>, String) {
         })
     });
 
-    parts.unwrap_or((None, stem))
+    parts.unwrap_or_else(|| (None, stem.to_owned()))
 }
 
 #[cfg(test)]
@@ -120,21 +113,14 @@ mod test_stem {
     use super::*;
 
     #[test]
-    fn file_stem_absolute_path() {
-        let input = path::PathBuf::from("/embedded/path/___filE-worlD-__09___.md");
-        let actual = file_stem(input.as_path());
-        assert_eq!(actual, "___filE-worlD-__09___");
-    }
-
-    #[test]
     fn parse_file_stem_empty() {
-        assert_eq!(parse_file_stem("".to_owned()), (None, "".to_owned()));
+        assert_eq!(parse_file_stem(""), (None, "".to_owned()));
     }
 
     #[test]
     fn parse_file_stem_none() {
         assert_eq!(
-            parse_file_stem("First Blog Post".to_owned()),
+            parse_file_stem("First Blog Post"),
             (None, "First Blog Post".to_owned())
         );
     }
@@ -142,7 +128,7 @@ mod test_stem {
     #[test]
     fn parse_file_stem_out_of_range_month() {
         assert_eq!(
-            parse_file_stem("2017-30-5 First Blog Post".to_owned()),
+            parse_file_stem("2017-30-5 First Blog Post"),
             (None, "2017-30-5 First Blog Post".to_owned())
         );
     }
@@ -150,7 +136,7 @@ mod test_stem {
     #[test]
     fn parse_file_stem_out_of_range_day() {
         assert_eq!(
-            parse_file_stem("2017-3-50 First Blog Post".to_owned()),
+            parse_file_stem("2017-3-50 First Blog Post"),
             (None, "2017-3-50 First Blog Post".to_owned())
         );
     }
@@ -158,7 +144,7 @@ mod test_stem {
     #[test]
     fn parse_file_stem_single_digit() {
         assert_eq!(
-            parse_file_stem("2017-3-5 First Blog Post".to_owned()),
+            parse_file_stem("2017-3-5 First Blog Post"),
             (
                 Some(
                     crate::DateTime::default()
@@ -177,7 +163,7 @@ mod test_stem {
     #[test]
     fn parse_file_stem_double_digit() {
         assert_eq!(
-            parse_file_stem("2017-12-25 First Blog Post".to_owned()),
+            parse_file_stem("2017-12-25 First Blog Post"),
             (
                 Some(
                     crate::DateTime::default()
@@ -196,7 +182,7 @@ mod test_stem {
     #[test]
     fn parse_file_stem_double_digit_leading_zero() {
         assert_eq!(
-            parse_file_stem("2017-03-05 First Blog Post".to_owned()),
+            parse_file_stem("2017-03-05 First Blog Post"),
             (
                 Some(
                     crate::DateTime::default()
@@ -215,7 +201,7 @@ mod test_stem {
     #[test]
     fn parse_file_stem_dashed() {
         assert_eq!(
-            parse_file_stem("2017-3-5-First-Blog-Post".to_owned()),
+            parse_file_stem("2017-3-5-First-Blog-Post"),
             (
                 Some(
                     crate::DateTime::default()
