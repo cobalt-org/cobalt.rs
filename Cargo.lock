@@ -301,7 +301,7 @@ dependencies = [
  "ghp",
  "html-minifier",
  "ignore",
- "itertools",
+ "itertools 0.10.1",
  "jsonfeed",
  "kstring",
  "lazy_static",
@@ -327,6 +327,22 @@ dependencies = [
  "toml",
  "vimwiki",
  "walkdir 2.3.2",
+]
+
+[[package]]
+name = "cobalt-config"
+version = "0.16.0"
+dependencies = [
+ "chrono",
+ "deunicode",
+ "itertools 0.8.2",
+ "liquid-value",
+ "log",
+ "once_cell",
+ "regex",
+ "serde",
+ "serde_yaml",
+ "status",
 ]
 
 [[package]]
@@ -936,6 +952,15 @@ dependencies = [
 
 [[package]]
 name = "itertools"
+version = "0.8.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f56a2d0bc861f9165be4eb3442afd3c236d8a98afd426f65d92324ae1091a484"
+dependencies = [
+ "either",
+]
+
+[[package]]
+name = "itertools"
 version = "0.10.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "69ddb889f9d0d08a67338271fa9b62996bc788c7796a5c18cf057420aaed5eaf"
@@ -1048,7 +1073,7 @@ checksum = "be5a88630d73ac78b46277169f92ef135fb09ad50af039f76ccfc35264796cc5"
 dependencies = [
  "anymap",
  "chrono",
- "itertools",
+ "itertools 0.10.1",
  "kstring",
  "liquid-derive",
  "num-traits",
@@ -1069,6 +1094,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "liquid-error"
+version = "0.19.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7d5c0851812322e87dcf67c2d7e520c3efd8651bd44eb8d0c0246e6dfb94d481"
+
+[[package]]
 name = "liquid-lib"
 version = "0.22.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1076,13 +1107,26 @@ checksum = "10c14f535f61c4263e57cd4f6ad9701b97459f026420347ed978c4ab0d2512cc"
 dependencies = [
  "chrono",
  "deunicode",
- "itertools",
+ "itertools 0.10.1",
  "kstring",
  "liquid-core",
  "once_cell",
  "percent-encoding",
  "regex",
  "unicode-segmentation",
+]
+
+[[package]]
+name = "liquid-value"
+version = "0.19.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2f56016187fb289186fccf44a9ae840f7b9ba35a04fd611e591aed2a1f53c265"
+dependencies = [
+ "chrono",
+ "itertools 0.8.2",
+ "liquid-error",
+ "num-traits",
+ "serde",
 ]
 
 [[package]]
@@ -1773,6 +1817,15 @@ name = "static_assertions"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
+
+[[package]]
+name = "status"
+version = "0.0.10"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "36f7e6db3d58ab9e499a2722b0ddaaffeda2d76865a1749d5411182176c594f9"
+dependencies = [
+ "indexmap",
+]
 
 [[package]]
 name = "stfu8"

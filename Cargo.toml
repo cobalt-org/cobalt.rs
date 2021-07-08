@@ -1,3 +1,8 @@
+[workspace]
+members = [
+    "crates/config",
+]
+
 [package]
 name = "cobalt-bin"
 version = "0.16.5"
