@@ -13,6 +13,7 @@ use crate::error::Result;
 use super::datetime;
 use super::pagination_config;
 use super::slug;
+pub use cobalt_config::SourceFormat;
 
 const PATH_ALIAS: &str = "/{{parent}}/{{name}}{{ext}}";
 
@@ -21,20 +22,6 @@ lazy_static! {
         .iter()
         .map(|&(k, v)| (k, v))
         .collect();
-}
-
-#[derive(Debug, Eq, PartialEq, Hash, Copy, Clone, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub enum SourceFormat {
-    Raw,
-    Markdown,
-    Vimwiki,
-}
-
-impl Default for SourceFormat {
-    fn default() -> SourceFormat {
-        SourceFormat::Raw
-    }
 }
 
 // TODO(epage): Remove the serde traits and instead provide an impl based on if serde traits exist

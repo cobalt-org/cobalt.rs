@@ -28,7 +28,7 @@ impl Vimwiki {
         let lang = Language::from_vimwiki_str(content);
 
         // TODO: vimwiki crate needs to support converting ParseError<'a>
-        //       into owned verison of ParseError<'static> similar to elements
+        //       into owned version of ParseError<'static> similar to elements
         //
         //       Until then, we just convert to error display message and
         //       wrap that in a general failure error type

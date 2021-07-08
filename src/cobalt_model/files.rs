@@ -517,7 +517,7 @@ mod tests {
     }
 
     #[test]
-    fn files_includes_overriden_file() {
+    fn files_includes_overridden_file() {
         let ignores = &["!.htaccess"];
 
         assert_includes_file!(
@@ -538,7 +538,7 @@ mod tests {
     }
 
     #[test]
-    fn files_includes_overriden_dir() {
+    fn files_includes_overridden_dir() {
         let ignores = &[
             "!/_posts",
             "!/_posts/**",
@@ -591,7 +591,7 @@ mod tests {
     }
 
     #[test]
-    fn files_includes_overriden_dir_file() {
+    fn files_includes_overridden_dir_file() {
         let ignores = &[
             "!/_posts",
             "!/_posts/**",

@@ -293,6 +293,7 @@ dependencies = [
  "assert_fs",
  "chrono",
  "clap",
+ "cobalt-config",
  "deunicode",
  "difference",
  "env_logger",
@@ -327,6 +328,22 @@ dependencies = [
  "toml",
  "vimwiki",
  "walkdir 2.3.2",
+]
+
+[[package]]
+name = "cobalt-config"
+version = "0.16.0"
+dependencies = [
+ "chrono",
+ "deunicode",
+ "itertools",
+ "liquid-core",
+ "log",
+ "once_cell",
+ "regex",
+ "serde",
+ "serde_yaml",
+ "status",
 ]
 
 [[package]]
@@ -1773,6 +1790,15 @@ name = "static_assertions"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
+
+[[package]]
+name = "status"
+version = "0.0.10"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "36f7e6db3d58ab9e499a2722b0ddaaffeda2d76865a1749d5411182176c594f9"
+dependencies = [
+ "indexmap",
+]
 
 [[package]]
 name = "stfu8"

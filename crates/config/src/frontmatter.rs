@@ -1,12 +1,13 @@
 use std::fmt;
 use std::path;
 
-use serde;
-
 use super::*;
 
 #[derive(Debug, Eq, PartialEq, Default, Clone, serde::Serialize, serde::Deserialize)]
-#[serde(deny_unknown_fields, default)]
+#[serde(default)]
+#[serde(rename_all = "snake_case")]
+#[cfg_attr(feature = "unstable", serde(deny_unknown_fields))]
+#[cfg_attr(not(feature = "unstable"), non_exhaustive)]
 pub struct Frontmatter {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub permalink: Option<Permalink>,
@@ -25,17 +26,19 @@ pub struct Frontmatter {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub excerpt_separator: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub published_date: Option<datetime::DateTime>,
+    pub published_date: Option<DateTime>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub format: Option<SourceFormat>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub templated: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub layout: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub is_draft: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub weight: Option<i32>,
-    #[serde(skip_serializing_if = "liquid_value::Object::is_empty")]
-    pub data: liquid_value::Object,
+    #[serde(skip_serializing_if = "liquid_core::Object::is_empty")]
+    pub data: liquid_core::Object,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub pagination: Option<Pagination>,
     // Controlled by where the file is found.  We might allow control over the type at a later
@@ -50,28 +53,41 @@ impl Frontmatter {
     }
 
     pub fn merge_path(mut self, relpath: &path::Path) -> Self {
-        if self.format.is_none() {
-            let ext = relpath.extension().and_then(|os| os.to_str()).unwrap_or("");
-            let format = match ext {
-                "md" => SourceFormat::Markdown,
-                "wiki" => SourceFormat::Vimwiki,
+        if let Some(name) = relpath.file_name().and_then(|f| f.to_str()) {
+            let mut split_name = crate::path::split_ext(name);
+
+            #[cfg(feature = "preview_unstable")]
+            if split_name.1 == Some("liquid") {
+                self.templated.get_or_insert(true);
+                split_name = crate::path::split_ext(split_name.0);
+            } else {
+                self.templated.get_or_insert(false);
+            }
+
+            let format = match split_name.1 {
+                Some("md") => SourceFormat::Markdown,
+                Some("wiki") => SourceFormat::Vimwiki,
                 _ => SourceFormat::Raw,
             };
-            self.format = Some(format);
-        }
+            self.format.get_or_insert(format);
 
-        if self.published_date.is_none() || self.slug.is_none() {
-            let file_stem = crate::path::file_stem(relpath);
-            let (file_date, file_stem) = crate::path::parse_file_stem(file_stem);
-            if self.published_date.is_none() {
-                self.published_date = file_date;
+            while split_name.1.is_some() {
+                split_name = crate::path::split_ext(split_name.0);
             }
-            if self.slug.is_none() {
-                let slug = crate::path::slugify(file_stem);
-                if self.title.is_none() {
-                    self.title = Some(crate::path::titleize_slug(&slug));
+
+            if self.published_date.is_none() || self.slug.is_none() {
+                let file_stem = split_name.0;
+                let (file_date, file_stem) = crate::path::parse_file_stem(file_stem);
+                if self.published_date.is_none() {
+                    self.published_date = file_date;
                 }
-                self.slug = Some(slug);
+                if self.slug.is_none() {
+                    let slug = crate::path::slugify(file_stem);
+                    if self.title.is_none() {
+                        self.title = Some(crate::path::titleize_slug(&slug));
+                    }
+                    self.slug = Some(slug);
+                }
             }
         }
 
@@ -90,6 +106,7 @@ impl Frontmatter {
             excerpt_separator,
             published_date,
             format,
+            templated,
             layout,
             is_draft,
             weight,
@@ -106,8 +123,9 @@ impl Frontmatter {
             categories: categories.or_else(|| other.categories.clone()),
             tags: tags.or_else(|| other.tags.clone()),
             excerpt_separator: excerpt_separator.or_else(|| other.excerpt_separator.clone()),
-            published_date: published_date.or_else(|| other.published_date.clone()),
+            published_date: published_date.or(other.published_date),
             format: format.or(other.format),
+            templated: templated.or(other.templated),
             layout: layout.or_else(|| other.layout.clone()),
             is_draft: is_draft.or(other.is_draft),
             weight: weight.or(other.weight),
@@ -120,39 +138,48 @@ impl Frontmatter {
 
 impl fmt::Display for Frontmatter {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let converted = serde_yaml::to_string(self).ok();
-        if converted.as_ref().map(|s| s.as_str()) == Some("---\n{}") {
+        let converted = serde_yaml::to_string(self).expect("should always be valid");
+        let subset = converted
+            .strip_prefix("---")
+            .unwrap_or_else(|| converted.as_str())
+            .trim();
+        let converted = if subset == "{}" { "" } else { subset };
+        if converted.is_empty() {
             Ok(())
         } else {
-            write!(f, "{}", &converted.unwrap()[4..])
+            write!(f, "{}", converted)
         }
     }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "kebab-case")]
+#[serde(rename_all = "snake_case")]
+#[cfg_attr(feature = "unstable", serde(deny_unknown_fields))]
+#[cfg_attr(not(feature = "unstable"), non_exhaustive)]
 pub enum PermalinkAlias {
     Path,
+    #[cfg(not(feature = "unstable"))]
     #[doc(hidden)]
-    __NonExhaustive,
+    #[serde(other)]
+    Unknown,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
 #[serde(untagged)]
+#[cfg_attr(feature = "unstable", serde(deny_unknown_fields))]
+#[cfg_attr(not(feature = "unstable"), non_exhaustive)]
 pub enum Permalink {
     Alias(PermalinkAlias),
     Explicit(String),
-    #[doc(hidden)]
-    __NonExhaustive,
 }
 
 impl Permalink {
     pub fn as_str(&self) -> &str {
         match self {
             Permalink::Alias(PermalinkAlias::Path) => "/{{parent}}/{{name}}{{ext}}",
-            Permalink::Alias(PermalinkAlias::__NonExhaustive) => unreachable!("private variant"),
+            #[cfg(not(feature = "unstable"))]
+            Permalink::Alias(PermalinkAlias::Unknown) => unreachable!("private variant"),
             Permalink::Explicit(path) => path.as_str(),
-            Permalink::__NonExhaustive => unreachable!("private variant"),
         }
     }
 }
@@ -170,11 +197,17 @@ impl fmt::Display for Permalink {
 }
 
 #[derive(Debug, Eq, PartialEq, Hash, Copy, Clone, serde::Serialize, serde::Deserialize)]
-#[serde(deny_unknown_fields)]
+#[cfg_attr(feature = "preview_unstable", serde(rename_all = "snake_case"))]
+#[cfg_attr(feature = "unstable", serde(deny_unknown_fields))]
+#[cfg_attr(not(feature = "unstable"), non_exhaustive)]
 pub enum SourceFormat {
     Raw,
     Markdown,
     Vimwiki,
+    #[cfg(not(feature = "unstable"))]
+    #[doc(hidden)]
+    #[serde(other)]
+    Unknown,
 }
 
 impl Default for SourceFormat {
@@ -183,11 +216,11 @@ impl Default for SourceFormat {
     }
 }
 
-/// Shallow merge of `liquid_value::Object`'s
+/// Shallow merge of `liquid_core::Object`'s
 fn merge_objects(
-    mut primary: liquid_value::Object,
-    secondary: &liquid_value::Object,
-) -> liquid_value::Object {
+    mut primary: liquid_core::Object,
+    secondary: &liquid_core::Object,
+) -> liquid_core::Object {
     for (key, value) in secondary {
         primary
             .entry(key.to_owned())

@@ -6,20 +6,7 @@ use super::files;
 use super::slug;
 use super::FrontmatterBuilder;
 use crate::error::*;
-
-#[derive(Debug, Eq, PartialEq, Hash, Copy, Clone, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub enum SortOrder {
-    None,
-    Asc,
-    Desc,
-}
-
-impl Default for SortOrder {
-    fn default() -> SortOrder {
-        SortOrder::Desc
-    }
-}
+pub use cobalt_config::SortOrder;
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields, default)]

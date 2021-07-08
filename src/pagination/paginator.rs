@@ -112,7 +112,7 @@ pub fn create_paginator(
 impl Into<liquid::Object> for Paginator {
     fn into(self) -> liquid::Object {
         let mut object = liquid::Object::new();
-        // if no pages, means we have indexes instead, `tags` like cases for exemple
+        // if no pages, means we have indexes instead, `tags` like cases for example
         if let Some(pages) = self.pages {
             object.insert("pages".into(), liquid::model::Value::Array(pages));
         }

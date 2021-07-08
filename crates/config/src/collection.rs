@@ -1,7 +1,10 @@
 use super::*;
 
 #[derive(Debug, Clone, Default, PartialEq, serde::Serialize, serde::Deserialize)]
-#[serde(deny_unknown_fields, default)]
+#[serde(default)]
+#[serde(rename_all = "snake_case")]
+#[cfg_attr(feature = "unstable", serde(deny_unknown_fields))]
+#[cfg_attr(not(feature = "unstable"), non_exhaustive)]
 pub struct Collection {
     pub title: Option<String>,
     pub description: Option<String>,
@@ -59,13 +62,19 @@ impl From<PageCollection> for Collection {
 }
 
 #[derive(Debug, Clone, PartialEq, Default, serde::Serialize, serde::Deserialize)]
-#[serde(deny_unknown_fields, default)]
+#[serde(default)]
+#[serde(rename_all = "snake_case")]
+#[cfg_attr(feature = "unstable", serde(deny_unknown_fields))]
+#[cfg_attr(not(feature = "unstable"), non_exhaustive)]
 pub struct PageCollection {
     pub default: Frontmatter,
 }
 
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
-#[serde(deny_unknown_fields, default)]
+#[serde(default)]
+#[serde(rename_all = "snake_case")]
+#[cfg_attr(feature = "unstable", serde(deny_unknown_fields))]
+#[cfg_attr(not(feature = "unstable"), non_exhaustive)]
 pub struct PostCollection {
     pub title: Option<String>,
     pub description: Option<String>,
@@ -95,12 +104,17 @@ impl Default for PostCollection {
 }
 
 #[derive(Debug, Eq, PartialEq, Hash, Copy, Clone, serde::Serialize, serde::Deserialize)]
-#[serde(deny_unknown_fields)]
-#[serde(rename_all = "kebab-case")]
+#[cfg_attr(feature = "preview_unstable", serde(rename_all = "snake_case"))]
+#[cfg_attr(feature = "unstable", serde(deny_unknown_fields))]
+#[cfg_attr(not(feature = "unstable"), non_exhaustive)]
 pub enum SortOrder {
     None,
     Asc,
     Desc,
+    #[cfg(not(feature = "unstable"))]
+    #[doc(hidden)]
+    #[serde(other)]
+    Unknown,
 }
 
 impl Default for SortOrder {
