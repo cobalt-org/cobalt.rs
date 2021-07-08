@@ -1,8 +1,6 @@
 use std::fmt;
 use std::path;
 
-use serde;
-
 use super::*;
 
 #[derive(Debug, Eq, PartialEq, Default, Clone, serde::Serialize, serde::Deserialize)]
@@ -125,7 +123,7 @@ impl Frontmatter {
             categories: categories.or_else(|| other.categories.clone()),
             tags: tags.or_else(|| other.tags.clone()),
             excerpt_separator: excerpt_separator.or_else(|| other.excerpt_separator.clone()),
-            published_date: published_date.or_else(|| other.published_date),
+            published_date: published_date.or(other.published_date),
             format: format.or(other.format),
             templated: templated.or(other.templated),
             layout: layout.or_else(|| other.layout.clone()),

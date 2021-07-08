@@ -1,8 +1,6 @@
 use std::fmt;
 use std::path;
 
-use serde_yaml;
-
 use super::*;
 
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]

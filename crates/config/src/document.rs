@@ -1,7 +1,5 @@
 use std::fmt;
 
-use regex;
-
 use crate::Frontmatter;
 use crate::Result;
 use crate::Status;

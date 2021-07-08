@@ -1,4 +1,3 @@
-use std::convert::Into;
 use std::vec::Vec;
 
 use super::*;
@@ -77,20 +76,6 @@ pub enum Include {
     #[doc(hidden)]
     #[serde(other)]
     Unknown,
-}
-
-impl Into<&'static str> for Include {
-    fn into(self) -> &'static str {
-        match self {
-            Include::None => "",
-            Include::All => "all",
-            Include::Tags => "tags",
-            Include::Categories => "categories",
-            Include::Dates => "dates",
-            #[cfg(not(feature = "unstable"))]
-            Include::Unknown => "",
-        }
-    }
 }
 
 impl Default for Include {
