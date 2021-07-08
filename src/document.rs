@@ -193,55 +193,39 @@ pub struct Document {
 }
 
 impl Document {
-    pub fn new(
-        url_path: String,
-        file_path: PathBuf,
-        content: String,
-        attributes: Object,
-        front: cobalt_model::Frontmatter,
-    ) -> Document {
-        Document {
-            url_path,
-            file_path,
-            content,
-            attributes,
-            front,
-        }
-    }
-
     pub fn parse(
         src_path: &Path,
         rel_path: &Path,
-        default_front: cobalt_model::FrontmatterBuilder,
+        default_front: cobalt_config::Frontmatter,
     ) -> Result<Document> {
         trace!("Parsing {:?}", rel_path);
         let content = files::read_file(src_path)?;
-        let builder =
-            cobalt_model::DocumentBuilder::<cobalt_model::FrontmatterBuilder>::parse(&content)?;
-        let (front, content) = builder.parts();
-        let front = front.merge_path(rel_path).merge(default_front);
+        let builder = cobalt_config::Document::parse(&content)?;
+        let (front, content) = builder.into_parts();
+        let front = front.merge_path(rel_path).merge(&default_front);
 
-        let front = front.build()?;
+        let front = cobalt_model::Frontmatter::from_config(front)?;
 
         let (file_path, url_path) = {
             let perma_attributes = permalink_attributes(&front, rel_path);
-            let url_path = permalink::explode_permalink(&front.permalink, &perma_attributes)
-                .with_context(|_| {
-                    failure::format_err!("Failed to create permalink `{}`", front.permalink)
-                })?;
+            let url_path =
+                permalink::explode_permalink(front.permalink.as_str(), &perma_attributes)
+                    .with_context(|_| {
+                        failure::format_err!("Failed to create permalink `{}`", front.permalink)
+                    })?;
             let file_path = permalink::format_url_as_file(&url_path);
             (file_path, url_path)
         };
 
         let doc_attributes = document_attributes(&front, rel_path, url_path.as_ref());
 
-        Ok(Document::new(
+        Ok(Document {
             url_path,
             file_path,
             content,
-            doc_attributes,
+            attributes: doc_attributes,
             front,
-        ))
+        })
     }
 
     /// Metadata for generating RSS feeds

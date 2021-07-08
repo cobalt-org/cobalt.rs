@@ -1,12 +1,12 @@
 use std::path;
 
+use cobalt_config::Frontmatter;
+use cobalt_config::SortOrder;
 use liquid;
 
 use super::files;
 use super::slug;
-use super::FrontmatterBuilder;
 use crate::error::*;
-pub use cobalt_config::SortOrder;
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields, default)]
@@ -25,15 +25,111 @@ pub struct CollectionBuilder {
     pub jsonfeed: Option<String>,
     pub base_url: Option<String>,
     pub publish_date_in_filename: bool,
-    pub default: FrontmatterBuilder,
+    pub default: Frontmatter,
 }
 
 impl CollectionBuilder {
-    pub fn new() -> Self {
-        Self::default()
+    pub fn from_page_config(
+        config: cobalt_config::PageCollection,
+        source: &path::Path,
+        site: &cobalt_config::Site,
+        posts: &cobalt_config::PostCollection,
+        common_default: &cobalt_config::Frontmatter,
+        ignore: &[String],
+        template_extensions: &[String],
+    ) -> Self {
+        let mut ignore = ignore.to_vec();
+        ignore.push(format!("/{}", posts.dir));
+        if let Some(ref drafts_dir) = posts.drafts_dir {
+            ignore.push(format!("/{}", drafts_dir));
+        }
+        let mut config: cobalt_config::Collection = config.into();
+        // Use `site` because the pages are effectively the site
+        config.title = Some(site.title.clone().unwrap_or_else(|| "".to_owned()));
+        config.description = site.description.clone();
+        Self::from_config(
+            config,
+            "pages",
+            false,
+            source,
+            site,
+            common_default,
+            ignore,
+            template_extensions,
+        )
     }
 
-    pub fn merge_frontmatter(mut self, secondary: FrontmatterBuilder) -> Self {
+    pub fn from_post_config(
+        config: cobalt_config::PostCollection,
+        source: &path::Path,
+        site: &cobalt_config::Site,
+        include_drafts: bool,
+        common_default: &cobalt_config::Frontmatter,
+        ignore: &[String],
+        template_extensions: &[String],
+    ) -> Self {
+        let mut config: cobalt_config::Collection = config.into();
+        // Default with `site` for people quickly bootstrapping a blog, the blog and site are
+        // effectively equivalent.
+        if config.title.is_none() {
+            config.title = Some(site.title.clone().unwrap_or_else(|| "".to_owned()));
+        }
+        if config.description.is_none() {
+            config.description = site.description.clone();
+        }
+        Self::from_config(
+            config,
+            "posts",
+            include_drafts,
+            source,
+            site,
+            common_default,
+            ignore.to_vec(),
+            template_extensions,
+        )
+    }
+
+    fn from_config(
+        config: cobalt_config::Collection,
+        slug: &str,
+        include_drafts: bool,
+        source: &path::Path,
+        site: &cobalt_config::Site,
+        common_default: &cobalt_config::Frontmatter,
+        ignore: Vec<String>,
+        template_extensions: &[String],
+    ) -> Self {
+        let cobalt_config::Collection {
+            title,
+            description,
+            dir,
+            drafts_dir,
+            order,
+            rss,
+            jsonfeed,
+            publish_date_in_filename,
+            default,
+        } = config;
+        Self {
+            title: title,
+            slug: Some(slug.to_owned()),
+            description: description,
+            source: Some(source.to_owned()),
+            dir: dir,
+            drafts_dir: drafts_dir,
+            include_drafts,
+            template_extensions: template_extensions.to_vec(),
+            ignore,
+            order,
+            rss,
+            jsonfeed,
+            base_url: site.base_url.clone(),
+            publish_date_in_filename,
+            default: default.merge(&common_default),
+        }
+    }
+
+    pub fn merge_frontmatter(mut self, secondary: &Frontmatter) -> Self {
         self.default = self.default.merge(secondary);
         self
     }
@@ -90,7 +186,10 @@ impl CollectionBuilder {
             );
         }
 
-        let default = default.set_collection(slug.clone());
+        let default = default.merge(&Frontmatter {
+            collection: Some(slug.clone()),
+            ..Default::default()
+        });
 
         let new = Collection {
             title,
@@ -151,7 +250,7 @@ pub struct Collection {
     pub rss: Option<String>,
     pub jsonfeed: Option<String>,
     pub base_url: Option<String>,
-    pub default: FrontmatterBuilder,
+    pub default: Frontmatter,
     pub attributes: liquid::Object,
 }
 

@@ -1,11 +1,12 @@
+use std::ffi::OsStr;
 use std::path;
+
+use failure::ResultExt;
 
 use super::sass;
 use super::{files, Minify};
 
 use crate::error::*;
-use failure::ResultExt;
-use std::ffi::OsStr;
 
 #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
 #[serde(deny_unknown_fields, default)]
@@ -17,6 +18,20 @@ pub struct AssetsBuilder {
 }
 
 impl AssetsBuilder {
+    pub fn from_config(
+        config: cobalt_config::Assets,
+        source: &path::Path,
+        ignore: &[String],
+        template_extensions: &[String],
+    ) -> Self {
+        Self {
+            sass: sass::SassBuilder::from_config(config.sass, source),
+            source: Some(source.to_owned()),
+            ignore: ignore.to_vec(),
+            template_extensions: template_extensions.to_vec(),
+        }
+    }
+
     pub fn build(self) -> Result<Assets> {
         let AssetsBuilder {
             sass,

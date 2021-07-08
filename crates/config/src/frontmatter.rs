@@ -153,18 +153,6 @@ impl fmt::Display for Frontmatter {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "snake_case")]
-#[cfg_attr(feature = "unstable", serde(deny_unknown_fields))]
-#[cfg_attr(not(feature = "unstable"), non_exhaustive)]
-pub enum PermalinkAlias {
-    Path,
-    #[cfg(not(feature = "unstable"))]
-    #[doc(hidden)]
-    #[serde(other)]
-    Unknown,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
 #[serde(untagged)]
 #[cfg_attr(feature = "unstable", serde(deny_unknown_fields))]
 #[cfg_attr(not(feature = "unstable"), non_exhaustive)]
@@ -177,10 +165,32 @@ impl Permalink {
     pub fn as_str(&self) -> &str {
         match self {
             Permalink::Alias(PermalinkAlias::Path) => "/{{parent}}/{{name}}{{ext}}",
-            #[cfg(not(feature = "unstable"))]
-            Permalink::Alias(PermalinkAlias::Unknown) => unreachable!("private variant"),
             Permalink::Explicit(path) => path.as_str(),
         }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
+#[serde(deny_unknown_fields)]
+#[cfg_attr(not(feature = "unstable"), non_exhaustive)]
+pub enum PermalinkAlias {
+    Path,
+}
+
+impl std::ops::Deref for Permalink {
+    type Target = str;
+
+    #[inline]
+    fn deref(&self) -> &str {
+        self.as_str()
+    }
+}
+
+impl AsRef<str> for Permalink {
+    #[inline]
+    fn as_ref(&self) -> &str {
+        self.as_str()
     }
 }
 

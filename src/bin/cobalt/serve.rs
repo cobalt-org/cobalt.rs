@@ -64,7 +64,7 @@ pub fn serve_command(matches: &clap::ArgMatches) -> Result<()> {
     let mut config = args::get_config(matches)?;
     debug!("Overriding config `site.base_url` with `{}`", ip);
     config.site.base_url = Some(format!("http://{}", ip));
-    let config = config.build()?;
+    let config = cobalt::cobalt_model::Config::from_config(config)?;
     let dest = path::Path::new(&config.destination).to_owned();
 
     build::build(config.clone())?;
