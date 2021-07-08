@@ -48,6 +48,7 @@ fn parse_frontmatter(front: &str) -> Result<Frontmatter> {
     Ok(front)
 }
 
+#[cfg(feature = "preview_unstable")]
 static FRONT_MATTER: once_cell::sync::Lazy<regex::Regex> = once_cell::sync::Lazy::new(|| {
     regex::RegexBuilder::new(r"\A---\s*\r?\n([\s\S]*\n)?---\s*\r?\n(.*)")
         .dot_matches_new_line(true)
@@ -55,10 +56,77 @@ static FRONT_MATTER: once_cell::sync::Lazy<regex::Regex> = once_cell::sync::Lazy
         .unwrap()
 });
 
+#[cfg(feature = "preview_unstable")]
 fn split_document(content: &str) -> (Option<&str>, &str) {
     if let Some(captures) = FRONT_MATTER.captures(content) {
         let front_split = captures.get(1).map(|m| m.as_str()).unwrap_or_default();
         let content_split = captures.get(2).unwrap().as_str();
+
+        if front_split.is_empty() {
+            (None, content_split)
+        } else {
+            (Some(front_split), content_split)
+        }
+    } else {
+        (None, content)
+    }
+}
+
+#[cfg(not(feature = "preview_unstable"))]
+fn split_document(content: &str) -> (Option<&str>, &str) {
+    static FRONT_MATTER_DIVIDE: once_cell::sync::Lazy<regex::Regex> =
+        once_cell::sync::Lazy::new(|| {
+            regex::RegexBuilder::new(r"---\s*\r?\n")
+                .dot_matches_new_line(true)
+                .build()
+                .unwrap()
+        });
+    static FRONT_MATTER: once_cell::sync::Lazy<regex::Regex> = once_cell::sync::Lazy::new(|| {
+        regex::RegexBuilder::new(r"\A---\s*\r?\n([\s\S]*\n)?---\s*\r?\n")
+            .dot_matches_new_line(true)
+            .build()
+            .unwrap()
+    });
+
+    if FRONT_MATTER.is_match(content) {
+        // skip first empty string
+        let mut splits = FRONT_MATTER_DIVIDE.splitn(content, 3).skip(1);
+
+        // split between dividers
+        let front_split = splits.next().unwrap_or("");
+
+        // split after second divider
+        let content_split = splits.next().unwrap_or("");
+
+        if front_split.is_empty() {
+            (None, content_split)
+        } else {
+            (Some(front_split), content_split)
+        }
+    } else {
+        deprecated_split_front_matter(content)
+    }
+}
+
+#[cfg(not(feature = "preview_unstable"))]
+fn deprecated_split_front_matter(content: &str) -> (Option<&str>, &str) {
+    static FRONT_MATTER_DIVIDE: once_cell::sync::Lazy<regex::Regex> =
+        once_cell::sync::Lazy::new(|| {
+            regex::RegexBuilder::new(r"(\A|\n)---\s*\r?\n")
+                .dot_matches_new_line(true)
+                .build()
+                .unwrap()
+        });
+    if FRONT_MATTER_DIVIDE.is_match(content) {
+        log::warn!("Trailing separators are deprecated. We recommend frontmatters be surrounded, above and below, with ---");
+
+        let mut splits = FRONT_MATTER_DIVIDE.splitn(content, 2);
+
+        // above the split are the attributes
+        let front_split = splits.next().unwrap_or("");
+
+        // everything below the split becomes the new content
+        let content_split = splits.next().unwrap_or("");
 
         if front_split.is_empty() {
             (None, content_split)

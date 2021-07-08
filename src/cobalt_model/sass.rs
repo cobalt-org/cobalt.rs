@@ -17,8 +17,15 @@ pub struct SassBuilder {
 }
 
 impl SassBuilder {
-    pub fn new() -> Self {
-        Default::default()
+    pub fn from_config(config: cobalt_config::Sass, source: &path::Path) -> Self {
+        Self {
+            style: config.style,
+            import_dir: source
+                .join(config.import_dir)
+                .into_os_string()
+                .into_string()
+                .ok(),
+        }
     }
 
     pub fn build(self) -> SassCompiler {

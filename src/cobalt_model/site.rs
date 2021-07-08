@@ -19,10 +19,20 @@ pub struct SiteBuilder {
     pub description: Option<String>,
     pub base_url: Option<String>,
     pub data: Option<liquid::Object>,
-    pub data_dir: Option<path::PathBuf>,
+    pub data_dir: path::PathBuf,
 }
 
 impl SiteBuilder {
+    pub fn from_config(config: cobalt_config::Site, source: &path::Path) -> Self {
+        Self {
+            title: config.title,
+            description: config.description,
+            base_url: config.base_url,
+            data: config.data,
+            data_dir: source.join(config.data_dir),
+        }
+    }
+
     pub fn build(self) -> Result<liquid::Object> {
         let SiteBuilder {
             title,
@@ -53,9 +63,7 @@ impl SiteBuilder {
             attributes.insert("base_url".into(), liquid::model::Value::scalar(base_url));
         }
         let mut data = data.unwrap_or_default();
-        if let Some(ref data_dir) = data_dir {
-            insert_data_dir(&mut data, data_dir)?;
-        }
+        insert_data_dir(&mut data, &data_dir)?;
         if !data.is_empty() {
             attributes.insert("data".into(), liquid::model::Value::Object(data));
         }
