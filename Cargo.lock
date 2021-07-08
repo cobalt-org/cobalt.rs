@@ -302,7 +302,7 @@ dependencies = [
  "ghp",
  "html-minifier",
  "ignore",
- "itertools 0.10.1",
+ "itertools",
  "jsonfeed",
  "kstring",
  "lazy_static",
@@ -336,7 +336,7 @@ version = "0.16.0"
 dependencies = [
  "chrono",
  "deunicode",
- "itertools 0.8.2",
+ "itertools",
  "liquid-core",
  "log",
  "once_cell",
@@ -953,15 +953,6 @@ dependencies = [
 
 [[package]]
 name = "itertools"
-version = "0.8.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f56a2d0bc861f9165be4eb3442afd3c236d8a98afd426f65d92324ae1091a484"
-dependencies = [
- "either",
-]
-
-[[package]]
-name = "itertools"
 version = "0.10.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "69ddb889f9d0d08a67338271fa9b62996bc788c7796a5c18cf057420aaed5eaf"
@@ -1074,7 +1065,7 @@ checksum = "be5a88630d73ac78b46277169f92ef135fb09ad50af039f76ccfc35264796cc5"
 dependencies = [
  "anymap",
  "chrono",
- "itertools 0.10.1",
+ "itertools",
  "kstring",
  "liquid-derive",
  "num-traits",
@@ -1102,7 +1093,7 @@ checksum = "10c14f535f61c4263e57cd4f6ad9701b97459f026420347ed978c4ab0d2512cc"
 dependencies = [
  "chrono",
  "deunicode",
- "itertools 0.10.1",
+ "itertools",
  "kstring",
  "liquid-core",
  "once_cell",
