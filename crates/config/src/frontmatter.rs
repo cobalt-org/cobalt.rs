@@ -138,11 +138,16 @@ impl Frontmatter {
 
 impl fmt::Display for Frontmatter {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let converted = serde_yaml::to_string(self).ok();
-        if converted.as_deref() == Some("---\n{}") {
+        let converted = serde_yaml::to_string(self).expect("should always be valid");
+        let subset = converted
+            .strip_prefix("---")
+            .unwrap_or_else(|| converted.as_str())
+            .trim();
+        let converted = if subset == "{}" { "" } else { subset };
+        if converted.is_empty() {
             Ok(())
         } else {
-            write!(f, "{}", &converted.unwrap()[4..])
+            write!(f, "{}", converted)
         }
     }
 }
