@@ -344,6 +344,28 @@ fn parse_drafts(
     Ok(())
 }
 
+fn parse_pages(
+    page_files: &files::Files,
+    collection: &Collection,
+    source: &path::Path,
+) -> Result<Vec<Document>> {
+    let mut documents = vec![];
+    for file_path in page_files.files() {
+        let rel_src = file_path
+            .strip_prefix(source)
+            .expect("file was found under the root");
+
+        let default_front = collection.default.clone();
+
+        let doc = Document::parse(&file_path, rel_src, default_front)
+            .with_context(|_| failure::format_err!("Failed to parse {}", rel_src.display()))?;
+        if !doc.front.is_draft || collection.include_drafts {
+            documents.push(doc);
+        }
+    }
+    Ok(documents)
+}
+
 fn find_layouts(layouts: &path::Path) -> Result<files::Files> {
     let mut files = files::FilesBuilder::new(layouts)?;
     files.ignore_hidden(false)?;
@@ -381,28 +403,6 @@ fn parse_layouts(files: &files::Files) -> HashMap<String, String> {
         .into_iter()
         .map(|entry| entry.expect("partition to filter out errors"))
         .collect()
-}
-
-fn parse_pages(
-    page_files: &files::Files,
-    collection: &Collection,
-    source: &path::Path,
-) -> Result<Vec<Document>> {
-    let mut documents = vec![];
-    for file_path in page_files.files() {
-        let rel_src = file_path
-            .strip_prefix(source)
-            .expect("file was found under the root");
-
-        let default_front = collection.default.clone();
-
-        let doc = Document::parse(&file_path, rel_src, default_front)
-            .with_context(|_| failure::format_err!("Failed to parse {}", rel_src.display()))?;
-        if !doc.front.is_draft || collection.include_drafts {
-            documents.push(doc);
-        }
-    }
-    Ok(documents)
 }
 
 // creates a new RSS file with the contents of the site blog
