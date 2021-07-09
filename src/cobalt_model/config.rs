@@ -21,7 +21,7 @@ pub struct Config {
     pub pages: collection::CollectionBuilder,
     pub posts: collection::CollectionBuilder,
     pub site: site::SiteBuilder,
-    pub layouts_dir: path::PathBuf,
+    pub layouts_path: path::PathBuf,
     pub liquid: template::LiquidBuilder,
     pub markdown: mark::MarkdownBuilder,
     pub vimwiki: vwiki::VimwikiBuilder,
@@ -99,11 +99,11 @@ impl Config {
         let assets =
             assets::AssetsBuilder::from_config(assets, &source, &ignore, &template_extensions);
 
-        let includes_dir = source.join(includes_dir);
-        let layouts_dir = source.join(layouts_dir);
+        let includes_path = source.join(includes_dir);
+        let layouts_path = source.join(layouts_dir);
 
         let liquid = template::LiquidBuilder {
-            includes_dir,
+            includes_path,
             theme: syntax_highlight.theme.clone(),
         };
         let markdown = mark::MarkdownBuilder {
@@ -121,7 +121,7 @@ impl Config {
             pages,
             posts,
             site,
-            layouts_dir,
+            layouts_path,
             liquid,
             markdown,
             vimwiki,

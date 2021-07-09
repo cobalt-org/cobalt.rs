@@ -32,7 +32,7 @@ fn load_partials_from_path(root: path::PathBuf) -> Result<Partials> {
 #[derive(Debug, Clone, PartialEq, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct LiquidBuilder {
-    pub includes_dir: path::PathBuf,
+    pub includes_path: path::PathBuf,
     pub theme: String,
 }
 
@@ -49,7 +49,7 @@ impl LiquidBuilder {
             .filter(liquid_lib::jekyll::Shift)
             .filter(liquid_lib::jekyll::Unshift)
             .filter(liquid_lib::jekyll::ArrayToSentenceString)
-            .partials(load_partials_from_path(self.includes_dir)?)
+            .partials(load_partials_from_path(self.includes_path)?)
             .block(highlight)
             .build()?;
         Ok(Liquid { parser })

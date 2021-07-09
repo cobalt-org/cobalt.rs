@@ -42,7 +42,7 @@ impl Context {
             pages,
             posts,
             site,
-            layouts_dir,
+            layouts_path,
             liquid,
             markdown,
             vimwiki,
@@ -59,7 +59,7 @@ impl Context {
         let vimwiki = vimwiki.build();
         let assets = assets.build()?;
 
-        let layouts = find_layouts(&layouts_dir)?;
+        let layouts = find_layouts(&layouts_path)?;
         let layouts = parse_layouts(&layouts);
 
         let context = Context {
