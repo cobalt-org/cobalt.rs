@@ -1,6 +1,7 @@
 [workspace]
 members = [
     "crates/config",
+    "crates/core",
 ]
 
 [package]
@@ -36,6 +37,7 @@ doc = false
 
 [dependencies]
 cobalt-config = { version = "=0.16.0", path = "crates/config", features = ["unstable"] }
+cobalt-core = { version = "=0.16.0", path = "crates/core", features = ["unstable"] }
 clap = "2.33"
 kstring = "1.0"
 liquid = "0.22"

@@ -1,5 +1,5 @@
 [package]
-name = "cobalt-config"
+name = "cobalt-core"
 version = "0.16.0"
 authors = ["Ed Page <eopage@gmail.com>"]
 description = "Static site generator written in Rust"
@@ -15,14 +15,5 @@ unstable = []
 preview_unstable = []
 
 [dependencies]
-liquid-core = "0.22"
-chrono = "0.4"
-log = "0.4"
-regex = "1.1"
-serde = "1.0"
-serde_yaml = "0.8"
-relative-path = { version = "1", features = ["serde"] }
-once_cell = "1.2"
+cobalt-config = { version = "=0.16.0", path = "..//config", features = ["unstable"] }
 status = { version = "0.0.10", features = ["send_sync"] }
-deunicode = "1.0"
-itertools = "0.10"
