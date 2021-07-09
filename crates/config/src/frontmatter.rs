@@ -158,7 +158,7 @@ impl fmt::Display for Frontmatter {
 #[cfg_attr(not(feature = "unstable"), non_exhaustive)]
 pub enum Permalink {
     Alias(PermalinkAlias),
-    Explicit(String),
+    Explicit(ExplicitPermalink),
 }
 
 impl Permalink {
@@ -203,6 +203,76 @@ impl Default for Permalink {
 impl fmt::Display for Permalink {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.as_str())
+    }
+}
+
+#[derive(
+    Default,
+    Clone,
+    Debug,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize,
+)]
+#[repr(transparent)]
+#[serde(try_from = "String")]
+pub struct ExplicitPermalink(String);
+
+impl ExplicitPermalink {
+    pub fn from_unchecked(value: &str) -> Self {
+        Self(value.into())
+    }
+
+    pub fn as_str(&self) -> &str {
+        self.0.as_str()
+    }
+}
+
+impl std::fmt::Display for ExplicitPermalink {
+    fn fmt(&self, fmt: &mut std::fmt::Formatter) -> std::fmt::Result {
+        self.0.fmt(fmt)
+    }
+}
+
+impl<'s> std::convert::TryFrom<&'s str> for ExplicitPermalink {
+    type Error = &'static str;
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        if !value.starts_with('/') {
+            Err("Permalinks must be absolute paths")
+        } else {
+            let path = Self(value.into());
+            Ok(path)
+        }
+    }
+}
+
+impl std::convert::TryFrom<String> for ExplicitPermalink {
+    type Error = &'static str;
+
+    fn try_from(value: String) -> Result<Self, Self::Error> {
+        let value = value.as_str();
+        Self::try_from(value)
+    }
+}
+
+impl std::ops::Deref for ExplicitPermalink {
+    type Target = str;
+
+    #[inline]
+    fn deref(&self) -> &str {
+        self.as_str()
+    }
+}
+
+impl AsRef<str> for ExplicitPermalink {
+    #[inline]
+    fn as_ref(&self) -> &str {
+        self.as_str()
     }
 }
 
@@ -285,7 +355,9 @@ mod test {
     #[test]
     fn display_permalink_explicit() {
         let front = Frontmatter {
-            permalink: Some(Permalink::Explicit("foo".to_owned())),
+            permalink: Some(Permalink::Explicit(ExplicitPermalink::from_unchecked(
+                "foo",
+            ))),
             ..Default::default()
         };
         assert_eq!(&front.to_string(), "permalink: foo");

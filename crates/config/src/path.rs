@@ -37,6 +37,84 @@ fn title_case(s: &str) -> String {
     }
 }
 
+#[derive(
+    Default,
+    Clone,
+    Debug,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize,
+)]
+#[repr(transparent)]
+#[serde(try_from = "String")]
+pub struct RelPath(relative_path::RelativePathBuf);
+
+impl RelPath {
+    pub fn new() -> Self {
+        let path = relative_path::RelativePathBuf::new();
+        Self(path)
+    }
+
+    pub fn from_unchecked(value: &str) -> Self {
+        let path: relative_path::RelativePathBuf = value.into();
+        let path = path.normalize();
+        Self(path)
+    }
+
+    pub fn as_str(&self) -> &str {
+        self.0.as_str()
+    }
+}
+
+impl std::fmt::Display for RelPath {
+    fn fmt(&self, fmt: &mut std::fmt::Formatter) -> std::fmt::Result {
+        self.0.fmt(fmt)
+    }
+}
+
+impl<'s> std::convert::TryFrom<&'s str> for RelPath {
+    type Error = &'static str;
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        if value.starts_with('/') {
+            Err("Absolute paths are not supported")
+        } else {
+            let path: relative_path::RelativePathBuf = value.into();
+            let path = path.normalize();
+            Ok(Self(path))
+        }
+    }
+}
+
+impl std::convert::TryFrom<String> for RelPath {
+    type Error = &'static str;
+
+    fn try_from(value: String) -> Result<Self, Self::Error> {
+        let value = value.as_str();
+        Self::try_from(value)
+    }
+}
+
+impl std::ops::Deref for RelPath {
+    type Target = str;
+
+    #[inline]
+    fn deref(&self) -> &str {
+        self.as_str()
+    }
+}
+
+impl AsRef<str> for RelPath {
+    #[inline]
+    fn as_ref(&self) -> &str {
+        self.as_str()
+    }
+}
+
 #[cfg(test)]
 mod test_slug {
     use super::*;
@@ -215,5 +293,32 @@ mod test_stem {
                 "First-Blog-Post".to_owned()
             )
         );
+    }
+}
+
+#[cfg(test)]
+mod test_rel_path {
+    use super::*;
+    use std::convert::TryFrom;
+
+    #[test]
+    fn test_try_from_cwd_is_empty() {
+        assert_eq!(RelPath::new().as_str(), "");
+        assert_eq!(RelPath::default().as_str(), "");
+        assert_eq!(RelPath::try_from(".").unwrap().as_str(), "");
+        assert_eq!(RelPath::try_from("./").unwrap().as_str(), "");
+    }
+
+    #[test]
+    fn test_try_from_relpath_works() {
+        assert_eq!(RelPath::try_from("./foo/bar").unwrap().as_str(), "foo/bar");
+        assert_eq!(RelPath::try_from("foo/bar").unwrap().as_str(), "foo/bar");
+    }
+
+    #[test]
+    fn test_try_from_abspath_fails() {
+        let case = RelPath::try_from("/foo/bar");
+        println!("{:?}", case);
+        assert!(case.is_err());
     }
 }

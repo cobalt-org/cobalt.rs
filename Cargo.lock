@@ -341,6 +341,7 @@ dependencies = [
  "log",
  "once_cell",
  "regex",
+ "relative-path",
  "serde",
  "serde_yaml",
  "status",
@@ -1604,6 +1605,9 @@ name = "relative-path"
 version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a479d53d7eed831f3c92ca79c61002d5987e21417d528296832f802bca532380"
+dependencies = [
+ "serde",
+]
 
 [[package]]
 name = "remove_dir_all"
