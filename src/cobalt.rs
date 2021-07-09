@@ -24,13 +24,13 @@ struct Context {
     pub destination: path::PathBuf,
     pub pages: cobalt_model::Collection,
     pub posts: cobalt_model::Collection,
-    pub site: liquid::Object,
+    pub site: cobalt_model::Site,
+    pub site_attributes: liquid::Object,
     pub layouts: HashMap<String, String>,
     pub liquid: cobalt_model::Liquid,
     pub markdown: cobalt_model::Markdown,
     pub vimwiki: cobalt_model::Vimwiki,
     pub assets: cobalt_model::Assets,
-    pub sitemap: Option<String>,
     pub minify: Minify,
 }
 
@@ -47,13 +47,12 @@ impl Context {
             markdown,
             vimwiki,
             assets,
-            sitemap,
             minify,
         } = config;
 
         let pages = pages.build()?;
         let posts = posts.build()?;
-        let site = site.build()?;
+        let site_attributes = site.load(&source)?;
         let liquid = liquid.build()?;
         let markdown = markdown.build();
         let vimwiki = vimwiki.build();
@@ -68,12 +67,12 @@ impl Context {
             pages,
             posts,
             site,
+            site_attributes,
             layouts,
             liquid,
             markdown,
             vimwiki,
             assets,
-            sitemap,
             minify,
         };
         Ok(context)
@@ -105,7 +104,7 @@ pub fn build(config: Config) -> Result<()> {
     if let Some(ref path) = context.posts.jsonfeed {
         create_jsonfeed(path, &context.destination, &context.posts, &posts)?;
     }
-    if let Some(ref path) = context.sitemap {
+    if let Some(ref path) = context.site.sitemap {
         let sitemap_path = &context.destination.join(path);
         create_sitemap(
             &sitemap_path,
@@ -158,7 +157,7 @@ fn generate_doc(
     let mut globals: liquid::Object = vec![
         (
             "site".into(),
-            liquid::model::Value::Object(context.site.clone()),
+            liquid::model::Value::Object(context.site_attributes.clone()),
         ),
         global_collection,
     ]

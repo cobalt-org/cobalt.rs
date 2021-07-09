@@ -20,13 +20,12 @@ pub struct Config {
     pub destination: path::PathBuf,
     pub pages: collection::CollectionBuilder,
     pub posts: collection::CollectionBuilder,
-    pub site: site::SiteBuilder,
+    pub site: site::Site,
     pub layouts_path: path::PathBuf,
     pub liquid: template::LiquidBuilder,
     pub markdown: mark::MarkdownBuilder,
     pub vimwiki: vwiki::VimwikiBuilder,
     pub assets: assets::AssetsBuilder,
-    pub sitemap: Option<String>,
     pub minify: cobalt_config::Minify,
 }
 
@@ -93,8 +92,7 @@ impl Config {
             &template_extensions,
         );
 
-        let sitemap = site.sitemap.clone();
-        let site = site::SiteBuilder::from_config(site, &source);
+        let site = site::Site::from_config(site);
 
         let assets =
             assets::AssetsBuilder::from_config(assets, &source, &ignore, &template_extensions);
@@ -126,7 +124,6 @@ impl Config {
             markdown,
             vimwiki,
             assets,
-            sitemap,
             minify,
         };
 
