@@ -61,7 +61,8 @@ pub fn new_command_args() -> clap::App<'static, 'static> {
 }
 
 pub fn new_command(matches: &clap::ArgMatches) -> Result<()> {
-    let config = args::get_config(matches)?;
+    let mut config = args::get_config(matches)?;
+    config.include_drafts = true;
     let config = cobalt::cobalt_model::Config::from_config(config)?;
 
     let title = matches.value_of("TITLE").unwrap();
@@ -106,7 +107,8 @@ pub fn rename_command_args() -> clap::App<'static, 'static> {
 }
 
 pub fn rename_command(matches: &clap::ArgMatches) -> Result<()> {
-    let config = args::get_config(matches)?;
+    let mut config = args::get_config(matches)?;
+    config.include_drafts = true;
     let config = cobalt::cobalt_model::Config::from_config(config)?;
 
     let source = path::PathBuf::from(matches.value_of("SRC").unwrap());
