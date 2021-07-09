@@ -268,32 +268,26 @@ pub fn create_new_document(
         )
     })?;
 
-    let pages = config.pages.clone().build()?;
-    let posts = config.posts.clone().build()?;
-    let file_type = if posts.pages.includes_file(&file)
-        || posts
-            .drafts
-            .map(|d| d.includes_file(&file))
-            .unwrap_or_default()
-    {
-        posts.slug.as_str()
-    } else if pages.pages.includes_file(&file)
-        || pages
-            .drafts
-            .map(|d| d.includes_file(&file))
-            .unwrap_or_default()
-    {
-        pages.slug.as_str()
+    let source_files =
+        cobalt_core::Source::new(&config.source, config.ignore.iter().map(|s| s.as_str()))?;
+    let collection_slug = if source_files.includes_file(&file) {
+        match cobalt::classify_path(
+            &file,
+            &source_files,
+            &config.pages,
+            &config.posts,
+            &config.page_extensions,
+        ) {
+            Some((slug, _)) => slug,
+            None => failure::bail!("Target file is an asset: {}", file.display()),
+        }
     } else {
-        failure::bail!(
-            "Target file wouldn't be a member of any collection: {}",
-            file.display()
-        );
+        failure::bail!("Target file is ignored: {}", file.display());
     };
 
     let source_path = config
         .source
-        .join(format!("_defaults/{}.{}", file_type, extension));
+        .join(format!("_defaults/{}.{}", collection_slug, extension));
     let source = if source_path.is_file() {
         cobalt_model::files::read_file(&source_path)
             .with_context(|_| failure::format_err!("Failed to read default: {:?}", source_path))?
@@ -310,7 +304,7 @@ pub fn create_new_document(
             );
         }
         // For custom collections, use a post default.
-        let default = *DEFAULT.get(file_type).unwrap_or(&POST_MD);
+        let default = *DEFAULT.get(collection_slug).unwrap_or(&POST_MD);
         default.to_string()
     };
 
@@ -321,7 +315,7 @@ pub fn create_new_document(
     let doc = doc.to_string();
 
     create_file(&file, &doc)?;
-    info!("Created new {} {:?}", file_type, rel_file);
+    info!("Created new {} {:?}", collection_slug, rel_file);
 
     Ok(())
 }
@@ -364,36 +358,30 @@ pub fn rename_document(
     let doc = cobalt_model::Document::parse(&doc)?;
     let (mut front, content) = doc.into_parts();
 
-    let pages = config.pages.clone().build()?;
-    let posts = config.posts.clone().build()?;
-    let full_front = if posts.pages.includes_file(&target)
-        || posts
-            .drafts
-            .map(|d| d.includes_file(&target))
-            .unwrap_or_default()
-    {
-        // Can't rely on this for drafts atm
-        let rel_src = target
-            .strip_prefix(&config.source)
-            .expect("file was found under the root");
-        front.clone().merge_path(rel_src).merge(&posts.default)
-    } else if pages.pages.includes_file(&target)
-        || pages
-            .drafts
-            .map(|d| d.includes_file(&target))
-            .unwrap_or_default()
-    {
-        // Can't rely on this for drafts atm
-        let rel_src = target
-            .strip_prefix(&config.source)
-            .expect("file was found under the root");
-        front.clone().merge_path(rel_src).merge(&pages.default)
+    let source_files =
+        cobalt_core::Source::new(&config.source, config.ignore.iter().map(|s| s.as_str()))?;
+    let collection = if source_files.includes_file(&target) {
+        match cobalt::classify_path(
+            &target,
+            &source_files,
+            &config.pages,
+            &config.posts,
+            &config.page_extensions,
+        ) {
+            Some((slug, _)) if slug == config.pages.slug => &config.pages,
+            Some((slug, _)) if slug == config.posts.slug => &config.posts,
+            Some((slug, _)) => unreachable!("Unknown collection: {}", slug),
+            None => failure::bail!("Target file is an asset: {}", target.display()),
+        }
     } else {
-        failure::bail!(
-            "Target file wouldn't be a member of any collection: {:?}",
-            target
-        );
+        failure::bail!("Target file is ignored: {}", target.display());
     };
+    // Can't rely on this for drafts atm
+    let rel_src = target
+        .strip_prefix(&config.source)
+        .expect("file was found under the root");
+    let full_front = front.clone().merge_path(rel_src).merge(&collection.default);
+
     let full_front = cobalt_model::Frontmatter::from_config(full_front)?;
 
     front.title = Some(title.to_string());
@@ -429,8 +417,7 @@ fn prepend_date_to_filename(
         file.extension()
             .and_then(|os| os.to_str())
             .unwrap_or_else(|| &config
-                .posts
-                .template_extensions
+                .page_extensions
                 .get(0)
                 .expect("at least one element is enforced by config validator"))
     );
@@ -443,32 +430,25 @@ fn move_from_drafts_to_posts(
     config: &cobalt_model::Config,
     file: &path::Path,
 ) -> Result<path::PathBuf> {
-    let posts = config.posts.clone().build()?;
-
-    if posts
-        .drafts
-        .as_ref()
-        .map(|d| d.includes_file(&file))
-        .unwrap_or_default()
-    {
-        let drafts = posts.drafts.expect("Should have drafts in this if body");
-        let target = config.source.join("posts").join(
-            file.strip_prefix(drafts.subtree())
-                .expect("Should have subtree as prefix"),
-        );
-        trace!(
-            "post is in `drafts_dir` moving it to `posts` directory: {}",
-            target.display()
-        );
-        if let Some(parent) = target.parent() {
-            fs::create_dir_all(parent)
-                .with_context(|_| failure::format_err!("Could not create {}", parent.display()))?;
+    if let Some(drafts_dir) = config.posts.drafts_dir.as_ref() {
+        let drafts_root = config.source.join(drafts_dir);
+        if let Ok(relpath) = file.strip_prefix(drafts_root) {
+            let target = config.source.join(&config.posts.dir).join(relpath);
+            log::trace!(
+                "post is in `drafts_dir`; moving it to `posts` directory: {}",
+                target.display()
+            );
+            if let Some(parent) = target.parent() {
+                fs::create_dir_all(parent).with_context(|_| {
+                    failure::format_err!("Could not create {}", parent.display())
+                })?;
+            }
+            fs::rename(file, &target)?;
+            return Ok(target);
         }
-        fs::rename(file, &target)?;
-        Ok(target)
-    } else {
-        Ok(file.to_path_buf())
     }
+
+    Ok(file.to_owned())
 }
 
 pub fn publish_document(config: &cobalt_model::Config, file: &path::Path) -> Result<()> {
@@ -486,11 +466,26 @@ pub fn publish_document(config: &cobalt_model::Config, file: &path::Path) -> Res
 
     let file = move_from_drafts_to_posts(&config, &file)?;
 
-    let posts = config.posts.clone().build()?;
-    let pages = config.pages.clone().build()?;
-    if (posts.pages.includes_file(&file) && config.posts.publish_date_in_filename)
-        || (pages.pages.includes_file(&file) && config.pages.publish_date_in_filename)
-    {
+    let source_files =
+        cobalt_core::Source::new(&config.source, config.ignore.iter().map(|s| s.as_str()))?;
+    let collection = if source_files.includes_file(&file) {
+        match cobalt::classify_path(
+            &file,
+            &source_files,
+            &config.pages,
+            &config.posts,
+            &config.page_extensions,
+        ) {
+            Some((slug, _)) if slug == config.pages.slug => &config.pages,
+            Some((slug, _)) if slug == config.posts.slug => &config.posts,
+            Some((slug, _)) => unreachable!("Unknown collection: {}", slug),
+            None => failure::bail!("Target file is an asset: {}", file.display()),
+        }
+    } else {
+        failure::bail!("Target file is ignored: {}", file.display());
+    };
+
+    if collection.publish_date_in_filename {
         prepend_date_to_filename(&config, &file, &date)?;
     }
     Ok(())

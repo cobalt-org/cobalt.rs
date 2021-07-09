@@ -18,8 +18,11 @@ use super::vwiki;
 pub struct Config {
     pub source: path::PathBuf,
     pub destination: path::PathBuf,
-    pub pages: collection::CollectionBuilder,
-    pub posts: collection::CollectionBuilder,
+    pub ignore: Vec<String>,
+    pub page_extensions: Vec<String>,
+    pub include_drafts: bool,
+    pub pages: collection::Collection,
+    pub posts: collection::Collection,
     pub site: site::Site,
     pub layouts_path: path::PathBuf,
     pub liquid: template::LiquidBuilder,
@@ -42,7 +45,7 @@ impl Config {
             posts,
             site,
             template_extensions,
-            ignore,
+            ignore: custom_ignore,
             syntax_highlight,
             layouts_dir,
             includes_dir,
@@ -61,41 +64,36 @@ impl Config {
         let source = files::cleanup_path(&source);
         let destination = files::cleanup_path(&destination);
 
-        let mut ignore = ignore;
+        let source = root.join(source);
+        let destination = abs_dest.unwrap_or_else(|| root.join(destination));
+
+        let pages = collection::Collection::from_page_config(pages, &site, &default)?;
+
+        let posts =
+            collection::Collection::from_post_config(posts, &site, include_drafts, &default)?;
+
+        let site = site::Site::from_config(site);
+
+        let mut ignore = vec![".*".to_owned(), "_*".to_owned()];
         if let Ok(rel_dest) = path::Path::new(&destination).strip_prefix(&source) {
             let rel_dest = rel_dest.to_str().expect("started as a utf-8 string");
             if !rel_dest.is_empty() {
                 ignore.push(format!("/{}", rel_dest.to_owned()));
             }
         }
+        ignore.push(format!("/{}", includes_dir));
+        ignore.push(format!("/{}", layouts_dir));
+        ignore.push(format!("/_defaults"));
+        ignore.push(format!("/{}", assets.sass.import_dir));
+        assert_eq!(pages.dir, "");
+        assert_eq!(pages.drafts_dir, None);
+        ignore.push(format!("!/{}", posts.dir));
+        if let Some(dir) = posts.drafts_dir.as_deref() {
+            ignore.push(format!("!/{}", dir));
+        }
+        ignore.extend(custom_ignore);
 
-        let source = root.join(source);
-        let destination = abs_dest.unwrap_or_else(|| root.join(destination));
-
-        let pages = collection::CollectionBuilder::from_page_config(
-            pages,
-            &source,
-            &site,
-            &posts,
-            &default,
-            &ignore,
-            &template_extensions,
-        );
-
-        let posts = collection::CollectionBuilder::from_post_config(
-            posts,
-            &source,
-            &site,
-            include_drafts,
-            &default,
-            &ignore,
-            &template_extensions,
-        );
-
-        let site = site::Site::from_config(site);
-
-        let assets =
-            assets::AssetsBuilder::from_config(assets, &source, &ignore, &template_extensions);
+        let assets = assets::AssetsBuilder::from_config(assets, &source);
 
         let includes_path = source.join(includes_dir);
         let layouts_path = source.join(layouts_dir);
@@ -116,6 +114,9 @@ impl Config {
         let config = Config {
             source,
             destination,
+            ignore,
+            page_extensions: template_extensions,
+            include_drafts,
             pages,
             posts,
             site,

@@ -40,12 +40,6 @@ pub struct SassCompiler {
     style: SassOutputStyle,
 }
 
-impl Default for SassCompiler {
-    fn default() -> Self {
-        SassBuilder::default().build()
-    }
-}
-
 impl SassCompiler {
     pub fn compile_file<S: AsRef<path::Path>, D: AsRef<path::Path>, F: AsRef<path::Path>>(
         &self,
@@ -111,6 +105,12 @@ impl SassCompiler {
             .expect("file was found under the root");
         let dest_file = dest.join(rel_src);
         files::copy_file(file_path, &dest_file)
+    }
+}
+
+impl Default for SassCompiler {
+    fn default() -> Self {
+        SassBuilder::default().build()
     }
 }
 

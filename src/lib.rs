@@ -10,6 +10,7 @@ extern crate lazy_static;
 extern crate serde;
 
 pub use crate::cobalt::build;
+pub use crate::cobalt::classify_path;
 pub use crate::cobalt_model::Config;
 pub use crate::error::Error;
 
