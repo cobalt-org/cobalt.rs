@@ -143,7 +143,8 @@ pub fn publish_command(matches: &clap::ArgMatches) -> Result<()> {
     let mut file = env::current_dir().expect("How does this fail?");
     file.push(path::Path::new(filename));
     let file = file;
-    let config = args::get_config(matches)?;
+    let mut config = args::get_config(matches)?;
+    config.include_drafts = true;
     let config = cobalt::cobalt_model::Config::from_config(config)?;
 
     publish_document(&config, &file)
@@ -440,9 +441,7 @@ fn move_from_drafts_to_posts(
     config: &cobalt_model::Config,
     file: &path::Path,
 ) -> Result<path::PathBuf> {
-    let mut posts = config.posts.clone();
-    posts.include_drafts = true;
-    let posts = posts.build()?;
+    let posts = config.posts.clone().build()?;
 
     if posts
         .drafts
