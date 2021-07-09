@@ -195,3 +195,361 @@ pub fn init_project_can_build() {
 
     project_root.close().unwrap();
 }
+
+#[test]
+pub fn new_page_can_build() {
+    let project_root = assert_fs::TempDir::new().unwrap();
+    let dest = project_root.child("_dest");
+    dest.assert(predicate::path::missing());
+
+    process::Command::cargo_bin("cobalt")
+        .unwrap()
+        .args(&["init", "--trace"])
+        .current_dir(project_root.path())
+        .assert()
+        .success();
+
+    process::Command::cargo_bin("cobalt")
+        .unwrap()
+        .args(&["new", "--trace", "My New Special Page"])
+        .current_dir(project_root.path())
+        .assert()
+        .success();
+    project_root
+        .child("my-new-special-page.md")
+        .assert(predicate::path::exists());
+
+    dest.assert(predicate::path::missing());
+    process::Command::cargo_bin("cobalt")
+        .unwrap()
+        .args(&["build", "--trace", "-d", "_dest", "--drafts"])
+        .current_dir(project_root.path())
+        .assert()
+        .success();
+    dest.assert(predicate::path::exists());
+
+    project_root.close().unwrap();
+}
+
+#[test]
+pub fn new_post_can_build() {
+    let project_root = assert_fs::TempDir::new().unwrap();
+    let dest = project_root.child("_dest");
+    dest.assert(predicate::path::missing());
+
+    process::Command::cargo_bin("cobalt")
+        .unwrap()
+        .args(&["init", "--trace"])
+        .current_dir(project_root.path())
+        .assert()
+        .success();
+
+    process::Command::cargo_bin("cobalt")
+        .unwrap()
+        .args(&["new", "--trace", "My New Special Post"])
+        .current_dir(project_root.path().join("posts"))
+        .assert()
+        .success();
+    project_root
+        .child("posts/my-new-special-post.md")
+        .assert(predicate::path::exists());
+
+    dest.assert(predicate::path::missing());
+    process::Command::cargo_bin("cobalt")
+        .unwrap()
+        .args(&["build", "--trace", "-d", "_dest", "--drafts"])
+        .current_dir(project_root.path())
+        .assert()
+        .success();
+    dest.assert(predicate::path::exists());
+
+    project_root.close().unwrap();
+}
+
+#[test]
+pub fn rename_page_can_build() {
+    let project_root = assert_fs::TempDir::new().unwrap();
+    let dest = project_root.child("_dest");
+    dest.assert(predicate::path::missing());
+
+    process::Command::cargo_bin("cobalt")
+        .unwrap()
+        .args(&["init", "--trace"])
+        .current_dir(project_root.path())
+        .assert()
+        .success();
+
+    process::Command::cargo_bin("cobalt")
+        .unwrap()
+        .args(&["new", "--trace", "My New Special Page"])
+        .current_dir(project_root.path())
+        .assert()
+        .success();
+    project_root
+        .child("my-new-special-page.md")
+        .assert(predicate::path::exists());
+
+    process::Command::cargo_bin("cobalt")
+        .unwrap()
+        .args(&[
+            "rename",
+            "--trace",
+            "my-new-special-page.md",
+            "New and Improved!",
+        ])
+        .current_dir(project_root.path())
+        .assert()
+        .success();
+    project_root
+        .child("my-special-page.md")
+        .assert(predicate::path::missing());
+    project_root
+        .child("new-and-improved.md")
+        .assert(predicate::path::exists());
+
+    dest.assert(predicate::path::missing());
+    process::Command::cargo_bin("cobalt")
+        .unwrap()
+        .args(&["build", "--trace", "-d", "_dest", "--drafts"])
+        .current_dir(project_root.path())
+        .assert()
+        .success();
+    dest.assert(predicate::path::exists());
+
+    project_root.close().unwrap();
+}
+
+#[test]
+pub fn rename_post_can_build() {
+    let project_root = assert_fs::TempDir::new().unwrap();
+    let dest = project_root.child("_dest");
+    dest.assert(predicate::path::missing());
+
+    process::Command::cargo_bin("cobalt")
+        .unwrap()
+        .args(&["init", "--trace"])
+        .current_dir(project_root.path())
+        .assert()
+        .success();
+
+    process::Command::cargo_bin("cobalt")
+        .unwrap()
+        .args(&["new", "--trace", "My New Special Post"])
+        .current_dir(project_root.path().join("posts"))
+        .assert()
+        .success();
+    project_root
+        .child("posts/my-new-special-post.md")
+        .assert(predicate::path::exists());
+
+    process::Command::cargo_bin("cobalt")
+        .unwrap()
+        .args(&[
+            "rename",
+            "--trace",
+            "my-new-special-post.md",
+            "New and Improved!",
+        ])
+        .current_dir(project_root.path().join("posts"))
+        .assert()
+        .success();
+    project_root
+        .child("posts/my-new-special-post.md")
+        .assert(predicate::path::missing());
+    project_root
+        .child("posts/new-and-improved.md")
+        .assert(predicate::path::exists());
+
+    dest.assert(predicate::path::missing());
+    process::Command::cargo_bin("cobalt")
+        .unwrap()
+        .args(&["build", "--trace", "-d", "_dest", "--drafts"])
+        .current_dir(project_root.path())
+        .assert()
+        .success();
+    dest.assert(predicate::path::exists());
+
+    project_root.close().unwrap();
+}
+
+#[test]
+pub fn publish_post_can_build() {
+    let project_root = assert_fs::TempDir::new().unwrap();
+    let dest = project_root.child("_dest");
+    dest.assert(predicate::path::missing());
+
+    process::Command::cargo_bin("cobalt")
+        .unwrap()
+        .args(&["init", "--trace"])
+        .current_dir(project_root.path())
+        .assert()
+        .success();
+    project_root
+        .child("_cobalt.yml")
+        .write_str(
+            "
+site:
+  title: cobalt blog
+  description: Blog Posts Go Here
+  base_url: http://example.com
+posts:
+  rss: rss.xml
+  publish_date_in_filename: false
+",
+        )
+        .unwrap();
+
+    process::Command::cargo_bin("cobalt")
+        .unwrap()
+        .args(&["new", "--trace", "My New Special Post"])
+        .current_dir(project_root.path().join("posts"))
+        .assert()
+        .success();
+    project_root
+        .child("posts/my-new-special-post.md")
+        .assert(predicate::path::exists());
+
+    process::Command::cargo_bin("cobalt")
+        .unwrap()
+        .args(&["publish", "--trace", "my-new-special-post.md"])
+        .current_dir(project_root.path().join("posts"))
+        .assert()
+        .success();
+    project_root
+        .child("posts/my-new-special-post.md")
+        .assert(predicate::path::exists());
+
+    dest.assert(predicate::path::missing());
+    process::Command::cargo_bin("cobalt")
+        .unwrap()
+        .args(&["build", "--trace", "-d", "_dest", "--drafts"])
+        .current_dir(project_root.path())
+        .assert()
+        .success();
+    dest.assert(predicate::path::exists());
+
+    project_root.close().unwrap();
+}
+
+#[test]
+pub fn publish_date_in_post() {
+    let project_root = assert_fs::TempDir::new().unwrap();
+    let dest = project_root.child("_dest");
+    dest.assert(predicate::path::missing());
+
+    process::Command::cargo_bin("cobalt")
+        .unwrap()
+        .args(&["init", "--trace"])
+        .current_dir(project_root.path())
+        .assert()
+        .success();
+    project_root
+        .child("_cobalt.yml")
+        .write_str(
+            "
+site:
+  title: cobalt blog
+  description: Blog Posts Go Here
+  base_url: http://example.com
+posts:
+  rss: rss.xml
+  publish_date_in_filename: true
+",
+        )
+        .unwrap();
+
+    process::Command::cargo_bin("cobalt")
+        .unwrap()
+        .args(&["new", "--trace", "My New Special Post"])
+        .current_dir(project_root.path().join("posts"))
+        .assert()
+        .success();
+    project_root
+        .child("posts/my-new-special-post.md")
+        .assert(predicate::path::exists());
+
+    process::Command::cargo_bin("cobalt")
+        .unwrap()
+        .args(&["publish", "--trace", "my-new-special-post.md"])
+        .current_dir(project_root.path().join("posts"))
+        .assert()
+        .success();
+    project_root
+        .child("posts/my-new-special-post.md")
+        .assert(predicate::path::missing());
+
+    dest.assert(predicate::path::missing());
+    process::Command::cargo_bin("cobalt")
+        .unwrap()
+        .args(&["build", "--trace", "-d", "_dest", "--drafts"])
+        .current_dir(project_root.path())
+        .assert()
+        .success();
+    dest.assert(predicate::path::exists());
+
+    project_root.close().unwrap();
+}
+
+#[test]
+pub fn publish_draft_moves_dir() {
+    let project_root = assert_fs::TempDir::new().unwrap();
+    let dest = project_root.child("_dest");
+    dest.assert(predicate::path::missing());
+
+    process::Command::cargo_bin("cobalt")
+        .unwrap()
+        .args(&["init", "--trace"])
+        .current_dir(project_root.path())
+        .assert()
+        .success();
+    project_root
+        .child("_cobalt.yml")
+        .write_str(
+            "
+site:
+  title: cobalt blog
+  description: Blog Posts Go Here
+  base_url: http://example.com
+posts:
+  drafts_dir: _drafts
+  rss: rss.xml
+  publish_date_in_filename: false
+",
+        )
+        .unwrap();
+    project_root.child("_drafts").create_dir_all().unwrap();
+
+    process::Command::cargo_bin("cobalt")
+        .unwrap()
+        .args(&["new", "--trace", "My New Special Post"])
+        .current_dir(project_root.path().join("_drafts"))
+        .assert()
+        .success();
+    project_root
+        .child("_drafts/my-new-special-post.md")
+        .assert(predicate::path::exists());
+
+    process::Command::cargo_bin("cobalt")
+        .unwrap()
+        .args(&["publish", "--trace", "my-new-special-post.md"])
+        .current_dir(project_root.path().join("_drafts"))
+        .assert()
+        .success();
+    project_root
+        .child("_drafts/my-new-special-post.md")
+        .assert(predicate::path::missing());
+    project_root
+        .child("posts/my-new-special-post.md")
+        .assert(predicate::path::exists());
+
+    dest.assert(predicate::path::missing());
+    process::Command::cargo_bin("cobalt")
+        .unwrap()
+        .args(&["build", "--trace", "-d", "_dest", "--drafts"])
+        .current_dir(project_root.path())
+        .assert()
+        .success();
+    dest.assert(predicate::path::exists());
+
+    project_root.close().unwrap();
+}
