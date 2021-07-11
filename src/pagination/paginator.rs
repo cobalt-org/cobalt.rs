@@ -109,6 +109,7 @@ pub fn create_paginator(
     Ok(paginator)
 }
 
+#[allow(clippy::from_over_into)]
 impl Into<liquid::Object> for Paginator {
     fn into(self) -> liquid::Object {
         let mut object = liquid::Object::new();

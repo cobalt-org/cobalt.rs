@@ -4,10 +4,7 @@ use std::io::Write;
 use std::path;
 
 use failure::ResultExt;
-use jsonfeed;
 use jsonfeed::Feed;
-use liquid;
-use rss;
 use sitemap::writer::SiteMapWriter;
 
 use crate::cobalt_model;
@@ -582,21 +579,19 @@ pub fn classify_path<'s>(
 ) -> Option<(&'s str, bool)> {
     if ext_contains(&page_extensions, &path) {
         let relpath = path.strip_prefix(source.root()).unwrap();
-        loop {
-            if relpath.starts_with(std::path::Path::new(&posts.dir)) {
-                return Some((posts.slug.as_str(), false));
-            }
-
-            if let Some(drafts_dir) = posts.drafts_dir.as_ref() {
-                if relpath.starts_with(std::path::Path::new(drafts_dir)) {
-                    return Some((posts.slug.as_str(), true));
-                }
-            }
-
-            return Some((pages.slug.as_str(), false));
+        if relpath.starts_with(std::path::Path::new(&posts.dir)) {
+            return Some((posts.slug.as_str(), false));
         }
+
+        if let Some(drafts_dir) = posts.drafts_dir.as_ref() {
+            if relpath.starts_with(std::path::Path::new(drafts_dir)) {
+                return Some((posts.slug.as_str(), true));
+            }
+        }
+
+        Some((pages.slug.as_str(), false))
     } else {
-        return None;
+        None
     }
 }
 

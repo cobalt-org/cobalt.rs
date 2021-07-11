@@ -59,13 +59,15 @@ impl SassCompiler {
         file_path: &path::Path,
         minify: &Minify,
     ) -> Result<()> {
-        let mut sass_opts = sass_rs::Options::default();
-        sass_opts.include_paths = self.import_dir.iter().cloned().collect();
-        sass_opts.output_style = match self.style {
-            SassOutputStyle::Nested => sass_rs::OutputStyle::Nested,
-            SassOutputStyle::Expanded => sass_rs::OutputStyle::Expanded,
-            SassOutputStyle::Compact => sass_rs::OutputStyle::Compact,
-            SassOutputStyle::Compressed => sass_rs::OutputStyle::Compressed,
+        let sass_opts = sass_rs::Options {
+            include_paths: self.import_dir.iter().cloned().collect(),
+            output_style: match self.style {
+                SassOutputStyle::Nested => sass_rs::OutputStyle::Nested,
+                SassOutputStyle::Expanded => sass_rs::OutputStyle::Expanded,
+                SassOutputStyle::Compact => sass_rs::OutputStyle::Compact,
+                SassOutputStyle::Compressed => sass_rs::OutputStyle::Compressed,
+            },
+            ..Default::default()
         };
         let content = sass_rs::compile_file(file_path, sass_opts).map_err(failure::err_msg)?;
 

@@ -91,8 +91,8 @@ impl Collection {
             order,
             rss,
             jsonfeed,
-            default,
             publish_date_in_filename,
+            default,
         };
         Ok(new)
     }

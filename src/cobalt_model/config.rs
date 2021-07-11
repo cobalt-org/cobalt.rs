@@ -83,7 +83,7 @@ impl Config {
         }
         ignore.push(format!("/{}", includes_dir));
         ignore.push(format!("/{}", layouts_dir));
-        ignore.push(format!("/_defaults"));
+        ignore.push("/_defaults".to_owned());
         ignore.push(format!("/{}", assets.sass.import_dir));
         assert_eq!(pages.dir, "");
         assert_eq!(pages.drafts_dir, None);

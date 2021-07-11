@@ -5,7 +5,6 @@ use std::fs;
 use std::io::Write;
 use std::path;
 
-use clap;
 use cobalt::cobalt_model;
 use failure::ResultExt;
 

@@ -1,6 +1,3 @@
-use clap;
-use cobalt;
-
 use crate::args;
 use crate::error::*;
 

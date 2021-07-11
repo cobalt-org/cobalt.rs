@@ -6,12 +6,9 @@ use std::sync::mpsc::channel;
 use std::thread;
 use std::time;
 
-use clap;
 use cobalt::cobalt_model;
 use failure::ResultExt;
-use notify;
 use notify::Watcher;
-use open;
 use tiny_http::{Request, Response, Server};
 
 use crate::args;

@@ -2,8 +2,6 @@ use std::env;
 use std::io::Write;
 use std::path;
 
-use clap;
-use env_logger;
 use failure::ResultExt;
 
 use crate::error::*;

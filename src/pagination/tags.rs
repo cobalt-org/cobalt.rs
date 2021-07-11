@@ -20,7 +20,7 @@ fn distribute_posts_by_tags<'a>(
                     .ok_or_else(|| failure::err_msg("Should have string tags"))?
                     .to_kstr()
                     .into_string();
-                let cur_tag = per_tags.entry(tag).or_insert_with(|| vec![]);
+                let cur_tag = per_tags.entry(tag).or_insert_with(Vec::new);
                 cur_tag.push(post);
             }
         }
@@ -34,6 +34,7 @@ struct TagPaginators {
     paginators: Vec<Paginator>,
 }
 
+#[allow(clippy::bind_instead_of_map)]
 pub fn create_tags_paginators(
     all_posts: &[&liquid::model::Value],
     doc: &Document,
@@ -59,14 +60,14 @@ pub fn create_tags_paginators(
         .or_else(std::result::Result::<_, failure::Error>::Err)?;
 
     tag_paginators.firsts_of_tags.sort_unstable_by_key(|p| {
-        if let Some(ref index_title) = p.index_title {
-            Some(slug::slugify(index_title.to_kstr()).to_lowercase())
-        } else {
-            None
-        }
+        p.index_title
+            .as_ref()
+            .map(|index_title| slug::slugify(index_title.to_kstr()).to_lowercase())
     });
-    let mut first = Paginator::default();
-    first.indexes = Some(tag_paginators.firsts_of_tags);
+    let first = Paginator {
+        indexes: Some(tag_paginators.firsts_of_tags),
+        ..Default::default()
+    };
     tag_paginators.paginators.insert(0, first);
     Ok(tag_paginators.paginators)
 }

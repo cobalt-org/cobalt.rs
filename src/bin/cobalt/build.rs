@@ -2,10 +2,6 @@ use std::env;
 use std::fs;
 use std::path;
 
-use clap;
-use cobalt;
-use ghp;
-
 use crate::args;
 use crate::error::*;
 
