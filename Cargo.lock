@@ -294,6 +294,7 @@ dependencies = [
  "chrono",
  "clap",
  "cobalt-config",
+ "cobalt-core",
  "deunicode",
  "difference",
  "env_logger",
@@ -344,6 +345,14 @@ dependencies = [
  "relative-path",
  "serde",
  "serde_yaml",
+ "status",
+]
+
+[[package]]
+name = "cobalt-core"
+version = "0.16.0"
+dependencies = [
+ "cobalt-config",
  "status",
 ]
 

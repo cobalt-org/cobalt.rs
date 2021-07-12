@@ -18,5 +18,5 @@ pub use self::site::*;
 pub use liquid_core::model::DateTime;
 pub use path::RelPath;
 
-type Status = status::Status;
-type Result<T, E = Status> = std::result::Result<T, E>;
+pub type Status = status::Status;
+pub type Result<T, E = Status> = std::result::Result<T, E>;
