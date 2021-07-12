@@ -4,10 +4,7 @@ use std::io::Write;
 use std::path;
 
 use failure::ResultExt;
-use jsonfeed;
 use jsonfeed::Feed;
-use liquid;
-use rss;
 use sitemap::writer::SiteMapWriter;
 
 use crate::cobalt_model;
@@ -22,6 +19,9 @@ use crate::pagination;
 struct Context {
     pub source: path::PathBuf,
     pub destination: path::PathBuf,
+    pub source_files: cobalt_core::Source,
+    pub page_extensions: Vec<String>,
+    pub include_drafts: bool,
     pub pages: cobalt_model::Collection,
     pub posts: cobalt_model::Collection,
     pub site: cobalt_model::Site,
@@ -39,6 +39,9 @@ impl Context {
         let Config {
             source,
             destination,
+            ignore,
+            page_extensions,
+            include_drafts,
             pages,
             posts,
             site,
@@ -50,8 +53,7 @@ impl Context {
             minify,
         } = config;
 
-        let pages = pages.build()?;
-        let posts = posts.build()?;
+        let source_files = cobalt_core::Source::new(&source, ignore.iter().map(|s| s.as_str()))?;
         let site_attributes = site.load(&source)?;
         let liquid = liquid.build()?;
         let markdown = markdown.build();
@@ -64,6 +66,9 @@ impl Context {
         let context = Context {
             source,
             destination,
+            source_files,
+            page_extensions,
+            include_drafts,
             pages,
             posts,
             site,
@@ -83,35 +88,81 @@ impl Context {
 pub fn build(config: Config) -> Result<()> {
     let context = Context::with_config(config)?;
 
-    let post_files = &context.posts.pages;
-    let mut posts = parse_pages(post_files, &context.posts, &context.source)?;
-    if let Some(ref drafts) = context.posts.drafts {
-        let drafts_root = drafts.subtree();
-        parse_drafts(drafts_root, drafts, &mut posts, &context.posts)?;
+    let mut post_paths = Vec::new();
+    let mut post_draft_paths = Vec::new();
+    let mut page_paths = Vec::new();
+    let mut asset_paths = Vec::new();
+    for path in context.source_files.iter() {
+        match classify_path(
+            &path,
+            &context.source_files,
+            &context.pages,
+            &context.posts,
+            &context.page_extensions,
+        ) {
+            Some((slug, false)) if slug == context.pages.slug => page_paths.push(path),
+            Some((slug, true)) if slug == context.pages.slug => {
+                unreachable!("We don't support draft pages")
+            }
+            Some((slug, false)) if slug == context.posts.slug => post_paths.push(path),
+            Some((slug, true)) if slug == context.posts.slug => post_draft_paths.push(path),
+            Some((slug, _)) => unreachable!("Unknown collection: {}", slug),
+            None => asset_paths.push(path),
+        }
     }
 
-    let page_files = &context.pages.pages;
-    let documents = parse_pages(page_files, &context.pages, &context.source)?;
+    let mut posts = parse_pages(
+        &post_paths,
+        &context.posts,
+        &context.source,
+        context.include_drafts,
+    )?;
+    if !post_draft_paths.is_empty() {
+        parse_drafts(
+            &post_draft_paths,
+            &mut posts,
+            &context.posts,
+            &context.source,
+        )?;
+    }
+
+    let documents = parse_pages(
+        &page_paths,
+        &context.pages,
+        &context.source,
+        context.include_drafts,
+    )?;
 
     sort_pages(&mut posts, &context.posts)?;
     generate_posts(&mut posts, &context)?;
 
     // check if we should create an RSS file and create it!
     if let Some(ref path) = context.posts.rss {
-        create_rss(path, &context.destination, &context.posts, &posts)?;
+        create_rss(
+            path,
+            &context.destination,
+            &context.posts,
+            &posts,
+            context.site.base_url.as_deref(),
+        )?;
     }
     // check if we should create an jsonfeed file and create it!
     if let Some(ref path) = context.posts.jsonfeed {
-        create_jsonfeed(path, &context.destination, &context.posts, &posts)?;
+        create_jsonfeed(
+            path,
+            &context.destination,
+            &context.posts,
+            &posts,
+            context.site.base_url.as_deref(),
+        )?;
     }
     if let Some(ref path) = context.site.sitemap {
         let sitemap_path = &context.destination.join(path);
         create_sitemap(
             &sitemap_path,
-            &context.posts,
             &posts,
-            &context.pages,
             &documents,
+            context.site.base_url.as_deref(),
         )?;
     }
 
@@ -119,9 +170,11 @@ pub fn build(config: Config) -> Result<()> {
 
     // copy all remaining files in the source to the destination
     // compile SASS along the way
-    context
-        .assets
-        .populate(&context.destination, &context.minify)?;
+    for asset_path in asset_paths {
+        context
+            .assets
+            .process(&asset_path, &context.destination, &context.minify)?;
+    }
 
     Ok(())
 }
@@ -130,7 +183,7 @@ fn generate_collections_var(
     posts_data: &[liquid::model::Value],
     context: &Context,
 ) -> (kstring::KString, liquid::model::Value) {
-    let mut posts_variable = context.posts.attributes.clone();
+    let mut posts_variable = context.posts.attributes();
     posts_variable.insert(
         "pages".into(),
         liquid::model::Value::Array(posts_data.to_vec()),
@@ -313,22 +366,25 @@ fn sort_pages(posts: &mut Vec<Document>, collection: &Collection) -> Result<()> 
 }
 
 fn parse_drafts(
-    drafts_root: &path::Path,
-    draft_files: &files::Files,
+    page_paths: &[std::path::PathBuf],
     documents: &mut Vec<Document>,
     collection: &Collection,
+    source: &path::Path,
 ) -> Result<()> {
-    let rel_real = collection
-        .pages
-        .subtree()
-        .strip_prefix(collection.pages.root())
-        .expect("subtree is under root");
-    for file_path in draft_files.files() {
+    let dir = std::path::Path::new(&collection.dir);
+    let drafts_dir = std::path::Path::new(
+        collection
+            .drafts_dir
+            .as_deref()
+            .expect("Caller checked first"),
+    );
+    let drafts_root = source.join(drafts_dir);
+    for file_path in page_paths {
         // Provide a fake path as if it was not a draft
         let rel_src = file_path
             .strip_prefix(&drafts_root)
             .expect("file was found under the root");
-        let new_path = rel_real.join(rel_src);
+        let new_path = dir.join(rel_src);
 
         let default_front = cobalt_config::Frontmatter {
             is_draft: Some(true),
@@ -344,12 +400,13 @@ fn parse_drafts(
 }
 
 fn parse_pages(
-    page_files: &files::Files,
+    page_paths: &[std::path::PathBuf],
     collection: &Collection,
     source: &path::Path,
+    include_drafts: bool,
 ) -> Result<Vec<Document>> {
     let mut documents = vec![];
-    for file_path in page_files.files() {
+    for file_path in page_paths {
         let rel_src = file_path
             .strip_prefix(source)
             .expect("file was found under the root");
@@ -358,8 +415,10 @@ fn parse_pages(
 
         let doc = Document::parse(&file_path, rel_src, default_front)
             .with_context(|_| failure::format_err!("Failed to parse {}", rel_src.display()))?;
-        if !doc.front.is_draft || collection.include_drafts {
+        if !doc.front.is_draft || include_drafts {
             documents.push(doc);
+        } else {
+            log::trace!("Skipping draft {}", file_path.display());
         }
     }
     Ok(documents)
@@ -410,14 +469,14 @@ fn create_rss(
     dest: &path::Path,
     collection: &Collection,
     documents: &[Document],
+    base_url: Option<&str>,
 ) -> Result<()> {
     let rss_path = dest.join(path);
     debug!("Creating RSS file at {}", rss_path.display());
 
     let title = &collection.title;
     let description = collection.description.as_deref().unwrap_or("");
-    let link = collection
-        .base_url
+    let link = base_url
         .as_ref()
         .ok_or_else(|| failure::err_msg("`base_url` is required for RSS support"))?;
 
@@ -454,14 +513,14 @@ fn create_jsonfeed(
     dest: &path::Path,
     collection: &Collection,
     documents: &[Document],
+    base_url: Option<&str>,
 ) -> Result<()> {
     let jsonfeed_path = dest.join(path);
     debug!("Creating jsonfeed file at {}", jsonfeed_path.display());
 
     let title = &collection.title;
     let description = collection.description.as_deref().unwrap_or("");
-    let link = collection
-        .base_url
+    let link = base_url
         .as_ref()
         .ok_or_else(|| failure::err_msg("`base_url` is required for jsonfeed support"))?;
 
@@ -480,18 +539,17 @@ fn create_jsonfeed(
 
     Ok(())
 }
+
 fn create_sitemap(
     sitemap_path: &path::Path,
-    collection: &Collection,
     documents: &[Document],
-    collection_pages: &Collection,
     documents_pages: &[Document],
+    base_url: Option<&str>,
 ) -> Result<()> {
     debug!("Creating sitemap file at {}", sitemap_path.display());
     let mut buff = Vec::new();
     let writer = SiteMapWriter::new(&mut buff);
-    let link = collection
-        .base_url
+    let link = base_url
         .as_ref()
         .ok_or_else(|| failure::err_msg("`base_url` is required for sitemap support"))?;
     let mut urls = writer.start_urlset()?;
@@ -499,8 +557,7 @@ fn create_sitemap(
         doc.to_sitemap(link, &mut urls)?;
     }
 
-    let link = collection_pages
-        .base_url
+    let link = base_url
         .as_ref()
         .ok_or_else(|| failure::err_msg("`base_url` is required for sitemap support"))?;
     for doc in documents_pages {
@@ -511,4 +568,39 @@ fn create_sitemap(
     files::write_document_file(String::from_utf8(buff)?, sitemap_path)?;
 
     Ok(())
+}
+
+pub fn classify_path<'s>(
+    path: &std::path::Path,
+    source: &cobalt_core::Source,
+    pages: &'s cobalt_model::Collection,
+    posts: &'s cobalt_model::Collection,
+    page_extensions: &[String],
+) -> Option<(&'s str, bool)> {
+    if ext_contains(&page_extensions, &path) {
+        let relpath = path.strip_prefix(source.root()).unwrap();
+        if relpath.starts_with(std::path::Path::new(&posts.dir)) {
+            return Some((posts.slug.as_str(), false));
+        }
+
+        if let Some(drafts_dir) = posts.drafts_dir.as_ref() {
+            if relpath.starts_with(std::path::Path::new(drafts_dir)) {
+                return Some((posts.slug.as_str(), true));
+            }
+        }
+
+        Some((pages.slug.as_str(), false))
+    } else {
+        None
+    }
+}
+
+fn ext_contains(extensions: &[String], file: &path::Path) -> bool {
+    if extensions.is_empty() {
+        return true;
+    }
+
+    file.extension()
+        .map(|ext| extensions.iter().any(|e| std::ffi::OsStr::new(e) == ext))
+        .unwrap_or(false)
 }

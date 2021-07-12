@@ -54,8 +54,8 @@ impl PaginationConfig {
 }
 
 // TODO to be replaced by a call to `is_sorted()` once it's stabilized
-pub fn is_date_index_sorted(v: &Vec<DateIndex>) -> bool {
-    let mut copy = v.clone();
+pub fn is_date_index_sorted(v: &[DateIndex]) -> bool {
+    let mut copy = v.to_owned();
     copy.sort_unstable();
     copy.eq(v)
 }

@@ -5,14 +5,10 @@ use std::path::{Path, PathBuf};
 
 use chrono::{Datelike, Timelike};
 use failure::ResultExt;
-use itertools;
-use jsonfeed;
-use liquid;
 use liquid::model::Value;
 use liquid::Object;
 use liquid::ValueView;
 use regex::Regex;
-use rss;
 
 use crate::cobalt_model;
 use crate::cobalt_model::files;
@@ -36,7 +32,7 @@ fn minify_if_enabled(html: String, _context: &RenderContex, _file_path: &Path) -
 
 #[cfg(feature = "html-minifier")]
 fn minify_if_enabled(html: String, context: &RenderContex, file_path: &Path) -> Result<String> {
-    let extension = file_path.extension().unwrap_or_else(|| Default::default());
+    let extension = file_path.extension().unwrap_or_else(Default::default);
     if context.minify.html && (extension == "html" || extension == "htm") {
         Ok(html_minifier::minify(html)?)
     } else {
@@ -174,10 +170,7 @@ fn document_attributes(
     }
 
     if let Some(ref published_date) = front.published_date {
-        attributes.insert(
-            "published_date".into(),
-            Value::scalar(liquid::model::DateTime::from(*published_date)),
-        );
+        attributes.insert("published_date".into(), Value::scalar(*published_date));
     }
 
     attributes

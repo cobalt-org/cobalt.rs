@@ -1,6 +1,3 @@
-use clap;
-use cobalt;
-
 use crate::args;
 use crate::error::*;
 
@@ -52,35 +49,22 @@ pub fn debug_command(matches: &clap::ArgMatches) -> Result<()> {
             let collection = matches.value_of("COLLECTION");
             match collection {
                 Some("assets") => {
-                    let assets = config.assets.build()?;
-                    for file_path in assets.files() {
-                        println!("{:?}", file_path);
-                    }
+                    failure::bail!("TODO Re-implement");
                 }
                 Some("pages") => {
-                    let pages = config.pages.build()?;
-                    for file_path in pages.pages.files() {
-                        println!("{:?}", file_path);
-                    }
-                    if let Some(ref drafts) = pages.drafts {
-                        for file_path in drafts.files() {
-                            println!("{:?}", file_path);
-                        }
-                    }
+                    failure::bail!("TODO Re-implement");
                 }
                 Some("posts") => {
-                    let posts = config.posts.build()?;
-                    for file_path in posts.pages.files() {
-                        println!("{:?}", file_path);
-                    }
-                    if let Some(ref drafts) = posts.drafts {
-                        for file_path in drafts.files() {
-                            println!("{:?}", file_path);
-                        }
-                    }
+                    failure::bail!("TODO Re-implement");
                 }
                 None => {
-                    failure::bail!("Must specify collection");
+                    let source_files = cobalt_core::Source::new(
+                        &config.source,
+                        config.ignore.iter().map(|s| s.as_str()),
+                    )?;
+                    for path in source_files.iter() {
+                        println!("{}", path.display());
+                    }
                 }
                 _ => {
                     failure::bail!("Collection is not yet supported");

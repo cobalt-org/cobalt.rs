@@ -2,7 +2,6 @@ use std::ffi;
 use std::fs;
 use std::io::Read;
 use std::io::Write;
-use std::iter::FromIterator;
 use std::path;
 
 use crate::error::Result;
@@ -263,7 +262,7 @@ pub fn read_file<P: AsRef<path::Path>>(path: P) -> Result<String> {
     let mut file = fs::File::open(path.as_ref())?;
     let mut text = String::new();
     file.read_to_string(&mut text)?;
-    let text = String::from_iter(normalized(text.chars()));
+    let text: String = normalized(text.chars()).collect();
     Ok(text)
 }
 

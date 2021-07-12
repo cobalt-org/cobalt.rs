@@ -353,7 +353,13 @@ name = "cobalt-core"
 version = "0.16.0"
 dependencies = [
  "cobalt-config",
+ "ignore",
+ "liquid-core",
+ "log",
+ "once_cell",
+ "serde",
  "status",
+ "walkdir 2.3.2",
 ]
 
 [[package]]

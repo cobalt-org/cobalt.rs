@@ -29,7 +29,7 @@ impl<'a> DateIndexHolder<'a> {
     }
 }
 
-fn extract_published_date<'a>(value: &'a dyn liquid::ValueView) -> Option<DateTime> {
+fn extract_published_date(value: &'_ dyn liquid::ValueView) -> Option<DateTime> {
     let published_date = extract_scalar(value, "published_date")?;
     published_date.to_date_time()
 }
@@ -79,8 +79,10 @@ fn walk_dates(
         if !cur_date_paginators.is_empty() {
             cur_date_holder_paginators.extend(cur_date_paginators.into_iter());
         } else {
-            let mut p = Paginator::default();
-            p.index_title = Some(index_title);
+            let p = Paginator {
+                index_title: Some(index_title),
+                ..Default::default()
+            };
             cur_date_holder_paginators.push(p);
         }
     } else {

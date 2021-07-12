@@ -24,7 +24,6 @@ pub use cobalt_config::SourceFormat;
 pub use self::assets::Assets;
 pub use self::assets::AssetsBuilder;
 pub use self::collection::Collection;
-pub use self::collection::CollectionBuilder;
 pub use self::config::Config;
 pub use self::frontmatter::Frontmatter;
 pub use self::mark::Markdown;
