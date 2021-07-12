@@ -187,6 +187,10 @@ impl Files {
     }
 
     fn includes_path(&self, path: &path::Path, is_dir: bool) -> bool {
+        if path == self.root_dir {
+            return true;
+        }
+
         let parent = path.parent();
         if let Some(mut parent) = parent {
             if parent.starts_with(&self.root_dir) {

@@ -14,33 +14,25 @@ use super::files;
 
 #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
 #[serde(deny_unknown_fields, default)]
-pub struct SiteBuilder {
+pub struct Site {
     pub title: Option<String>,
     pub description: Option<String>,
     pub base_url: Option<String>,
+    pub sitemap: Option<String>,
     pub data: Option<liquid::Object>,
-    pub data_dir: path::PathBuf,
+    pub data_dir: &'static str,
 }
 
-impl SiteBuilder {
-    pub fn from_config(config: cobalt_config::Site, source: &path::Path) -> Self {
-        Self {
-            title: config.title,
-            description: config.description,
-            base_url: config.base_url,
-            data: config.data,
-            data_dir: source.join(config.data_dir),
-        }
-    }
-
-    pub fn build(self) -> Result<liquid::Object> {
-        let SiteBuilder {
+impl Site {
+    pub fn from_config(config: cobalt_config::Site) -> Self {
+        let cobalt_config::Site {
             title,
             description,
             base_url,
+            sitemap,
             data,
             data_dir,
-        } = self;
+        } = config;
 
         let base_url = base_url.map(|mut l| {
             if l.ends_with('/') {
@@ -49,21 +41,39 @@ impl SiteBuilder {
             l
         });
 
-        let mut attributes = liquid::Object::new();
-        if let Some(title) = title {
-            attributes.insert("title".into(), liquid::model::Value::scalar(title));
+        Self {
+            title,
+            description,
+            base_url,
+            sitemap,
+            data,
+            data_dir,
         }
-        if let Some(description) = description {
+    }
+
+    pub fn load(&self, source: &std::path::Path) -> Result<liquid::Object> {
+        let mut attributes = liquid::Object::new();
+        if let Some(title) = self.title.as_ref() {
             attributes.insert(
-                "description".into(),
-                liquid::model::Value::scalar(description),
+                "title".into(),
+                liquid::model::Value::scalar(kstring::KString::from_ref(title)),
             );
         }
-        if let Some(base_url) = base_url {
-            attributes.insert("base_url".into(), liquid::model::Value::scalar(base_url));
+        if let Some(description) = self.description.as_ref() {
+            attributes.insert(
+                "description".into(),
+                liquid::model::Value::scalar(kstring::KString::from_ref(description)),
+            );
         }
-        let mut data = data.unwrap_or_default();
-        insert_data_dir(&mut data, &data_dir)?;
+        if let Some(base_url) = self.base_url.as_ref() {
+            attributes.insert(
+                "base_url".into(),
+                liquid::model::Value::scalar(kstring::KString::from_ref(base_url)),
+            );
+        }
+        let mut data = self.data.clone().unwrap_or_default();
+        let data_path = source.join(&self.data_dir);
+        insert_data_dir(&mut data, &data_path)?;
         if !data.is_empty() {
             attributes.insert("data".into(), liquid::model::Value::Object(data));
         }

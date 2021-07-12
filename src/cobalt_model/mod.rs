@@ -31,7 +31,7 @@ pub use self::mark::Markdown;
 pub use self::mark::MarkdownBuilder;
 pub use self::sass::SassBuilder;
 pub use self::sass::SassCompiler;
-pub use self::site::SiteBuilder;
+pub use self::site::Site;
 pub use self::template::Liquid;
 pub use self::template::LiquidBuilder;
 pub use self::vwiki::Vimwiki;

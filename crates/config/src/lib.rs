@@ -16,6 +16,7 @@ pub use self::frontmatter::*;
 pub use self::pagination::*;
 pub use self::site::*;
 pub use liquid_core::model::DateTime;
+pub use path::RelPath;
 
 type Status = status::Status;
 type Result<T, E = Status> = std::result::Result<T, E>;

@@ -24,13 +24,13 @@ struct Context {
     pub destination: path::PathBuf,
     pub pages: cobalt_model::Collection,
     pub posts: cobalt_model::Collection,
-    pub site: liquid::Object,
+    pub site: cobalt_model::Site,
+    pub site_attributes: liquid::Object,
     pub layouts: HashMap<String, String>,
     pub liquid: cobalt_model::Liquid,
     pub markdown: cobalt_model::Markdown,
     pub vimwiki: cobalt_model::Vimwiki,
     pub assets: cobalt_model::Assets,
-    pub sitemap: Option<String>,
     pub minify: Minify,
 }
 
@@ -42,24 +42,23 @@ impl Context {
             pages,
             posts,
             site,
-            layouts_dir,
+            layouts_path,
             liquid,
             markdown,
             vimwiki,
             assets,
-            sitemap,
             minify,
         } = config;
 
         let pages = pages.build()?;
         let posts = posts.build()?;
-        let site = site.build()?;
+        let site_attributes = site.load(&source)?;
         let liquid = liquid.build()?;
         let markdown = markdown.build();
         let vimwiki = vimwiki.build();
         let assets = assets.build()?;
 
-        let layouts = find_layouts(&layouts_dir)?;
+        let layouts = find_layouts(&layouts_path)?;
         let layouts = parse_layouts(&layouts);
 
         let context = Context {
@@ -68,12 +67,12 @@ impl Context {
             pages,
             posts,
             site,
+            site_attributes,
             layouts,
             liquid,
             markdown,
             vimwiki,
             assets,
-            sitemap,
             minify,
         };
         Ok(context)
@@ -105,7 +104,7 @@ pub fn build(config: Config) -> Result<()> {
     if let Some(ref path) = context.posts.jsonfeed {
         create_jsonfeed(path, &context.destination, &context.posts, &posts)?;
     }
-    if let Some(ref path) = context.sitemap {
+    if let Some(ref path) = context.site.sitemap {
         let sitemap_path = &context.destination.join(path);
         create_sitemap(
             &sitemap_path,
@@ -158,7 +157,7 @@ fn generate_doc(
     let mut globals: liquid::Object = vec![
         (
             "site".into(),
-            liquid::model::Value::Object(context.site.clone()),
+            liquid::model::Value::Object(context.site_attributes.clone()),
         ),
         global_collection,
     ]
@@ -344,6 +343,28 @@ fn parse_drafts(
     Ok(())
 }
 
+fn parse_pages(
+    page_files: &files::Files,
+    collection: &Collection,
+    source: &path::Path,
+) -> Result<Vec<Document>> {
+    let mut documents = vec![];
+    for file_path in page_files.files() {
+        let rel_src = file_path
+            .strip_prefix(source)
+            .expect("file was found under the root");
+
+        let default_front = collection.default.clone();
+
+        let doc = Document::parse(&file_path, rel_src, default_front)
+            .with_context(|_| failure::format_err!("Failed to parse {}", rel_src.display()))?;
+        if !doc.front.is_draft || collection.include_drafts {
+            documents.push(doc);
+        }
+    }
+    Ok(documents)
+}
+
 fn find_layouts(layouts: &path::Path) -> Result<files::Files> {
     let mut files = files::FilesBuilder::new(layouts)?;
     files.ignore_hidden(false)?;
@@ -381,28 +402,6 @@ fn parse_layouts(files: &files::Files) -> HashMap<String, String> {
         .into_iter()
         .map(|entry| entry.expect("partition to filter out errors"))
         .collect()
-}
-
-fn parse_pages(
-    page_files: &files::Files,
-    collection: &Collection,
-    source: &path::Path,
-) -> Result<Vec<Document>> {
-    let mut documents = vec![];
-    for file_path in page_files.files() {
-        let rel_src = file_path
-            .strip_prefix(source)
-            .expect("file was found under the root");
-
-        let default_front = collection.default.clone();
-
-        let doc = Document::parse(&file_path, rel_src, default_front)
-            .with_context(|_| failure::format_err!("Failed to parse {}", rel_src.display()))?;
-        if !doc.front.is_draft || collection.include_drafts {
-            documents.push(doc);
-        }
-    }
-    Ok(documents)
 }
 
 // creates a new RSS file with the contents of the site blog

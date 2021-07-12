@@ -8,8 +8,8 @@ use super::*;
 pub struct Collection {
     pub title: Option<String>,
     pub description: Option<String>,
-    pub dir: Option<String>,
-    pub drafts_dir: Option<String>,
+    pub dir: Option<crate::RelPath>,
+    pub drafts_dir: Option<crate::RelPath>,
     pub order: SortOrder,
     pub rss: Option<String>,
     pub jsonfeed: Option<String>,
@@ -54,7 +54,7 @@ impl From<PageCollection> for Collection {
         });
         Self {
             default,
-            dir: Some(".".to_owned()),
+            dir: Some(crate::RelPath::new()),
             order: SortOrder::None,
             ..Default::default()
         }
@@ -78,8 +78,8 @@ pub struct PageCollection {
 pub struct PostCollection {
     pub title: Option<String>,
     pub description: Option<String>,
-    pub dir: String,
-    pub drafts_dir: Option<String>,
+    pub dir: crate::RelPath,
+    pub drafts_dir: Option<crate::RelPath>,
     pub order: SortOrder,
     pub rss: Option<String>,
     pub jsonfeed: Option<String>,
@@ -92,7 +92,7 @@ impl Default for PostCollection {
         Self {
             title: Default::default(),
             description: Default::default(),
-            dir: "posts".to_owned(),
+            dir: crate::RelPath::from_unchecked("posts"),
             drafts_dir: Default::default(),
             order: Default::default(),
             rss: Default::default(),

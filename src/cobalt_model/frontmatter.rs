@@ -54,11 +54,6 @@ impl Frontmatter {
         let collection = collection.unwrap_or_default();
 
         let permalink = permalink.unwrap_or_default();
-        if let cobalt_config::Permalink::Explicit(permalink) = &permalink {
-            if !permalink.starts_with('/') {
-                failure::bail!("Unsupported permalink alias '{}'", permalink);
-            }
-        }
 
         if let Some(ref tags) = tags {
             if tags.iter().any(|x| x.trim().is_empty()) {

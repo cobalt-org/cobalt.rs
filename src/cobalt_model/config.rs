@@ -20,13 +20,12 @@ pub struct Config {
     pub destination: path::PathBuf,
     pub pages: collection::CollectionBuilder,
     pub posts: collection::CollectionBuilder,
-    pub site: site::SiteBuilder,
-    pub layouts_dir: path::PathBuf,
+    pub site: site::Site,
+    pub layouts_path: path::PathBuf,
     pub liquid: template::LiquidBuilder,
     pub markdown: mark::MarkdownBuilder,
     pub vimwiki: vwiki::VimwikiBuilder,
     pub assets: assets::AssetsBuilder,
-    pub sitemap: Option<String>,
     pub minify: cobalt_config::Minify,
 }
 
@@ -93,17 +92,16 @@ impl Config {
             &template_extensions,
         );
 
-        let sitemap = site.sitemap.clone();
-        let site = site::SiteBuilder::from_config(site, &source);
+        let site = site::Site::from_config(site);
 
         let assets =
             assets::AssetsBuilder::from_config(assets, &source, &ignore, &template_extensions);
 
-        let includes_dir = source.join(includes_dir);
-        let layouts_dir = source.join(layouts_dir);
+        let includes_path = source.join(includes_dir);
+        let layouts_path = source.join(layouts_dir);
 
         let liquid = template::LiquidBuilder {
-            includes_dir,
+            includes_path,
             theme: syntax_highlight.theme.clone(),
         };
         let markdown = mark::MarkdownBuilder {
@@ -121,12 +119,11 @@ impl Config {
             pages,
             posts,
             site,
-            layouts_dir,
+            layouts_path,
             liquid,
             markdown,
             vimwiki,
             assets,
-            sitemap,
             minify,
         };
 
