@@ -84,7 +84,7 @@ features =  ["parsing", "regex-fancy", "assets", "html", "dump-load-rs"]
 [dev-dependencies]
 assert_cmd = "1.0"
 assert_fs = "1.0"
-predicates = "1.0"
+predicates = "2.0"
 difference = "2.0"
 
 [features]
