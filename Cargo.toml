@@ -43,7 +43,7 @@ kstring = "1.0"
 liquid = "0.22"
 liquid-core = "0.22"
 liquid-lib = { version = "0.22", features = ["jekyll", "shopify", "extra"] }
-deunicode = "1.1.1"
+deunicode = "1.3.1"
 walkdir = "2.2"
 chrono = "0.4"
 log = "0.4"
