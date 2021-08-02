@@ -154,17 +154,8 @@ fn serve(dest: &path::Path, ip: &str) -> Result<()> {
 
 fn open_browser(url: String) -> Result<()> {
     match open::that(url) {
-        Ok(exit_status) => {
-            if exit_status.success() {
-                info!("Please check your browser!");
-            } else {
-                info!(
-                    "Command returned non-zero exit status {:?}",
-                    exit_status.code()
-                );
-            }
-        }
-        Err(why) => println!("Failure to execute command: {}", why),
+        Ok(()) => info!("Please check your browser!"),
+        Err(why) => eprintln!("Failure to execute command: {}", why),
     }
     Ok(())
 }
