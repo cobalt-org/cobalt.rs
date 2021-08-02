@@ -12,7 +12,7 @@ use crate::cobalt_model::files;
 use crate::cobalt_model::permalink;
 use crate::cobalt_model::Collection;
 use crate::cobalt_model::{Config, Minify, SortOrder};
-use crate::document::{Document, RenderContex};
+use crate::document::{Document, RenderContext};
 use crate::error::*;
 use crate::pagination;
 
@@ -221,7 +221,7 @@ fn generate_doc(
         liquid::model::Value::Object(doc.attributes.clone()),
     );
     {
-        let render_context = RenderContex {
+        let render_context = RenderContext {
             parser: &context.liquid,
             markdown: &context.markdown,
             vimwiki: &context.vimwiki,
@@ -242,7 +242,7 @@ fn generate_doc(
         "page".into(),
         liquid::model::Value::Object(doc.attributes.clone()),
     );
-    let render_context = RenderContex {
+    let render_context = RenderContext {
         parser: &context.liquid,
         markdown: &context.markdown,
         vimwiki: &context.vimwiki,

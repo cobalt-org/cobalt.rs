@@ -49,7 +49,7 @@ and `right` of STAGE-DIR to check out the contents of the current
 master branch of the bare git repository, which must exist in the
 current working directory. It will then build the site in one of these
 directories using cobalt. If successful, DEPLOY-DIR will be updated
-with a symblic link pointing to generated `_site` directory.
+with a symbolic link pointing to generated `_site` directory.
 EOF
 }
 

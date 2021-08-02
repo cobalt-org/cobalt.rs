@@ -17,7 +17,7 @@ use crate::cobalt_model::slug;
 use crate::cobalt_model::Minify;
 use crate::error::*;
 
-pub struct RenderContex<'a> {
+pub struct RenderContext<'a> {
     pub parser: &'a cobalt_model::Liquid,
     pub markdown: &'a cobalt_model::Markdown,
     pub vimwiki: &'a cobalt_model::Vimwiki,
@@ -26,12 +26,12 @@ pub struct RenderContex<'a> {
 }
 
 #[cfg(not(feature = "html-minifier"))]
-fn minify_if_enabled(html: String, _context: &RenderContex, _file_path: &Path) -> Result<String> {
+fn minify_if_enabled(html: String, _context: &RenderContext, _file_path: &Path) -> Result<String> {
     Ok(html)
 }
 
 #[cfg(feature = "html-minifier")]
-fn minify_if_enabled(html: String, context: &RenderContex, file_path: &Path) -> Result<String> {
+fn minify_if_enabled(html: String, context: &RenderContext, file_path: &Path) -> Result<String> {
     let extension = file_path.extension().unwrap_or_else(Default::default);
     if context.minify.html && (extension == "html" || extension == "htm") {
         Ok(html_minifier::minify(html)?)
@@ -299,7 +299,7 @@ impl Document {
     /// Takes `content` string and returns rendered HTML. This function doesn't
     /// take `"extends"` attribute into account. This function can be used for
     /// rendering content or excerpt.
-    fn render_html(&self, content: &str, context: &RenderContex) -> Result<String> {
+    fn render_html(&self, content: &str, context: &RenderContext) -> Result<String> {
         let html = if self.front.templated {
             let template = context.parser.parse(content)?;
             template.render(context.globals)?
@@ -322,7 +322,7 @@ impl Document {
     /// given, or extracted from the content, if `excerpt_separator` is not
     /// empty. When neither condition applies, the excerpt is set to the `Nil`
     /// value.
-    pub fn render_excerpt(&mut self, context: &RenderContex) -> Result<()> {
+    pub fn render_excerpt(&mut self, context: &RenderContext) -> Result<()> {
         let value = if let Some(excerpt_str) = self.front.excerpt.as_ref() {
             let excerpt = self.render_html(excerpt_str, context)?;
             Value::scalar(excerpt)
@@ -345,7 +345,7 @@ impl Document {
     /// Renders the content and adds it to attributes of the document.
     ///
     /// When we say "content" we mean only this document without extended layout.
-    pub fn render_content(&mut self, context: &RenderContex) -> Result<()> {
+    pub fn render_content(&mut self, context: &RenderContext) -> Result<()> {
         let content_html = self.render_html(&self.content, context)?;
         self.attributes
             .insert("content".into(), Value::scalar(content_html));
@@ -359,7 +359,7 @@ impl Document {
     /// * layout may be inserted to layouts cache
     pub fn render(
         &mut self,
-        context: &RenderContex,
+        context: &RenderContext,
         layouts: &HashMap<String, String>,
     ) -> Result<String> {
         if let Some(ref layout) = self.front.layout {
