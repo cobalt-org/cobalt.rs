@@ -17,11 +17,11 @@ pub struct Pagination {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub per_page: Option<i32>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub permalink_suffix: Option<String>,
+    pub permalink_suffix: Option<kstring::KString>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub order: Option<SortOrder>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub sort_by: Option<Vec<String>>,
+    pub sort_by: Option<Vec<kstring::KString>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub date_index: Option<Vec<DateIndex>>,
 }
@@ -35,9 +35,9 @@ impl Pagination {
         Self {
             include: Some(Include::None),
             per_page: Some(DEFAULT_PER_PAGE),
-            permalink_suffix: Some(DEFAULT_PERMALINK.to_owned()),
+            permalink_suffix: Some(DEFAULT_PERMALINK.into()),
             order: Some(SortOrder::Desc),
-            sort_by: Some(vec![DEFAULT_SORT.to_owned()]),
+            sort_by: Some(vec![DEFAULT_SORT.into()]),
             date_index: Some(vec![DateIndex::Year, DateIndex::Month]),
         }
     }

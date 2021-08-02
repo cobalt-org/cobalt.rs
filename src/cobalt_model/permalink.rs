@@ -1,5 +1,3 @@
-use std::path::{Path, PathBuf};
-
 use liquid;
 
 use crate::error::*;
@@ -31,12 +29,12 @@ fn explode_permalink_string(permalink: &str, attributes: &liquid::Object) -> Res
     Ok(p)
 }
 
-pub fn format_url_as_file<S: AsRef<str>>(permalink: S) -> PathBuf {
+pub fn format_url_as_file<S: AsRef<str>>(permalink: S) -> relative_path::RelativePathBuf {
     format_url_as_file_str(permalink.as_ref())
 }
 
-fn format_url_as_file_str(permalink: &str) -> PathBuf {
-    let mut path = Path::new(&permalink);
+fn format_url_as_file_str(permalink: &str) -> relative_path::RelativePathBuf {
+    let mut path = std::path::Path::new(&permalink);
 
     // remove the root prefix (leading slash on unix systems)
     if path.has_root() {
@@ -45,7 +43,7 @@ fn format_url_as_file_str(permalink: &str) -> PathBuf {
         path = components.as_path();
     }
 
-    let mut path_buf = path.to_path_buf();
+    let mut path_buf = relative_path::RelativePathBuf::from_path(path).unwrap();
 
     // explode the url if no extension was specified
     if path_buf.extension().is_none() {
@@ -83,18 +81,27 @@ mod test {
     #[test]
     fn format_url_as_file_absolute() {
         let actual = format_url_as_file("/hello/world.html");
-        assert_eq!(actual, Path::new("hello/world.html"));
+        assert_eq!(
+            actual,
+            relative_path::RelativePath::from_path("hello/world.html").unwrap()
+        );
     }
 
     #[test]
     fn format_url_as_file_no_explode() {
         let actual = format_url_as_file("/hello/world.custom");
-        assert_eq!(actual, Path::new("hello/world.custom"));
+        assert_eq!(
+            actual,
+            relative_path::RelativePath::from_path("hello/world.custom").unwrap()
+        );
     }
 
     #[test]
     fn format_url_as_file_explode() {
         let actual = format_url_as_file("/hello/world");
-        assert_eq!(actual, Path::new("hello/world/index.html"));
+        assert_eq!(
+            actual,
+            relative_path::RelativePath::from_path("hello/world/index.html").unwrap()
+        );
     }
 }

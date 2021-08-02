@@ -1,5 +1,4 @@
 use std::fmt;
-use std::path;
 
 use super::*;
 
@@ -12,19 +11,19 @@ pub struct Frontmatter {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub permalink: Option<Permalink>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub slug: Option<String>,
+    pub slug: Option<kstring::KString>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub title: Option<String>,
+    pub title: Option<kstring::KString>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub description: Option<String>,
+    pub description: Option<kstring::KString>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub excerpt: Option<String>,
+    pub excerpt: Option<kstring::KString>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub categories: Option<Vec<String>>,
+    pub categories: Option<Vec<kstring::KString>>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub tags: Option<Vec<String>>,
+    pub tags: Option<Vec<kstring::KString>>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub excerpt_separator: Option<String>,
+    pub excerpt_separator: Option<kstring::KString>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub published_date: Option<DateTime>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -32,7 +31,7 @@ pub struct Frontmatter {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub templated: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub layout: Option<String>,
+    pub layout: Option<kstring::KString>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub is_draft: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -44,7 +43,7 @@ pub struct Frontmatter {
     // Controlled by where the file is found.  We might allow control over the type at a later
     // point but we need to first define those semantics.
     #[serde(skip)]
-    pub collection: Option<String>,
+    pub collection: Option<kstring::KString>,
 }
 
 impl Frontmatter {
@@ -52,8 +51,8 @@ impl Frontmatter {
         Self::default()
     }
 
-    pub fn merge_path(mut self, relpath: &path::Path) -> Self {
-        if let Some(name) = relpath.file_name().and_then(|f| f.to_str()) {
+    pub fn merge_path(mut self, relpath: &relative_path::RelativePath) -> Self {
+        if let Some(name) = relpath.file_name() {
             let mut split_name = crate::path::split_ext(name);
 
             #[cfg(feature = "preview_unstable")]
@@ -220,11 +219,11 @@ impl fmt::Display for Permalink {
 )]
 #[repr(transparent)]
 #[serde(try_from = "String")]
-pub struct ExplicitPermalink(String);
+pub struct ExplicitPermalink(kstring::KString);
 
 impl ExplicitPermalink {
     pub fn from_unchecked(value: &str) -> Self {
-        Self(value.into())
+        Self(kstring::KString::from_ref(value))
     }
 
     pub fn as_str(&self) -> &str {
@@ -245,7 +244,7 @@ impl<'s> std::convert::TryFrom<&'s str> for ExplicitPermalink {
         if !value.starts_with('/') {
             Err("Permalinks must be absolute paths")
         } else {
-            let path = Self(value.into());
+            let path = Self(kstring::KString::from_ref(value));
             Ok(path)
         }
     }
@@ -337,7 +336,7 @@ mod test {
     #[test]
     fn display_slug() {
         let front = Frontmatter {
-            slug: Some("foo".to_owned()),
+            slug: Some("foo".into()),
             ..Default::default()
         };
         assert_eq!(&front.to_string(), "slug: foo");

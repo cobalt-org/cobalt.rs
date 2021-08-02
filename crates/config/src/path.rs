@@ -6,35 +6,37 @@ static SLUG_INVALID_CHARS: once_cell::sync::Lazy<regex::Regex> =
     once_cell::sync::Lazy::new(|| regex::Regex::new(r"([^a-zA-Z0-9]+)").unwrap());
 
 /// Create a slug for a given file.  Correlates to Jekyll's :slug path tag
-pub fn slugify<S: AsRef<str>>(name: S) -> String {
+pub fn slugify<S: AsRef<str>>(name: S) -> kstring::KString {
     slugify_str(name.as_ref())
 }
 
-fn slugify_str(name: &str) -> String {
+fn slugify_str(name: &str) -> kstring::KString {
     let name = deunicode::deunicode_with_tofu(name, "-");
     let slug = SLUG_INVALID_CHARS.replace_all(&name, "-");
-    slug.trim_matches('-').to_lowercase()
+    let slug = slug.trim_matches('-').to_lowercase();
+    slug.into()
 }
 
 /// Format a user-visible title out of a slug.  Correlates to Jekyll's "title" attribute
-pub fn titleize_slug<S: AsRef<str>>(slug: S) -> String {
+pub fn titleize_slug<S: AsRef<str>>(slug: S) -> kstring::KString {
     titleize_slug_str(slug.as_ref())
 }
 
-fn titleize_slug_str(slug: &str) -> String {
-    slug.split('-').map(title_case).join(" ")
+fn titleize_slug_str(slug: &str) -> kstring::KString {
+    slug.split('-').map(title_case).join(" ").into()
 }
 
 /// Title-case a single word
-fn title_case(s: &str) -> String {
+fn title_case(s: &str) -> kstring::KString {
     let mut c = s.chars();
-    match c.next() {
+    let title = match c.next() {
         None => String::new(),
         Some(f) => f
             .to_uppercase()
             .chain(c.flat_map(|t| t.to_lowercase()))
             .collect(),
-    }
+    };
+    title.into()
 }
 
 #[derive(
@@ -59,14 +61,42 @@ impl RelPath {
         Self(path)
     }
 
-    pub fn from_unchecked(value: &str) -> Self {
-        let path: relative_path::RelativePathBuf = value.into();
-        let path = path.normalize();
-        Self(path)
+    pub fn from_path(value: impl AsRef<std::path::Path>) -> Option<Self> {
+        let value = value.as_ref();
+        let path: Option<relative_path::RelativePathBuf> =
+            value.components().map(|c| c.as_os_str().to_str()).collect();
+        let path = path?.normalize();
+        Some(Self(path))
+    }
+
+    pub fn from_unchecked(value: impl AsRef<std::path::Path>) -> Self {
+        Self::from_path(value).unwrap()
     }
 
     pub fn as_str(&self) -> &str {
         self.0.as_str()
+    }
+
+    pub fn as_path(&self) -> &std::path::Path {
+        std::path::Path::new(self.as_str())
+    }
+
+    pub fn into_inner(self) -> relative_path::RelativePathBuf {
+        self.0
+    }
+}
+
+impl PartialEq<str> for RelPath {
+    #[inline]
+    fn eq(&self, other: &str) -> bool {
+        *self == RelPath::from_unchecked(other)
+    }
+}
+
+impl<'s> PartialEq<&'s str> for RelPath {
+    #[inline]
+    fn eq(&self, other: &&'s str) -> bool {
+        *self == RelPath::from_unchecked(*other)
     }
 }
 
@@ -80,12 +110,11 @@ impl<'s> std::convert::TryFrom<&'s str> for RelPath {
     type Error = &'static str;
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
-        if value.starts_with('/') {
+        let path = std::path::Path::new(value);
+        if path.is_absolute() || path.has_root() {
             Err("Absolute paths are not supported")
         } else {
-            let path: relative_path::RelativePathBuf = value.into();
-            let path = path.normalize();
-            Ok(Self(path))
+            Ok(Self::from_unchecked(value))
         }
     }
 }
@@ -100,11 +129,11 @@ impl std::convert::TryFrom<String> for RelPath {
 }
 
 impl std::ops::Deref for RelPath {
-    type Target = str;
+    type Target = relative_path::RelativePath;
 
     #[inline]
-    fn deref(&self) -> &str {
-        self.as_str()
+    fn deref(&self) -> &Self::Target {
+        self.as_ref()
     }
 }
 
@@ -112,6 +141,20 @@ impl AsRef<str> for RelPath {
     #[inline]
     fn as_ref(&self) -> &str {
         self.as_str()
+    }
+}
+
+impl AsRef<std::path::Path> for RelPath {
+    #[inline]
+    fn as_ref(&self) -> &std::path::Path {
+        self.as_path()
+    }
+}
+
+impl AsRef<relative_path::RelativePath> for RelPath {
+    #[inline]
+    fn as_ref(&self) -> &relative_path::RelativePath {
+        &self.0
     }
 }
 
@@ -148,7 +191,7 @@ static DATE_PREFIX_REF: once_cell::sync::Lazy<regex::Regex> = once_cell::sync::L
     regex::Regex::new(r"^(\d{4})-(\d{1,2})-(\d{1,2})[- ](.*)$").unwrap()
 });
 
-pub fn parse_file_stem(stem: &str) -> (Option<crate::DateTime>, String) {
+pub fn parse_file_stem(stem: &str) -> (Option<crate::DateTime>, kstring::KString) {
     let parts = DATE_PREFIX_REF.captures(stem).and_then(|caps| {
         let year: i32 = caps
             .get(1)
@@ -175,15 +218,12 @@ pub fn parse_file_stem(stem: &str) -> (Option<crate::DateTime>, String) {
         published.map(|p| {
             (
                 Some(p),
-                caps.get(4)
-                    .expect("unconditional capture")
-                    .as_str()
-                    .to_owned(),
+                kstring::KString::from_ref(caps.get(4).expect("unconditional capture").as_str()),
             )
         })
     });
 
-    parts.unwrap_or_else(|| (None, stem.to_owned()))
+    parts.unwrap_or_else(|| (None, kstring::KString::from_ref(stem)))
 }
 
 #[cfg(test)]
@@ -192,14 +232,14 @@ mod test_stem {
 
     #[test]
     fn parse_file_stem_empty() {
-        assert_eq!(parse_file_stem(""), (None, "".to_owned()));
+        assert_eq!(parse_file_stem(""), (None, "".into()));
     }
 
     #[test]
     fn parse_file_stem_none() {
         assert_eq!(
             parse_file_stem("First Blog Post"),
-            (None, "First Blog Post".to_owned())
+            (None, "First Blog Post".into())
         );
     }
 
@@ -207,7 +247,7 @@ mod test_stem {
     fn parse_file_stem_out_of_range_month() {
         assert_eq!(
             parse_file_stem("2017-30-5 First Blog Post"),
-            (None, "2017-30-5 First Blog Post".to_owned())
+            (None, "2017-30-5 First Blog Post".into())
         );
     }
 
@@ -215,7 +255,7 @@ mod test_stem {
     fn parse_file_stem_out_of_range_day() {
         assert_eq!(
             parse_file_stem("2017-3-50 First Blog Post"),
-            (None, "2017-3-50 First Blog Post".to_owned())
+            (None, "2017-3-50 First Blog Post".into())
         );
     }
 
@@ -233,7 +273,7 @@ mod test_stem {
                         .with_day(5)
                         .unwrap()
                 ),
-                "First Blog Post".to_owned()
+                "First Blog Post".into()
             )
         );
     }
@@ -252,7 +292,7 @@ mod test_stem {
                         .with_day(25)
                         .unwrap()
                 ),
-                "First Blog Post".to_owned()
+                "First Blog Post".into()
             )
         );
     }
@@ -271,7 +311,7 @@ mod test_stem {
                         .with_day(5)
                         .unwrap()
                 ),
-                "First Blog Post".to_owned()
+                "First Blog Post".into()
             )
         );
     }
@@ -290,7 +330,7 @@ mod test_stem {
                         .with_day(5)
                         .unwrap()
                 ),
-                "First-Blog-Post".to_owned()
+                "First-Blog-Post".into()
             )
         );
     }

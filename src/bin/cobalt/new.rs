@@ -309,7 +309,7 @@ pub fn create_new_document(
 
     let doc = cobalt_model::Document::parse(&source)?;
     let (mut front, content) = doc.into_parts();
-    front.title = Some(title.to_owned());
+    front.title = Some(kstring::KString::from_ref(title));
     let doc = cobalt_model::Document::new(front, content);
     let doc = doc.to_string();
 
@@ -367,8 +367,8 @@ pub fn rename_document(
             &config.posts,
             &config.page_extensions,
         ) {
-            Some((slug, _)) if slug == config.pages.slug => &config.pages,
-            Some((slug, _)) if slug == config.posts.slug => &config.posts,
+            Some((slug, _)) if config.pages.slug == slug => &config.pages,
+            Some((slug, _)) if config.posts.slug == slug => &config.posts,
             Some((slug, _)) => unreachable!("Unknown collection: {}", slug),
             None => failure::bail!("Target file is an asset: {}", target.display()),
         }
@@ -378,12 +378,17 @@ pub fn rename_document(
     // Can't rely on this for drafts atm
     let rel_src = target
         .strip_prefix(&config.source)
+        .ok()
+        .and_then(|s| cobalt_config::RelPath::from_path(s))
         .expect("file was found under the root");
-    let full_front = front.clone().merge_path(rel_src).merge(&collection.default);
+    let full_front = front
+        .clone()
+        .merge_path(&rel_src)
+        .merge(&collection.default);
 
     let full_front = cobalt_model::Frontmatter::from_config(full_front)?;
 
-    front.title = Some(title.to_string());
+    front.title = Some(kstring::KString::from_ref(title));
     let doc = cobalt_model::Document::new(front, content);
     let doc = doc.to_string();
     cobalt_model::files::write_document_file(doc, target)?;
@@ -430,9 +435,9 @@ fn move_from_drafts_to_posts(
     file: &path::Path,
 ) -> Result<path::PathBuf> {
     if let Some(drafts_dir) = config.posts.drafts_dir.as_ref() {
-        let drafts_root = config.source.join(drafts_dir);
+        let drafts_root = drafts_dir.to_path(&config.source);
         if let Ok(relpath) = file.strip_prefix(drafts_root) {
-            let target = config.source.join(&config.posts.dir).join(relpath);
+            let target = config.posts.dir.to_path(&config.source).join(relpath);
             log::trace!(
                 "post is in `drafts_dir`; moving it to `posts` directory: {}",
                 target.display()
@@ -475,8 +480,8 @@ pub fn publish_document(config: &cobalt_model::Config, file: &path::Path) -> Res
             &config.posts,
             &config.page_extensions,
         ) {
-            Some((slug, _)) if slug == config.pages.slug => &config.pages,
-            Some((slug, _)) if slug == config.posts.slug => &config.posts,
+            Some((slug, _)) if config.pages.slug == slug => &config.pages,
+            Some((slug, _)) if config.posts.slug == slug => &config.posts,
             Some((slug, _)) => unreachable!("Unknown collection: {}", slug),
             None => failure::bail!("Target file is an asset: {}", file.display()),
         }

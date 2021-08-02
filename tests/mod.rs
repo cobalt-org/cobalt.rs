@@ -73,7 +73,7 @@ fn run_test(name: &str) -> Result<(), cobalt::Error> {
         .unwrap();
 
     let mut config = cobalt_config::Config::from_cwd(target.path())?;
-    config.destination = "./_dest".into();
+    config.destination = cobalt_config::RelPath::from_unchecked("./_dest");
     let config = cobalt::cobalt_model::Config::from_config(config)?;
     let result = cobalt::build(config);
 
@@ -90,7 +90,7 @@ fn test_with_expected(name: &str) -> Result<(), cobalt::Error> {
         .unwrap();
 
     let mut config = cobalt_config::Config::from_cwd(target.path())?;
-    config.destination = "./_dest".into();
+    config.destination = cobalt_config::RelPath::from_unchecked("./_dest");
     let config = cobalt::cobalt_model::Config::from_config(config)?;
     let destination = config.destination.clone();
     let result = cobalt::build(config);

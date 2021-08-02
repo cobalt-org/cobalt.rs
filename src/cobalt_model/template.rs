@@ -33,7 +33,7 @@ fn load_partials_from_path(root: path::PathBuf) -> Result<Partials> {
 #[serde(deny_unknown_fields)]
 pub struct LiquidBuilder {
     pub includes_path: path::PathBuf,
-    pub theme: String,
+    pub theme: kstring::KString,
 }
 
 impl LiquidBuilder {
@@ -55,7 +55,7 @@ impl LiquidBuilder {
         Ok(Liquid { parser })
     }
 
-    fn highlight(theme: String) -> Result<Box<dyn liquid_core::ParseBlock>> {
+    fn highlight(theme: kstring::KString) -> Result<Box<dyn liquid_core::ParseBlock>> {
         let result: Result<()> = match syntax_highlight::has_syntax_theme(&theme) {
             Ok(true) => Ok(()),
             Ok(false) => Err(failure::format_err!(

@@ -1,3 +1,4 @@
+use std::convert::TryInto;
 use std::fmt;
 use std::path;
 
@@ -11,8 +12,8 @@ use super::*;
 pub struct Config {
     #[serde(skip)]
     pub root: path::PathBuf,
-    pub source: String,
-    pub destination: String,
+    pub source: crate::RelPath,
+    pub destination: crate::RelPath,
     #[serde(skip)]
     pub abs_dest: Option<path::PathBuf>,
     pub include_drafts: bool,
@@ -20,8 +21,8 @@ pub struct Config {
     pub pages: PageCollection,
     pub posts: PostCollection,
     pub site: Site,
-    pub template_extensions: Vec<String>,
-    pub ignore: Vec<String>,
+    pub template_extensions: Vec<kstring::KString>,
+    pub ignore: Vec<kstring::KString>,
     pub syntax_highlight: SyntaxHighlight,
     #[serde(skip)]
     pub layouts_dir: &'static str,
@@ -35,15 +36,15 @@ impl Default for Config {
     fn default() -> Config {
         Config {
             root: Default::default(),
-            source: "./".to_owned(),
-            destination: "./_site".to_owned(),
+            source: "./".try_into().unwrap(),
+            destination: "./_site".try_into().unwrap(),
             abs_dest: Default::default(),
             include_drafts: false,
             default: Default::default(),
             pages: Default::default(),
             posts: Default::default(),
             site: Default::default(),
-            template_extensions: vec!["md".to_owned(), "wiki".to_owned(), "liquid".to_owned()],
+            template_extensions: vec!["md".into(), "wiki".into(), "liquid".into()],
             ignore: Default::default(),
             syntax_highlight: SyntaxHighlight::default(),
             layouts_dir: "_layouts",
@@ -120,14 +121,14 @@ impl fmt::Display for Config {
 #[cfg_attr(feature = "unstable", serde(deny_unknown_fields))]
 #[cfg_attr(not(feature = "unstable"), non_exhaustive)]
 pub struct SyntaxHighlight {
-    pub theme: String,
+    pub theme: kstring::KString,
     pub enabled: bool,
 }
 
 impl Default for SyntaxHighlight {
     fn default() -> Self {
         Self {
-            theme: "base16-ocean.dark".to_owned(),
+            theme: "base16-ocean.dark".into(),
             enabled: true,
         }
     }

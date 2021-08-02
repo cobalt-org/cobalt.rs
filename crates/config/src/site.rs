@@ -4,10 +4,10 @@
 #[cfg_attr(feature = "unstable", serde(deny_unknown_fields))]
 #[cfg_attr(not(feature = "unstable"), non_exhaustive)]
 pub struct Site {
-    pub title: Option<String>,
-    pub description: Option<String>,
-    pub base_url: Option<String>,
-    pub sitemap: Option<String>,
+    pub title: Option<kstring::KString>,
+    pub description: Option<kstring::KString>,
+    pub base_url: Option<kstring::KString>,
+    pub sitemap: Option<crate::RelPath>,
     pub data: Option<liquid_core::Object>,
     #[serde(skip)]
     pub data_dir: &'static str,
