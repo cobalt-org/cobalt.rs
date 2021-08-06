@@ -1,7 +1,7 @@
 use std::clone::Clone;
 use std::collections::HashMap;
 use std::default::Default;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use chrono::{Datelike, Timelike};
 use failure::ResultExt;
@@ -26,12 +26,20 @@ pub struct RenderContext<'a> {
 }
 
 #[cfg(not(feature = "html-minifier"))]
-fn minify_if_enabled(html: String, _context: &RenderContext, _file_path: &Path) -> Result<String> {
+fn minify_if_enabled(
+    html: String,
+    _context: &RenderContext,
+    _file_path: &relative_path::RelativePath,
+) -> Result<String> {
     Ok(html)
 }
 
 #[cfg(feature = "html-minifier")]
-fn minify_if_enabled(html: String, context: &RenderContext, file_path: &Path) -> Result<String> {
+fn minify_if_enabled(
+    html: String,
+    context: &RenderContext,
+    file_path: &relative_path::RelativePath,
+) -> Result<String> {
     let extension = file_path.extension().unwrap_or_else(Default::default);
     if context.minify.html && (extension == "html" || extension == "htm") {
         Ok(html_minifier::minify(html)?)
@@ -40,37 +48,23 @@ fn minify_if_enabled(html: String, context: &RenderContext, file_path: &Path) ->
     }
 }
 
-/// Convert the source file's relative path into a format useful for generating permalinks that
-/// mirror the source directory hierarchy.
-fn format_path_variable(source_file: &Path) -> String {
-    let parent = source_file
-        .parent()
-        .and_then(|p| p.to_str())
-        .unwrap_or("")
-        .to_owned();
-    let mut path = parent.replace("\\", "/");
-    if path.starts_with("./") {
-        path.remove(0);
-    }
-    if path.starts_with('/') {
-        path.remove(0);
-    }
-    path
-}
-
-pub fn permalink_attributes(front: &cobalt_model::Frontmatter, dest_file: &Path) -> Object {
+pub fn permalink_attributes(
+    front: &cobalt_model::Frontmatter,
+    dest_file: &relative_path::RelativePath,
+) -> Object {
     let mut attributes = Object::new();
 
     attributes.insert(
         "parent".into(),
-        Value::scalar(format_path_variable(dest_file)),
+        Value::scalar(
+            dest_file
+                .parent()
+                .unwrap_or_else(|| relative_path::RelativePath::new(""))
+                .to_string(),
+        ),
     );
 
-    let filename = dest_file
-        .file_stem()
-        .and_then(|s| s.to_str())
-        .unwrap_or("")
-        .to_owned();
+    let filename = dest_file.file_stem().unwrap_or("").to_owned();
     attributes.insert("name".into(), Value::scalar(filename));
 
     attributes.insert("ext".into(), Value::scalar(".html"));
@@ -115,7 +109,7 @@ pub fn permalink_attributes(front: &cobalt_model::Frontmatter, dest_file: &Path)
 
 fn document_attributes(
     front: &cobalt_model::Frontmatter,
-    source_file: &Path,
+    source_file: &relative_path::RelativePath,
     url_path: &str,
 ) -> Object {
     let categories = Value::Array(
@@ -132,14 +126,14 @@ fn document_attributes(
     let file: Object = vec![
         (
             "permalink".into(),
-            Value::scalar(source_file.to_str().unwrap_or("").to_owned()),
+            Value::scalar(source_file.as_str().to_owned()),
         ),
         (
             "parent".into(),
             Value::scalar(
                 source_file
                     .parent()
-                    .and_then(Path::to_str)
+                    .map(relative_path::RelativePath::as_str)
                     .unwrap_or("")
                     .to_owned(),
             ),
@@ -179,8 +173,8 @@ fn document_attributes(
 #[derive(Debug, Clone)]
 pub struct Document {
     pub url_path: String,
-    pub file_path: PathBuf,
-    pub content: String,
+    pub file_path: relative_path::RelativePathBuf,
+    pub content: kstring::KString,
     pub attributes: Object,
     pub front: cobalt_model::Frontmatter,
 }
@@ -188,7 +182,7 @@ pub struct Document {
 impl Document {
     pub fn parse(
         src_path: &Path,
-        rel_path: &Path,
+        rel_path: &relative_path::RelativePath,
         default_front: cobalt_config::Frontmatter,
     ) -> Result<Document> {
         trace!("Parsing {:?}", rel_path);
@@ -231,7 +225,7 @@ impl Document {
             .map_err(failure::err_msg)?;
 
         let item = rss::ItemBuilder::default()
-            .title(Some(self.front.title.clone()))
+            .title(Some(self.front.title.as_str().to_owned()))
             .link(Some(link))
             .guid(Some(guid))
             .pub_date(self.front.published_date.map(|date| date.to_rfc2822()))
@@ -248,13 +242,19 @@ impl Document {
         jsonfeed::Item {
             id: link.clone(),
             url: Some(link),
-            title: Some(self.front.title.clone()),
+            title: Some(self.front.title.as_str().to_owned()),
             content: jsonfeed::Content::Html(
                 self.description_to_str().unwrap_or_else(|| "".into()),
             ),
             date_published: self.front.published_date.map(|date| date.to_rfc2822()),
             // TODO completely implement categories, see Issue 131
-            tags: Some(self.front.categories.clone()),
+            tags: Some(
+                self.front
+                    .categories
+                    .iter()
+                    .map(|s| s.as_str().to_owned())
+                    .collect(),
+            ),
             ..Default::default()
         }
     }
@@ -277,7 +277,8 @@ impl Document {
     fn description_to_str(&self) -> Option<String> {
         self.front
             .description
-            .clone()
+            .as_ref()
+            .map(|s| s.as_str().to_owned())
             .or_else(|| {
                 self.attributes.get("excerpt").and_then(|excerpt| {
                     if excerpt.is_nil() {
@@ -363,11 +364,11 @@ impl Document {
         layouts: &HashMap<String, String>,
     ) -> Result<String> {
         if let Some(ref layout) = self.front.layout {
-            let layout_data_ref = layouts.get(layout).ok_or_else(|| {
+            let layout_data_ref = layouts.get(layout.as_str()).ok_or_else(|| {
                 failure::format_err!(
                     "Layout {} does not exist (referenced in {}).",
                     layout,
-                    self.file_path.display()
+                    self.file_path
                 )
             })?;
 
@@ -432,28 +433,5 @@ fn extract_excerpt(
         cobalt_model::SourceFormat::Vimwiki | cobalt_model::SourceFormat::Raw => {
             extract_excerpt_raw(content, excerpt_separator)
         }
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use super::*;
-
-    #[test]
-    fn format_path_variable_file() {
-        let input = Path::new("/hello/world/file.liquid");
-        let actual = format_path_variable(input);
-        assert_eq!(actual, "hello/world");
-    }
-
-    #[test]
-    fn format_path_variable_relative() {
-        let input = Path::new("hello/world/file.liquid");
-        let actual = format_path_variable(input);
-        assert_eq!(actual, "hello/world");
-
-        let input = Path::new("./hello/world/file.liquid");
-        let actual = format_path_variable(input);
-        assert_eq!(actual, "hello/world");
     }
 }

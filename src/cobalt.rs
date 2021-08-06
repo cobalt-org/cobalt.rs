@@ -20,7 +20,7 @@ struct Context {
     pub source: path::PathBuf,
     pub destination: path::PathBuf,
     pub source_files: cobalt_core::Source,
-    pub page_extensions: Vec<String>,
+    pub page_extensions: Vec<kstring::KString>,
     pub include_drafts: bool,
     pub pages: cobalt_model::Collection,
     pub posts: cobalt_model::Collection,
@@ -100,12 +100,12 @@ pub fn build(config: Config) -> Result<()> {
             &context.posts,
             &context.page_extensions,
         ) {
-            Some((slug, false)) if slug == context.pages.slug => page_paths.push(path),
-            Some((slug, true)) if slug == context.pages.slug => {
+            Some((slug, false)) if context.pages.slug == slug => page_paths.push(path),
+            Some((slug, true)) if context.pages.slug == slug => {
                 unreachable!("We don't support draft pages")
             }
-            Some((slug, false)) if slug == context.posts.slug => post_paths.push(path),
-            Some((slug, true)) if slug == context.posts.slug => post_draft_paths.push(path),
+            Some((slug, false)) if context.posts.slug == slug => post_paths.push(path),
+            Some((slug, true)) if context.posts.slug == slug => post_draft_paths.push(path),
             Some((slug, _)) => unreachable!("Unknown collection: {}", slug),
             None => asset_paths.push(path),
         }
@@ -138,9 +138,9 @@ pub fn build(config: Config) -> Result<()> {
 
     // check if we should create an RSS file and create it!
     if let Some(ref path) = context.posts.rss {
+        let path = path.to_path(&context.destination);
         create_rss(
-            path,
-            &context.destination,
+            &path,
             &context.posts,
             &posts,
             context.site.base_url.as_deref(),
@@ -148,22 +148,17 @@ pub fn build(config: Config) -> Result<()> {
     }
     // check if we should create an jsonfeed file and create it!
     if let Some(ref path) = context.posts.jsonfeed {
+        let path = path.to_path(&context.destination);
         create_jsonfeed(
-            path,
-            &context.destination,
+            &path,
             &context.posts,
             &posts,
             context.site.base_url.as_deref(),
         )?;
     }
     if let Some(ref path) = context.site.sitemap {
-        let sitemap_path = &context.destination.join(path);
-        create_sitemap(
-            &sitemap_path,
-            &posts,
-            &documents,
-            context.site.base_url.as_deref(),
-        )?;
+        let path = path.to_path(&context.destination);
+        create_sitemap(&path, &posts, &documents, context.site.base_url.as_deref())?;
     }
 
     generate_pages(posts, documents, &context)?;
@@ -230,10 +225,10 @@ fn generate_doc(
         };
 
         doc.render_excerpt(&render_context).with_context(|_| {
-            failure::format_err!("Failed to render excerpt for {}", doc.file_path.display())
+            failure::format_err!("Failed to render excerpt for {}", doc.file_path)
         })?;
         doc.render_content(&render_context).with_context(|_| {
-            failure::format_err!("Failed to render content for {}", doc.file_path.display())
+            failure::format_err!("Failed to render content for {}", doc.file_path)
         })?;
     }
 
@@ -251,10 +246,8 @@ fn generate_doc(
     };
     let doc_html = doc
         .render(&render_context, &context.layouts)
-        .with_context(|_| {
-            failure::format_err!("Failed to render for {}", doc.file_path.display())
-        })?;
-    files::write_document_file(doc_html, context.destination.join(&doc.file_path))?;
+        .with_context(|_| failure::format_err!("Failed to render for {}", doc.file_path))?;
+    files::write_document_file(doc_html, doc.file_path.to_path(&context.destination))?;
     Ok(())
 }
 
@@ -371,20 +364,20 @@ fn parse_drafts(
     collection: &Collection,
     source: &path::Path,
 ) -> Result<()> {
-    let dir = std::path::Path::new(&collection.dir);
-    let drafts_dir = std::path::Path::new(
-        collection
-            .drafts_dir
-            .as_deref()
-            .expect("Caller checked first"),
-    );
-    let drafts_root = source.join(drafts_dir);
+    let dir = &collection.dir;
+    let drafts_dir = collection
+        .drafts_dir
+        .as_deref()
+        .expect("Caller checked first");
+    let drafts_root = drafts_dir.to_path(source);
     for file_path in page_paths {
         // Provide a fake path as if it was not a draft
         let rel_src = file_path
             .strip_prefix(&drafts_root)
+            .ok()
+            .and_then(cobalt_config::RelPath::from_path)
             .expect("file was found under the root");
-        let new_path = dir.join(rel_src);
+        let new_path = dir.join(&rel_src);
 
         let default_front = cobalt_config::Frontmatter {
             is_draft: Some(true),
@@ -393,7 +386,7 @@ fn parse_drafts(
         .merge(&collection.default);
 
         let doc = Document::parse(&file_path, &new_path, default_front)
-            .with_context(|_| failure::format_err!("Failed to parse {}", rel_src.display()))?;
+            .with_context(|_| failure::format_err!("Failed to parse {}", rel_src))?;
         documents.push(doc);
     }
     Ok(())
@@ -409,12 +402,14 @@ fn parse_pages(
     for file_path in page_paths {
         let rel_src = file_path
             .strip_prefix(source)
+            .ok()
+            .and_then(cobalt_config::RelPath::from_path)
             .expect("file was found under the root");
 
         let default_front = collection.default.clone();
 
-        let doc = Document::parse(&file_path, rel_src, default_front)
-            .with_context(|_| failure::format_err!("Failed to parse {}", rel_src.display()))?;
+        let doc = Document::parse(&file_path, &rel_src, default_front)
+            .with_context(|_| failure::format_err!("Failed to parse {}", rel_src))?;
         if !doc.front.is_draft || include_drafts {
             documents.push(doc);
         } else {
@@ -465,14 +460,12 @@ fn parse_layouts(files: &files::Files) -> HashMap<String, String> {
 
 // creates a new RSS file with the contents of the site blog
 fn create_rss(
-    path: &str,
-    dest: &path::Path,
+    path: &std::path::Path,
     collection: &Collection,
     documents: &[Document],
     base_url: Option<&str>,
 ) -> Result<()> {
-    let rss_path = dest.join(path);
-    debug!("Creating RSS file at {}", rss_path.display());
+    debug!("Creating RSS file at {}", path.display());
 
     let title = &collection.title;
     let description = collection.description.as_deref().unwrap_or("");
@@ -484,7 +477,7 @@ fn create_rss(
     let items = items?;
 
     let channel = rss::ChannelBuilder::default()
-        .title(title.to_owned())
+        .title(title.as_str().to_owned())
         .link(link.to_owned())
         .description(description.to_owned())
         .items(items)
@@ -495,12 +488,12 @@ fn create_rss(
     trace!("RSS data: {}", rss_string);
 
     // create target directories if any exist
-    if let Some(parent) = rss_path.parent() {
+    if let Some(parent) = path.parent() {
         fs::create_dir_all(parent)
             .with_context(|_| failure::format_err!("Could not create {}", parent.display()))?;
     }
 
-    let mut rss_file = fs::File::create(&rss_path)?;
+    let mut rss_file = fs::File::create(&path)?;
     rss_file.write_all(&rss_string.into_bytes())?;
     rss_file.write_all(b"\n")?;
 
@@ -509,14 +502,12 @@ fn create_rss(
 
 // creates a new jsonfeed file with the contents of the site blog
 fn create_jsonfeed(
-    path: &str,
-    dest: &path::Path,
+    path: &std::path::Path,
     collection: &Collection,
     documents: &[Document],
     base_url: Option<&str>,
 ) -> Result<()> {
-    let jsonfeed_path = dest.join(path);
-    debug!("Creating jsonfeed file at {}", jsonfeed_path.display());
+    debug!("Creating jsonfeed file at {}", path.display());
 
     let title = &collection.title;
     let description = collection.description.as_deref().unwrap_or("");
@@ -535,18 +526,18 @@ fn create_jsonfeed(
     };
 
     let jsonfeed_string = jsonfeed::to_string(&feed).unwrap();
-    files::write_document_file(jsonfeed_string, jsonfeed_path)?;
+    files::write_document_file(jsonfeed_string, path)?;
 
     Ok(())
 }
 
 fn create_sitemap(
-    sitemap_path: &path::Path,
+    path: &path::Path,
     documents: &[Document],
     documents_pages: &[Document],
     base_url: Option<&str>,
 ) -> Result<()> {
-    debug!("Creating sitemap file at {}", sitemap_path.display());
+    debug!("Creating sitemap file at {}", path.display());
     let mut buff = Vec::new();
     let writer = SiteMapWriter::new(&mut buff);
     let link = base_url
@@ -565,7 +556,7 @@ fn create_sitemap(
     }
     urls.end()?;
 
-    files::write_document_file(String::from_utf8(buff)?, sitemap_path)?;
+    files::write_document_file(String::from_utf8(buff)?, path)?;
 
     Ok(())
 }
@@ -575,16 +566,16 @@ pub fn classify_path<'s>(
     source: &cobalt_core::Source,
     pages: &'s cobalt_model::Collection,
     posts: &'s cobalt_model::Collection,
-    page_extensions: &[String],
+    page_extensions: &[kstring::KString],
 ) -> Option<(&'s str, bool)> {
     if ext_contains(&page_extensions, &path) {
         let relpath = path.strip_prefix(source.root()).unwrap();
-        if relpath.starts_with(std::path::Path::new(&posts.dir)) {
+        if relpath.starts_with(posts.dir.as_str()) {
             return Some((posts.slug.as_str(), false));
         }
 
         if let Some(drafts_dir) = posts.drafts_dir.as_ref() {
-            if relpath.starts_with(std::path::Path::new(drafts_dir)) {
+            if relpath.starts_with(drafts_dir.as_str()) {
                 return Some((posts.slug.as_str(), true));
             }
         }
@@ -595,7 +586,7 @@ pub fn classify_path<'s>(
     }
 }
 
-fn ext_contains(extensions: &[String], file: &path::Path) -> bool {
+fn ext_contains(extensions: &[kstring::KString], file: &path::Path) -> bool {
     if extensions.is_empty() {
         return true;
     }

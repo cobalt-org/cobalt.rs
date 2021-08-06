@@ -4,7 +4,7 @@ use vimwiki::{HtmlCodeConfig, HtmlConfig, Language, Page, ParseError, ToHtmlStri
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct VimwikiBuilder {
-    pub theme: String,
+    pub theme: kstring::KString,
     pub syntax_highlight_enabled: bool,
 }
 
@@ -19,7 +19,7 @@ impl VimwikiBuilder {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Vimwiki {
-    theme: String,
+    theme: kstring::KString,
     syntax_highlight_enabled: bool,
 }
 
@@ -38,7 +38,7 @@ impl Vimwiki {
 
         let config = HtmlConfig {
             code: HtmlCodeConfig {
-                theme: self.theme.to_string(),
+                theme: self.theme.as_str().to_owned(),
                 server_side: self.syntax_highlight_enabled,
                 ..Default::default()
             },

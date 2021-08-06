@@ -89,7 +89,7 @@ impl Renderable for CodeBlock {
 pub struct CodeBlockParser {}
 
 impl CodeBlockParser {
-    pub fn new(_syntax_theme: String) -> Self {
+    pub fn new(_syntax_theme: kstring::KString) -> Self {
         Self {}
     }
 }
@@ -176,7 +176,7 @@ mod test {
     #[test]
     fn codeblock_renders_rust() {
         let highlight: Box<dyn liquid_core::ParseBlock> =
-            Box::new(CodeBlockParser::new("base16-ocean.dark".to_owned()));
+            Box::new(CodeBlockParser::new("base16-ocean.dark".into()));
         let parser = liquid::ParserBuilder::new()
             .block(highlight)
             .build()

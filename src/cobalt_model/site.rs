@@ -15,10 +15,10 @@ use super::files;
 #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
 #[serde(deny_unknown_fields, default)]
 pub struct Site {
-    pub title: Option<String>,
-    pub description: Option<String>,
-    pub base_url: Option<String>,
-    pub sitemap: Option<String>,
+    pub title: Option<kstring::KString>,
+    pub description: Option<kstring::KString>,
+    pub base_url: Option<kstring::KString>,
+    pub sitemap: Option<cobalt_config::RelPath>,
     pub data: Option<liquid::Object>,
     pub data_dir: &'static str,
 }
@@ -36,7 +36,9 @@ impl Site {
 
         let base_url = base_url.map(|mut l| {
             if l.ends_with('/') {
-                l.pop();
+                let mut other = String::from(l.as_str());
+                other.pop();
+                l = kstring::KString::from_string(other);
             }
             l
         });

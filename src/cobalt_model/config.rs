@@ -7,7 +7,6 @@ use crate::error::*;
 
 use super::assets;
 use super::collection;
-use super::files;
 use super::mark;
 use super::site;
 use super::template;
@@ -18,8 +17,8 @@ use super::vwiki;
 pub struct Config {
     pub source: path::PathBuf,
     pub destination: path::PathBuf,
-    pub ignore: Vec<String>,
-    pub page_extensions: Vec<String>,
+    pub ignore: Vec<kstring::KString>,
+    pub page_extensions: Vec<kstring::KString>,
     pub include_drafts: bool,
     pub pages: collection::Collection,
     pub posts: collection::Collection,
@@ -61,11 +60,8 @@ impl Config {
             failure::bail!("`template_extensions` should not be empty.");
         }
 
-        let source = files::cleanup_path(&source);
-        let destination = files::cleanup_path(&destination);
-
-        let source = root.join(source);
-        let destination = abs_dest.unwrap_or_else(|| root.join(destination));
+        let source = source.to_path(&root);
+        let destination = abs_dest.unwrap_or_else(|| destination.to_path(root));
 
         let pages = collection::Collection::from_page_config(pages, &site, &default)?;
 
@@ -74,22 +70,22 @@ impl Config {
 
         let site = site::Site::from_config(site);
 
-        let mut ignore = vec![".*".to_owned(), "_*".to_owned()];
+        let mut ignore: Vec<kstring::KString> = vec![".*".into(), "_*".into()];
         if let Ok(rel_dest) = path::Path::new(&destination).strip_prefix(&source) {
             let rel_dest = rel_dest.to_str().expect("started as a utf-8 string");
             if !rel_dest.is_empty() {
-                ignore.push(format!("/{}", rel_dest.to_owned()));
+                ignore.push(format!("/{}", rel_dest.to_owned()).into());
             }
         }
-        ignore.push(format!("/{}", includes_dir));
-        ignore.push(format!("/{}", layouts_dir));
-        ignore.push("/_defaults".to_owned());
-        ignore.push(format!("/{}", assets.sass.import_dir));
+        ignore.push(format!("/{}", includes_dir).into());
+        ignore.push(format!("/{}", layouts_dir).into());
+        ignore.push("/_defaults".into());
+        ignore.push(format!("/{}", assets.sass.import_dir).into());
         assert_eq!(pages.dir, "");
         assert_eq!(pages.drafts_dir, None);
-        ignore.push(format!("!/{}", posts.dir));
+        ignore.push(format!("!/{}", posts.dir).into());
         if let Some(dir) = posts.drafts_dir.as_deref() {
-            ignore.push(format!("!/{}", dir));
+            ignore.push(format!("!/{}", dir).into());
         }
         ignore.extend(custom_ignore);
 

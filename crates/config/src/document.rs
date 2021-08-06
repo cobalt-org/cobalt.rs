@@ -7,11 +7,11 @@ use crate::Status;
 #[derive(Debug, Eq, PartialEq, Default, Clone)]
 pub struct Document {
     front: crate::Frontmatter,
-    content: String,
+    content: kstring::KString,
 }
 
 impl Document {
-    pub fn new(front: Frontmatter, content: String) -> Self {
+    pub fn new(front: Frontmatter, content: kstring::KString) -> Self {
         Self { front, content }
     }
 
@@ -21,11 +21,11 @@ impl Document {
             .map(parse_frontmatter)
             .map_or(Ok(None), |r| r.map(Some))?
             .unwrap_or_else(Frontmatter::default);
-        let content = content.to_owned();
+        let content = kstring::KString::from_ref(content);
         Ok(Self { front, content })
     }
 
-    pub fn into_parts(self) -> (Frontmatter, String) {
+    pub fn into_parts(self) -> (Frontmatter, kstring::KString) {
         let Self { front, content } = self;
         (front, content)
     }
@@ -203,34 +203,34 @@ mod test {
     #[test]
     fn display_empty() {
         let front = Frontmatter::empty();
-        let doc = Document::new(front, String::new());
+        let doc = Document::new(front, kstring::KString::new());
         assert_eq!(&doc.to_string(), "");
     }
 
     #[test]
     fn display_empty_front() {
         let front = Frontmatter::empty();
-        let doc = Document::new(front, "body".to_owned());
+        let doc = Document::new(front, "body".into());
         assert_eq!(&doc.to_string(), "body");
     }
 
     #[test]
     fn display_empty_body() {
         let front = Frontmatter {
-            slug: Some("foo".to_owned()),
+            slug: Some("foo".into()),
             ..Default::default()
         };
-        let doc = Document::new(front, String::new());
+        let doc = Document::new(front, kstring::KString::new());
         assert_eq!(&doc.to_string(), "---\nslug: foo\n---\n");
     }
 
     #[test]
     fn display_both() {
         let front = Frontmatter {
-            slug: Some("foo".to_owned()),
+            slug: Some("foo".into()),
             ..Default::default()
         };
-        let doc = Document::new(front, "body".to_owned());
+        let doc = Document::new(front, "body".into());
         assert_eq!(&doc.to_string(), "---\nslug: foo\n---\nbody");
     }
 }

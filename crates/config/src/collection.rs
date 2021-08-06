@@ -6,13 +6,13 @@ use super::*;
 #[cfg_attr(feature = "unstable", serde(deny_unknown_fields))]
 #[cfg_attr(not(feature = "unstable"), non_exhaustive)]
 pub struct Collection {
-    pub title: Option<String>,
-    pub description: Option<String>,
+    pub title: Option<kstring::KString>,
+    pub description: Option<kstring::KString>,
     pub dir: Option<crate::RelPath>,
     pub drafts_dir: Option<crate::RelPath>,
     pub order: SortOrder,
-    pub rss: Option<String>,
-    pub jsonfeed: Option<String>,
+    pub rss: Option<crate::RelPath>,
+    pub jsonfeed: Option<crate::RelPath>,
     pub publish_date_in_filename: bool,
     pub default: Frontmatter,
 }
@@ -49,7 +49,7 @@ impl From<PageCollection> for Collection {
         let PageCollection { default } = other;
         // By default, Disable excerpts
         let default = default.merge(&Frontmatter {
-            excerpt_separator: Some("".to_owned()),
+            excerpt_separator: Some("".into()),
             ..Default::default()
         });
         Self {
@@ -76,13 +76,13 @@ pub struct PageCollection {
 #[cfg_attr(feature = "unstable", serde(deny_unknown_fields))]
 #[cfg_attr(not(feature = "unstable"), non_exhaustive)]
 pub struct PostCollection {
-    pub title: Option<String>,
-    pub description: Option<String>,
+    pub title: Option<kstring::KString>,
+    pub description: Option<kstring::KString>,
     pub dir: crate::RelPath,
     pub drafts_dir: Option<crate::RelPath>,
     pub order: SortOrder,
-    pub rss: Option<String>,
-    pub jsonfeed: Option<String>,
+    pub rss: Option<crate::RelPath>,
+    pub jsonfeed: Option<crate::RelPath>,
     pub publish_date_in_filename: bool,
     pub default: Frontmatter,
 }
