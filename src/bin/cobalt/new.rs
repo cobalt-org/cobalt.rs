@@ -259,7 +259,7 @@ pub fn create_new_document(
         (file, extension)
     };
 
-    let rel_file = file.strip_prefix(&config.source).map_err(|_| {
+    let file = cobalt_core::SourcePath::from_root(&config.source, &file).ok_or_else(|| {
         failure::format_err!(
             "New file {} not project directory ({})",
             file.display(),
@@ -269,19 +269,18 @@ pub fn create_new_document(
 
     let source_files =
         cobalt_core::Source::new(&config.source, config.ignore.iter().map(|s| s.as_str()))?;
-    let collection_slug = if source_files.includes_file(&file) {
+    let collection_slug = if source_files.includes_file(&file.abs_path) {
         match cobalt::classify_path(
-            &file,
-            &source_files,
+            &file.rel_path,
             &config.pages,
             &config.posts,
             &config.page_extensions,
         ) {
             Some((slug, _)) => slug,
-            None => failure::bail!("Target file is an asset: {}", file.display()),
+            None => failure::bail!("Target file is an asset: {}", file.rel_path),
         }
     } else {
-        failure::bail!("Target file is ignored: {}", file.display());
+        failure::bail!("Target file is ignored: {}", file.rel_path);
     };
 
     let source_path = config
@@ -299,7 +298,7 @@ pub fn create_new_document(
             failure::bail!(
                 "No builtin default for `{}` files, only `md`: {}",
                 extension,
-                file.display()
+                file.rel_path
             );
         }
         // For custom collections, use a post default.
@@ -313,8 +312,8 @@ pub fn create_new_document(
     let doc = cobalt_model::Document::new(front, content);
     let doc = doc.to_string();
 
-    create_file(&file, &doc)?;
-    info!("Created new {} {:?}", collection_slug, rel_file);
+    create_file(&file.abs_path, &doc)?;
+    info!("Created new {} {}", collection_slug, file.rel_path);
 
     Ok(())
 }
@@ -357,12 +356,19 @@ pub fn rename_document(
     let doc = cobalt_model::Document::parse(&doc)?;
     let (mut front, content) = doc.into_parts();
 
+    let target = cobalt_core::SourcePath::from_root(&config.source, &target).ok_or_else(|| {
+        failure::format_err!(
+            "New file {} not project directory ({})",
+            target.display(),
+            config.source.display()
+        )
+    })?;
+
     let source_files =
         cobalt_core::Source::new(&config.source, config.ignore.iter().map(|s| s.as_str()))?;
-    let collection = if source_files.includes_file(&target) {
+    let collection = if source_files.includes_file(&target.abs_path) {
         match cobalt::classify_path(
-            &target,
-            &source_files,
+            &target.rel_path,
             &config.pages,
             &config.posts,
             &config.page_extensions,
@@ -370,20 +376,15 @@ pub fn rename_document(
             Some((slug, _)) if config.pages.slug == slug => &config.pages,
             Some((slug, _)) if config.posts.slug == slug => &config.posts,
             Some((slug, _)) => unreachable!("Unknown collection: {}", slug),
-            None => failure::bail!("Target file is an asset: {}", target.display()),
+            None => failure::bail!("Target file is an asset: {}", target.rel_path),
         }
     } else {
-        failure::bail!("Target file is ignored: {}", target.display());
+        failure::bail!("Target file is ignored: {}", target.rel_path);
     };
     // Can't rely on this for drafts atm
-    let rel_src = target
-        .strip_prefix(&config.source)
-        .ok()
-        .and_then(|s| cobalt_config::RelPath::from_path(s))
-        .expect("file was found under the root");
     let full_front = front
         .clone()
-        .merge_path(&rel_src)
+        .merge_path(&target.rel_path)
         .merge(&collection.default);
 
     let full_front = cobalt_model::Frontmatter::from_config(full_front)?;
@@ -391,7 +392,7 @@ pub fn rename_document(
     front.title = Some(kstring::KString::from_ref(title));
     let doc = cobalt_model::Document::new(front, content);
     let doc = doc.to_string();
-    cobalt_model::files::write_document_file(doc, target)?;
+    cobalt_model::files::write_document_file(doc, &target.abs_path)?;
 
     if !full_front.is_draft {
         warn!("Renaming a published page might invalidate links");
@@ -469,13 +470,19 @@ pub fn publish_document(config: &cobalt_model::Config, file: &path::Path) -> Res
     cobalt_model::files::write_document_file(doc, file)?;
 
     let file = move_from_drafts_to_posts(&config, &file)?;
+    let file = cobalt_core::SourcePath::from_root(&config.source, &file).ok_or_else(|| {
+        failure::format_err!(
+            "New file {} not project directory ({})",
+            file.display(),
+            config.source.display()
+        )
+    })?;
 
     let source_files =
         cobalt_core::Source::new(&config.source, config.ignore.iter().map(|s| s.as_str()))?;
-    let collection = if source_files.includes_file(&file) {
+    let collection = if source_files.includes_file(&file.abs_path) {
         match cobalt::classify_path(
-            &file,
-            &source_files,
+            &file.rel_path,
             &config.pages,
             &config.posts,
             &config.page_extensions,
@@ -483,14 +490,14 @@ pub fn publish_document(config: &cobalt_model::Config, file: &path::Path) -> Res
             Some((slug, _)) if config.pages.slug == slug => &config.pages,
             Some((slug, _)) if config.posts.slug == slug => &config.posts,
             Some((slug, _)) => unreachable!("Unknown collection: {}", slug),
-            None => failure::bail!("Target file is an asset: {}", file.display()),
+            None => failure::bail!("Target file is an asset: {}", file.rel_path),
         }
     } else {
-        failure::bail!("Target file is ignored: {}", file.display());
+        failure::bail!("Target file is ignored: {}", file.rel_path);
     };
 
     if collection.publish_date_in_filename {
-        prepend_date_to_filename(&config, &file, &date)?;
+        prepend_date_to_filename(&config, &file.abs_path, &date)?;
     }
     Ok(())
 }

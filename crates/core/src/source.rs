@@ -43,7 +43,7 @@ impl Source {
         self.includes_path(dir, is_dir)
     }
 
-    pub fn iter(&self) -> impl Iterator<Item = std::path::PathBuf> + '_ {
+    pub fn iter(&self) -> impl Iterator<Item = crate::SourcePath> + '_ {
         walkdir::WalkDir::new(&self.root)
             .min_depth(1)
             .follow_links(false)
@@ -52,7 +52,7 @@ impl Source {
             .filter_entry(move |e| self.includes_entry(e))
             .filter_map(|e| e.ok())
             .filter(|e| e.file_type().is_file())
-            .map(move |e| e.path().to_path_buf())
+            .filter_map(move |e| crate::SourcePath::from_root(&self.root, e.path()))
     }
 
     fn includes_path(&self, path: &std::path::Path, is_dir: bool) -> bool {
