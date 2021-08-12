@@ -56,18 +56,17 @@ impl Source {
     }
 
     fn includes_path(&self, path: &std::path::Path, is_dir: bool) -> bool {
-        if path == self.root {
-            return true;
-        }
-
-        let parent = path.parent();
-        if let Some(parent) = parent {
-            if parent.starts_with(&self.root) && !self.includes_path(parent, parent.is_dir()) {
-                return false;
+        match self.ignore.matched_path_or_any_parents(path, is_dir) {
+            ignore::Match::None => true,
+            ignore::Match::Ignore(glob) => {
+                log::trace!("{:?}: ignored {:?}", path, glob.original());
+                false
+            }
+            ignore::Match::Whitelist(glob) => {
+                log::trace!("{:?}: allowed {:?}", path, glob.original());
+                true
             }
         }
-
-        self.includes_path_leaf(path, is_dir)
     }
 
     fn includes_path_leaf(&self, path: &std::path::Path, is_dir: bool) -> bool {
@@ -85,11 +84,11 @@ impl Source {
     }
 
     fn includes_entry(&self, entry: &walkdir::DirEntry) -> bool {
-        let file = entry.path();
+        let path = entry.path();
 
         // Assumption: The parent paths will have been checked before we even get to this point.
         let is_dir = entry.file_type().is_dir();
-        self.includes_path_leaf(file, is_dir)
+        self.includes_path_leaf(path, is_dir)
     }
 }
 
