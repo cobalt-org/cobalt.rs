@@ -7,17 +7,14 @@ members = [
 [package]
 name = "cobalt-bin"
 version = "0.16.5"
-authors = ["Benny Klotz <r3qnbenni@gmail.com>", "Johann Hofmann <mail@johann-hofmann.com>"]
 description = "Static site generator written in Rust"
+authors = ["Benny Klotz <r3qnbenni@gmail.com>", "Johann Hofmann <mail@johann-hofmann.com>"]
 repository = "https://github.com/cobalt-org/cobalt.rs"
 readme = "README.md"
-keywords = ["static", "site", "generator"]
 categories = ["command-line-utilities"]
+keywords = ["static", "site", "generator"]
 license = "MIT"
 edition = "2018"
-
-[badges]
-azure-devops = { project = "cobalt-org", pipeline = "cobalt.rs" }
 
 [package.metadata.release]
 pre-release-replacements = [

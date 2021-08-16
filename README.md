@@ -1,7 +1,6 @@
 # ![Cobalt](https://raw.githubusercontent.com/cobalt-org/logos/master/cobald.logo.02.resize.png)
 
 [![](https://img.shields.io/crates/v/cobalt-bin.svg?maxAge=25920)](https://crates.io/crates/cobalt-bin)
-[![Build Status](https://dev.azure.com/cobalt-org/cobalt-org/_apis/build/status/cobalt.rs?branchName=master)](https://dev.azure.com/cobalt-org/cobalt-org/_build/latest?definitionId=2&branchName=master)
 [![](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/cobalt-org/cobalt.rs?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
 A straightforward static site generator written in [Rust](http://www.rust-lang.org/).
