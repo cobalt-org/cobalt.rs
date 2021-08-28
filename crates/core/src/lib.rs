@@ -1,5 +1,7 @@
+mod fs;
 mod source;
 
+pub use fs::*;
 pub use source::*;
 
 type Status = status::Status;

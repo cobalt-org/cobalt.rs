@@ -17,7 +17,6 @@ use crate::error::*;
 use crate::pagination;
 
 struct Context {
-    pub source: path::PathBuf,
     pub destination: path::PathBuf,
     pub source_files: cobalt_core::Source,
     pub page_extensions: Vec<kstring::KString>,
@@ -64,7 +63,6 @@ impl Context {
         let layouts = parse_layouts(&layouts);
 
         let context = Context {
-            source,
             destination,
             source_files,
             page_extensions,
@@ -94,8 +92,7 @@ pub fn build(config: Config) -> Result<()> {
     let mut asset_paths = Vec::new();
     for path in context.source_files.iter() {
         match classify_path(
-            &path,
-            &context.source_files,
+            &path.rel_path,
             &context.pages,
             &context.posts,
             &context.page_extensions,
@@ -111,27 +108,12 @@ pub fn build(config: Config) -> Result<()> {
         }
     }
 
-    let mut posts = parse_pages(
-        &post_paths,
-        &context.posts,
-        &context.source,
-        context.include_drafts,
-    )?;
+    let mut posts = parse_pages(&post_paths, &context.posts, context.include_drafts)?;
     if !post_draft_paths.is_empty() {
-        parse_drafts(
-            &post_draft_paths,
-            &mut posts,
-            &context.posts,
-            &context.source,
-        )?;
+        parse_drafts(&post_draft_paths, &mut posts, &context.posts)?;
     }
 
-    let documents = parse_pages(
-        &page_paths,
-        &context.pages,
-        &context.source,
-        context.include_drafts,
-    )?;
+    let documents = parse_pages(&page_paths, &context.pages, context.include_drafts)?;
 
     sort_pages(&mut posts, &context.posts)?;
     generate_posts(&mut posts, &context)?;
@@ -168,7 +150,7 @@ pub fn build(config: Config) -> Result<()> {
     for asset_path in asset_paths {
         context
             .assets
-            .process(&asset_path, &context.destination, &context.minify)?;
+            .process(&asset_path.abs_path, &context.destination, &context.minify)?;
     }
 
     Ok(())
@@ -359,23 +341,21 @@ fn sort_pages(posts: &mut Vec<Document>, collection: &Collection) -> Result<()> 
 }
 
 fn parse_drafts(
-    page_paths: &[std::path::PathBuf],
+    page_paths: &[cobalt_core::SourcePath],
     documents: &mut Vec<Document>,
     collection: &Collection,
-    source: &path::Path,
 ) -> Result<()> {
     let dir = &collection.dir;
     let drafts_dir = collection
         .drafts_dir
         .as_deref()
         .expect("Caller checked first");
-    let drafts_root = drafts_dir.to_path(source);
     for file_path in page_paths {
         // Provide a fake path as if it was not a draft
         let rel_src = file_path
-            .strip_prefix(&drafts_root)
+            .rel_path
+            .strip_prefix(drafts_dir)
             .ok()
-            .and_then(cobalt_config::RelPath::from_path)
             .expect("file was found under the root");
         let new_path = dir.join(&rel_src);
 
@@ -385,35 +365,28 @@ fn parse_drafts(
         }
         .merge(&collection.default);
 
-        let doc = Document::parse(&file_path, &new_path, default_front)
-            .with_context(|_| failure::format_err!("Failed to parse {}", rel_src))?;
+        let doc = Document::parse(&file_path.abs_path, &new_path, default_front)
+            .with_context(|_| failure::format_err!("Failed to parse {}", file_path.rel_path))?;
         documents.push(doc);
     }
     Ok(())
 }
 
 fn parse_pages(
-    page_paths: &[std::path::PathBuf],
+    page_paths: &[cobalt_core::SourcePath],
     collection: &Collection,
-    source: &path::Path,
     include_drafts: bool,
 ) -> Result<Vec<Document>> {
     let mut documents = vec![];
     for file_path in page_paths {
-        let rel_src = file_path
-            .strip_prefix(source)
-            .ok()
-            .and_then(cobalt_config::RelPath::from_path)
-            .expect("file was found under the root");
-
         let default_front = collection.default.clone();
 
-        let doc = Document::parse(&file_path, &rel_src, default_front)
-            .with_context(|_| failure::format_err!("Failed to parse {}", rel_src))?;
+        let doc = Document::parse(&file_path.abs_path, &file_path.rel_path, default_front)
+            .with_context(|_| failure::format_err!("Failed to parse {}", file_path.rel_path))?;
         if !doc.front.is_draft || include_drafts {
             documents.push(doc);
         } else {
-            log::trace!("Skipping draft {}", file_path.display());
+            log::trace!("Skipping draft {}", file_path.rel_path);
         }
     }
     Ok(documents)
@@ -562,20 +535,18 @@ fn create_sitemap(
 }
 
 pub fn classify_path<'s>(
-    path: &std::path::Path,
-    source: &cobalt_core::Source,
+    path: &relative_path::RelativePathBuf,
     pages: &'s cobalt_model::Collection,
     posts: &'s cobalt_model::Collection,
     page_extensions: &[kstring::KString],
 ) -> Option<(&'s str, bool)> {
     if ext_contains(&page_extensions, &path) {
-        let relpath = path.strip_prefix(source.root()).unwrap();
-        if relpath.starts_with(posts.dir.as_str()) {
+        if path.starts_with(&posts.dir) {
             return Some((posts.slug.as_str(), false));
         }
 
         if let Some(drafts_dir) = posts.drafts_dir.as_ref() {
-            if relpath.starts_with(drafts_dir.as_str()) {
+            if path.starts_with(drafts_dir) {
                 return Some((posts.slug.as_str(), true));
             }
         }
@@ -586,12 +557,12 @@ pub fn classify_path<'s>(
     }
 }
 
-fn ext_contains(extensions: &[kstring::KString], file: &path::Path) -> bool {
+fn ext_contains(extensions: &[kstring::KString], file: &relative_path::RelativePath) -> bool {
     if extensions.is_empty() {
         return true;
     }
 
     file.extension()
-        .map(|ext| extensions.iter().any(|e| std::ffi::OsStr::new(e) == ext))
+        .map(|ext| extensions.iter().any(|e| e == ext))
         .unwrap_or(false)
 }

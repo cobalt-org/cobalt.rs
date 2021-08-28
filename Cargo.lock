@@ -359,6 +359,7 @@ dependencies = [
  "liquid-core",
  "log",
  "once_cell",
+ "relative-path",
  "serde",
  "status",
  "walkdir 2.3.2",

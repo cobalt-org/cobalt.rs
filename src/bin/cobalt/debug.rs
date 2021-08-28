@@ -63,7 +63,7 @@ pub fn debug_command(matches: &clap::ArgMatches) -> Result<()> {
                         config.ignore.iter().map(|s| s.as_str()),
                     )?;
                     for path in source_files.iter() {
-                        println!("{}", path.display());
+                        println!("{}", path.rel_path);
                     }
                 }
                 _ => {
