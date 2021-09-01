@@ -18,7 +18,7 @@ preview_unstable = []
 cobalt-config = { version = "=0.16.0", path = "..//config", features = ["unstable"] }
 ignore = "0.4"
 walkdir = "2.2"
-liquid-core = "0.22"
+liquid-core = "0.23"
 log = "0.4"
 serde = "1.0"
 once_cell = "1.2"
