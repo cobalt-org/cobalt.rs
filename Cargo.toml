@@ -38,9 +38,9 @@ cobalt-core = { version = "=0.16.0", path = "crates/core", features = ["unstable
 clap = "2.33"
 kstring = "1.0"
 relative-path = { version = "1", features = ["serde"] }
-liquid = "0.22"
-liquid-core = "0.22"
-liquid-lib = { version = "0.22", features = ["jekyll", "shopify", "extra"] }
+liquid = "0.23"
+liquid-core = "0.23"
+liquid-lib = { version = "0.23", features = ["jekyll", "shopify", "extra"] }
 deunicode = "1.1.1"
 walkdir = "2.2"
 chrono = "0.4"
