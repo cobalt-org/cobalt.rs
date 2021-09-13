@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 <!-- next-header -->
 ## [Unreleased] - ReleaseDate
 
+#### Features
+
+- Allow disabling of templating
+- vimwiki support
+
+#### Bug Fixes
+
+- Ensure we ignore `--destination` when building
+- `cobalt new` creates dir if needed
+
 ## [0.16.5] - 2021-05-29
 
 #### Bug Fixes
