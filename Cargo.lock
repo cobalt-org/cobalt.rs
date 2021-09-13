@@ -352,7 +352,7 @@ dependencies = [
 
 [[package]]
 name = "cobalt-core"
-version = "0.16.0"
+version = "0.17.0"
 dependencies = [
  "cobalt-config",
  "ignore",
