@@ -312,6 +312,9 @@ pub fn create_new_document(
     let doc = cobalt_model::Document::new(front, content);
     let doc = doc.to_string();
 
+    if let Some(parent) = file.abs_path.parent() {
+        std::fs::create_dir_all(parent)?;
+    }
     create_file(&file.abs_path, &doc)?;
     info!("Created new {} {}", collection_slug, file.rel_path);
 
