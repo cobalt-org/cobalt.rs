@@ -1,6 +1,3 @@
-#[macro_use]
-extern crate difference;
-
 use std::fs::File;
 use std::io::Read;
 use std::path::Path;
@@ -43,7 +40,7 @@ fn assert_dirs_eq(expected: &Path, actual: &Path) {
             .read_to_string(&mut created)
             .expect("Could not read to string");
 
-        assert_diff!(&original, &created, " ", 0);
+        similar_asserts::assert_eq!(&original, &created);
     }
 
     // Ensure no unnecessary files were created

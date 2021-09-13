@@ -269,7 +269,7 @@ mod test {
             ))
             .unwrap();
         let output = template.render(&liquid::Object::new());
-        difference::assert_diff!(CODEBLOCK_RENDERED, &output.unwrap(), "\n", 0);
+        similar_asserts::assert_eq!(CODEBLOCK_RENDERED, &output.unwrap());
     }
 
     const MARKDOWN_RENDERED: &str =
@@ -300,6 +300,6 @@ mod test {
         let mut buf = String::new();
         let parser = cmark::Parser::new(&html);
         cmark::html::push_html(&mut buf, decorate_markdown(parser, "base16-ocean.dark"));
-        difference::assert_diff!(MARKDOWN_RENDERED, &buf, "\n", 0);
+        similar_asserts::assert_eq!(MARKDOWN_RENDERED, &buf);
     }
 }

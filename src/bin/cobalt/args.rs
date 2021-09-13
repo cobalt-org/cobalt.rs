@@ -45,7 +45,14 @@ pub fn get_config(matches: &clap::ArgMatches) -> Result<cobalt_config::Config> {
         cobalt_config::Config::from_cwd(cwd)?
     };
 
-    config.abs_dest = matches.value_of("destination").map(path::PathBuf::from);
+    config.abs_dest = matches
+        .value_of("destination")
+        .map(|d| {
+            let d = path::PathBuf::from(d);
+            std::fs::create_dir_all(&d)?;
+            d.canonicalize()
+        })
+        .transpose()?;
 
     if matches.is_present("drafts") {
         config.include_drafts = true;
