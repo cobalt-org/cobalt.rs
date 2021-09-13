@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 <!-- next-header -->
 ## [Unreleased] - ReleaseDate
 
+## [0.17.0] - 2021-09-13
+
 #### Features
 
 - Allow disabling of templating
@@ -603,5 +605,6 @@ this.
 [@tak1n]: https://github.com/tak1n
 
 <!-- next-url -->
-[Unreleased]: https://github.com/assert-rs/predicates-rs/compare/v0.16.5...HEAD
+[Unreleased]: https://github.com/assert-rs/predicates-rs/compare/v0.17.0...HEAD
+[0.17.0]: https://github.com/assert-rs/predicates-rs/compare/v0.16.5...v0.17.0
 [0.16.5]: https://github.com/cobalt-org/cobalt.rs/compare/v0.16.4...v0.16.5
