@@ -14,6 +14,18 @@ categories = ["command-line-utilities"]
 keywords = ["static", "site", "generator"]
 license = "MIT"
 edition = "2018"
+exclude = [
+    ".gitignore",
+    "CHANGELOG.md",
+    "CONTRIBUTING.md",
+    "release.toml",
+    "typos.toml",
+    "committed.toml",
+    "docs/**",
+    ".github/**",
+    "tests/**",
+    "benches/**",
+]
 
 [package.metadata.release]
 pre-release-replacements = [
