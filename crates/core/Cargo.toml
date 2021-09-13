@@ -15,7 +15,7 @@ unstable = []
 preview_unstable = []
 
 [dependencies]
-cobalt-config = { version = "=0.16.0", path = "..//config", features = ["unstable"] }
+cobalt-config = { version = "=0.17.0", path = "..//config", features = ["unstable"] }
 ignore = "0.4"
 walkdir = "2.2"
 liquid-core = "0.23"
