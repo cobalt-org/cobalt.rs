@@ -99,7 +99,7 @@ jobs:
         staging="${{ env.BIN_NAME }}-${{ needs.create-release.outputs.release_version }}-${{ matrix.target }}"
         mkdir -p "$staging"/{complete,doc}
         cp {README.md,LICENSE-*} "$staging/"
-        cp {CHANGELOG.md,docs/*} "$staging/doc/"
+        cp {CHANGELOG.md} "$staging/doc/"
         if [ "${{ matrix.os }}" = "windows-2019" ]; then
           cp "target/${{ matrix.target }}/release/${{ env.BIN_NAME }}.exe" "$staging/"
           cd "$staging"
