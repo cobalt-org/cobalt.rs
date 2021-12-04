@@ -79,7 +79,7 @@ impl Site {
         }
         attributes.insert(
             "time".into(),
-            liquid::model::Value::scalar(kstring::KString::from_ref(&self.time.to_string())),
+            liquid::model::Value::scalar(self.time),
         );
 
         let mut data = self.data.clone().unwrap_or_default();
