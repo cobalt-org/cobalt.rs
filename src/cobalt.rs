@@ -456,8 +456,7 @@ fn create_rss(
         .link(link.to_owned())
         .description(description.to_owned())
         .items(items)
-        .build()
-        .map_err(failure::err_msg)?;
+        .build();
 
     let rss_string = channel.to_string();
     trace!("RSS data: {}", rss_string);
