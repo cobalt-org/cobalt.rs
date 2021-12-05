@@ -5,6 +5,7 @@ use std::path::Path;
 
 use chrono::{Datelike, Timelike};
 use failure::ResultExt;
+use kstring::KString;
 use liquid::model::Value;
 use liquid::Object;
 use liquid::ValueView;
@@ -363,8 +364,8 @@ impl Document {
         context: &RenderContext,
         layouts: &HashMap<String, String>,
     ) -> Result<String> {
-        if let Some(ref layout) = self.front.layout {
-            let layout_data_ref = layouts.get(layout.as_str()).ok_or_else(|| {
+        let parse_layout = |layout: &str| -> Result<(cobalt_config::Frontmatter, KString)> {
+            let full_content = layouts.get(layout).ok_or_else(|| {
                 failure::format_err!(
                     "Layout {} does not exist (referenced in {}).",
                     layout,
@@ -372,14 +373,40 @@ impl Document {
                 )
             })?;
 
-            let template = context
-                .parser
-                .parse(layout_data_ref)
-                .with_context(|_| failure::format_err!("Failed to parse layout {:?}", layout))?;
-            let content_html = template
-                .render(context.globals)
-                .with_context(|_| failure::format_err!("Failed to render layout {:?}", layout))?;
-            let content_html = minify_if_enabled(content_html, context, &self.file_path)?;
+            let builder = cobalt_config::Document::parse(&full_content)?;
+            let (front, content) = builder.into_parts();
+
+            Ok((front, content))
+        };
+
+        if self.front.layout.is_some() {
+            let mut layout = self.front.layout.clone();
+            let mut layout_context = context.globals.clone();
+            let mut content = String::new();
+
+            while let Some(ref current_layout) = layout {
+                let (front, layout_data_ref) = parse_layout(&current_layout)?;
+
+                let template = context.parser.parse(&layout_data_ref).with_context(|_| {
+                    failure::format_err!("Failed to parse layout {:?}", current_layout)
+                })?;
+
+                let content_html = template.render(&layout_context).with_context(|_| {
+                    failure::format_err!("Failed to render layout {:?}", current_layout)
+                })?;
+
+                // Replace the end content with the one that was just generated
+                content = content_html.clone();
+                // replace the content for the page with the rendered layout
+                layout_context.insert(
+                    "page.content".into(),
+                    liquid_core::Value::scalar(content_html),
+                );
+                // set the new layout if there is one
+                layout = front.layout;
+            }
+
+            let content_html = minify_if_enabled(content, context, &self.file_path)?;
             Ok(content_html)
         } else {
             let path = &[
