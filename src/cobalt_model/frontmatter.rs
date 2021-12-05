@@ -3,6 +3,7 @@ use std::fmt;
 use cobalt_config::DateTime;
 use cobalt_config::SourceFormat;
 use liquid;
+use serde::Serialize;
 
 use super::pagination;
 use crate::error::Result;
@@ -99,7 +100,7 @@ impl Frontmatter {
 }
 
 impl fmt::Display for Frontmatter {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let converted = serde_yaml::to_string(self).expect("should always be valid");
         let subset = converted
             .strip_prefix("---")

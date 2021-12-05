@@ -3,6 +3,7 @@ use std::path;
 
 #[cfg(feature = "sass")]
 use sass_rs;
+use serde::{Deserialize, Serialize};
 
 use super::files;
 use crate::cobalt_model::Minify;

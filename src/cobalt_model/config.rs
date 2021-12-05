@@ -1,6 +1,8 @@
 use std::fmt;
 use std::path;
 
+use log::debug;
+use serde::Serialize;
 use serde_yaml;
 
 use crate::error::*;
@@ -136,7 +138,7 @@ impl Default for Config {
 }
 
 impl fmt::Display for Config {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut converted = serde_yaml::to_string(self).map_err(|_| fmt::Error)?;
         converted.drain(..4);
         write!(f, "{}", converted)

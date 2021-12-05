@@ -51,7 +51,7 @@ pub fn serve_command_args() -> clap::App<'static, 'static> {
         )
 }
 
-pub fn serve_command(matches: &clap::ArgMatches) -> Result<()> {
+pub fn serve_command(matches: &clap::ArgMatches<'_>) -> Result<()> {
     let host = matches.value_of("host").unwrap().to_string();
     let port = matches.value_of("port").unwrap().to_string();
     let ip = format!("{}:{}", host, port);

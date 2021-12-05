@@ -1,6 +1,6 @@
 use crate::error::*;
+use serde::{Deserialize, Serialize};
 use vimwiki::{HtmlCodeConfig, HtmlConfig, Language, Page, ParseError, ToHtmlString};
-
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct VimwikiBuilder {
@@ -32,9 +32,9 @@ impl Vimwiki {
         //
         //       Until then, we just convert to error display message and
         //       wrap that in a general failure error type
-        let page: Page = lang
-            .parse()
-            .map_err(|x: ParseError| failure::err_msg(format!("vimwiki parsing failed: {}", x)))?;
+        let page: Page<'_> = lang.parse().map_err(|x: ParseError<'_>| {
+            failure::err_msg(format!("vimwiki parsing failed: {}", x))
+        })?;
 
         let config = HtmlConfig {
             code: HtmlCodeConfig {

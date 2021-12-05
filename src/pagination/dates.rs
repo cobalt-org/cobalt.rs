@@ -43,7 +43,7 @@ pub fn create_dates_paginators(
     walk_dates(&mut root_date, &pagination_cfg, &doc, None)
 }
 
-fn format_date_holder(d: &DateIndexHolder) -> liquid::model::Value {
+fn format_date_holder(d: &DateIndexHolder<'_>) -> liquid::model::Value {
     let field = d
         .field
         .expect("Should not be called with the root DateIndexHolder");
@@ -54,15 +54,15 @@ fn format_date_holder(d: &DateIndexHolder) -> liquid::model::Value {
     liquid::model::Value::scalar(formatted)
 }
 
-fn date_fields_to_array(date: &[DateIndexHolder]) -> liquid::model::Array {
+fn date_fields_to_array(date: &[DateIndexHolder<'_>]) -> liquid::model::Array {
     date.iter().map(|d| format_date_holder(&d)).collect()
 }
 
 fn walk_dates(
-    date_holder: &mut DateIndexHolder,
+    date_holder: &mut DateIndexHolder<'_>,
     config: &PaginationConfig,
     doc: &Document,
-    parent_dates: Option<Vec<DateIndexHolder>>,
+    parent_dates: Option<Vec<DateIndexHolder<'_>>>,
 ) -> Result<Vec<Paginator>> {
     let mut cur_date_holder_paginators: Vec<Paginator> = vec![];
     let mut current_date = if let Some(parent_dates) = parent_dates {

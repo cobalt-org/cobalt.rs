@@ -1,6 +1,8 @@
 use std::io::Write;
 
+use crate::error;
 use itertools::Itertools;
+use lazy_static::lazy_static;
 use liquid_core::error::ResultLiquidReplaceExt;
 use liquid_core::parser::TryMatchToken;
 use liquid_core::Language;
@@ -16,8 +18,6 @@ use syntect::html::{
     highlighted_html_for_string, start_highlighted_html_snippet, IncludeBackground,
 };
 use syntect::parsing::{SyntaxReference, SyntaxSet};
-
-use crate::error;
 
 struct Setup {
     syntax_set: SyntaxSet,
@@ -123,8 +123,8 @@ impl liquid_core::ParseBlock for CodeBlockParser {
 
     fn parse(
         &self,
-        mut arguments: TagTokenIter,
-        mut tokens: TagBlock,
+        mut arguments: TagTokenIter<'_>,
+        mut tokens: TagBlock<'_, '_>,
         _options: &Language,
     ) -> Result<Box<dyn Renderable>, liquid_core::Error> {
         let lang = arguments

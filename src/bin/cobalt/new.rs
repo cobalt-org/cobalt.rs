@@ -22,7 +22,7 @@ pub fn init_command_args() -> clap::App<'static, 'static> {
         )
 }
 
-pub fn init_command(matches: &clap::ArgMatches) -> Result<()> {
+pub fn init_command(matches: &clap::ArgMatches<'_>) -> Result<()> {
     let directory = matches.value_of("DIRECTORY").unwrap();
 
     create_new_project(&directory.to_string())
@@ -59,7 +59,7 @@ pub fn new_command_args() -> clap::App<'static, 'static> {
         )
 }
 
-pub fn new_command(matches: &clap::ArgMatches) -> Result<()> {
+pub fn new_command(matches: &clap::ArgMatches<'_>) -> Result<()> {
     let mut config = args::get_config(matches)?;
     config.include_drafts = true;
     let config = cobalt::cobalt_model::Config::from_config(config)?;
@@ -105,7 +105,7 @@ pub fn rename_command_args() -> clap::App<'static, 'static> {
         )
 }
 
-pub fn rename_command(matches: &clap::ArgMatches) -> Result<()> {
+pub fn rename_command(matches: &clap::ArgMatches<'_>) -> Result<()> {
     let mut config = args::get_config(matches)?;
     config.include_drafts = true;
     let config = cobalt::cobalt_model::Config::from_config(config)?;
@@ -137,7 +137,7 @@ pub fn publish_command_args() -> clap::App<'static, 'static> {
         )
 }
 
-pub fn publish_command(matches: &clap::ArgMatches) -> Result<()> {
+pub fn publish_command(matches: &clap::ArgMatches<'_>) -> Result<()> {
     let filename = matches
         .value_of("FILENAME")
         .expect("required parameters are present");

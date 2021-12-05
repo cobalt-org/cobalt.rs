@@ -11,7 +11,7 @@ pub fn build_command_args() -> clap::App<'static, 'static> {
         .args(&args::get_config_args())
 }
 
-pub fn build_command(matches: &clap::ArgMatches) -> Result<()> {
+pub fn build_command(matches: &clap::ArgMatches<'_>) -> Result<()> {
     let config = args::get_config(matches)?;
     let config = cobalt::cobalt_model::Config::from_config(config)?;
 
@@ -37,7 +37,7 @@ pub fn clean_command_args() -> clap::App<'static, 'static> {
         .args(&args::get_config_args())
 }
 
-pub fn clean_command(matches: &clap::ArgMatches) -> Result<()> {
+pub fn clean_command(matches: &clap::ArgMatches<'_>) -> Result<()> {
     let config = args::get_config(matches)?;
     let config = cobalt::cobalt_model::Config::from_config(config)?;
 
@@ -94,7 +94,7 @@ pub fn import_command_args() -> clap::App<'static, 'static> {
         )
 }
 
-pub fn import_command(matches: &clap::ArgMatches) -> Result<()> {
+pub fn import_command(matches: &clap::ArgMatches<'_>) -> Result<()> {
     let config = args::get_config(matches)?;
     let config = cobalt::cobalt_model::Config::from_config(config)?;
 

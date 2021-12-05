@@ -5,6 +5,9 @@ use std::path;
 
 use failure::ResultExt;
 use jsonfeed::Feed;
+use log::debug;
+use log::trace;
+use log::warn;
 use sitemap::writer::SiteMapWriter;
 
 use crate::cobalt_model;

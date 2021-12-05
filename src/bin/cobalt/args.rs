@@ -33,7 +33,7 @@ pub fn get_config_args() -> Vec<clap::Arg<'static, 'static>> {
     .to_vec()
 }
 
-pub fn get_config(matches: &clap::ArgMatches) -> Result<cobalt_config::Config> {
+pub fn get_config(matches: &clap::ArgMatches<'_>) -> Result<cobalt_config::Config> {
     let config_path = matches.value_of("config");
 
     // Fetch config information if available
@@ -88,8 +88,8 @@ pub fn get_logging_args() -> Vec<clap::Arg<'static, 'static>> {
 }
 
 pub fn get_logging(
-    global_matches: &clap::ArgMatches,
-    matches: &clap::ArgMatches,
+    global_matches: &clap::ArgMatches<'_>,
+    matches: &clap::ArgMatches<'_>,
 ) -> Result<env_logger::Builder> {
     let mut builder = env_logger::Builder::new();
 
