@@ -53,7 +53,7 @@ impl Site {
             sitemap,
             data,
             data_dir,
-            time: DateTime::now()
+            time: DateTime::now(),
         }
     }
 
@@ -77,10 +77,7 @@ impl Site {
                 liquid::model::Value::scalar(kstring::KString::from_ref(base_url)),
             );
         }
-        attributes.insert(
-            "time".into(),
-            liquid::model::Value::scalar(self.time),
-        );
+        attributes.insert("time".into(), liquid::model::Value::scalar(self.time));
 
         let mut data = self.data.clone().unwrap_or_default();
         let data_path = source.join(&self.data_dir);
