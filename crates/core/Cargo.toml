@@ -8,7 +8,7 @@ readme = "../../README.md"
 keywords = ["static", "site", "generator"]
 categories = ["command-line-utilities"]
 license = "MIT OR Apache-2.0"
-edition = "2018"
+edition = "2021"
 
 [features]
 unstable = []
