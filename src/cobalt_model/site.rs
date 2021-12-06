@@ -2,6 +2,7 @@ use std::ffi::OsStr;
 use std::fs;
 use std::path;
 
+use cobalt_config::DateTime;
 use failure::ResultExt;
 use liquid;
 use serde_json;
@@ -21,6 +22,8 @@ pub struct Site {
     pub sitemap: Option<cobalt_config::RelPath>,
     pub data: Option<liquid::Object>,
     pub data_dir: &'static str,
+    /// The time at which the `cobalt` binary built the site
+    pub time: DateTime,
 }
 
 impl Site {
@@ -50,6 +53,7 @@ impl Site {
             sitemap,
             data,
             data_dir,
+            time: DateTime::now(),
         }
     }
 
@@ -73,6 +77,8 @@ impl Site {
                 liquid::model::Value::scalar(kstring::KString::from_ref(base_url)),
             );
         }
+        attributes.insert("time".into(), liquid::model::Value::scalar(self.time));
+
         let mut data = self.data.clone().unwrap_or_default();
         let data_path = source.join(&self.data_dir);
         insert_data_dir(&mut data, &data_path)?;
