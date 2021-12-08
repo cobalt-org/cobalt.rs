@@ -1,5 +1,3 @@
-
-
 use std::process;
 
 use assert_cmd::prelude::*;
