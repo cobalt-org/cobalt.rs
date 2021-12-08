@@ -11,6 +11,8 @@ use serde_json;
 use serde_yaml;
 use toml;
 
+use crate::error::*;
+
 use super::files;
 
 #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
