@@ -20,7 +20,7 @@ impl Document {
         let front = front
             .map(parse_frontmatter)
             .map_or(Ok(None), |r| r.map(Some))?
-            .unwrap_or_else(Frontmatter::default);
+            .unwrap_or_default();
         let content = kstring::KString::from_ref(content);
         Ok(Self { front, content })
     }

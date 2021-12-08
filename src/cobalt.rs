@@ -169,7 +169,7 @@ fn generate_collections_var(
         liquid::model::Value::Array(posts_data.to_vec()),
     );
     let global_collection: liquid::Object = vec![(
-        context.posts.slug.clone().into(),
+        context.posts.slug.clone(),
         liquid::model::Value::Object(posts_variable),
     )]
     .into_iter()
@@ -278,7 +278,7 @@ fn generate_pages(posts: Vec<Document>, documents: Vec<Document>, context: &Cont
             generate_doc(
                 &mut doc,
                 context,
-                generate_collections_var(&posts_data, &context),
+                generate_collections_var(&posts_data, context),
             )?;
         };
     }
@@ -315,7 +315,7 @@ fn generate_posts(posts: &mut Vec<Document>, context: &Context) -> Result<()> {
         generate_doc(
             post,
             context,
-            generate_collections_var(&simple_posts_data, &context),
+            generate_collections_var(&simple_posts_data, context),
         )?;
     }
 
@@ -358,7 +358,6 @@ fn parse_drafts(
         let rel_src = file_path
             .rel_path
             .strip_prefix(drafts_dir)
-            .ok()
             .expect("file was found under the root");
         let new_path = dir.join(&rel_src);
 
@@ -543,7 +542,7 @@ pub fn classify_path<'s>(
     posts: &'s cobalt_model::Collection,
     page_extensions: &[kstring::KString],
 ) -> Option<(&'s str, bool)> {
-    if ext_contains(&page_extensions, &path) {
+    if ext_contains(page_extensions, path) {
         if path.starts_with(&posts.dir) {
             return Some((posts.slug.as_str(), false));
         }

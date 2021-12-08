@@ -46,7 +46,7 @@ impl Paginator {
         index_title: Option<&liquid::model::Value>,
     ) -> Result<()> {
         self.first_index_permalink = doc.url_path.to_string();
-        self.last_index_permalink = interpret_permalink(&config, &doc, total_pages, index_title)?;
+        self.last_index_permalink = interpret_permalink(config, doc, total_pages, index_title)?;
         Ok(())
     }
 
@@ -61,7 +61,7 @@ impl Paginator {
         self.index = index;
         self.pages = Some(all_pages.iter().map(|p| (*p).clone()).collect());
         self.index_title = index_title.cloned();
-        self.index_permalink = interpret_permalink(&config, &doc, index, index_title)?;
+        self.index_permalink = interpret_permalink(config, doc, index, index_title)?;
         Ok(())
     }
 
@@ -76,7 +76,7 @@ impl Paginator {
         if index > 1 {
             // we have a previous index
             self.previous_index_permalink =
-                Some(interpret_permalink(&config, &doc, index - 1, index_title)?);
+                Some(interpret_permalink(config, doc, index - 1, index_title)?);
             self.previous_index = index - 1;
         }
 
@@ -84,7 +84,7 @@ impl Paginator {
             // we have a next index
             self.next_index = index + 1;
             self.next_index_permalink =
-                Some(interpret_permalink(&config, &doc, index + 1, index_title)?);
+                Some(interpret_permalink(config, doc, index + 1, index_title)?);
         }
         Ok(())
     }
@@ -102,9 +102,9 @@ pub fn create_paginator(
     let index = i + 1;
     let mut paginator = Paginator::new(total_indexes, total_pages);
 
-    paginator.set_first_last(&doc, &config, total_indexes, index_title)?;
-    paginator.set_current_index_info(index, &all_posts, &config, &doc, index_title)?;
-    paginator.set_previous_next_info(index, total_indexes, &doc, &config, index_title)?;
+    paginator.set_first_last(doc, config, total_indexes, index_title)?;
+    paginator.set_current_index_info(index, all_posts, config, doc, index_title)?;
+    paginator.set_previous_next_info(index, total_indexes, doc, config, index_title)?;
 
     Ok(paginator)
 }

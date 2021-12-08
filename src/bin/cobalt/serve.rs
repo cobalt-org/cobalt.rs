@@ -145,7 +145,7 @@ fn serve(dest: &path::Path, ip: &str) -> Result<()> {
     let server = Server::http(ip).map_err(Error::from_boxed_compat)?;
 
     for request in server.incoming_requests() {
-        if let Err(e) = static_file_handler(&dest, request) {
+        if let Err(e) = static_file_handler(dest, request) {
             error!("{}", e);
         }
     }

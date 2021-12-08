@@ -78,7 +78,7 @@ impl Frontmatter {
             tags,
             excerpt_separator: excerpt_separator.unwrap_or_else(|| "\n\n".into()),
             published_date,
-            format: format.unwrap_or_else(super::SourceFormat::default),
+            format: format.unwrap_or_default(),
             #[cfg(feature = "preview_unstable")]
             templated: templated.unwrap_or(false),
             #[cfg(not(feature = "preview_unstable"))]

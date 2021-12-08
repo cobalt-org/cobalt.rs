@@ -32,12 +32,12 @@ pub fn generate_paginators(
     let mut all_posts: Vec<_> = posts_data.iter().collect();
     match config.include {
         Include::All => {
-            sort_posts(&mut all_posts, &config);
-            create_all_paginators(&all_posts, &doc, &config, None)
+            sort_posts(&mut all_posts, config);
+            create_all_paginators(&all_posts, doc, config, None)
         }
-        Include::Tags => tags::create_tags_paginators(&all_posts, &doc, &config),
-        Include::Categories => categories::create_categories_paginators(&all_posts, &doc, &config),
-        Include::Dates => dates::create_dates_paginators(&all_posts, &doc, &config),
+        Include::Tags => tags::create_tags_paginators(&all_posts, doc, config),
+        Include::Categories => categories::create_categories_paginators(&all_posts, doc, config),
+        Include::Dates => dates::create_dates_paginators(&all_posts, doc, config),
         Include::None => {
             unreachable!("PaginationConfigBuilder should have lead to a None for pagination.")
         }
@@ -62,9 +62,9 @@ fn create_all_paginators(
                 i,
                 total_indexes,
                 total_pages,
-                &pagination_cfg,
-                &doc,
-                &chunk,
+                pagination_cfg,
+                doc,
+                chunk,
                 index_title,
             )
         })
@@ -95,8 +95,8 @@ fn sort_posts(posts: &mut Vec<&liquid::model::Value>, config: &PaginationConfig)
         let mut cmp = Ordering::Less;
         for k in keys {
             cmp = match (
-                helpers::extract_scalar(a.as_view(), &k),
-                helpers::extract_scalar(b.as_view(), &k),
+                helpers::extract_scalar(a.as_view(), k),
+                helpers::extract_scalar(b.as_view(), k),
             ) {
                 (Some(a), Some(b)) => order(a, b),
                 (None, None) => Ordering::Equal,
@@ -158,9 +158,9 @@ fn interpret_permalink(
             || doc.url_path.clone(),
             |index| {
                 if pagination_root.is_empty() {
-                    index_to_string(&index)
+                    index_to_string(index)
                 } else {
-                    format!("{}/{}", pagination_root, index_to_string(&index))
+                    format!("{}/{}", pagination_root, index_to_string(index))
                 }
             },
         )
@@ -174,7 +174,7 @@ fn interpret_permalink(
                 }
                 "all".to_string()
             },
-            |index| index_to_string(&index),
+            |index| index_to_string(index),
         );
         if pagination_root.is_empty() {
             format!(

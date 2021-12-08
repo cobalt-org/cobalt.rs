@@ -42,7 +42,7 @@ fn minify_if_enabled(
     context: &RenderContext<'_>,
     file_path: &relative_path::RelativePath,
 ) -> Result<String> {
-    let extension = file_path.extension().unwrap_or_else(Default::default);
+    let extension = file_path.extension().unwrap_or_default();
     if context.minify.html && (extension == "html" || extension == "htm") {
         Ok(html_minifier::minify(html)?)
     } else {

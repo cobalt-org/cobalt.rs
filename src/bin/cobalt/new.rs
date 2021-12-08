@@ -424,7 +424,7 @@ fn prepend_date_to_filename(
         file_stem,
         file.extension()
             .and_then(|os| os.to_str())
-            .unwrap_or_else(|| &config
+            .unwrap_or_else(|| config
                 .page_extensions
                 .get(0)
                 .expect("at least one element is enforced by config validator"))
@@ -472,7 +472,7 @@ pub fn publish_document(config: &cobalt_model::Config, file: &path::Path) -> Res
     let doc = doc.to_string();
     cobalt_model::files::write_document_file(doc, file)?;
 
-    let file = move_from_drafts_to_posts(&config, &file)?;
+    let file = move_from_drafts_to_posts(config, file)?;
     let file = cobalt_core::SourcePath::from_root(&config.source, &file).ok_or_else(|| {
         failure::format_err!(
             "New file {} not project directory ({})",
@@ -500,7 +500,7 @@ pub fn publish_document(config: &cobalt_model::Config, file: &path::Path) -> Res
     };
 
     if collection.publish_date_in_filename {
-        prepend_date_to_filename(&config, &file.abs_path, &date)?;
+        prepend_date_to_filename(config, &file.abs_path, &date)?;
     }
     Ok(())
 }
