@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 <!-- next-header -->
 ## [Unreleased] - ReleaseDate
 
+### Features
+
+- `site.time` is added
+
 ## [0.17.4] - 2021-09-14
 
 ## [0.17.3] - 2021-09-14
