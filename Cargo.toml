@@ -13,7 +13,7 @@ readme = "README.md"
 categories = ["command-line-utilities"]
 keywords = ["static", "site", "generator"]
 license = "MIT"
-edition = "2018"
+edition = "2021"
 exclude = [
     ".gitignore",
     "CHANGELOG.md",

@@ -1,14 +1,5 @@
 #![warn(warnings)]
 
-#[macro_use]
-extern crate log;
-
-#[macro_use]
-extern crate lazy_static;
-
-#[macro_use]
-extern crate serde;
-
 pub use crate::cobalt::build;
 pub use crate::cobalt::classify_path;
 pub use crate::cobalt_model::Config;

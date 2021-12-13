@@ -5,6 +5,9 @@ use super::files;
 use crate::error::*;
 use crate::syntax_highlight;
 use liquid;
+use log::warn;
+use log::{debug, trace};
+use serde::Serialize;
 
 type Partials = liquid::partials::EagerCompiler<liquid::partials::InMemorySource>;
 
@@ -85,7 +88,7 @@ impl Liquid {
 }
 
 impl fmt::Debug for Liquid {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "Liquid{{}}")
     }
 }

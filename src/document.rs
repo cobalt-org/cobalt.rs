@@ -5,9 +5,11 @@ use std::path::Path;
 
 use chrono::{Datelike, Timelike};
 use failure::ResultExt;
+use lazy_static::lazy_static;
 use liquid::model::Value;
 use liquid::Object;
 use liquid::ValueView;
+use log::trace;
 use regex::Regex;
 
 use crate::cobalt_model;
@@ -37,10 +39,10 @@ fn minify_if_enabled(
 #[cfg(feature = "html-minifier")]
 fn minify_if_enabled(
     html: String,
-    context: &RenderContext,
+    context: &RenderContext<'_>,
     file_path: &relative_path::RelativePath,
 ) -> Result<String> {
-    let extension = file_path.extension().unwrap_or_else(Default::default);
+    let extension = file_path.extension().unwrap_or_default();
     if context.minify.html && (extension == "html" || extension == "htm") {
         Ok(html_minifier::minify(html)?)
     } else {
@@ -300,7 +302,7 @@ impl Document {
     /// Takes `content` string and returns rendered HTML. This function doesn't
     /// take `"extends"` attribute into account. This function can be used for
     /// rendering content or excerpt.
-    fn render_html(&self, content: &str, context: &RenderContext) -> Result<String> {
+    fn render_html(&self, content: &str, context: &RenderContext<'_>) -> Result<String> {
         let html = if self.front.templated {
             let template = context.parser.parse(content)?;
             template.render(context.globals)?
@@ -323,7 +325,7 @@ impl Document {
     /// given, or extracted from the content, if `excerpt_separator` is not
     /// empty. When neither condition applies, the excerpt is set to the `Nil`
     /// value.
-    pub fn render_excerpt(&mut self, context: &RenderContext) -> Result<()> {
+    pub fn render_excerpt(&mut self, context: &RenderContext<'_>) -> Result<()> {
         let value = if let Some(excerpt_str) = self.front.excerpt.as_ref() {
             let excerpt = self.render_html(excerpt_str, context)?;
             Value::scalar(excerpt)
@@ -346,7 +348,7 @@ impl Document {
     /// Renders the content and adds it to attributes of the document.
     ///
     /// When we say "content" we mean only this document without extended layout.
-    pub fn render_content(&mut self, context: &RenderContext) -> Result<()> {
+    pub fn render_content(&mut self, context: &RenderContext<'_>) -> Result<()> {
         let content_html = self.render_html(&self.content, context)?;
         self.attributes
             .insert("content".into(), Value::scalar(content_html));
@@ -360,7 +362,7 @@ impl Document {
     /// * layout may be inserted to layouts cache
     pub fn render(
         &mut self,
-        context: &RenderContext,
+        context: &RenderContext<'_>,
         layouts: &HashMap<String, String>,
     ) -> Result<String> {
         if let Some(ref layout) = self.front.layout {

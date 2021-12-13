@@ -40,17 +40,17 @@ pub fn create_tags_paginators(
     doc: &Document,
     pagination_cfg: &PaginationConfig,
 ) -> Result<Vec<Paginator>> {
-    let mut per_tags = distribute_posts_by_tags(&all_posts)?;
+    let mut per_tags = distribute_posts_by_tags(all_posts)?;
 
     // create all other paginators
     let mut tag_paginators: TagPaginators = per_tags
         .iter_mut()
         .try_fold(TagPaginators::default(), |mut acc, (tag, posts)| {
-            sort_posts(posts, &pagination_cfg);
+            sort_posts(posts, pagination_cfg);
             let cur_tag_paginators = create_all_paginators(
                 posts,
                 doc,
-                &pagination_cfg,
+                pagination_cfg,
                 Some(&liquid::model::Value::scalar(tag.to_owned())),
             )?;
             acc.firsts_of_tags.push(cur_tag_paginators[0].clone());

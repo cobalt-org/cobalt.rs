@@ -8,6 +8,8 @@ use crate::error::Result;
 use failure::ResultExt;
 use ignore::gitignore::{Gitignore, GitignoreBuilder};
 use ignore::Match;
+use log::debug;
+use log::trace;
 use normalize_line_endings::normalized;
 use walkdir::{DirEntry, WalkDir};
 
@@ -154,7 +156,7 @@ impl Files {
         self.includes_path(dir, is_dir)
     }
 
-    pub fn files(&self) -> FilesIterator {
+    pub fn files(&self) -> FilesIterator<'_> {
         FilesIterator::new(self)
     }
 

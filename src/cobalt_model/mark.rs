@@ -1,4 +1,5 @@
 use pulldown_cmark as cmark;
+use serde::Serialize;
 
 use crate::error::*;
 use crate::syntax_highlight::decorate_markdown;

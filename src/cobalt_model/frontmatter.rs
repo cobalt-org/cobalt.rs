@@ -3,6 +3,7 @@ use std::fmt;
 use cobalt_config::DateTime;
 use cobalt_config::SourceFormat;
 use liquid;
+use serde::Serialize;
 
 use super::pagination;
 use crate::error::Result;
@@ -77,7 +78,7 @@ impl Frontmatter {
             tags,
             excerpt_separator: excerpt_separator.unwrap_or_else(|| "\n\n".into()),
             published_date,
-            format: format.unwrap_or_else(super::SourceFormat::default),
+            format: format.unwrap_or_default(),
             #[cfg(feature = "preview_unstable")]
             templated: templated.unwrap_or(false),
             #[cfg(not(feature = "preview_unstable"))]
@@ -99,7 +100,7 @@ impl Frontmatter {
 }
 
 impl fmt::Display for Frontmatter {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let converted = serde_yaml::to_string(self).expect("should always be valid");
         let subset = converted
             .strip_prefix("---")

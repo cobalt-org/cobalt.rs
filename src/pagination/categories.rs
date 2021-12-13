@@ -31,7 +31,7 @@ impl<'a> Category<'a> {
     }
 
     fn add_post(&mut self, post: &'a liquid::model::Value) {
-        self.posts.push(&post)
+        self.posts.push(post)
     }
 }
 
@@ -93,13 +93,13 @@ fn parse_categories_list<'a, 'b>(
         };
 
         if is_leaf_category(cur_idx, cur_post_categories) {
-            cur_cat.add_post(&post);
+            cur_cat.add_post(post);
         } else {
             parse_categories_list(
                 &mut cur_cat,
                 next_category(cur_idx),
-                &cur_post_categories,
-                &post,
+                cur_post_categories,
+                post,
             )?;
         }
     }
@@ -113,7 +113,7 @@ fn distribute_posts_by_categories<'a>(
     for post in all_posts {
         if let Some(categories) = extract_categories(post.as_view()) {
             let categories: Vec<_> = categories.values().collect();
-            parse_categories_list(&mut root, 1, categories.as_slice(), &post)?;
+            parse_categories_list(&mut root, 1, categories.as_slice(), post)?;
         }
     }
     Ok(root)
@@ -128,11 +128,11 @@ fn walk_categories<'a, 'b>(
 ) -> Result<Vec<Paginator>> {
     let mut cur_cat_paginators_holder: Vec<Paginator> = vec![];
     if !category.cat_path.is_empty() {
-        sort_posts(&mut category.posts, &config);
+        sort_posts(&mut category.posts, config);
         let cur_cat_paginators = create_all_paginators(
             &category.posts,
             doc,
-            &config,
+            config,
             Some(&liquid::model::Value::array(category.cat_path.clone())),
         )?;
         if !cur_cat_paginators.is_empty() {
@@ -148,7 +148,7 @@ fn walk_categories<'a, 'b>(
         cur_cat_paginators_holder.push(Paginator::default());
     }
     for mut c in &mut category.sub_cats {
-        let mut sub_paginators_holder = walk_categories(&mut c, &config, doc)?;
+        let mut sub_paginators_holder = walk_categories(&mut c, config, doc)?;
 
         if let Some(indexes) = cur_cat_paginators_holder[0].indexes.as_mut() {
             indexes.push(sub_paginators_holder[0].clone());
@@ -165,8 +165,8 @@ pub fn create_categories_paginators(
     doc: &Document,
     pagination_cfg: &PaginationConfig,
 ) -> Result<Vec<Paginator>> {
-    let mut root_cat = distribute_posts_by_categories(&all_posts)?;
-    let paginators_holder = walk_categories(&mut root_cat, &pagination_cfg, doc)?;
+    let mut root_cat = distribute_posts_by_categories(all_posts)?;
+    let paginators_holder = walk_categories(&mut root_cat, pagination_cfg, doc)?;
     Ok(paginators_holder)
 }
 

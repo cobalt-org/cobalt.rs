@@ -1,7 +1,3 @@
-extern crate assert_cmd;
-extern crate assert_fs;
-extern crate predicates;
-
 use std::process;
 
 use assert_cmd::prelude::*;

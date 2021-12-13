@@ -23,7 +23,7 @@ pub fn debug_command_args() -> clap::App<'static, 'static> {
         )
 }
 
-pub fn debug_command(matches: &clap::ArgMatches) -> Result<()> {
+pub fn debug_command(matches: &clap::ArgMatches<'_>) -> Result<()> {
     match matches.subcommand() {
         ("config", _) => {
             let config = args::get_config(matches)?;

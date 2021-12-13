@@ -39,11 +39,11 @@ pub fn create_dates_paginators(
     doc: &Document,
     pagination_cfg: &PaginationConfig,
 ) -> Result<Vec<Paginator>> {
-    let mut root_date = distribute_posts_by_dates(&all_posts, &pagination_cfg)?;
-    walk_dates(&mut root_date, &pagination_cfg, &doc, None)
+    let mut root_date = distribute_posts_by_dates(all_posts, pagination_cfg)?;
+    walk_dates(&mut root_date, pagination_cfg, doc, None)
 }
 
-fn format_date_holder(d: &DateIndexHolder) -> liquid::model::Value {
+fn format_date_holder(d: &DateIndexHolder<'_>) -> liquid::model::Value {
     let field = d
         .field
         .expect("Should not be called with the root DateIndexHolder");
@@ -54,15 +54,15 @@ fn format_date_holder(d: &DateIndexHolder) -> liquid::model::Value {
     liquid::model::Value::scalar(formatted)
 }
 
-fn date_fields_to_array(date: &[DateIndexHolder]) -> liquid::model::Array {
-    date.iter().map(|d| format_date_holder(&d)).collect()
+fn date_fields_to_array(date: &[DateIndexHolder<'_>]) -> liquid::model::Array {
+    date.iter().map(|d| format_date_holder(d)).collect()
 }
 
 fn walk_dates(
-    date_holder: &mut DateIndexHolder,
+    date_holder: &mut DateIndexHolder<'_>,
     config: &PaginationConfig,
     doc: &Document,
-    parent_dates: Option<Vec<DateIndexHolder>>,
+    parent_dates: Option<Vec<DateIndexHolder<'_>>>,
 ) -> Result<Vec<Paginator>> {
     let mut cur_date_holder_paginators: Vec<Paginator> = vec![];
     let mut current_date = if let Some(parent_dates) = parent_dates {
@@ -71,11 +71,11 @@ fn walk_dates(
         vec![]
     };
     if let Some(_field) = date_holder.field {
-        sort_posts(&mut date_holder.posts, &config);
+        sort_posts(&mut date_holder.posts, config);
         current_date.push(date_holder.clone());
         let index_title = liquid::model::Value::array(date_fields_to_array(&current_date));
         let cur_date_paginators =
-            create_all_paginators(&date_holder.posts, &doc, &config, Some(&index_title))?;
+            create_all_paginators(&date_holder.posts, doc, config, Some(&index_title))?;
         if !cur_date_paginators.is_empty() {
             cur_date_holder_paginators.extend(cur_date_paginators.into_iter());
         } else {
@@ -90,7 +90,7 @@ fn walk_dates(
     }
     for mut dh in &mut date_holder.sub_date {
         let mut sub_paginators_holder =
-            walk_dates(&mut dh, &config, &doc, Some(current_date.clone()))?;
+            walk_dates(&mut dh, config, doc, Some(current_date.clone()))?;
 
         if let Some(indexes) = cur_date_holder_paginators[0].indexes.as_mut() {
             indexes.push(sub_paginators_holder[0].clone());
@@ -108,7 +108,7 @@ fn find_or_create_date_holder_and_put_post<'a, 'b>(
     wanted_field: DateIndex,
     post: &'a liquid::model::Value,
 ) {
-    let value = get_date_field_value(&published_date, wanted_field);
+    let value = get_date_field_value(published_date, wanted_field);
     let mut not_found = true;
     for mut dh in date_holder.sub_date.iter_mut() {
         let dh_field = dh
@@ -117,13 +117,13 @@ fn find_or_create_date_holder_and_put_post<'a, 'b>(
         if dh_field < wanted_field {
             // not at the level we want but still need to find the correct parent
             // parent should have been created in a previous loop
-            let parent_value = get_date_field_value(&published_date, dh_field);
+            let parent_value = get_date_field_value(published_date, dh_field);
             if dh.value == parent_value {
                 find_or_create_date_holder_and_put_post(
                     &mut dh,
-                    &published_date,
+                    published_date,
                     wanted_field,
-                    &post,
+                    post,
                 );
                 not_found = false;
             }
@@ -164,7 +164,7 @@ fn distribute_posts_by_dates<'a>(
     for post in all_posts {
         if let Some(published_date) = extract_published_date(post.as_view()) {
             for idx in date_index {
-                find_or_create_date_holder_and_put_post(&mut root, &published_date, *idx, &post);
+                find_or_create_date_holder_and_put_post(&mut root, &published_date, *idx, post);
             }
         }
     }

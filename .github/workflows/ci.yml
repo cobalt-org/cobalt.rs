@@ -65,7 +65,7 @@ jobs:
     - name: No-default features
       run: cargo test --workspace --no-default-features
   msrv:
-    name: "Check MSRV: 1.53.0"
+    name: "Check MSRV: 1.56.0"
     needs: smoke
     runs-on: ubuntu-latest
     steps:
@@ -74,7 +74,7 @@ jobs:
     - name: Install Rust
       uses: actions-rs/toolchain@v1
       with:
-        toolchain: 1.53.0  # MSRV
+        toolchain: 1.56.0  # MSRV
         profile: minimal
         override: true
     - uses: Swatinem/rust-cache@v1
@@ -127,7 +127,7 @@ jobs:
     - name: Install Rust
       uses: actions-rs/toolchain@v1
       with:
-        toolchain: 1.53.0  # MSRV
+        toolchain: 1.56.0  # MSRV
         profile: minimal
         override: true
         components: clippy

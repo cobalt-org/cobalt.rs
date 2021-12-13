@@ -22,7 +22,7 @@ pub fn init_command_args() -> clap::App<'static, 'static> {
         )
 }
 
-pub fn init_command(matches: &clap::ArgMatches) -> Result<()> {
+pub fn init_command(matches: &clap::ArgMatches<'_>) -> Result<()> {
     let directory = matches.value_of("DIRECTORY").unwrap();
 
     create_new_project(&directory.to_string())
@@ -59,7 +59,7 @@ pub fn new_command_args() -> clap::App<'static, 'static> {
         )
 }
 
-pub fn new_command(matches: &clap::ArgMatches) -> Result<()> {
+pub fn new_command(matches: &clap::ArgMatches<'_>) -> Result<()> {
     let mut config = args::get_config(matches)?;
     config.include_drafts = true;
     let config = cobalt::cobalt_model::Config::from_config(config)?;
@@ -105,7 +105,7 @@ pub fn rename_command_args() -> clap::App<'static, 'static> {
         )
 }
 
-pub fn rename_command(matches: &clap::ArgMatches) -> Result<()> {
+pub fn rename_command(matches: &clap::ArgMatches<'_>) -> Result<()> {
     let mut config = args::get_config(matches)?;
     config.include_drafts = true;
     let config = cobalt::cobalt_model::Config::from_config(config)?;
@@ -137,7 +137,7 @@ pub fn publish_command_args() -> clap::App<'static, 'static> {
         )
 }
 
-pub fn publish_command(matches: &clap::ArgMatches) -> Result<()> {
+pub fn publish_command(matches: &clap::ArgMatches<'_>) -> Result<()> {
     let filename = matches
         .value_of("FILENAME")
         .expect("required parameters are present");
@@ -424,7 +424,7 @@ fn prepend_date_to_filename(
         file_stem,
         file.extension()
             .and_then(|os| os.to_str())
-            .unwrap_or_else(|| &config
+            .unwrap_or_else(|| config
                 .page_extensions
                 .get(0)
                 .expect("at least one element is enforced by config validator"))
@@ -472,7 +472,7 @@ pub fn publish_document(config: &cobalt_model::Config, file: &path::Path) -> Res
     let doc = doc.to_string();
     cobalt_model::files::write_document_file(doc, file)?;
 
-    let file = move_from_drafts_to_posts(&config, &file)?;
+    let file = move_from_drafts_to_posts(config, file)?;
     let file = cobalt_core::SourcePath::from_root(&config.source, &file).ok_or_else(|| {
         failure::format_err!(
             "New file {} not project directory ({})",
@@ -500,7 +500,7 @@ pub fn publish_document(config: &cobalt_model::Config, file: &path::Path) -> Res
     };
 
     if collection.publish_date_in_filename {
-        prepend_date_to_filename(&config, &file.abs_path, &date)?;
+        prepend_date_to_filename(config, &file.abs_path, &date)?;
     }
     Ok(())
 }
