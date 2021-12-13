@@ -70,7 +70,7 @@ fn parse_categories_list<'a, 'b>(
 ) -> Result<()> {
     if cur_idx <= cur_post_categories.len() {
         let cat_full_path = construct_cat_full_path(cur_idx, cur_post_categories);
-        let mut cur_cat = if let Ok(idx) = parent.sub_cats.binary_search_by(|c| {
+        let cur_cat = if let Ok(idx) = parent.sub_cats.binary_search_by(|c| {
             compare_category_path(
                 c.cat_path.iter().map(|v| v.as_view()),
                 cat_full_path.iter().copied(),
@@ -95,12 +95,7 @@ fn parse_categories_list<'a, 'b>(
         if is_leaf_category(cur_idx, cur_post_categories) {
             cur_cat.add_post(post);
         } else {
-            parse_categories_list(
-                &mut cur_cat,
-                next_category(cur_idx),
-                cur_post_categories,
-                post,
-            )?;
+            parse_categories_list(cur_cat, next_category(cur_idx), cur_post_categories, post)?;
         }
     }
     Ok(())
@@ -147,8 +142,8 @@ fn walk_categories<'a, 'b>(
     } else {
         cur_cat_paginators_holder.push(Paginator::default());
     }
-    for mut c in &mut category.sub_cats {
-        let mut sub_paginators_holder = walk_categories(&mut c, config, doc)?;
+    for c in &mut category.sub_cats {
+        let mut sub_paginators_holder = walk_categories(c, config, doc)?;
 
         if let Some(indexes) = cur_cat_paginators_holder[0].indexes.as_mut() {
             indexes.push(sub_paginators_holder[0].clone());

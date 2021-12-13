@@ -174,7 +174,7 @@ fn interpret_permalink(
                 }
                 "all".to_string()
             },
-            |index| index_to_string(index),
+            index_to_string,
         );
         if pagination_root.is_empty() {
             format!(
