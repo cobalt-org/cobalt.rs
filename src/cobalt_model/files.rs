@@ -310,6 +310,8 @@ fn write_document_file_internal(content: &str, dest_file: &path::Path) -> Result
 
 #[cfg(test)]
 mod tests {
+    #![allow(clippy::bool_assert_comparison)]
+
     use super::*;
 
     macro_rules! assert_includes_dir {

@@ -134,7 +134,7 @@ impl Default for SyntaxHighlight {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Default, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 #[serde(default)]
 #[serde(rename_all = "snake_case")]
 #[cfg_attr(feature = "unstable", serde(deny_unknown_fields))]
@@ -143,16 +143,6 @@ pub struct Minify {
     pub html: bool,
     pub css: bool,
     pub js: bool,
-}
-
-impl Default for Minify {
-    fn default() -> Self {
-        Minify {
-            html: false,
-            css: false,
-            js: false,
-        }
-    }
 }
 
 fn find_project_file<P: Into<path::PathBuf>>(dir: P, name: &str) -> Option<path::PathBuf> {

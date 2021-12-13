@@ -55,7 +55,7 @@ fn format_date_holder(d: &DateIndexHolder<'_>) -> liquid::model::Value {
 }
 
 fn date_fields_to_array(date: &[DateIndexHolder<'_>]) -> liquid::model::Array {
-    date.iter().map(|d| format_date_holder(d)).collect()
+    date.iter().map(format_date_holder).collect()
 }
 
 fn walk_dates(
@@ -88,9 +88,8 @@ fn walk_dates(
     } else {
         cur_date_holder_paginators.push(Paginator::default());
     }
-    for mut dh in &mut date_holder.sub_date {
-        let mut sub_paginators_holder =
-            walk_dates(&mut dh, config, doc, Some(current_date.clone()))?;
+    for dh in &mut date_holder.sub_date {
+        let mut sub_paginators_holder = walk_dates(dh, config, doc, Some(current_date.clone()))?;
 
         if let Some(indexes) = cur_date_holder_paginators[0].indexes.as_mut() {
             indexes.push(sub_paginators_holder[0].clone());
@@ -110,7 +109,7 @@ fn find_or_create_date_holder_and_put_post<'a, 'b>(
 ) {
     let value = get_date_field_value(published_date, wanted_field);
     let mut not_found = true;
-    for mut dh in date_holder.sub_date.iter_mut() {
+    for dh in date_holder.sub_date.iter_mut() {
         let dh_field = dh
             .field
             .expect("Only root has None, we should always have a field");
@@ -119,12 +118,7 @@ fn find_or_create_date_holder_and_put_post<'a, 'b>(
             // parent should have been created in a previous loop
             let parent_value = get_date_field_value(published_date, dh_field);
             if dh.value == parent_value {
-                find_or_create_date_holder_and_put_post(
-                    &mut dh,
-                    published_date,
-                    wanted_field,
-                    post,
-                );
+                find_or_create_date_holder_and_put_post(dh, published_date, wanted_field, post);
                 not_found = false;
             }
         } else if dh_field == wanted_field && dh.value == value {
