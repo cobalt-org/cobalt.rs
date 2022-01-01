@@ -46,7 +46,7 @@ doc = false
 [dependencies]
 cobalt-config = { version = "=0.17.0", path = "crates/config", features = ["unstable"] }
 cobalt-core = { version = "=0.17.0", path = "crates/core", features = ["unstable"] }
-clap = "2.33"
+clap = "3.0"
 kstring = "1.0"
 relative-path = { version = "1", features = ["serde"] }
 liquid = "0.23"
