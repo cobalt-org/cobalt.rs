@@ -148,9 +148,12 @@ impl liquid_core::ParseBlock for CodeBlockParser {
     }
 }
 
-pub type DecoratedParser<'a> = cmark::Parser<'a>;
+pub type DecoratedParser<'a> = cmark::Parser<'a, 'a>;
 
-pub fn decorate_markdown<'a>(parser: cmark::Parser<'a>, _theme_name: &str) -> DecoratedParser<'a> {
+pub fn decorate_markdown<'a>(
+    parser: cmark::Parser<'a, 'a>,
+    _theme_name: &str,
+) -> DecoratedParser<'a> {
     parser
 }
 
