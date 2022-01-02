@@ -158,12 +158,12 @@ impl liquid_core::ParseBlock for CodeBlockParser {
 
 pub struct DecoratedParser<'a> {
     h: Option<HighlightLines<'a>>,
-    parser: cmark::Parser<'a>,
+    parser: cmark::Parser<'a, 'a>,
     theme: &'a Theme,
 }
 
 impl<'a> DecoratedParser<'a> {
-    pub fn new(parser: cmark::Parser<'a>, theme: &'a Theme) -> Self {
+    pub fn new(parser: cmark::Parser<'a, 'a>, theme: &'a Theme) -> Self {
         DecoratedParser {
             h: None,
             parser,
@@ -223,7 +223,10 @@ impl<'a> Iterator for DecoratedParser<'a> {
     }
 }
 
-pub fn decorate_markdown<'a>(parser: cmark::Parser<'a>, theme_name: &str) -> DecoratedParser<'a> {
+pub fn decorate_markdown<'a>(
+    parser: cmark::Parser<'a, 'a>,
+    theme_name: &str,
+) -> DecoratedParser<'a> {
     DecoratedParser::new(parser, &SETUP.theme_set.themes[theme_name])
 }
 
