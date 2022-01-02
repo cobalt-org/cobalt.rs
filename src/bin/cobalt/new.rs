@@ -11,18 +11,18 @@ use failure::ResultExt;
 use crate::args;
 use crate::error::*;
 
-pub fn init_command_args() -> clap::App<'static, 'static> {
-    clap::SubCommand::with_name("init")
+pub fn init_command_args() -> clap::App<'static> {
+    clap::App::new("init")
         .about("create a new cobalt project")
         .arg(
-            clap::Arg::with_name("DIRECTORY")
+            clap::Arg::new("DIRECTORY")
                 .help("Target directory")
                 .default_value("./")
                 .index(1),
         )
 }
 
-pub fn init_command(matches: &clap::ArgMatches<'_>) -> Result<()> {
+pub fn init_command(matches: &clap::ArgMatches) -> Result<()> {
     let directory = matches.value_of("DIRECTORY").unwrap();
 
     create_new_project(&directory.to_string())
@@ -32,26 +32,26 @@ pub fn init_command(matches: &clap::ArgMatches<'_>) -> Result<()> {
     Ok(())
 }
 
-pub fn new_command_args() -> clap::App<'static, 'static> {
-    clap::SubCommand::with_name("new")
+pub fn new_command_args() -> clap::App<'static> {
+    clap::App::new("new")
         .about("Create a document")
-        .args(&args::get_config_args())
+        .args(args::get_config_args())
         .arg(
-            clap::Arg::with_name("TITLE")
+            clap::Arg::new("TITLE")
                 .required(true)
                 .help("Title of the post")
                 .takes_value(true),
         )
         .arg(
-            clap::Arg::with_name("file")
-                .short("f")
+            clap::Arg::new("file")
+                .short('f')
                 .long("file")
                 .value_name("DIR_OR_FILE")
                 .help("New document's parent directory or file (default: `<CWD>/title.ext`)")
                 .takes_value(true),
         )
         .arg(
-            clap::Arg::with_name("with-ext")
+            clap::Arg::new("with-ext")
                 .long("with-ext")
                 .value_name("EXT")
                 .help("The default file's extension (e.g. `liquid`)")
@@ -59,7 +59,7 @@ pub fn new_command_args() -> clap::App<'static, 'static> {
         )
 }
 
-pub fn new_command(matches: &clap::ArgMatches<'_>) -> Result<()> {
+pub fn new_command(matches: &clap::ArgMatches) -> Result<()> {
     let mut config = args::get_config(matches)?;
     config.include_drafts = true;
     let config = cobalt::cobalt_model::Config::from_config(config)?;
@@ -79,25 +79,25 @@ pub fn new_command(matches: &clap::ArgMatches<'_>) -> Result<()> {
     Ok(())
 }
 
-pub fn rename_command_args() -> clap::App<'static, 'static> {
-    clap::SubCommand::with_name("rename")
+pub fn rename_command_args() -> clap::App<'static> {
+    clap::App::new("rename")
         .about("Rename a document")
-        .args(&args::get_config_args())
+        .args(args::get_config_args())
         .arg(
-            clap::Arg::with_name("SRC")
+            clap::Arg::new("SRC")
                 .required(true)
                 .help("File to rename")
                 .takes_value(true),
         )
         .arg(
-            clap::Arg::with_name("TITLE")
+            clap::Arg::new("TITLE")
                 .required(true)
                 .help("Title of the post")
                 .takes_value(true),
         )
         .arg(
-            clap::Arg::with_name("file")
-                .short("f")
+            clap::Arg::new("file")
+                .short('f')
                 .long("file")
                 .value_name("DIR_OR_FILE")
                 .help("New document's parent directory or file (default: `<CWD>/title.ext`)")
@@ -105,7 +105,7 @@ pub fn rename_command_args() -> clap::App<'static, 'static> {
         )
 }
 
-pub fn rename_command(matches: &clap::ArgMatches<'_>) -> Result<()> {
+pub fn rename_command(matches: &clap::ArgMatches) -> Result<()> {
     let mut config = args::get_config(matches)?;
     config.include_drafts = true;
     let config = cobalt::cobalt_model::Config::from_config(config)?;
@@ -126,18 +126,19 @@ pub fn rename_command(matches: &clap::ArgMatches<'_>) -> Result<()> {
     Ok(())
 }
 
-pub fn publish_command_args() -> clap::App<'static, 'static> {
-    clap::SubCommand::with_name("publish")
+pub fn publish_command_args() -> clap::App<'static> {
+    clap::App::new("publish")
         .about("Publish a document")
+        .args(args::get_config_args())
         .arg(
-            clap::Arg::with_name("FILENAME")
+            clap::Arg::new("FILENAME")
                 .required(true)
                 .help("Document path to publish")
                 .takes_value(true),
         )
 }
 
-pub fn publish_command(matches: &clap::ArgMatches<'_>) -> Result<()> {
+pub fn publish_command(matches: &clap::ArgMatches) -> Result<()> {
     let filename = matches
         .value_of("FILENAME")
         .expect("required parameters are present");

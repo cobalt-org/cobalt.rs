@@ -1,49 +1,49 @@
 use crate::args;
 use crate::error::*;
 
-pub fn debug_command_args() -> clap::App<'static, 'static> {
-    clap::SubCommand::with_name("debug")
+pub fn debug_command_args() -> clap::App<'static> {
+    clap::App::new("debug")
         .about("Print site debug information")
-        .subcommand(clap::SubCommand::with_name("config").about("Prints post-processed config"))
+        .subcommand(clap::App::new("config").about("Prints post-processed config"))
         .subcommand(
-            clap::SubCommand::with_name("highlight")
+            clap::App::new("highlight")
                 .about("Print syntax-highlight information")
-                .subcommand(clap::SubCommand::with_name("themes"))
-                .subcommand(clap::SubCommand::with_name("syntaxes")),
+                .subcommand(clap::App::new("themes"))
+                .subcommand(clap::App::new("syntaxes")),
         )
         .subcommand(
-            clap::SubCommand::with_name("files")
+            clap::App::new("files")
                 .about("Print files associated with a collection")
-                .args(&args::get_config_args())
+                .args(args::get_config_args())
                 .arg(
-                    clap::Arg::with_name("COLLECTION")
+                    clap::Arg::new("COLLECTION")
                         .help("Collection name")
                         .index(1),
                 ),
         )
 }
 
-pub fn debug_command(matches: &clap::ArgMatches<'_>) -> Result<()> {
+pub fn debug_command(matches: &clap::ArgMatches) -> Result<()> {
     match matches.subcommand() {
-        ("config", _) => {
+        Some(("config", _)) => {
             let config = args::get_config(matches)?;
             let config = cobalt::cobalt_model::Config::from_config(config)?;
             println!("{}", config);
         }
-        ("highlight", Some(matches)) => match matches.subcommand() {
-            ("themes", _) => {
+        Some(("highlight", matches)) => match matches.subcommand() {
+            Some(("themes", _)) => {
                 for name in cobalt::list_syntax_themes() {
                     println!("{}", name);
                 }
             }
-            ("syntaxes", _) => {
+            Some(("syntaxes", _)) => {
                 for name in cobalt::list_syntaxes() {
                     println!("{}", name);
                 }
             }
-            _ => failure::bail!(matches.usage().to_owned()),
+            _ => unreachable!("Unexpected subcommand"),
         },
-        ("files", Some(matches)) => {
+        Some(("files", matches)) => {
             let config = args::get_config(matches)?;
             let config = cobalt::cobalt_model::Config::from_config(config)?;
             let collection = matches.value_of("COLLECTION");
@@ -71,7 +71,7 @@ pub fn debug_command(matches: &clap::ArgMatches<'_>) -> Result<()> {
                 }
             }
         }
-        _ => failure::bail!(matches.usage().to_owned()),
+        _ => unreachable!("Unexpected subcommand"),
     }
 
     Ok(())
