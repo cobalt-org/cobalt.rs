@@ -223,8 +223,7 @@ impl Document {
         let guid = rss::GuidBuilder::default()
             .value(link.clone())
             .permalink(true)
-            .build()
-            .map_err(failure::err_msg)?;
+            .build();
 
         let item = rss::ItemBuilder::default()
             .title(Some(self.front.title.as_str().to_owned()))
@@ -232,8 +231,7 @@ impl Document {
             .guid(Some(guid))
             .pub_date(self.front.published_date.map(|date| date.to_rfc2822()))
             .description(self.description_to_str())
-            .build()
-            .map_err(failure::err_msg)?;
+            .build();
         Ok(item)
     }
 
