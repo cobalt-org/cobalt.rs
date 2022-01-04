@@ -15,13 +15,13 @@ use crate::args;
 use crate::build;
 use crate::error::*;
 
-pub fn serve_command_args() -> clap::App<'static, 'static> {
-    clap::SubCommand::with_name("serve")
+pub fn serve_command_args() -> clap::App<'static> {
+    clap::App::new("serve")
         .about("build, serve, and watch the project at the source dir")
-        .args(&args::get_config_args())
+        .args(args::get_config_args())
         .arg(
-            clap::Arg::with_name("port")
-                .short("P")
+            clap::Arg::new("port")
+                .short('P')
                 .long("port")
                 .value_name("INT")
                 .help("Port to serve from")
@@ -29,7 +29,7 @@ pub fn serve_command_args() -> clap::App<'static, 'static> {
                 .takes_value(true),
         )
         .arg(
-            clap::Arg::with_name("host")
+            clap::Arg::new("host")
                 .long("host")
                 .value_name("host-name/IP")
                 .help("Host to serve from")
@@ -37,21 +37,21 @@ pub fn serve_command_args() -> clap::App<'static, 'static> {
                 .takes_value(true),
         )
         .arg(
-            clap::Arg::with_name("no-watch")
+            clap::Arg::new("no-watch")
                 .long("no-watch")
                 .help("Disable rebuilding on change")
                 .conflicts_with("drafts")
                 .takes_value(false),
         )
         .arg(
-            clap::Arg::with_name("open")
+            clap::Arg::new("open")
                 .long("open")
                 .help("Open in browser")
                 .takes_value(false),
         )
 }
 
-pub fn serve_command(matches: &clap::ArgMatches<'_>) -> Result<()> {
+pub fn serve_command(matches: &clap::ArgMatches) -> Result<()> {
     let host = matches.value_of("host").unwrap().to_string();
     let port = matches.value_of("port").unwrap().to_string();
     let ip = format!("{}:{}", host, port);

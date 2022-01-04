@@ -6,25 +6,25 @@ use failure::ResultExt;
 
 use crate::error::*;
 
-pub fn get_config_args() -> Vec<clap::Arg<'static, 'static>> {
+pub fn get_config_args() -> Vec<clap::Arg<'static>> {
     [
-        clap::Arg::with_name("config")
-            .short("c")
+        clap::Arg::new("config")
+            .short('c')
             .long("config")
             .value_name("FILE")
             .help("Config file to use [default: _cobalt.yml]")
             .takes_value(true),
-        clap::Arg::with_name("destination")
-            .short("d")
+        clap::Arg::new("destination")
+            .short('d')
             .long("destination")
             .value_name("DIR")
             .help("Site destination folder [default: ./]")
             .takes_value(true),
-        clap::Arg::with_name("drafts")
+        clap::Arg::new("drafts")
             .long("drafts")
             .help("Include drafts.")
             .takes_value(false),
-        clap::Arg::with_name("no-drafts")
+        clap::Arg::new("no-drafts")
             .long("no-drafts")
             .help("Ignore drafts.")
             .conflicts_with("drafts")
@@ -33,7 +33,7 @@ pub fn get_config_args() -> Vec<clap::Arg<'static, 'static>> {
     .to_vec()
 }
 
-pub fn get_config(matches: &clap::ArgMatches<'_>) -> Result<cobalt_config::Config> {
+pub fn get_config(matches: &clap::ArgMatches) -> Result<cobalt_config::Config> {
     let config_path = matches.value_of("config");
 
     // Fetch config information if available
@@ -64,21 +64,21 @@ pub fn get_config(matches: &clap::ArgMatches<'_>) -> Result<cobalt_config::Confi
     Ok(config)
 }
 
-pub fn get_logging_args() -> Vec<clap::Arg<'static, 'static>> {
+pub fn get_logging_args() -> Vec<clap::Arg<'static>> {
     [
-        clap::Arg::with_name("log-level")
-            .short("L")
+        clap::Arg::new("log-level")
+            .short('L')
             .long("log-level")
             .possible_values(&["error", "warn", "info", "debug", "trace", "off"])
             .help("Log level [default: info]")
             .global(true)
             .takes_value(true),
-        clap::Arg::with_name("trace")
+        clap::Arg::new("trace")
             .long("trace")
             .help("Log ultra-verbose (trace level) information")
             .global(true)
             .takes_value(false),
-        clap::Arg::with_name("silent")
+        clap::Arg::new("silent")
             .long("silent")
             .help("Suppress all output")
             .global(true)
@@ -88,8 +88,8 @@ pub fn get_logging_args() -> Vec<clap::Arg<'static, 'static>> {
 }
 
 pub fn get_logging(
-    global_matches: &clap::ArgMatches<'_>,
-    matches: &clap::ArgMatches<'_>,
+    global_matches: &clap::ArgMatches,
+    matches: &clap::ArgMatches,
 ) -> Result<env_logger::Builder> {
     let mut builder = env_logger::Builder::new();
 

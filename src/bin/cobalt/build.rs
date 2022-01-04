@@ -5,13 +5,13 @@ use std::path;
 use crate::args;
 use crate::error::*;
 
-pub fn build_command_args() -> clap::App<'static, 'static> {
-    clap::SubCommand::with_name("build")
+pub fn build_command_args() -> clap::App<'static> {
+    clap::App::new("build")
         .about("build the cobalt project at the source dir")
-        .args(&args::get_config_args())
+        .args(args::get_config_args())
 }
 
-pub fn build_command(matches: &clap::ArgMatches<'_>) -> Result<()> {
+pub fn build_command(matches: &clap::ArgMatches) -> Result<()> {
     let config = args::get_config(matches)?;
     let config = cobalt::cobalt_model::Config::from_config(config)?;
 
@@ -31,13 +31,13 @@ pub fn build(config: cobalt::Config) -> Result<()> {
     Ok(())
 }
 
-pub fn clean_command_args() -> clap::App<'static, 'static> {
-    clap::SubCommand::with_name("clean")
+pub fn clean_command_args() -> clap::App<'static> {
+    clap::App::new("clean")
         .about("cleans `destination` directory")
-        .args(&args::get_config_args())
+        .args(args::get_config_args())
 }
 
-pub fn clean_command(matches: &clap::ArgMatches<'_>) -> Result<()> {
+pub fn clean_command(matches: &clap::ArgMatches) -> Result<()> {
     let config = args::get_config(matches)?;
     let config = cobalt::cobalt_model::Config::from_config(config)?;
 
@@ -70,13 +70,13 @@ pub fn clean(config: &cobalt::Config) -> Result<()> {
     Ok(())
 }
 
-pub fn import_command_args() -> clap::App<'static, 'static> {
-    clap::SubCommand::with_name("import")
+pub fn import_command_args() -> clap::App<'static> {
+    clap::App::new("import")
         .about("moves the contents of the dest folder to the gh-pages branch")
-        .args(&args::get_config_args())
+        .args(args::get_config_args())
         .arg(
-            clap::Arg::with_name("branch")
-                .short("b")
+            clap::Arg::new("branch")
+                .short('b')
                 .long("branch")
                 .value_name("BRANCH")
                 .help("Branch that will be used to import the site to")
@@ -84,8 +84,8 @@ pub fn import_command_args() -> clap::App<'static, 'static> {
                 .takes_value(true),
         )
         .arg(
-            clap::Arg::with_name("message")
-                .short("m")
+            clap::Arg::new("message")
+                .short('m')
                 .long("message")
                 .value_name("COMMIT-MESSAGE")
                 .help("Commit message that will be used on import")
@@ -94,7 +94,7 @@ pub fn import_command_args() -> clap::App<'static, 'static> {
         )
 }
 
-pub fn import_command(matches: &clap::ArgMatches<'_>) -> Result<()> {
+pub fn import_command(matches: &clap::ArgMatches) -> Result<()> {
     let config = args::get_config(matches)?;
     let config = cobalt::cobalt_model::Config::from_config(config)?;
 

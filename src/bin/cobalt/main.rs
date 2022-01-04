@@ -32,13 +32,13 @@ fn main() -> std::result::Result<(), exitfailure::ExitFailure> {
     Ok(())
 }
 
-fn run() -> Result<()> {
+fn cli() -> App<'static> {
     let app_cli = App::new("Cobalt")
         .version(crate_version!())
         .author("Benny Klotz <r3qnbenni@gmail.com>, Johann Hofmann")
         .about("A static site generator written in Rust.")
         .setting(AppSettings::SubcommandRequired)
-        .setting(AppSettings::GlobalVersion)
+        .setting(AppSettings::PropagateVersion)
         .args(&args::get_logging_args())
         .subcommand(new::init_command_args())
         .subcommand(new::new_command_args())
@@ -50,12 +50,16 @@ fn run() -> Result<()> {
         .subcommand(debug::debug_command_args());
     #[cfg(feature = "serve")]
     let app_cli = app_cli.subcommand(serve::serve_command_args());
+    app_cli
+}
 
+fn run() -> Result<()> {
+    let app_cli = cli();
     let global_matches = app_cli.get_matches();
 
     let (command, matches) = match global_matches.subcommand() {
-        (command, Some(matches)) => (command, matches),
-        (_, None) => unreachable!(),
+        Some((command, matches)) => (command, matches),
+        None => unreachable!(),
     };
 
     let mut builder = args::get_logging(&global_matches, matches)?;
@@ -72,11 +76,14 @@ fn run() -> Result<()> {
         "serve" => serve::serve_command(matches),
         "import" => build::import_command(matches),
         "debug" => debug::debug_command(matches),
-        _ => {
-            failure::bail!(global_matches.usage().to_owned());
-        }
+        _ => unreachable!("Unexpected subcommand"),
     }
     .with_context(|_| failure::format_err!("{} command failed", command))?;
 
     Ok(())
+}
+
+#[test]
+fn verify_app() {
+    cli().debug_assert()
 }
