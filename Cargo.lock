@@ -342,6 +342,7 @@ dependencies = [
  "relative-path",
  "rss",
  "sass-rs",
+ "scrawl",
  "serde",
  "serde_json",
  "serde_yaml",
@@ -1859,6 +1860,12 @@ dependencies = [
  "num_cpus",
  "pkg-config",
 ]
+
+[[package]]
+name = "scrawl"
+version = "1.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8fbfda0f5cf9c3c8a8058bc9c48b8c1bcdaec976086ad389ae0df6e98b302dd2"
 
 [[package]]
 name = "serde"

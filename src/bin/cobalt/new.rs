@@ -1,4 +1,3 @@
-use std::borrow;
 use std::collections;
 use std::env;
 use std::fs;
@@ -33,7 +32,7 @@ impl InitArgs {
 #[derive(Clone, Debug, PartialEq, Eq, clap::Args)]
 pub struct NewArgs {
     /// Title of the post
-    pub title: String,
+    pub title: Option<String>,
 
     /// New document's parent directory or file (default: `<CWD>/title.ext`)
     #[clap(short, long, value_name = "DIR_OR_FILE", parse(from_os_str))]
@@ -42,6 +41,10 @@ pub struct NewArgs {
     /// The default file's extension (e.g. `liquid`)
     #[clap(long, value_name = "EXT")]
     pub with_ext: Option<String>,
+
+    /// Open the new document in your configured EDITOR
+    #[clap(long)]
+    pub edit: bool,
 
     #[clap(flatten, help_heading = "CONFIG")]
     pub config: args::ConfigArgs,
@@ -53,7 +56,7 @@ impl NewArgs {
         config.include_drafts = true;
         let config = cobalt::cobalt_model::Config::from_config(config)?;
 
-        let title = self.title.as_ref();
+        let title = self.title.as_deref();
 
         let mut file = env::current_dir().expect("How does this fail?");
         if let Some(rel_file) = self.file.as_deref() {
@@ -62,8 +65,8 @@ impl NewArgs {
 
         let ext = self.with_ext.as_deref();
 
-        create_new_document(&config, title, file, ext)
-            .with_context(|_| failure::format_err!("Could not create `{}`", title))?;
+        create_new_document(&config, title, file, ext, self.edit)
+            .with_context(|_| failure::format_err!("Could not create document"))?;
 
         Ok(())
     }
@@ -218,52 +221,53 @@ pub fn create_new_project_for_path(dest: &path::Path) -> Result<()> {
 
 pub fn create_new_document(
     config: &cobalt_model::Config,
-    title: &str,
-    file: path::PathBuf,
+    title: Option<&str>,
+    mut file: path::PathBuf,
     extension: Option<&str>,
+    edit: bool,
 ) -> Result<()> {
-    let (file, extension) = if file.extension().is_none() || file.is_dir() {
-        let extension = extension.unwrap_or("md");
-        let file_name = format!("{}.{}", cobalt_model::slug::slugify(title), extension);
-        let mut file = file;
-        file.push(path::Path::new(&file_name));
-        (file, borrow::Cow::Borrowed(extension))
+    let (parent_dir, filename, extension) = if file.is_file() {
+        let filename = file.file_name().unwrap().to_string_lossy().into_owned();
+        let ext = extension
+            .map(|e| e.to_owned())
+            .or_else(|| file.extension().map(|s| s.to_string_lossy().into_owned()))
+            .unwrap_or_else(|| "md".to_owned());
+        file.pop();
+        let parent_dir = file.clone();
+        (parent_dir, Some(filename), ext)
     } else {
-        // The user-provided extension will be used for selecting a template
-        let extension = extension.map(borrow::Cow::Borrowed).unwrap_or_else(|| {
-            borrow::Cow::Owned(
-                file.extension()
-                    .unwrap_or_default()
-                    .to_str()
-                    .unwrap_or_default()
-                    .to_string(),
-            )
-        });
-        (file, extension)
+        let parent_dir = file.clone();
+        let filename = None;
+        let ext = extension
+            .map(|e| e.to_owned())
+            .unwrap_or_else(|| "md".to_owned());
+        (parent_dir, filename, ext)
     };
 
-    let file = cobalt_core::SourcePath::from_root(&config.source, &file).ok_or_else(|| {
-        failure::format_err!(
-            "New file {} not project directory ({})",
-            file.display(),
-            config.source.display()
-        )
-    })?;
+    let interim_path = parent_dir.join(format!("NON_EXISTENT.{}", extension));
+    let interim_path = cobalt_core::SourcePath::from_root(&config.source, &interim_path)
+        .ok_or_else(|| {
+            failure::format_err!(
+                "New file {} not project directory ({})",
+                file.display(),
+                config.source.display()
+            )
+        })?;
 
     let source_files =
         cobalt_core::Source::new(&config.source, config.ignore.iter().map(|s| s.as_str()))?;
-    let collection_slug = if source_files.includes_file(&file.abs_path) {
+    let collection_slug = if source_files.includes_file(&interim_path.abs_path) {
         match cobalt::classify_path(
-            &file.rel_path,
+            &interim_path.rel_path,
             &config.pages,
             &config.posts,
             &config.page_extensions,
         ) {
             Some((slug, _)) => slug,
-            None => failure::bail!("Target file is an asset: {}", file.rel_path),
+            None => failure::bail!("Target file is an asset: {}", file.display()),
         }
     } else {
-        failure::bail!("Target file is ignored: {}", file.rel_path);
+        failure::bail!("Target file is ignored: {}", file.display());
     };
 
     let source_path = config
@@ -278,22 +282,41 @@ pub fn create_new_document(
             source_path
         );
         if extension != "md" {
-            failure::bail!(
-                "No builtin default for `{}` files, only `md`: {}",
-                extension,
-                file.rel_path
-            );
+            failure::bail!("No builtin default for `{}` files, only `md`", extension,);
         }
         // For custom collections, use a post default.
         let default = *DEFAULT.get(collection_slug).unwrap_or(&POST_MD);
         default.to_string()
     };
 
-    let doc = cobalt_model::Document::parse(&source)?;
-    let (mut front, content) = doc.into_parts();
-    front.title = Some(kstring::KString::from_ref(title));
-    let doc = cobalt_model::Document::new(front, content);
-    let doc = doc.to_string();
+    let parsed = cobalt_model::Document::parse(&source)?;
+    let (mut front, content) = parsed.into_parts();
+    if let Some(title) = title {
+        front.title = Some(kstring::KString::from_ref(title));
+    } else {
+        front.title = Some(kstring::KString::from_ref("Untitled"));
+    }
+
+    let doc = cobalt_model::Document::new(front.clone(), content);
+    let mut doc = doc.to_string();
+    if edit || title.is_none() {
+        doc = scrawl::editor::new()
+            .extension(extension.as_str())
+            .contents(doc.as_str())
+            .open()?;
+        let parsed = cobalt_model::Document::parse(&doc)?;
+        front = parsed.into_parts().0;
+    }
+
+    let title = title
+        .map(|t| t.to_owned())
+        .or_else(|| front.title.map(|s| s.into_string()))
+        .ok_or_else(|| failure::format_err!("Title is missing"))?;
+    let filename = filename
+        .unwrap_or_else(|| format!("{}.{}", cobalt_model::slug::slugify(&title), extension));
+    let mut file = interim_path;
+    file.pop();
+    file.push(&filename);
 
     if let Some(parent) = file.abs_path.parent() {
         std::fs::create_dir_all(parent)?;
