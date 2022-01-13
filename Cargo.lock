@@ -313,6 +313,8 @@ dependencies = [
  "clap-verbosity-flag",
  "cobalt-config",
  "cobalt-core",
+ "concolor",
+ "concolor-clap",
  "deunicode",
  "env_logger",
  "exitfailure",
@@ -350,6 +352,7 @@ dependencies = [
  "toml",
  "vimwiki",
  "walkdir 2.3.2",
+ "yansi",
 ]
 
 [[package]]
@@ -384,6 +387,33 @@ dependencies = [
  "status",
  "walkdir 2.3.2",
 ]
+
+[[package]]
+name = "concolor"
+version = "0.0.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "015267563b1df20adccdd00cb05257b1dfbea70a04928e9cf88ffb850c1a40af"
+dependencies = [
+ "atty",
+ "bitflags",
+ "concolor-query",
+]
+
+[[package]]
+name = "concolor-clap"
+version = "0.0.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "059a1172876f3c1a3a23247d9d79efaaaf2f27f40a776e54db820be8386be32a"
+dependencies = [
+ "clap",
+ "concolor",
+]
+
+[[package]]
+name = "concolor-query"
+version = "0.0.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d6417fe6fc03a8b533fd2177742eeb39a90c7233eedec7bac96d4d6b69a09449"
 
 [[package]]
 name = "console"
@@ -2399,3 +2429,9 @@ checksum = "56c1936c4cc7a1c9ab21a1ebb602eb942ba868cbd44a99cb7cdc5892335e1c85"
 dependencies = [
  "linked-hash-map",
 ]
+
+[[package]]
+name = "yansi"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9fc79f4a1e39857fc00c3f662cbf2651c771f00e9c15fe2abc341806bd46bd71"

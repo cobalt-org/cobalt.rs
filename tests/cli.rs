@@ -53,9 +53,9 @@ pub fn log_levels_debug() {
         .current_dir(project_root.path())
         .assert()
         .success()
-        .stderr(predicate::str::contains("[trace]").not().from_utf8())
-        .stderr(predicate::str::contains("[debug]").from_utf8())
-        .stderr(predicate::str::contains("[info]").from_utf8());
+        .stderr(predicate::str::contains("TRACE").not().from_utf8())
+        .stderr(predicate::str::contains("DEBUG").from_utf8())
+        .stderr(predicate::str::contains("INFO").from_utf8());
 
     project_root.close().unwrap();
 }
@@ -73,9 +73,9 @@ pub fn log_levels_info() {
         .current_dir(project_root.path())
         .assert()
         .success()
-        .stderr(predicate::str::contains("[trace]").not().from_utf8())
-        .stderr(predicate::str::contains("[debug]").not().from_utf8())
-        .stderr(predicate::str::contains("[info]").from_utf8());
+        .stderr(predicate::str::contains("TRACE").not().from_utf8())
+        .stderr(predicate::str::contains("DEBUG").not().from_utf8())
+        .stderr(predicate::str::contains("INFO").not().from_utf8());
 
     project_root.close().unwrap();
 }

@@ -49,6 +49,9 @@ cobalt-core = { version = "=0.17.0", path = "crates/core", features = ["unstable
 clap = { version = "3.0", features = ["derive"] }
 clap-verbosity-flag = "0.4"
 proc-exit = "1"
+yansi = "0.5.0"
+concolor = "0.0.8"
+concolor-clap = { version = "0.0.8", features = ["api_unstable"] }
 human-panic = "1"
 kstring = "1.0"
 relative-path = { version = "1", features = ["serde"] }

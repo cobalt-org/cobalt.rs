@@ -26,10 +26,14 @@ static GLOBAL: alloc::System = alloc::System;
 /// Static site generator
 #[derive(Clone, Debug, Parser)]
 #[clap(global_setting = AppSettings::PropagateVersion)]
+#[clap(color = concolor_clap::color_choice())]
 #[clap(version)]
 struct Cli {
     #[clap(flatten)]
     pub logging: clap_verbosity_flag::Verbosity,
+
+    #[clap(flatten)]
+    pub color: concolor_clap::Color,
 
     #[clap(subcommand)]
     command: Command,
@@ -52,12 +56,9 @@ enum Command {
 
 impl Cli {
     pub fn run(&self) -> Result<()> {
-        let mut logging = self.logging.clone();
-        logging.set_default(Some(log::Level::Info));
-        if let Some(level) = logging.log_level() {
-            let mut builder = args::get_logging(level)?;
-            builder.init();
-        }
+        self.color.apply();
+        let colored_stderr = concolor::get(concolor::Stream::Stderr).ansi_color();
+        args::init_logging(self.logging.clone(), colored_stderr);
 
         match &self.command {
             Command::Init(cmd) => cmd.run(),

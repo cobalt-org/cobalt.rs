@@ -69,23 +69,85 @@ fn resolve_bool_arg(yes: bool, no: bool) -> Option<bool> {
     }
 }
 
-pub fn get_logging(level: log::Level) -> Result<env_logger::Builder> {
-    let mut builder = env_logger::Builder::new();
+pub fn init_logging(mut level: clap_verbosity_flag::Verbosity, colored: bool) {
+    level.set_default(Some(log::Level::Info));
 
-    builder.filter(None, level.to_level_filter());
+    if let Some(level) = level.log_level() {
+        let palette = if colored {
+            Palette::colored()
+        } else {
+            Palette::plain()
+        };
 
-    if level == log::LevelFilter::Trace {
-        builder.format_timestamp_secs();
-    } else {
-        builder.format(|f, record| {
-            writeln!(
-                f,
-                "[{}] {}",
-                record.level().to_string().to_lowercase(),
-                record.args()
-            )
+        let mut builder = env_logger::Builder::new();
+        builder.write_style(if colored {
+            env_logger::WriteStyle::Always
+        } else {
+            env_logger::WriteStyle::Never
         });
+
+        builder.filter(None, level.to_level_filter());
+
+        if level == log::LevelFilter::Trace || level == log::LevelFilter::Debug {
+            builder.format_timestamp_secs();
+        } else {
+            builder.format(move |f, record| match record.level() {
+                log::Level::Error => writeln!(
+                    f,
+                    "{}: {}",
+                    palette.error.paint(record.level()),
+                    record.args()
+                ),
+                log::Level::Warn => writeln!(
+                    f,
+                    "{}: {}",
+                    palette.warn.paint(record.level()),
+                    record.args()
+                ),
+                log::Level::Info => writeln!(f, "{}", record.args()),
+                log::Level::Debug => writeln!(
+                    f,
+                    "{}: {}",
+                    palette.debug.paint(record.level()),
+                    record.args()
+                ),
+                log::Level::Trace => writeln!(
+                    f,
+                    "{}: {}",
+                    palette.trace.paint(record.level()),
+                    record.args()
+                ),
+            });
+        }
+
+        builder.init();
+    }
+}
+
+#[derive(Copy, Clone, Debug)]
+struct Palette {
+    error: yansi::Style,
+    warn: yansi::Style,
+    debug: yansi::Style,
+    trace: yansi::Style,
+}
+
+impl Palette {
+    pub fn colored() -> Self {
+        Self {
+            error: yansi::Style::new(yansi::Color::Red).bold(),
+            warn: yansi::Style::new(yansi::Color::Yellow),
+            debug: yansi::Style::new(yansi::Color::Blue),
+            trace: yansi::Style::new(yansi::Color::Cyan),
+        }
     }
 
-    Ok(builder)
+    pub fn plain() -> Self {
+        Self {
+            error: yansi::Style::default(),
+            warn: yansi::Style::default(),
+            debug: yansi::Style::default(),
+            trace: yansi::Style::default(),
+        }
+    }
 }
