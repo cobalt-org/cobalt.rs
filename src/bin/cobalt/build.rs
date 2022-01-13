@@ -5,20 +5,23 @@ use std::path;
 use crate::args;
 use crate::error::*;
 
-pub fn build_command_args() -> clap::App<'static> {
-    clap::App::new("build")
-        .about("build the cobalt project at the source dir")
-        .args(args::get_config_args())
+/// Build the cobalt project at the source dir
+#[derive(Clone, Debug, PartialEq, Eq, clap::Args)]
+pub struct BuildArgs {
+    #[clap(flatten, help_heading = "CONFIG")]
+    pub config: args::ConfigArgs,
 }
 
-pub fn build_command(matches: &clap::ArgMatches) -> Result<()> {
-    let config = args::get_config(matches)?;
-    let config = cobalt::cobalt_model::Config::from_config(config)?;
+impl BuildArgs {
+    pub fn run(&self) -> Result<()> {
+        let config = self.config.load_config()?;
+        let config = cobalt::cobalt_model::Config::from_config(config)?;
 
-    build(config)?;
-    info!("Build successful");
+        build(config)?;
+        info!("Build successful");
 
-    Ok(())
+        Ok(())
+    }
 }
 
 pub fn build(config: cobalt::Config) -> Result<()> {
@@ -31,17 +34,20 @@ pub fn build(config: cobalt::Config) -> Result<()> {
     Ok(())
 }
 
-pub fn clean_command_args() -> clap::App<'static> {
-    clap::App::new("clean")
-        .about("cleans `destination` directory")
-        .args(args::get_config_args())
+/// Cleans `destination` directory
+#[derive(Clone, Debug, PartialEq, Eq, clap::Args)]
+pub struct CleanArgs {
+    #[clap(flatten, help_heading = "CONFIG")]
+    pub config: args::ConfigArgs,
 }
 
-pub fn clean_command(matches: &clap::ArgMatches) -> Result<()> {
-    let config = args::get_config(matches)?;
-    let config = cobalt::cobalt_model::Config::from_config(config)?;
+impl CleanArgs {
+    pub fn run(&self) -> Result<()> {
+        let config = self.config.load_config()?;
+        let config = cobalt::cobalt_model::Config::from_config(config)?;
 
-    clean(&config)
+        clean(&config)
+    }
 }
 
 pub fn clean(config: &cobalt::Config) -> Result<()> {
@@ -70,42 +76,38 @@ pub fn clean(config: &cobalt::Config) -> Result<()> {
     Ok(())
 }
 
-pub fn import_command_args() -> clap::App<'static> {
-    clap::App::new("import")
-        .about("moves the contents of the dest folder to the gh-pages branch")
-        .args(args::get_config_args())
-        .arg(
-            clap::Arg::new("branch")
-                .short('b')
-                .long("branch")
-                .value_name("BRANCH")
-                .help("Branch that will be used to import the site to")
-                .default_value("gh-pages")
-                .takes_value(true),
-        )
-        .arg(
-            clap::Arg::new("message")
-                .short('m')
-                .long("message")
-                .value_name("COMMIT-MESSAGE")
-                .help("Commit message that will be used on import")
-                .default_value("cobalt site import")
-                .takes_value(true),
-        )
+/// Moves the contents of the dest folder to the gh-pages branch
+#[derive(Clone, Debug, PartialEq, Eq, clap::Args)]
+pub struct ImportArgs {
+    /// Branch that will be used to import the site to
+    #[clap(short, long, default_value = "gh-pages")]
+    pub branch: String,
+
+    /// Commit message that will be used on import
+    #[clap(
+        short,
+        long,
+        value_name = "COMMIT-MESSAGE",
+        default_value = "cobalt site import"
+    )]
+    pub message: String,
+
+    #[clap(flatten, help_heading = "CONFIG")]
+    pub config: args::ConfigArgs,
 }
 
-pub fn import_command(matches: &clap::ArgMatches) -> Result<()> {
-    let config = args::get_config(matches)?;
-    let config = cobalt::cobalt_model::Config::from_config(config)?;
+impl ImportArgs {
+    pub fn run(&self) -> Result<()> {
+        let config = self.config.load_config()?;
+        let config = cobalt::cobalt_model::Config::from_config(config)?;
 
-    clean(&config)?;
-    build(config.clone())?;
+        clean(&config)?;
+        build(config.clone())?;
 
-    let branch = matches.value_of("branch").unwrap().to_string();
-    let message = matches.value_of("message").unwrap().to_string();
-    import(&config, &branch, &message)?;
+        import(&config, &self.branch, &self.message)?;
 
-    Ok(())
+        Ok(())
+    }
 }
 
 fn import(config: &cobalt::Config, branch: &str, message: &str) -> Result<()> {
