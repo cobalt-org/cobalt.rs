@@ -10,7 +10,7 @@ pub fn invalid_calls() {
         .unwrap()
         .assert()
         .failure()
-        .stderr(predicate::str::contains("requires a subcommand").from_utf8());
+        .stderr(predicate::str::contains("SUBCOMMANDS:").from_utf8());
 
     process::Command::cargo_bin("cobalt")
         .unwrap()
@@ -29,27 +29,7 @@ pub fn log_levels_trace() {
 
     process::Command::cargo_bin("cobalt")
         .unwrap()
-        .args(&["build", "-L", "trace"])
-        .current_dir(project_root.path())
-        .assert()
-        .success()
-        .stderr(predicate::str::contains("TRACE").from_utf8())
-        .stderr(predicate::str::contains("DEBUG").from_utf8())
-        .stderr(predicate::str::contains("INFO").from_utf8());
-
-    project_root.close().unwrap();
-}
-
-#[test]
-pub fn log_levels_trace_alias() {
-    let project_root = assert_fs::TempDir::new().unwrap();
-    project_root
-        .copy_from("tests/fixtures/example", &["**"])
-        .unwrap();
-
-    process::Command::cargo_bin("cobalt")
-        .unwrap()
-        .args(&["build", "--trace"])
+        .args(&["-vv", "build"])
         .current_dir(project_root.path())
         .assert()
         .success()
@@ -69,13 +49,13 @@ pub fn log_levels_debug() {
 
     process::Command::cargo_bin("cobalt")
         .unwrap()
-        .args(&["build", "-L", "debug"])
+        .args(&["-v", "build"])
         .current_dir(project_root.path())
         .assert()
         .success()
-        .stderr(predicate::str::contains("[trace]").not().from_utf8())
-        .stderr(predicate::str::contains("[debug]").from_utf8())
-        .stderr(predicate::str::contains("[info]").from_utf8());
+        .stderr(predicate::str::contains("TRACE").not().from_utf8())
+        .stderr(predicate::str::contains("DEBUG").from_utf8())
+        .stderr(predicate::str::contains("INFO").from_utf8());
 
     project_root.close().unwrap();
 }
@@ -89,13 +69,13 @@ pub fn log_levels_info() {
 
     process::Command::cargo_bin("cobalt")
         .unwrap()
-        .args(&["build", "-L", "info"])
+        .args(&["build"])
         .current_dir(project_root.path())
         .assert()
         .success()
-        .stderr(predicate::str::contains("[trace]").not().from_utf8())
-        .stderr(predicate::str::contains("[debug]").not().from_utf8())
-        .stderr(predicate::str::contains("[info]").from_utf8());
+        .stderr(predicate::str::contains("TRACE").not().from_utf8())
+        .stderr(predicate::str::contains("DEBUG").not().from_utf8())
+        .stderr(predicate::str::contains("INFO").not().from_utf8());
 
     project_root.close().unwrap();
 }
@@ -109,7 +89,7 @@ pub fn log_levels_silent() {
 
     process::Command::cargo_bin("cobalt")
         .unwrap()
-        .args(&["build", "--silent"])
+        .args(&["-qqqq", "build"])
         .current_dir(project_root.path())
         .assert()
         .success()
@@ -130,7 +110,7 @@ pub fn clean() {
 
     process::Command::cargo_bin("cobalt")
         .unwrap()
-        .args(&["build", "--trace", "-d", "_dest"])
+        .args(&["-vv", "build", "-d", "_dest"])
         .current_dir(project_root.path())
         .assert()
         .success();
@@ -138,7 +118,7 @@ pub fn clean() {
 
     process::Command::cargo_bin("cobalt")
         .unwrap()
-        .args(&["clean", "--trace", "-d", "_dest"])
+        .args(&["-vv", "clean", "-d", "_dest"])
         .current_dir(project_root.path())
         .assert()
         .success();
@@ -158,7 +138,7 @@ pub fn clean_empty() {
 
     process::Command::cargo_bin("cobalt")
         .unwrap()
-        .args(&["clean", "--trace", "-d", "_dest"])
+        .args(&["-vv", "clean", "-d", "_dest"])
         .current_dir(project_root.path())
         .assert()
         .success();
@@ -175,7 +155,7 @@ pub fn init_project_can_build() {
 
     process::Command::cargo_bin("cobalt")
         .unwrap()
-        .args(&["init", "--trace"])
+        .args(&["-vv", "init"])
         .current_dir(project_root.path())
         .assert()
         .success();
@@ -183,7 +163,7 @@ pub fn init_project_can_build() {
 
     process::Command::cargo_bin("cobalt")
         .unwrap()
-        .args(&["build", "--trace", "-d", "_dest", "--drafts"])
+        .args(&["-vv", "build", "-d", "_dest", "--drafts"])
         .current_dir(project_root.path())
         .assert()
         .success();
@@ -200,14 +180,14 @@ pub fn new_page_can_build() {
 
     process::Command::cargo_bin("cobalt")
         .unwrap()
-        .args(&["init", "--trace"])
+        .args(&["-vv", "init"])
         .current_dir(project_root.path())
         .assert()
         .success();
 
     process::Command::cargo_bin("cobalt")
         .unwrap()
-        .args(&["new", "--trace", "My New Special Page"])
+        .args(&["-vv", "new", "My New Special Page"])
         .current_dir(project_root.path())
         .assert()
         .success();
@@ -218,7 +198,7 @@ pub fn new_page_can_build() {
     dest.assert(predicate::path::missing());
     process::Command::cargo_bin("cobalt")
         .unwrap()
-        .args(&["build", "--trace", "-d", "_dest", "--drafts"])
+        .args(&["-vv", "build", "-d", "_dest", "--drafts"])
         .current_dir(project_root.path())
         .assert()
         .success();
@@ -235,14 +215,14 @@ pub fn new_post_can_build() {
 
     process::Command::cargo_bin("cobalt")
         .unwrap()
-        .args(&["init", "--trace"])
+        .args(&["-vv", "init"])
         .current_dir(project_root.path())
         .assert()
         .success();
 
     process::Command::cargo_bin("cobalt")
         .unwrap()
-        .args(&["new", "--trace", "My New Special Post"])
+        .args(&["-vv", "new", "My New Special Post"])
         .current_dir(project_root.path().join("posts"))
         .assert()
         .success();
@@ -253,7 +233,7 @@ pub fn new_post_can_build() {
     dest.assert(predicate::path::missing());
     process::Command::cargo_bin("cobalt")
         .unwrap()
-        .args(&["build", "--trace", "-d", "_dest", "--drafts"])
+        .args(&["-vv", "build", "-d", "_dest", "--drafts"])
         .current_dir(project_root.path())
         .assert()
         .success();
@@ -270,14 +250,14 @@ pub fn rename_page_can_build() {
 
     process::Command::cargo_bin("cobalt")
         .unwrap()
-        .args(&["init", "--trace"])
+        .args(&["-vv", "init"])
         .current_dir(project_root.path())
         .assert()
         .success();
 
     process::Command::cargo_bin("cobalt")
         .unwrap()
-        .args(&["new", "--trace", "My New Special Page"])
+        .args(&["-vv", "new", "My New Special Page"])
         .current_dir(project_root.path())
         .assert()
         .success();
@@ -288,8 +268,8 @@ pub fn rename_page_can_build() {
     process::Command::cargo_bin("cobalt")
         .unwrap()
         .args(&[
+            "-vv",
             "rename",
-            "--trace",
             "my-new-special-page.md",
             "New and Improved!",
         ])
@@ -306,7 +286,7 @@ pub fn rename_page_can_build() {
     dest.assert(predicate::path::missing());
     process::Command::cargo_bin("cobalt")
         .unwrap()
-        .args(&["build", "--trace", "-d", "_dest", "--drafts"])
+        .args(&["-vv", "build", "-d", "_dest", "--drafts"])
         .current_dir(project_root.path())
         .assert()
         .success();
@@ -323,14 +303,14 @@ pub fn rename_post_can_build() {
 
     process::Command::cargo_bin("cobalt")
         .unwrap()
-        .args(&["init", "--trace"])
+        .args(&["-vv", "init"])
         .current_dir(project_root.path())
         .assert()
         .success();
 
     process::Command::cargo_bin("cobalt")
         .unwrap()
-        .args(&["new", "--trace", "My New Special Post"])
+        .args(&["-vv", "new", "My New Special Post"])
         .current_dir(project_root.path().join("posts"))
         .assert()
         .success();
@@ -341,8 +321,8 @@ pub fn rename_post_can_build() {
     process::Command::cargo_bin("cobalt")
         .unwrap()
         .args(&[
+            "-vv",
             "rename",
-            "--trace",
             "my-new-special-post.md",
             "New and Improved!",
         ])
@@ -359,7 +339,7 @@ pub fn rename_post_can_build() {
     dest.assert(predicate::path::missing());
     process::Command::cargo_bin("cobalt")
         .unwrap()
-        .args(&["build", "--trace", "-d", "_dest", "--drafts"])
+        .args(&["-vv", "build", "-d", "_dest", "--drafts"])
         .current_dir(project_root.path())
         .assert()
         .success();
@@ -376,7 +356,7 @@ pub fn publish_post_can_build() {
 
     process::Command::cargo_bin("cobalt")
         .unwrap()
-        .args(&["init", "--trace"])
+        .args(&["-vv", "init"])
         .current_dir(project_root.path())
         .assert()
         .success();
@@ -397,7 +377,7 @@ posts:
 
     process::Command::cargo_bin("cobalt")
         .unwrap()
-        .args(&["new", "--trace", "My New Special Post"])
+        .args(&["-vv", "new", "My New Special Post"])
         .current_dir(project_root.path().join("posts"))
         .assert()
         .success();
@@ -407,7 +387,7 @@ posts:
 
     process::Command::cargo_bin("cobalt")
         .unwrap()
-        .args(&["publish", "--trace", "my-new-special-post.md"])
+        .args(&["-vv", "publish", "my-new-special-post.md"])
         .current_dir(project_root.path().join("posts"))
         .assert()
         .success();
@@ -418,7 +398,7 @@ posts:
     dest.assert(predicate::path::missing());
     process::Command::cargo_bin("cobalt")
         .unwrap()
-        .args(&["build", "--trace", "-d", "_dest", "--drafts"])
+        .args(&["-vv", "build", "-d", "_dest", "--drafts"])
         .current_dir(project_root.path())
         .assert()
         .success();
@@ -435,7 +415,7 @@ pub fn publish_date_in_post() {
 
     process::Command::cargo_bin("cobalt")
         .unwrap()
-        .args(&["init", "--trace"])
+        .args(&["-vv", "init"])
         .current_dir(project_root.path())
         .assert()
         .success();
@@ -456,7 +436,7 @@ posts:
 
     process::Command::cargo_bin("cobalt")
         .unwrap()
-        .args(&["new", "--trace", "My New Special Post"])
+        .args(&["-vv", "new", "My New Special Post"])
         .current_dir(project_root.path().join("posts"))
         .assert()
         .success();
@@ -466,7 +446,7 @@ posts:
 
     process::Command::cargo_bin("cobalt")
         .unwrap()
-        .args(&["publish", "--trace", "my-new-special-post.md"])
+        .args(&["-vv", "publish", "my-new-special-post.md"])
         .current_dir(project_root.path().join("posts"))
         .assert()
         .success();
@@ -477,7 +457,7 @@ posts:
     dest.assert(predicate::path::missing());
     process::Command::cargo_bin("cobalt")
         .unwrap()
-        .args(&["build", "--trace", "-d", "_dest", "--drafts"])
+        .args(&["-vv", "build", "-d", "_dest", "--drafts"])
         .current_dir(project_root.path())
         .assert()
         .success();
@@ -494,7 +474,7 @@ pub fn publish_draft_moves_dir() {
 
     process::Command::cargo_bin("cobalt")
         .unwrap()
-        .args(&["init", "--trace"])
+        .args(&["-vv", "init"])
         .current_dir(project_root.path())
         .assert()
         .success();
@@ -517,7 +497,7 @@ posts:
 
     process::Command::cargo_bin("cobalt")
         .unwrap()
-        .args(&["new", "--trace", "My New Special Post"])
+        .args(&["-vv", "new", "My New Special Post"])
         .current_dir(project_root.path().join("_drafts"))
         .assert()
         .success();
@@ -527,7 +507,7 @@ posts:
 
     process::Command::cargo_bin("cobalt")
         .unwrap()
-        .args(&["publish", "--trace", "my-new-special-post.md"])
+        .args(&["-vv", "publish", "my-new-special-post.md"])
         .current_dir(project_root.path().join("_drafts"))
         .assert()
         .success();
@@ -541,7 +521,7 @@ posts:
     dest.assert(predicate::path::missing());
     process::Command::cargo_bin("cobalt")
         .unwrap()
-        .args(&["build", "--trace", "-d", "_dest", "--drafts"])
+        .args(&["-vv", "build", "-d", "_dest", "--drafts"])
         .current_dir(project_root.path())
         .assert()
         .success();

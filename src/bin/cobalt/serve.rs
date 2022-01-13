@@ -15,76 +15,67 @@ use crate::args;
 use crate::build;
 use crate::error::*;
 
-pub fn serve_command_args() -> clap::App<'static> {
-    clap::App::new("serve")
-        .about("build, serve, and watch the project at the source dir")
-        .args(args::get_config_args())
-        .arg(
-            clap::Arg::new("port")
-                .short('P')
-                .long("port")
-                .value_name("INT")
-                .help("Port to serve from")
-                .default_value("3000")
-                .takes_value(true),
-        )
-        .arg(
-            clap::Arg::new("host")
-                .long("host")
-                .value_name("host-name/IP")
-                .help("Host to serve from")
-                .default_value("localhost")
-                .takes_value(true),
-        )
-        .arg(
-            clap::Arg::new("no-watch")
-                .long("no-watch")
-                .help("Disable rebuilding on change")
-                .conflicts_with("drafts")
-                .takes_value(false),
-        )
-        .arg(
-            clap::Arg::new("open")
-                .long("open")
-                .help("Open in browser")
-                .takes_value(false),
-        )
+/// Build, serve, and watch the project at the source dir
+#[derive(Clone, Debug, PartialEq, Eq, clap::Args)]
+pub struct ServeArgs {
+    /// Open a browser
+    #[clap(long)]
+    pub open: bool,
+
+    /// Host to serve from
+    #[clap(long, value_name = "HOSTNAME_OR_IP", default_value = "localhost")]
+    pub host: String,
+
+    /// Port to serve from
+    #[clap(short = 'P', long, value_name = "NUM", default_value_t = 3000)]
+    pub port: usize,
+
+    /// Disable rebuilding on change
+    #[clap(long)]
+    pub no_watch: bool,
+
+    #[clap(flatten, help_heading = "CONFIG")]
+    pub config: args::ConfigArgs,
 }
 
-pub fn serve_command(matches: &clap::ArgMatches) -> Result<()> {
-    let host = matches.value_of("host").unwrap().to_string();
-    let port = matches.value_of("port").unwrap().to_string();
-    let ip = format!("{}:{}", host, port);
-    let open_in_browser = matches.is_present("open");
-    let url = format!("http://{}", ip);
+impl ServeArgs {
+    pub fn run(&self) -> Result<()> {
+        let host = self.host.as_str();
+        let port = self.port;
+        let ip = format!("{}:{}", host, port);
+        let url = format!("http://{}", ip);
+        let open_in_browser = self.open;
 
-    let mut config = args::get_config(matches)?;
-    debug!("Overriding config `site.base_url` with `{}`", ip);
-    config.site.base_url = Some(format!("http://{}", ip).into());
-    let config = cobalt::cobalt_model::Config::from_config(config)?;
-    let dest = path::Path::new(&config.destination).to_owned();
+        let mut config = self.config.load_config()?;
+        debug!("Overriding config `site.base_url` with `{}`", ip);
+        config.site.base_url = Some(format!("http://{}", ip).into());
+        let config = cobalt::cobalt_model::Config::from_config(config)?;
 
-    build::build(config.clone())?;
+        let dest = path::Path::new(&config.destination).to_owned();
 
-    if open_in_browser {
-        open_browser(url)?;
+        build::build(config.clone())?;
+
+        if open_in_browser {
+            open_browser(url)?;
+        }
+
+        if self.no_watch {
+            serve(&dest, &ip)?;
+        } else {
+            info!("Watching {:?} for changes", &config.source);
+            thread::spawn(move || {
+                let e = serve(&dest, &ip);
+                if let Some(e) = e.err() {
+                    error!("{}", e);
+                }
+                process::exit(1)
+            });
+
+            watch(&config)?;
+        }
+
+        Ok(())
     }
-
-    if matches.is_present("no-watch") {
-        serve(&dest, &ip)?;
-    } else {
-        info!("Watching {:?} for changes", &config.source);
-        thread::spawn(move || {
-            let e = serve(&dest, &ip);
-            if let Some(e) = e.err() {
-                error!("{}", e);
-            }
-            process::exit(1)
-        });
-
-        watch(&config)?;
-    }
-    Ok(())
 }
 
 fn static_file_handler(dest: &path::Path, req: Request) -> Result<()> {

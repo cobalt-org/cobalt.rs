@@ -11,148 +11,130 @@ use failure::ResultExt;
 use crate::args;
 use crate::error::*;
 
-pub fn init_command_args() -> clap::App<'static> {
-    clap::App::new("init")
-        .about("create a new cobalt project")
-        .arg(
-            clap::Arg::new("DIRECTORY")
-                .help("Target directory")
-                .default_value("./")
-                .index(1),
-        )
+/// Create a document
+#[derive(Clone, Debug, PartialEq, Eq, clap::Args)]
+pub struct InitArgs {
+    /// Target directory
+    #[clap(default_value = "./", parse(from_os_str))]
+    pub directory: path::PathBuf,
 }
 
-pub fn init_command(matches: &clap::ArgMatches) -> Result<()> {
-    let directory = matches.value_of("DIRECTORY").unwrap();
+impl InitArgs {
+    pub fn run(&self) -> Result<()> {
+        create_new_project(&self.directory)
+            .with_context(|_| failure::err_msg("Could not create a new cobalt project"))?;
+        info!("Created new project at {}", self.directory.display());
 
-    create_new_project(&directory.to_string())
-        .with_context(|_| failure::err_msg("Could not create a new cobalt project"))?;
-    info!("Created new project at {}", directory);
-
-    Ok(())
-}
-
-pub fn new_command_args() -> clap::App<'static> {
-    clap::App::new("new")
-        .about("Create a document")
-        .args(args::get_config_args())
-        .arg(
-            clap::Arg::new("TITLE")
-                .required(true)
-                .help("Title of the post")
-                .takes_value(true),
-        )
-        .arg(
-            clap::Arg::new("file")
-                .short('f')
-                .long("file")
-                .value_name("DIR_OR_FILE")
-                .help("New document's parent directory or file (default: `<CWD>/title.ext`)")
-                .takes_value(true),
-        )
-        .arg(
-            clap::Arg::new("with-ext")
-                .long("with-ext")
-                .value_name("EXT")
-                .help("The default file's extension (e.g. `liquid`)")
-                .takes_value(true),
-        )
-}
-
-pub fn new_command(matches: &clap::ArgMatches) -> Result<()> {
-    let mut config = args::get_config(matches)?;
-    config.include_drafts = true;
-    let config = cobalt::cobalt_model::Config::from_config(config)?;
-
-    let title = matches.value_of("TITLE").unwrap();
-
-    let mut file = env::current_dir().expect("How does this fail?");
-    if let Some(rel_file) = matches.value_of("file") {
-        file.push(path::Path::new(rel_file))
+        Ok(())
     }
-
-    let ext = matches.value_of("with-ext");
-
-    create_new_document(&config, title, file, ext)
-        .with_context(|_| failure::format_err!("Could not create `{}`", title))?;
-
-    Ok(())
 }
 
-pub fn rename_command_args() -> clap::App<'static> {
-    clap::App::new("rename")
-        .about("Rename a document")
-        .args(args::get_config_args())
-        .arg(
-            clap::Arg::new("SRC")
-                .required(true)
-                .help("File to rename")
-                .takes_value(true),
-        )
-        .arg(
-            clap::Arg::new("TITLE")
-                .required(true)
-                .help("Title of the post")
-                .takes_value(true),
-        )
-        .arg(
-            clap::Arg::new("file")
-                .short('f')
-                .long("file")
-                .value_name("DIR_OR_FILE")
-                .help("New document's parent directory or file (default: `<CWD>/title.ext`)")
-                .takes_value(true),
-        )
+/// Create a document
+#[derive(Clone, Debug, PartialEq, Eq, clap::Args)]
+pub struct NewArgs {
+    /// Title of the post
+    pub title: String,
+
+    /// New document's parent directory or file (default: `<CWD>/title.ext`)
+    #[clap(short, long, value_name = "DIR_OR_FILE", parse(from_os_str))]
+    pub file: Option<path::PathBuf>,
+
+    /// The default file's extension (e.g. `liquid`)
+    #[clap(long, value_name = "EXT")]
+    pub with_ext: Option<String>,
+
+    #[clap(flatten, help_heading = "CONFIG")]
+    pub config: args::ConfigArgs,
 }
 
-pub fn rename_command(matches: &clap::ArgMatches) -> Result<()> {
-    let mut config = args::get_config(matches)?;
-    config.include_drafts = true;
-    let config = cobalt::cobalt_model::Config::from_config(config)?;
+impl NewArgs {
+    pub fn run(&self) -> Result<()> {
+        let mut config = self.config.load_config()?;
+        config.include_drafts = true;
+        let config = cobalt::cobalt_model::Config::from_config(config)?;
 
-    let source = path::PathBuf::from(matches.value_of("SRC").unwrap());
+        let title = self.title.as_ref();
 
-    let title = matches.value_of("TITLE").unwrap();
+        let mut file = env::current_dir().expect("How does this fail?");
+        if let Some(rel_file) = self.file.as_deref() {
+            file.push(rel_file)
+        }
 
-    let mut file = env::current_dir().expect("How does this fail?");
-    if let Some(rel_file) = matches.value_of("file") {
-        file.push(path::Path::new(rel_file))
+        let ext = self.with_ext.as_deref();
+
+        create_new_document(&config, title, file, ext)
+            .with_context(|_| failure::format_err!("Could not create `{}`", title))?;
+
+        Ok(())
     }
-    let file = file;
-
-    rename_document(&config, source, title, file)
-        .with_context(|_| failure::format_err!("Could not rename `{}`", title))?;
-
-    Ok(())
 }
 
-pub fn publish_command_args() -> clap::App<'static> {
-    clap::App::new("publish")
-        .about("Publish a document")
-        .args(args::get_config_args())
-        .arg(
-            clap::Arg::new("FILENAME")
-                .required(true)
-                .help("Document path to publish")
-                .takes_value(true),
-        )
+/// Rename a document
+#[derive(Clone, Debug, PartialEq, Eq, clap::Args)]
+pub struct RenameArgs {
+    /// File to rename
+    #[clap(value_name = "FILE", parse(from_os_str))]
+    pub src: path::PathBuf,
+
+    /// Title of the post
+    pub title: String,
+
+    /// New document's parent directory or file (default: `<CWD>/title.ext`)
+    #[clap(short, long, value_name = "DIR_OR_FILE", parse(from_os_str))]
+    pub file: Option<path::PathBuf>,
+
+    #[clap(flatten, help_heading = "CONFIG")]
+    pub config: args::ConfigArgs,
 }
 
-pub fn publish_command(matches: &clap::ArgMatches) -> Result<()> {
-    let filename = matches
-        .value_of("FILENAME")
-        .expect("required parameters are present");
-    let mut file = env::current_dir().expect("How does this fail?");
-    file.push(path::Path::new(filename));
-    let file = file;
-    let mut config = args::get_config(matches)?;
-    config.include_drafts = true;
-    let config = cobalt::cobalt_model::Config::from_config(config)?;
+impl RenameArgs {
+    pub fn run(&self) -> Result<()> {
+        let mut config = self.config.load_config()?;
+        config.include_drafts = true;
+        let config = cobalt::cobalt_model::Config::from_config(config)?;
 
-    publish_document(&config, &file)
-        .with_context(|_| failure::format_err!("Could not publish `{:?}`", file))?;
+        let source = self.src.clone();
 
-    Ok(())
+        let title = self.title.as_ref();
+
+        let mut file = env::current_dir().expect("How does this fail?");
+        if let Some(rel_file) = self.file.as_deref() {
+            file.push(rel_file)
+        }
+
+        rename_document(&config, source, title, file)
+            .with_context(|_| failure::format_err!("Could not rename `{}`", title))?;
+
+        Ok(())
+    }
+}
+
+/// Publish a document
+#[derive(Clone, Debug, PartialEq, Eq, clap::Args)]
+pub struct PublishArgs {
+    /// Document to publish
+    #[clap(value_name = "FILE", parse(from_os_str))]
+    pub filename: path::PathBuf,
+
+    #[clap(flatten, help_heading = "CONFIG")]
+    pub config: args::ConfigArgs,
+}
+
+impl PublishArgs {
+    pub fn run(&self) -> Result<()> {
+        let mut config = self.config.load_config()?;
+        config.include_drafts = true;
+        let config = cobalt::cobalt_model::Config::from_config(config)?;
+
+        let filename = self.filename.as_path();
+        let mut file = env::current_dir().expect("How does this fail?");
+        file.push(path::Path::new(filename));
+
+        publish_document(&config, &file)
+            .with_context(|_| failure::format_err!("Could not publish `{:?}`", file))?;
+
+        Ok(())
+    }
 }
 
 const COBALT_YML: &str = "
