@@ -319,6 +319,7 @@ dependencies = [
  "env_logger",
  "exitfailure",
  "failure",
+ "file-serve",
  "html-minifier",
  "human-panic",
  "ignore",
@@ -330,7 +331,6 @@ dependencies = [
  "liquid-core",
  "liquid-lib",
  "log",
- "mime_guess",
  "normalize-line-endings",
  "notify",
  "open",
@@ -349,7 +349,6 @@ dependencies = [
  "sitemap",
  "syntect",
  "tempfile",
- "tiny_http",
  "toml",
  "vimwiki",
  "walkdir",
@@ -763,6 +762,15 @@ checksum = "9d6b8560a05112eb52f04b00e5d3790c0dd75d9d980eb8a122fb23b92a623ccf"
 dependencies = [
  "bit-set",
  "regex",
+]
+
+[[package]]
+name = "file-serve"
+version = "0.1.0"
+dependencies = [
+ "log",
+ "mime_guess",
+ "tiny_http",
 ]
 
 [[package]]

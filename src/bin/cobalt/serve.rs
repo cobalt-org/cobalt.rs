@@ -1,7 +1,5 @@
-use std::fs;
 use std::path;
 use std::process;
-use std::str::FromStr;
 use std::sync::mpsc::channel;
 use std::thread;
 use std::time;
@@ -9,7 +7,6 @@ use std::time;
 use cobalt::cobalt_model;
 use failure::ResultExt;
 use notify::Watcher;
-use tiny_http::{Request, Response, Server};
 
 use crate::args;
 use crate::build;
@@ -28,7 +25,7 @@ pub struct ServeArgs {
 
     /// Port to serve from
     #[clap(short = 'P', long, value_name = "NUM", default_value_t = 3000)]
-    pub port: usize,
+    pub port: u16,
 
     /// Disable rebuilding on change
     #[clap(long)]
@@ -40,17 +37,16 @@ pub struct ServeArgs {
 
 impl ServeArgs {
     pub fn run(&self) -> Result<()> {
-        let host = self.host.as_str();
-        let port = self.port;
-        let ip = format!("{}:{}", host, port);
-        let url = format!("http://{}", ip);
-        let open_in_browser = self.open;
-
         let dest = tempfile::tempdir()?;
 
+        let mut server = file_serve::ServerBuilder::new(dest.path());
+        server.hostname(&self.host);
+        server.port(self.port);
+        let server = server.build();
+
         let mut config = self.config.load_config()?;
-        debug!("Overriding config `site.base_url` with `{}`", ip);
-        config.site.base_url = Some(format!("http://{}", ip).into());
+        debug!("Overriding config `site.base_url` with `{}`", server.addr());
+        config.site.base_url = Some(format!("http://{}", server.addr()).into());
         let mut config = cobalt::cobalt_model::Config::from_config(config)?;
         debug!(
             "Overriding config `destination` with `{}`",
@@ -60,18 +56,19 @@ impl ServeArgs {
 
         build::build(config.clone())?;
 
-        if open_in_browser {
+        if self.open {
+            let url = format!("http://{}", server.addr());
             open_browser(url)?;
         }
 
         if self.no_watch {
-            serve(dest.path(), &ip)?;
+            serve(&server)?;
 
             dest.close()?;
         } else {
             info!("Watching {:?} for changes", &config.source);
             thread::spawn(move || {
-                let e = serve(dest.path(), &ip);
+                let e = serve(&server);
                 if let Some(e) = e.err() {
                     error!("{}", e);
                 }
@@ -85,69 +82,17 @@ impl ServeArgs {
     }
 }
 
-fn static_file_handler(dest: &path::Path, req: Request) -> Result<()> {
-    // grab the requested path
-    let mut req_path = req.url().to_string();
-
-    // strip off any querystrings so path.is_file() matches and doesn't stick index.html on the end
-    // of the path (querystrings often used for cachebusting)
-    if let Some(position) = req_path.rfind('?') {
-        req_path.truncate(position);
-    }
-
-    // find the path of the file in the local system
-    // (this gets rid of the '/' in `p`, so the `join()` will not replace the path)
-    let path = dest.to_path_buf().join(&req_path[1..]);
-
-    let serve_path = if path.is_file() {
-        // try to point the serve path to `path` if it corresponds to a file
-        path
-    } else {
-        // try to point the serve path into a "index.html" file in the requested
-        // path
-        path.join("index.html")
-    };
-
-    // if the request points to a file and it exists, read and serve it
-    if serve_path.exists() {
-        let file = fs::File::open(&serve_path)?;
-        let mut response = Response::from_file(file);
-        if let Some(mime) = mime_guess::MimeGuess::from_path(&serve_path).first_raw() {
-            let content_type = format!("Content-Type:{}", mime);
-            let content_type =
-                tiny_http::Header::from_str(&content_type).expect("formatted correctly");
-            response.add_header(content_type);
-        }
-        req.respond(response)?;
-    } else {
-        // write a simple body for the 404 page
-        req.respond(
-            Response::from_string("<h1> <center> 404: Page not found </center> </h1>")
-                .with_status_code(404)
-                .with_header(
-                    tiny_http::Header::from_str("Content-Type: text/html")
-                        .expect("formatted correctly"),
-                ),
-        )?;
-    }
-
-    Ok(())
-}
-
-fn serve(dest: &path::Path, ip: &str) -> Result<()> {
-    info!("Serving {:?} through static file server", dest);
-    info!("Server Listening on http://{}", &ip);
+fn serve(server: &file_serve::Server) -> Result<()> {
+    info!(
+        "Serving {} through static file server",
+        server.source().display()
+    );
+    info!("Server Listening on http://{}", server.addr());
     info!("Ctrl-c to stop the server");
 
-    // attempts to create a server
-    let server = Server::http(ip).map_err(Error::from_boxed_compat)?;
-
-    for request in server.incoming_requests() {
-        if let Err(e) = static_file_handler(dest, request) {
-            error!("{}", e);
-        }
-    }
-    Ok(())
+    server
+        .serve()
+        .map_err(|e| Error::from_boxed_compat(Box::new(e)))
 }
 
 fn open_browser(url: String) -> Result<()> {
