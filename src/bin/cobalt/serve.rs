@@ -46,12 +46,17 @@ impl ServeArgs {
         let url = format!("http://{}", ip);
         let open_in_browser = self.open;
 
+        let dest = tempfile::tempdir()?;
+
         let mut config = self.config.load_config()?;
         debug!("Overriding config `site.base_url` with `{}`", ip);
         config.site.base_url = Some(format!("http://{}", ip).into());
-        let config = cobalt::cobalt_model::Config::from_config(config)?;
-
-        let dest = path::Path::new(&config.destination).to_owned();
+        let mut config = cobalt::cobalt_model::Config::from_config(config)?;
+        debug!(
+            "Overriding config `destination` with `{}`",
+            dest.path().display()
+        );
+        config.destination = dest.path().to_owned();
 
         build::build(config.clone())?;
 
@@ -60,11 +65,13 @@ impl ServeArgs {
         }
 
         if self.no_watch {
-            serve(&dest, &ip)?;
+            serve(dest.path(), &ip)?;
+
+            dest.close()?;
         } else {
             info!("Watching {:?} for changes", &config.source);
             thread::spawn(move || {
-                let e = serve(&dest, &ip);
+                let e = serve(dest.path(), &ip);
                 if let Some(e) = e.err() {
                     error!("{}", e);
                 }
