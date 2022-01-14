@@ -1,0 +1,25 @@
+[package]
+name = "file-serve"
+version = "0.1.0"
+description = "HTTP Static File Server"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/cobalt-org/cobalt.rs"
+documentation = "docs.srs/file-serve"
+readme = "README.md"
+categories = ["development-tools::testing", "web-programming::http-server"]
+keywords = ["serve", "http-server", "static-files", "http", "server"]
+edition = "2018"
+include = [
+  "build.rs",
+  "src/**/*",
+  "Cargo.toml",
+  "LICENSE*",
+  "README.md",
+  "benches/**/*",
+  "examples/**/*"
+]
+
+[dependencies]
+tiny_http = "0.9.0"
+mime_guess = "2"
+log = "0.4"
