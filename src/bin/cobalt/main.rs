@@ -47,7 +47,6 @@ enum Command {
     Publish(new::PublishArgs),
     Build(build::BuildArgs),
     Clean(build::CleanArgs),
-    Import(build::ImportArgs),
     #[cfg(feature = "serve")]
     Serve(serve::ServeArgs),
     #[clap(subcommand)]
@@ -67,7 +66,6 @@ impl Cli {
             Command::Publish(cmd) => cmd.run(),
             Command::Build(cmd) => cmd.run(),
             Command::Clean(cmd) => cmd.run(),
-            Command::Import(cmd) => cmd.run(),
             #[cfg(feature = "serve")]
             Command::Serve(cmd) => cmd.run(),
             Command::Debug(cmd) => cmd.run(),

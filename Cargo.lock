@@ -319,7 +319,6 @@ dependencies = [
  "env_logger",
  "exitfailure",
  "failure",
- "ghp",
  "html-minifier",
  "human-panic",
  "ignore",
@@ -353,7 +352,7 @@ dependencies = [
  "tiny_http",
  "toml",
  "vimwiki",
- "walkdir 2.3.2",
+ "walkdir",
  "yansi",
 ]
 
@@ -387,7 +386,7 @@ dependencies = [
  "relative-path",
  "serde",
  "status",
- "walkdir 2.3.2",
+ "walkdir",
 ]
 
 [[package]]
@@ -866,15 +865,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "getopts"
-version = "0.2.21"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "14dbbfd5c71d70241ecf9e6f13737f7b5ce823821063188d7e46c41d371eebd5"
-dependencies = [
- "unicode-width",
-]
-
-[[package]]
 name = "getrandom"
 version = "0.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -883,16 +873,6 @@ dependencies = [
  "cfg-if 1.0.0",
  "libc",
  "wasi",
-]
-
-[[package]]
-name = "ghp"
-version = "0.1.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2381a505873cc9b3bc814214150a0da3193db84cdaf3c9eb2145c7a369d337f0"
-dependencies = [
- "getopts",
- "walkdir 0.1.8",
 ]
 
 [[package]]
@@ -922,7 +902,7 @@ checksum = "93e3af942408868f6934a7b85134a3230832b9977cf66125df2f9edcfce4ddcc"
 dependencies = [
  "bitflags",
  "ignore",
- "walkdir 2.3.2",
+ "walkdir",
 ]
 
 [[package]]
@@ -1019,7 +999,7 @@ dependencies = [
  "regex",
  "same-file",
  "thread_local",
- "walkdir 2.3.2",
+ "walkdir",
  "winapi-util",
 ]
 
@@ -1380,7 +1360,7 @@ dependencies = [
  "libc",
  "mio",
  "mio-extras",
- "walkdir 2.3.2",
+ "walkdir",
  "winapi 0.3.9",
 ]
 
@@ -2065,7 +2045,7 @@ dependencies = [
  "serde",
  "serde_derive",
  "serde_json",
- "walkdir 2.3.2",
+ "walkdir",
  "yaml-rust",
 ]
 
@@ -2229,12 +2209,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8895849a949e7845e06bd6dc1aa51731a103c42707010a5b591c0038fb73385b"
 
 [[package]]
-name = "unicode-width"
-version = "0.1.9"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3ed742d4ea2bd1176e236172c8429aaf54486e7ac098db29ffe6529e0ce50973"
-
-[[package]]
 name = "unicode-xid"
 version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2335,16 +2309,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9f200f5b12eb75f8c1ed65abd4b2db8a6e1b138a20de009dacee265a2498f3f6"
 dependencies = [
  "libc",
-]
-
-[[package]]
-name = "walkdir"
-version = "0.1.8"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c66c0b9792f0a765345452775f3adbd28dde9d33f30d13e5dcc5ae17cf6f3780"
-dependencies = [
- "kernel32-sys",
- "winapi 0.2.8",
 ]
 
 [[package]]
