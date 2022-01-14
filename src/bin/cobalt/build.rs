@@ -53,7 +53,7 @@ impl CleanArgs {
 
 pub fn clean(config: &cobalt::Config) -> Result<()> {
     let cwd = env::current_dir().unwrap_or_else(|_| path::PathBuf::new());
-    let destdir = config.destination.canonicalize();
+    let destdir = dunce::canonicalize(&config.destination);
     let destdir = match destdir {
         Ok(destdir) => destdir,
         Err(e) => {

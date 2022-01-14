@@ -44,7 +44,7 @@ impl ConfigArgs {
             .as_deref()
             .map(|d| {
                 std::fs::create_dir_all(d)?;
-                d.canonicalize()
+                dunce::canonicalize(d)
             })
             .transpose()?;
 

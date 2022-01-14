@@ -316,6 +316,7 @@ dependencies = [
  "concolor",
  "concolor-clap",
  "deunicode",
+ "dunce",
  "env_logger",
  "exitfailure",
  "failure",

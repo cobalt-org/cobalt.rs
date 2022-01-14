@@ -108,16 +108,13 @@ fn open_browser(url: String) -> Result<()> {
 fn watch(config: &cobalt_model::Config) -> Result<()> {
     // canonicalize is to ensure there is no question that `watcher`s paths come back safe for
     // Files::includes_file
-    let source = path::Path::new(&config.source)
-        .canonicalize()
+    let source = dunce::canonicalize(path::Path::new(&config.source))
         .with_context(|_| failure::err_msg("Failed in processing source"))?;
 
     // Also canonicalize the destination folder. In particular for Windows, notify-rs
     // generates the absolute path by prepending the above source path.
     // On Windows canonicalize() adds a \\?\ to the start of the path.
-    let destination = config
-        .destination
-        .canonicalize()
+    let destination = dunce::canonicalize(&config.destination)
         .with_context(|_| failure::err_msg("Failed to canonicalize destination folder"))?;
 
     let (tx, rx) = channel();
