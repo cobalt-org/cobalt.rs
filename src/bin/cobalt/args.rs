@@ -88,7 +88,7 @@ pub fn init_logging(mut level: clap_verbosity_flag::Verbosity, colored: bool) {
 
         builder.filter(None, level.to_level_filter());
 
-        if level == log::LevelFilter::Trace || level == log::LevelFilter::Debug {
+        if level == log::LevelFilter::Trace {
             builder.format_timestamp_secs();
         } else {
             builder.format(move |f, record| match record.level() {
