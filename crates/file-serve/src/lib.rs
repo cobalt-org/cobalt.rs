@@ -29,7 +29,11 @@ impl ServerBuilder {
     pub fn build(&self) -> Server {
         let source = self.source.clone();
         let hostname = self.hostname.as_deref().unwrap_or("localhost");
-        let port = self.port.unwrap_or(3000);
+        let port = self
+            .port
+            .or_else(|| get_available_port(hostname))
+            // Just have `serve` error out
+            .unwrap_or(3000);
 
         Server {
             source,
@@ -143,4 +147,14 @@ fn static_file_handler(dest: &std::path::Path, req: tiny_http::Request) -> Resul
     }
 
     Ok(())
+}
+
+fn get_available_port(host: &str) -> Option<u16> {
+    // Start after "well-known" ports (0–1023) as they require superuser
+    // privileges on UNIX-like operating systems.
+    (1024..9000).find(|port| port_is_available(host, *port))
+}
+
+fn port_is_available(host: &str, port: u16) -> bool {
+    std::net::TcpListener::bind((host, port)).is_ok()
 }

@@ -24,8 +24,8 @@ pub struct ServeArgs {
     pub host: String,
 
     /// Port to serve from
-    #[clap(short = 'P', long, value_name = "NUM", default_value_t = 3000)]
-    pub port: u16,
+    #[clap(short = 'P', long, value_name = "NUM")]
+    pub port: Option<u16>,
 
     /// Disable rebuilding on change
     #[clap(long)]
@@ -41,7 +41,9 @@ impl ServeArgs {
 
         let mut server = file_serve::ServerBuilder::new(dest.path());
         server.hostname(&self.host);
-        server.port(self.port);
+        if let Some(port) = self.port {
+            server.port(port);
+        }
         let server = server.build();
 
         let mut config = self.config.load_config()?;
