@@ -162,7 +162,7 @@ fn load_data(data_path: &path::Path) -> Result<liquid::model::Value> {
 }
 
 fn insert_data_dir(data: &mut liquid::Object, data_root: &path::Path) -> Result<()> {
-    debug!("Loading data from {:?}", data_root);
+    debug!("Loading data from `{}`", data_root.display());
 
     let data_files_builder = files::FilesBuilder::new(data_root)?;
     let data_files = data_files_builder.build()?;
@@ -176,10 +176,10 @@ fn insert_data_dir(data: &mut liquid::Object, data_root: &path::Path) -> Result<
             .expect("Files will always return with a stem");
         let file_stem = String::from(file_stem.to_str().unwrap());
         let data_fragment = load_data(&full_path)
-            .with_context(|_| format!("Loading data from {:?} failed", full_path))?;
+            .with_context(|_| format!("Loading data from `{}` failed", full_path.display()))?;
 
         deep_insert(data, rel_path, file_stem, data_fragment)
-            .with_context(|_| format!("Merging data into {:?} failed", rel_path))?;
+            .with_context(|_| format!("Merging data into `{}` failed", rel_path.display()))?;
     }
 
     Ok(())

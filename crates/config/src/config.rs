@@ -92,7 +92,7 @@ impl Config {
         let file_path = find_project_file(&cwd, "_cobalt.yml");
         let config = file_path
             .map(|p| {
-                log::debug!("Using config file {:?}", &p);
+                log::debug!("Using config file {}", p.display());
                 Self::from_file(&p)
             })
             .unwrap_or_else(|| {
