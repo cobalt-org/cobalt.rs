@@ -26,8 +26,9 @@ impl BuildArgs {
 
 pub fn build(config: cobalt::Config) -> Result<()> {
     info!(
-        "Building from {:?} into {:?}",
-        config.source, config.destination
+        "Building from `{}` into `{}`",
+        config.source.display(),
+        config.destination.display()
     );
     cobalt::build(config)?;
 
@@ -52,11 +53,11 @@ impl CleanArgs {
 
 pub fn clean(config: &cobalt::Config) -> Result<()> {
     let cwd = env::current_dir().unwrap_or_else(|_| path::PathBuf::new());
-    let destdir = config.destination.canonicalize();
+    let destdir = dunce::canonicalize(&config.destination);
     let destdir = match destdir {
         Ok(destdir) => destdir,
         Err(e) => {
-            debug!("No \"{:?}\" to clean", &config.destination);
+            debug!("No `{}` to clean", config.destination.display());
             debug!("{}", e);
             return Ok(());
         }
@@ -71,7 +72,7 @@ pub fn clean(config: &cobalt::Config) -> Result<()> {
 
     fs::remove_dir_all(&destdir)?;
 
-    info!("directory \"{:?}\" removed", &destdir);
+    info!("directory `{}` removed", destdir.display());
 
     Ok(())
 }

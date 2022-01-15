@@ -14,7 +14,7 @@ type Partials = liquid::partials::EagerCompiler<liquid::partials::InMemorySource
 fn load_partials_from_path(root: path::PathBuf) -> Result<Partials> {
     let mut source = Partials::empty();
 
-    debug!("Loading snippets from {:?}", root);
+    debug!("Loading snippets from `{}`", root.display());
     let template_files = files::FilesBuilder::new(root)?
         .ignore_hidden(false)?
         .build()?;
@@ -25,7 +25,7 @@ fn load_partials_from_path(root: path::PathBuf) -> Result<Partials> {
             .to_str()
             .expect("only UTF-8 characters supported in paths")
             .to_owned();
-        trace!("Loading snippet {:?}", rel_path);
+        trace!("Loading snippet `{}`", rel_path);
         let content = files::read_file(file_path)?;
         source.add(rel_path, content);
     }
