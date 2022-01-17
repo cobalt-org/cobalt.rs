@@ -131,13 +131,13 @@ impl liquid_core::ParseBlock for CodeBlockParser {
 
 pub struct DecoratedParser<'a> {
     parser: cmark::Parser<'a, 'a>,
-    theme: &'a str,
+    theme: Option<&'a str>,
     lang: Option<String>,
     code: Option<Vec<pulldown_cmark::CowStr<'a>>>,
 }
 
 impl<'a> DecoratedParser<'a> {
-    pub fn new(parser: cmark::Parser<'a, 'a>, theme: &'a str) -> Self {
+    pub fn new(parser: cmark::Parser<'a, 'a>, theme: Option<&'a str>) -> Self {
         DecoratedParser {
             parser,
             theme,
@@ -172,9 +172,9 @@ impl<'a> Iterator for DecoratedParser<'a> {
             Some(End(cmark::Tag::CodeBlock(_))) => {
                 let html = if let Some(code) = self.code.as_deref() {
                     let code = code.iter().join("\n");
-                    HIGHLIGHT.format(&code, self.lang.as_deref(), Some(self.theme))
+                    HIGHLIGHT.format(&code, self.lang.as_deref(), self.theme)
                 } else {
-                    HIGHLIGHT.format("", self.lang.as_deref(), Some(self.theme))
+                    HIGHLIGHT.format("", self.lang.as_deref(), self.theme)
                 };
                 // reset highlighter
                 self.lang = None;
@@ -189,7 +189,7 @@ impl<'a> Iterator for DecoratedParser<'a> {
 
 pub fn decorate_markdown<'a>(
     parser: cmark::Parser<'a, 'a>,
-    theme_name: &'a str,
+    theme_name: Option<&'a str>,
 ) -> DecoratedParser<'a> {
     DecoratedParser::new(parser, theme_name)
 }
@@ -267,7 +267,10 @@ mod test_syntsx {
 
         let mut buf = String::new();
         let parser = cmark::Parser::new(&html);
-        cmark::html::push_html(&mut buf, decorate_markdown(parser, "base16-ocean.dark"));
+        cmark::html::push_html(
+            &mut buf,
+            decorate_markdown(parser, Some("base16-ocean.dark")),
+        );
         similar_asserts::assert_eq!(MARKDOWN_RENDERED, &buf);
     }
 }
@@ -331,7 +334,10 @@ mod test_raw {
 
         let mut buf = String::new();
         let parser = cmark::Parser::new(&html);
-        cmark::html::push_html(&mut buf, decorate_markdown(parser, "base16-ocean.dark"));
+        cmark::html::push_html(
+            &mut buf,
+            decorate_markdown(parser, Some("base16-ocean.dark")),
+        );
         assert_eq!(buf, MARKDOWN_RENDERED);
     }
 }

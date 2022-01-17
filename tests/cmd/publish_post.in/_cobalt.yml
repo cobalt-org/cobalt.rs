@@ -5,3 +5,5 @@ site:
 posts:
   rss: rss.xml
   publish_date_in_filename: false
+syntax_highlight:
+  enabled: false

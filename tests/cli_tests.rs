@@ -1,5 +1,14 @@
 #[test]
-#[cfg(feature = "syntax-highlight")]
 fn cli_tests() {
-    trycmd::TestCases::new().case("tests/cmd/*.md");
+    let t = trycmd::TestCases::new();
+    t.case("tests/cmd/*.md");
+    #[cfg(not(feature = "syntax-highlight"))]
+    {
+        t.skip("tests/cmd/init.md");
+        t.skip("tests/cmd/log_level.md");
+    }
+    #[cfg(not(feature = "serve"))]
+    {
+        t.skip("tests/cmd/errors.md");
+    }
 }
