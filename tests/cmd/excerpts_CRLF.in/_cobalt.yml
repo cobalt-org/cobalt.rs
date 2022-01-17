@@ -1,0 +1,5 @@
+source: "."
+site:
+  title: cobalt blog
+syntax_highlight:
+  enabled: false

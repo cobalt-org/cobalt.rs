@@ -1,0 +1,4 @@
+posts:
+  dir: _blog
+syntax_highlight:
+  enabled: false

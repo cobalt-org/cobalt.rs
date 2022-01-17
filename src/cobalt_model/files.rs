@@ -275,7 +275,11 @@ pub fn copy_file(src_file: &path::Path, dest_file: &path::Path) -> Result<()> {
             .with_context(|_| failure::format_err!("Could not create {}", parent.display()))?;
     }
 
-    debug!("Copying {:?} to {:?}", src_file, dest_file);
+    debug!(
+        "Copying `{}` to `{}`",
+        src_file.display(),
+        dest_file.display()
+    );
     fs::copy(src_file, dest_file).with_context(|_| {
         failure::format_err!(
             "Could not copy {} into {}",

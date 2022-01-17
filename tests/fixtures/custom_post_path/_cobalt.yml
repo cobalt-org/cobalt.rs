@@ -1,3 +1,0 @@
-posts:
-  default:
-    permalink: "/blog/{{year}}/{{month}}/{{day}}/"

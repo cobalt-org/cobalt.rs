@@ -76,7 +76,11 @@ fn copy_and_minify_css(src_file: &path::Path, dest_file: &path::Path, minify: bo
                 .with_context(|_| failure::format_err!("Could not create {}", parent.display()))?;
         }
 
-        debug!("Copying and minifying {:?} to {:?}", src_file, dest_file);
+        debug!(
+            "Copying and minifying `{}` to `{}`",
+            src_file.display(),
+            dest_file.display()
+        );
         let content = std::fs::read_to_string(src_file)?;
         let minified = minify(&content).map_err(|e| {
             failure::format_err!(
@@ -102,7 +106,11 @@ fn copy_and_minify_js(src_file: &path::Path, dest_file: &path::Path, minify: boo
                 .with_context(|_| failure::format_err!("Could not create {}", parent.display()))?;
         }
 
-        debug!("Copying and minifying {:?} to {:?}", src_file, dest_file);
+        debug!(
+            "Copying and minifying `{}` to `{}`",
+            src_file.display(),
+            dest_file.display()
+        );
         let content = std::fs::read_to_string(src_file)?;
         std::fs::write(dest_file, minify(&content))?;
     } else {
