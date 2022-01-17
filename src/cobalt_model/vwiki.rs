@@ -1,6 +1,7 @@
 use crate::error::*;
 use serde::{Deserialize, Serialize};
 use vimwiki::{HtmlCodeConfig, HtmlConfig, Language, Page, ParseError, ToHtmlString};
+
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct VimwikiBuilder {

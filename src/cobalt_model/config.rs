@@ -98,11 +98,14 @@ impl Config {
 
         let liquid = template::LiquidBuilder {
             includes_path,
-            theme: syntax_highlight.theme.clone(),
+            theme: syntax_highlight
+                .enabled
+                .then(|| syntax_highlight.theme.clone()),
         };
         let markdown = mark::MarkdownBuilder {
-            theme: syntax_highlight.theme.clone(),
-            syntax_highlight_enabled: syntax_highlight.enabled,
+            theme: syntax_highlight
+                .enabled
+                .then(|| syntax_highlight.theme.clone()),
         };
         let vimwiki = vwiki::VimwikiBuilder {
             theme: syntax_highlight.theme,

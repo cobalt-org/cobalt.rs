@@ -7,23 +7,18 @@ use crate::syntax_highlight::decorate_markdown;
 #[derive(Debug, Clone, PartialEq, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct MarkdownBuilder {
-    pub theme: kstring::KString,
-    pub syntax_highlight_enabled: bool,
+    pub theme: Option<kstring::KString>,
 }
 
 impl MarkdownBuilder {
     pub fn build(self) -> Markdown {
-        Markdown {
-            theme: self.theme,
-            syntax_highlight_enabled: self.syntax_highlight_enabled,
-        }
+        Markdown { theme: self.theme }
     }
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Markdown {
-    theme: kstring::KString,
-    syntax_highlight_enabled: bool,
+    theme: Option<kstring::KString>,
 }
 
 impl Markdown {
@@ -34,11 +29,7 @@ impl Markdown {
             | cmark::Options::ENABLE_STRIKETHROUGH
             | cmark::Options::ENABLE_TASKLISTS;
         let parser = cmark::Parser::new_ext(content, options);
-        if self.syntax_highlight_enabled {
-            cmark::html::push_html(&mut buf, decorate_markdown(parser, &self.theme));
-        } else {
-            cmark::html::push_html(&mut buf, parser);
-        }
+        cmark::html::push_html(&mut buf, decorate_markdown(parser, self.theme.as_deref()));
         Ok(buf)
     }
 }
