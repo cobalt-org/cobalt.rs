@@ -1,0 +1,6 @@
+template_extensions:
+  - txt
+  - md
+  - exe
+syntax_highlight:
+  enabled: false

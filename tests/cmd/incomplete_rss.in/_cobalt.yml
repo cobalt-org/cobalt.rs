@@ -1,0 +1,6 @@
+posts:
+  rss: rss.xml
+site:
+  title: "My blog!"
+syntax_highlight:
+  enabled: false
