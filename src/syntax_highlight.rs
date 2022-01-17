@@ -12,60 +12,39 @@ use liquid_core::ValueView;
 use liquid_core::{Renderable, Runtime};
 use pulldown_cmark as cmark;
 use pulldown_cmark::Event::{self, End, Html, Start, Text};
-use syntect::easy::HighlightLines;
-use syntect::highlighting::{Theme, ThemeSet};
-use syntect::html::{
-    highlighted_html_for_string, start_highlighted_html_snippet, IncludeBackground,
-};
-use syntect::parsing::{SyntaxReference, SyntaxSet};
 
-struct Setup {
-    syntax_set: SyntaxSet,
-    theme_set: ThemeSet,
-}
-
-unsafe impl Send for Setup {}
-unsafe impl Sync for Setup {}
+#[cfg(not(feature = "syntax-highlight"))]
+use engarde::Raw as Highlight;
+#[cfg(feature = "syntax-highlight")]
+use engarde::Syntax as Highlight;
 
 lazy_static! {
-    static ref SETUP: Setup = Setup {
-        syntax_set: SyntaxSet::load_defaults_newlines(),
-        theme_set: ThemeSet::load_defaults()
-    };
+    static ref HIGHLIGHT: Highlight = Highlight::new();
 }
 
+#[cfg(feature = "syntax-highlight")]
 pub fn has_syntax_theme(name: &str) -> error::Result<bool> {
-    Ok(SETUP.theme_set.themes.contains_key(name))
+    Ok(HIGHLIGHT.has_theme(name))
 }
 
-pub fn list_syntax_themes<'a>() -> Vec<&'a String> {
-    SETUP.theme_set.themes.keys().collect::<Vec<_>>()
+#[cfg(not(feature = "syntax-highlight"))]
+pub fn has_syntax_theme(name: &str) -> error::Result<bool> {
+    failure::bail!("Themes are unsupported in this build.");
+}
+
+pub fn list_syntax_themes() -> Vec<String> {
+    HIGHLIGHT.themes().collect()
 }
 
 pub fn list_syntaxes() -> Vec<String> {
-    fn reference_to_string(sd: &SyntaxReference) -> String {
-        let extensions = sd.file_extensions.iter().join(&", ".to_owned());
-        format!("{} [{}]", sd.name, extensions)
-    }
-
-    let mut syntaxes = SETUP
-        .syntax_set
-        .syntaxes()
-        .iter()
-        .map(reference_to_string)
-        .collect::<Vec<_>>();
-
-    // sort alphabetically with insensitive ascii case
-    syntaxes.sort_by_key(|a| a.to_ascii_lowercase());
-
-    syntaxes
+    HIGHLIGHT.syntaxes().collect()
 }
 
 #[derive(Clone, Debug)]
 struct CodeBlock {
-    lang: Option<String>,
+    lang: Option<kstring::KString>,
     code: String,
-    theme: Theme,
+    theme: kstring::KString,
 }
 
 impl Renderable for CodeBlock {
@@ -74,16 +53,10 @@ impl Renderable for CodeBlock {
         writer: &mut dyn Write,
         _context: &dyn Runtime,
     ) -> Result<(), liquid_core::Error> {
-        let syntax = match self.lang {
-            Some(ref lang) => SETUP.syntax_set.find_syntax_by_token(lang),
-            _ => None,
-        }
-        .unwrap_or_else(|| SETUP.syntax_set.find_syntax_plain_text());
-
         write!(
             writer,
             "{}",
-            highlighted_html_for_string(&self.code, &SETUP.syntax_set, syntax, &self.theme,)
+            HIGHLIGHT.format(&self.code, self.lang.as_deref(), Some(self.theme.as_str()))
         )
         .replace("Failed to render")?;
 
@@ -135,8 +108,8 @@ impl liquid_core::ParseBlock for CodeBlockParser {
                 // Those inputs would fail anyway by there being not a path with those langs so they are not a big concern.
                 match lang.expect_literal() {
                     // Using `to_str()` on literals ensures `Strings` will have their quotes trimmed.
-                    TryMatchToken::Matches(lang) => lang.to_kstr().into_string(),
-                    TryMatchToken::Fails(lang) => lang.as_str().to_string(),
+                    TryMatchToken::Matches(lang) => lang.to_kstr().into_owned(),
+                    TryMatchToken::Fails(lang) => kstring::KString::from_ref(lang.as_str()),
                 }
             });
         // no more arguments should be supplied, trying to supply them is an error
@@ -151,23 +124,25 @@ impl liquid_core::ParseBlock for CodeBlockParser {
         Ok(Box::new(CodeBlock {
             code: content,
             lang,
-            theme: SETUP.theme_set.themes[self.syntax_theme.as_str()].clone(),
+            theme: self.syntax_theme.clone(),
         }))
     }
 }
 
 pub struct DecoratedParser<'a> {
-    h: Option<HighlightLines<'a>>,
     parser: cmark::Parser<'a, 'a>,
-    theme: &'a Theme,
+    theme: &'a str,
+    lang: Option<String>,
+    code: Option<Vec<pulldown_cmark::CowStr<'a>>>,
 }
 
 impl<'a> DecoratedParser<'a> {
-    pub fn new(parser: cmark::Parser<'a, 'a>, theme: &'a Theme) -> Self {
+    pub fn new(parser: cmark::Parser<'a, 'a>, theme: &'a str) -> Self {
         DecoratedParser {
-            h: None,
             parser,
             theme,
+            lang: None,
+            code: None,
         }
     }
 }
@@ -178,17 +153,9 @@ impl<'a> Iterator for DecoratedParser<'a> {
     fn next(&mut self) -> Option<Event<'a>> {
         match self.parser.next() {
             Some(Text(text)) => {
-                if let Some(ref mut h) = self.h {
-                    let mut html = String::new();
-                    for line in syntect::util::LinesWithEndings::from(&text) {
-                        let regions = h.highlight(line, &SETUP.syntax_set);
-                        syntect::html::append_highlighted_html_for_styled_line(
-                            &regions[..],
-                            IncludeBackground::No,
-                            &mut html,
-                        );
-                    }
-                    Some(Html(pulldown_cmark::CowStr::Boxed(html.into_boxed_str())))
+                if let Some(ref mut code) = self.code {
+                    code.push(text);
+                    Some(Text(pulldown_cmark::CowStr::Borrowed("")))
                 } else {
                     Some(Text(text))
                 }
@@ -198,25 +165,22 @@ impl<'a> Iterator for DecoratedParser<'a> {
                     pulldown_cmark::CodeBlockKind::Indented => "",
                     pulldown_cmark::CodeBlockKind::Fenced(ref tag) => tag.as_ref(),
                 };
-                // set local highlighter, if found
-                let cur_syntax = tag
-                    .split(' ')
-                    .next()
-                    .and_then(|lang| SETUP.syntax_set.find_syntax_by_token(lang))
-                    .unwrap_or_else(|| SETUP.syntax_set.find_syntax_plain_text());
-                self.h = Some(HighlightLines::new(cur_syntax, self.theme));
-                let snippet = start_highlighted_html_snippet(self.theme);
-                Some(Html(pulldown_cmark::CowStr::Boxed(
-                    snippet.0.into_boxed_str(),
-                )))
+                self.lang = tag.split(' ').map(|s| s.to_owned()).next();
+                self.code = Some(vec![]);
+                Some(Text(pulldown_cmark::CowStr::Borrowed("")))
             }
             Some(End(cmark::Tag::CodeBlock(_))) => {
+                let html = if let Some(code) = self.code.as_deref() {
+                    let code = code.iter().join("\n");
+                    HIGHLIGHT.format(&code, self.lang.as_deref(), Some(self.theme))
+                } else {
+                    HIGHLIGHT.format("", self.lang.as_deref(), Some(self.theme))
+                };
                 // reset highlighter
-                self.h = None;
+                self.lang = None;
+                self.code = None;
                 // close the code block
-                Some(Html(pulldown_cmark::CowStr::Boxed(
-                    "</pre>".to_owned().into_boxed_str(),
-                )))
+                Some(Html(pulldown_cmark::CowStr::Boxed(html.into_boxed_str())))
             }
             item => item,
         }
@@ -225,13 +189,14 @@ impl<'a> Iterator for DecoratedParser<'a> {
 
 pub fn decorate_markdown<'a>(
     parser: cmark::Parser<'a, 'a>,
-    theme_name: &str,
+    theme_name: &'a str,
 ) -> DecoratedParser<'a> {
-    DecoratedParser::new(parser, &SETUP.theme_set.themes[theme_name])
+    DecoratedParser::new(parser, theme_name)
 }
 
 #[cfg(test)]
-mod test {
+#[cfg(feature = "syntax-highlight")]
+mod test_syntsx {
     use super::*;
 
     const CODE_BLOCK: &str = "mod test {
@@ -289,7 +254,7 @@ mod test {
          </span><span style=\"color:#c0c5ce;\">        }\n\
          </span><span style=\"color:#c0c5ce;\">    }\n\
          </span><span style=\"color:#c0c5ce;\">    \n\
-         </span></pre>";
+         </span></pre>\n";
 
     #[test]
     fn markdown_renders_rust() {
@@ -304,5 +269,69 @@ mod test {
         let parser = cmark::Parser::new(&html);
         cmark::html::push_html(&mut buf, decorate_markdown(parser, "base16-ocean.dark"));
         similar_asserts::assert_eq!(MARKDOWN_RENDERED, &buf);
+    }
+}
+
+#[cfg(test)]
+#[cfg(not(feature = "syntax-highlight"))]
+mod test_raw {
+    use super::*;
+
+    const CODE_BLOCK: &str = "mod test {
+        fn hello(arg: int) -> bool {
+            \
+                                      true
+        }
+    }
+";
+
+    const CODEBLOCK_RENDERED: &str = r#"<pre><code class="language-rust">mod test {
+        fn hello(arg: int) -&gt; bool {
+            true
+        }
+    }
+</code></pre>
+"#;
+
+    #[test]
+    fn codeblock_renders_rust() {
+        let highlight: Box<dyn liquid_core::ParseBlock> =
+            Box::new(CodeBlockParser::new("base16-ocean.dark".into()));
+        let parser = liquid::ParserBuilder::new()
+            .block(highlight)
+            .build()
+            .unwrap();
+        let template = parser
+            .parse(&format!(
+                "{{% highlight rust %}}{}{{% endhighlight %}}",
+                CODE_BLOCK
+            ))
+            .unwrap();
+        let output = template.render(&liquid::Object::new());
+        assert_eq!(output.unwrap(), CODEBLOCK_RENDERED.to_string());
+    }
+
+    const MARKDOWN_RENDERED: &str = r#"<pre><code class="language-rust">mod test {
+        fn hello(arg: int) -&gt; bool {
+            true
+        }
+    }
+
+</code></pre>
+"#;
+
+    #[test]
+    fn decorate_markdown_renders_rust() {
+        let html = format!(
+            "```rust
+{}
+```",
+            CODE_BLOCK
+        );
+
+        let mut buf = String::new();
+        let parser = cmark::Parser::new(&html);
+        cmark::html::push_html(&mut buf, decorate_markdown(parser, "base16-ocean.dark"));
+        assert_eq!(buf, MARKDOWN_RENDERED);
     }
 }

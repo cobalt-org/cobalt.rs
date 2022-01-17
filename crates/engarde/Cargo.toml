@@ -1,0 +1,30 @@
+[package]
+name = "engarde"
+version = "0.1.0"
+description = "Fenced Code Formatting"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/cobalt-org/cobalt.rs"
+documentation = "docs.srs/engarde"
+readme = "README.md"
+keywords = ["syntax", "highlighting", "highlighter", "colouring", "parsing"]
+categories = ["parser-implementations", "parsing", "text-processing"]
+edition = "2018"
+include = [
+  "build.rs",
+  "src/**/*",
+  "Cargo.toml",
+  "LICENSE*",
+  "README.md",
+  "benches/**/*",
+  "examples/**/*"
+]
+
+[features]
+default = []
+syntax = ["syntect"]
+
+[dependencies.syntect]
+version = "4.5.0"
+optional = true
+default-features = false
+features =  ["parsing", "regex-fancy", "assets", "html", "dump-load-rs"]
