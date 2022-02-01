@@ -8,7 +8,8 @@ USAGE:
     cobalt[EXE] [OPTIONS] <SUBCOMMAND>
 
 OPTIONS:
-        --color <WHEN>    Controls when to use color [default: auto]
+        --color <WHEN>    Controls when to use color [default: auto] [possible values: auto, always,
+                          never]
     -h, --help            Print help information
     -q, --quiet           Pass many times for less log output
     -v, --verbose         Pass many times for more log output
