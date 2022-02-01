@@ -432,6 +432,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "content_inspector"
+version = "0.2.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b7bda66e858c683005a53a9a60c69a4aca7eeaa45d124526e389f7aec8e62f38"
+dependencies = [
+ "memchr",
+]
+
+[[package]]
 name = "convert_case"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2311,11 +2320,12 @@ dependencies = [
 
 [[package]]
 name = "trycmd"
-version = "0.12.0"
+version = "0.12.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2900aa0cd96a7c0268e72307fd2a573d4d1db9bcc60b42551c798088e7d7461d"
+checksum = "170d4db4fe81231f42ba55a50675f72590153d3c6ede8ae979bf3084bf2d8ae7"
 dependencies = [
  "concolor",
+ "content_inspector",
  "difflib",
  "dunce",
  "glob",
