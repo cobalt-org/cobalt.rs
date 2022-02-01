@@ -273,9 +273,9 @@ dependencies = [
 
 [[package]]
 name = "clap-verbosity-flag"
-version = "0.4.0"
+version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fb1281ab1a7abc0f415a57cf6bc1f46282957ce0c5f2b3fe6b98ff3adf8e29b3"
+checksum = "c2474445ef3370e4844f9082eef2f80e4abaf7d985781afd78b89b58e2f69a14"
 dependencies = [
  "clap",
  "log",
