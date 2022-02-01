@@ -344,9 +344,9 @@ this.
 *   Migrate support for changing _layouts to _includes ([28ae870d](https://github.com/cobalt-org/cobalt.rs/commit/28ae870dab175264a87d1b1020bcbf23c85a60c1))
 * **config:**
   *  Change .cobalt.yml to _cobalt.yml ([c4ee83b3](https://github.com/cobalt-org/cobalt.rs/commit/c4ee83b3f5f60410c3e53cc8d14271d9e8c0f42f), closes [#348](https://github.com/cobalt-org/cobalt.rs/issues/348))
-  *  Stablize the format ([34e9d545](https://github.com/cobalt-org/cobalt.rs/commit/34e9d545b03e5696afd05a5922fcee49eacf5ec2), closes [#199](https://github.com/cobalt-org/cobalt.rs/issues/199), breaks [#](https://github.com/cobalt-org/cobalt.rs/issues/), [#](https://github.com/cobalt-org/cobalt.rs/issues/))
+  *  Stabilize the format ([34e9d545](https://github.com/cobalt-org/cobalt.rs/commit/34e9d545b03e5696afd05a5922fcee49eacf5ec2), closes [#199](https://github.com/cobalt-org/cobalt.rs/issues/199), breaks [#](https://github.com/cobalt-org/cobalt.rs/issues/), [#](https://github.com/cobalt-org/cobalt.rs/issues/))
 * **front:**
-  *  Stablize fronmatter format ([9089c721](https://github.com/cobalt-org/cobalt.rs/commit/9089c721a2910152b6685b497da8af26a37b64e8), closes [#257](https://github.com/cobalt-org/cobalt.rs/issues/257), breaks [#](https://github.com/cobalt-org/cobalt.rs/issues/))
+  *  Stabilize fronmatter format ([9089c721](https://github.com/cobalt-org/cobalt.rs/commit/9089c721a2910152b6685b497da8af26a37b64e8), closes [#257](https://github.com/cobalt-org/cobalt.rs/issues/257), breaks [#](https://github.com/cobalt-org/cobalt.rs/issues/))
   *  Change date to YYYY-MM-DD ([1e19ae07](https://github.com/cobalt-org/cobalt.rs/commit/1e19ae070dcde429c86212cb6c39e5298c841c92), closes [#349](https://github.com/cobalt-org/cobalt.rs/issues/349), breaks [#](https://github.com/cobalt-org/cobalt.rs/issues/))
   *  Change permalink variable names ([e78b806c](https://github.com/cobalt-org/cobalt.rs/commit/e78b806c9561d8ad9bd3b31b5ab161ea2e79faa8), breaks [#](https://github.com/cobalt-org/cobalt.rs/issues/))
   *  Change permalink to well-defined format ([c6c4d7ac](https://github.com/cobalt-org/cobalt.rs/commit/c6c4d7aca4e25820a7bf670a38d8c6023c902d5a), breaks [#](https://github.com/cobalt-org/cobalt.rs/issues/))
@@ -368,14 +368,14 @@ this.
 
 `cobalt migrate` was created to help mitigate the cost of most of these breaking changes.
 
-* **config:**  Stablize the format ([34e9d545](https://github.com/cobalt-org/cobalt.rs/commit/34e9d545b03e5696afd05a5922fcee49eacf5ec2), closes [#199](https://github.com/cobalt-org/cobalt.rs/issues/199), breaks [#](https://github.com/cobalt-org/cobalt.rs/issues/), [#](https://github.com/cobalt-org/cobalt.rs/issues/))
+* **config:**  Stabilize the format ([34e9d545](https://github.com/cobalt-org/cobalt.rs/commit/34e9d545b03e5696afd05a5922fcee49eacf5ec2), closes [#199](https://github.com/cobalt-org/cobalt.rs/issues/199), breaks [#](https://github.com/cobalt-org/cobalt.rs/issues/), [#](https://github.com/cobalt-org/cobalt.rs/issues/))
 * **debug:**  Generalize debug commands ([087d9919](https://github.com/cobalt-org/cobalt.rs/commit/087d99195ae66525445e5ce91246e0757e945214), breaks [#](https://github.com/cobalt-org/cobalt.rs/issues/))
 * **front:**
   *  Change date to YYYY-MM-DD ([1e19ae07](https://github.com/cobalt-org/cobalt.rs/commit/1e19ae070dcde429c86212cb6c39e5298c841c92), closes [#349](https://github.com/cobalt-org/cobalt.rs/issues/349), breaks [#](https://github.com/cobalt-org/cobalt.rs/issues/))
   *  Change permalink variable names ([e78b806c](https://github.com/cobalt-org/cobalt.rs/commit/e78b806c9561d8ad9bd3b31b5ab161ea2e79faa8), breaks [#](https://github.com/cobalt-org/cobalt.rs/issues/))
   *  Change permalink to well-defined format ([c6c4d7ac](https://github.com/cobalt-org/cobalt.rs/commit/c6c4d7aca4e25820a7bf670a38d8c6023c902d5a), breaks [#](https://github.com/cobalt-org/cobalt.rs/issues/))
   *  Standardize permalink behavior ([6730eb68](https://github.com/cobalt-org/cobalt.rs/commit/6730eb686d083b12c4307a25875ed0a9b7034236), breaks [#](https://github.com/cobalt-org/cobalt.rs/issues/))
-  *  Stablize fronmatter format ([9089c721](https://github.com/cobalt-org/cobalt.rs/commit/9089c721a2910152b6685b497da8af26a37b64e8), closes [#257](https://github.com/cobalt-org/cobalt.rs/issues/257), breaks [#](https://github.com/cobalt-org/cobalt.rs/issues/))
+  *  Stabilize fronmatter format ([9089c721](https://github.com/cobalt-org/cobalt.rs/commit/9089c721a2910152b6685b497da8af26a37b64e8), closes [#257](https://github.com/cobalt-org/cobalt.rs/issues/257), breaks [#](https://github.com/cobalt-org/cobalt.rs/issues/))
 * **page:**
   *  Liquid errors on undefined variables ([2ec3f24b](https://github.com/cobalt-org/cobalt.rs/commit/2ec3f24bb8eb3e7b09eb68209fa39430760d1d18))
     * This was done to help catch migration problems and to move us in the direction of easier debugging of problems
@@ -435,7 +435,7 @@ this.
   *  Auto-created posts start as drafts ([0cfc1581](https://github.com/cobalt-org/cobalt.rs/commit/0cfc15818c8cb026d90ae127301d5364bd90f262))
 * **watch:**  Rebuilding ignores dest ([b72863b9](https://github.com/cobalt-org/cobalt.rs/commit/b72863b94e904054cb12e8be640cd5e9d0ec27ab))
 *   Auto-ignore dest in more cases ([8676a3a8](https://github.com/cobalt-org/cobalt.rs/commit/8676a3a8c3263212e61c886ce3ff85dc059ee3b1))
-*   Don't ignore dest look-alikes ([33c7d0de](https://github.com/cobalt-org/cobalt.rs/commit/33c7d0dec590e7ac3621a82e32c97c6ae2ed0f69))
+*   Don't ignore dest lookalikes ([33c7d0de](https://github.com/cobalt-org/cobalt.rs/commit/33c7d0dec590e7ac3621a82e32c97c6ae2ed0f69))
 *   source/dest are now relative to config ([ce95b395](https://github.com/cobalt-org/cobalt.rs/commit/ce95b395412888f11ce2ab74d92dd297bbb74d45))
 * **clean:**  Better detect what we can't clean ([78bbfc3e](https://github.com/cobalt-org/cobalt.rs/commit/78bbfc3eb3248c150f9058d5d528022c769abbe7))
 * **cli:**  Clarify role of --destination ([a9fce407](https://github.com/cobalt-org/cobalt.rs/commit/a9fce407ba0a46ffd983819bfd30661acc435298))
@@ -507,7 +507,7 @@ this.
 #### Breaking Changes
 
 * `page.path` now returns non-exploded path. ([7f571a8b](https://github.com/cobalt-org/cobalt.rs/commit/7f571a8bd5b75adcdfc5de103778a210bbc2f5e3))
-* `--dump=liquid` is now split into `--dump=DocObject` and `--dump=DocTermplate` ([3439265b](https://github.com/cobalt-org/cobalt.rs/commit/3439265b64de9c7d87fad5f3c54501e0b33966f0))
+* `--dump=liquid` is now split into `--dump=DocObject` and `--dump=DocTemplate` ([3439265b](https://github.com/cobalt-org/cobalt.rs/commit/3439265b64de9c7d87fad5f3c54501e0b33966f0))
 
 #### Features
 

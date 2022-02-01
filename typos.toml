@@ -1,3 +1,5 @@
 [default.extend-words]
 # flate crate
 flate = "flate"
+# A person's handle
+nott = "nott"
