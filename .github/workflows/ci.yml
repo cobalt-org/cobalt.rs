@@ -1,4 +1,4 @@
-name: ci
+name: CI
 on:
   pull_request:
     paths:
@@ -60,6 +60,8 @@ jobs:
         profile: minimal
         override: true
     - uses: Swatinem/rust-cache@v1
+    - name: Build
+      run: cargo test --no-run --workspace --all-features
     - name: Default features
       run: cargo test --workspace
     - name: No-default features
@@ -101,7 +103,7 @@ jobs:
     - name: Check documentation
       env:
         RUSTDOCFLAGS: -D warnings
-      run: cargo doc --no-deps --document-private-items --workspace
+      run: cargo doc --workspace --all-features --no-deps --document-private-items
   rustfmt:
     name: rustfmt
     runs-on: ubuntu-latest
@@ -111,6 +113,8 @@ jobs:
     - name: Install Rust
       uses: actions-rs/toolchain@v1
       with:
+        # Not MSRV because its harder to jump between versions and people are
+        # more likely to have stable
         toolchain: stable
         profile: minimal
         override: true
@@ -135,4 +139,4 @@ jobs:
     - uses: actions-rs/clippy-check@v1
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
-        args: --workspace --all-features --all-targets -- -D warnings
+        args: --workspace --all-features --all-targets -- -D warnings --allow deprecated

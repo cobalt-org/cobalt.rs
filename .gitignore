@@ -1,13 +1,1 @@
-/target
-/build
-/rls
-
-.DS_Store
-*.rs.bk
-
-.*.swp
-/.vscode
-
-# IntelliJ files
-/.idea
-*.iml
+target
