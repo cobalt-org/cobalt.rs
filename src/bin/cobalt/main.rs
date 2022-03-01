@@ -30,7 +30,7 @@ static GLOBAL: alloc::System = alloc::System;
 #[clap(version)]
 struct Cli {
     #[clap(flatten)]
-    pub logging: clap_verbosity_flag::Verbosity,
+    pub logging: clap_verbosity_flag::Verbosity<clap_verbosity_flag::InfoLevel>,
 
     #[clap(flatten)]
     pub color: concolor_clap::Color,
