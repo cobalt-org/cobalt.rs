@@ -8,7 +8,7 @@ use crate::error::*;
 /// Build the cobalt project at the source dir
 #[derive(Clone, Debug, PartialEq, Eq, clap::Args)]
 pub struct BuildArgs {
-    #[clap(flatten, help_heading = "CONFIG")]
+    #[clap(flatten, next_help_heading = "CONFIG")]
     pub config: args::ConfigArgs,
 }
 
@@ -38,7 +38,7 @@ pub fn build(config: cobalt::Config) -> Result<()> {
 /// Cleans `destination` directory
 #[derive(Clone, Debug, PartialEq, Eq, clap::Args)]
 pub struct CleanArgs {
-    #[clap(flatten, help_heading = "CONFIG")]
+    #[clap(flatten, next_help_heading = "CONFIG")]
     pub config: args::ConfigArgs,
 }
 

@@ -16,7 +16,7 @@ mod serve;
 
 use std::alloc;
 
-use clap::{AppSettings, Parser};
+use clap::Parser;
 
 use crate::error::*;
 
@@ -25,12 +25,12 @@ static GLOBAL: alloc::System = alloc::System;
 
 /// Static site generator
 #[derive(Clone, Debug, Parser)]
-#[clap(global_setting = AppSettings::PropagateVersion)]
+#[clap(propagate_version = true)]
 #[clap(color = concolor_clap::color_choice())]
 #[clap(version)]
 struct Cli {
     #[clap(flatten)]
-    pub logging: clap_verbosity_flag::Verbosity,
+    pub logging: clap_verbosity_flag::Verbosity<clap_verbosity_flag::InfoLevel>,
 
     #[clap(flatten)]
     pub color: concolor_clap::Color,
@@ -82,6 +82,6 @@ fn main() -> std::result::Result<(), exitfailure::ExitFailure> {
 
 #[test]
 fn verify_app() {
-    use clap::IntoApp;
-    Cli::into_app().debug_assert()
+    use clap::CommandFactory;
+    Cli::command().debug_assert()
 }

@@ -6,7 +6,7 @@ use crate::error::*;
 pub enum DebugCommands {
     /// Prints post-processed config
     Config {
-        #[clap(flatten, help_heading = "CONFIG")]
+        #[clap(flatten, next_help_heading = "CONFIG")]
         config: args::ConfigArgs,
     },
 
@@ -19,7 +19,7 @@ pub enum DebugCommands {
         /// Collection name
         collection: Option<String>,
 
-        #[clap(flatten, help_heading = "CONFIG")]
+        #[clap(flatten, next_help_heading = "CONFIG")]
         config: args::ConfigArgs,
     },
 }

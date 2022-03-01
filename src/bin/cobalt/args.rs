@@ -69,9 +69,10 @@ fn resolve_bool_arg(yes: bool, no: bool) -> Option<bool> {
     }
 }
 
-pub fn init_logging(mut level: clap_verbosity_flag::Verbosity, colored: bool) {
-    level.set_default(Some(log::Level::Info));
-
+pub fn init_logging(
+    level: clap_verbosity_flag::Verbosity<clap_verbosity_flag::InfoLevel>,
+    colored: bool,
+) {
     if let Some(level) = level.log_level() {
         let palette = if colored {
             Palette::colored()

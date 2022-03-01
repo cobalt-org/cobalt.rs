@@ -46,7 +46,7 @@ pub struct NewArgs {
     #[clap(long)]
     pub edit: bool,
 
-    #[clap(flatten, help_heading = "CONFIG")]
+    #[clap(flatten, next_help_heading = "CONFIG")]
     pub config: args::ConfigArgs,
 }
 
@@ -86,7 +86,7 @@ pub struct RenameArgs {
     #[clap(short, long, value_name = "DIR_OR_FILE", parse(from_os_str))]
     pub file: Option<path::PathBuf>,
 
-    #[clap(flatten, help_heading = "CONFIG")]
+    #[clap(flatten, next_help_heading = "CONFIG")]
     pub config: args::ConfigArgs,
 }
 
@@ -119,7 +119,7 @@ pub struct PublishArgs {
     #[clap(value_name = "FILE", parse(from_os_str))]
     pub filename: path::PathBuf,
 
-    #[clap(flatten, help_heading = "CONFIG")]
+    #[clap(flatten, next_help_heading = "CONFIG")]
     pub config: args::ConfigArgs,
 }
 
