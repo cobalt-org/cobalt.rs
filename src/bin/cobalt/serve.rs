@@ -31,7 +31,7 @@ pub struct ServeArgs {
     #[clap(long)]
     pub no_watch: bool,
 
-    #[clap(flatten, help_heading = "CONFIG")]
+    #[clap(flatten, next_help_heading = "CONFIG")]
     pub config: args::ConfigArgs,
 }
 
