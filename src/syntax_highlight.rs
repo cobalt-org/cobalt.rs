@@ -237,7 +237,7 @@ mod test_syntsx {
             ))
             .unwrap();
         let output = template.render(&liquid::Object::new());
-        similar_asserts::assert_eq!(CODEBLOCK_RENDERED, &output.unwrap());
+        snapbox::assert_eq(CODEBLOCK_RENDERED, &output.unwrap());
     }
 
     const MARKDOWN_RENDERED: &str =
@@ -271,7 +271,7 @@ mod test_syntsx {
             &mut buf,
             decorate_markdown(parser, Some("base16-ocean.dark")),
         );
-        similar_asserts::assert_eq!(MARKDOWN_RENDERED, &buf);
+        snapbox::assert_eq(MARKDOWN_RENDERED, &buf);
     }
 }
 
