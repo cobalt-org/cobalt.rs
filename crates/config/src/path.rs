@@ -191,7 +191,7 @@ static DATE_PREFIX_REF: once_cell::sync::Lazy<regex::Regex> = once_cell::sync::L
 });
 
 pub fn parse_file_stem(stem: &str) -> (Option<crate::DateTime>, kstring::KString) {
-    let parts = DATE_PREFIX_REF.captures(stem).and_then(|caps| {
+    let parts = DATE_PREFIX_REF.captures(stem).map(|caps| {
         let year: i32 = caps
             .get(1)
             .expect("unconditional capture")
@@ -211,10 +211,10 @@ pub fn parse_file_stem(stem: &str) -> (Option<crate::DateTime>, kstring::KString
             .parse()
             .expect("regex gets back an integer");
         let published = crate::DateTime::from_ymd(year, month, day);
-        Some((
+        (
             Some(published),
             kstring::KString::from_ref(caps.get(4).expect("unconditional capture").as_str()),
-        ))
+        )
     });
 
     parts.unwrap_or_else(|| (None, kstring::KString::from_ref(stem)))

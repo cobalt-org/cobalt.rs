@@ -74,7 +74,7 @@ impl Frontmatter {
             title: title.ok_or_else(|| failure::err_msg("No title"))?,
             description,
             excerpt,
-            categories: categories.unwrap_or_else(Vec::new),
+            categories: categories.unwrap_or_default(),
             tags,
             excerpt_separator: excerpt_separator.unwrap_or_else(|| "\n\n".into()),
             published_date,
