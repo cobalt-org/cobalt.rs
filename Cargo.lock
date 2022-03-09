@@ -282,7 +282,6 @@ dependencies = [
 name = "cobalt-bin"
 version = "0.17.5"
 dependencies = [
- "chrono",
  "clap",
  "clap-verbosity-flag",
  "cobalt-config",
@@ -323,6 +322,7 @@ dependencies = [
  "sitemap",
  "snapbox",
  "tempfile",
+ "time 0.3.7",
  "toml",
  "trycmd",
  "vimwiki",
@@ -334,7 +334,6 @@ dependencies = [
 name = "cobalt-config"
 version = "0.17.0"
 dependencies = [
- "chrono",
  "deunicode",
  "itertools",
  "kstring",
@@ -346,6 +345,7 @@ dependencies = [
  "serde",
  "serde_yaml",
  "status",
+ "time 0.3.7",
 ]
 
 [[package]]
@@ -1175,9 +1175,9 @@ checksum = "7fb9b38af92608140b86b693604b9ffcc5824240a484d1ecd4795bacb2fe88f3"
 
 [[package]]
 name = "liquid"
-version = "0.23.1"
+version = "0.24.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "26e930310cf4334c4936ae18737500a57739c69442b5c42bae114d619af54b82"
+checksum = "cb6e6551b4c8a2045351f0853b54807b21080176a055b754dc0ad29428edf293"
 dependencies = [
  "doc-comment",
  "kstring",
@@ -1189,12 +1189,11 @@ dependencies = [
 
 [[package]]
 name = "liquid-core"
-version = "0.23.2"
+version = "0.24.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8eae470f061bfc53607283906de925ab67ed57a341e827146e3b241699a1dcde"
+checksum = "8ea8f6c13e8ae36bce67fc1eaacf32c13b26d16576b7ee2ec9de33a3980cefd6"
 dependencies = [
  "anymap2",
- "chrono",
  "itertools",
  "kstring",
  "liquid-derive",
@@ -1202,13 +1201,14 @@ dependencies = [
  "pest",
  "pest_derive",
  "serde",
+ "time 0.3.7",
 ]
 
 [[package]]
 name = "liquid-derive"
-version = "0.23.1"
+version = "0.24.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6510e456700da1afe07603913b0da5a2595f2482656ade07abf719aae7501f0a"
+checksum = "d82d81028aba7e869d0aa423ae926a7f15fd55ca576baac279ed38020b180a56"
 dependencies = [
  "proc-macro2",
  "proc-quote",
@@ -1217,11 +1217,10 @@ dependencies = [
 
 [[package]]
 name = "liquid-lib"
-version = "0.23.1"
+version = "0.24.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6341259f779ff663bdf1fc478bddb2ca51fda25414006dc69395eddfac07e0a4"
+checksum = "8256326835eae262affdc6df8743d9e1b917354ba3c8c380e6238426a8097564"
 dependencies = [
- "chrono",
  "deunicode",
  "itertools",
  "kstring",
@@ -1229,6 +1228,7 @@ dependencies = [
  "once_cell",
  "percent-encoding",
  "regex",
+ "time 0.3.7",
  "unicode-segmentation",
 ]
 

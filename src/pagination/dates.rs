@@ -1,8 +1,4 @@
-use chrono::Datelike;
-use chrono::Timelike;
-
 use crate::cobalt_model::pagination::DateIndex;
-
 use crate::cobalt_model::DateTime;
 use crate::document::Document;
 
@@ -142,10 +138,10 @@ fn get_date_field_value(date: &DateTime, field: DateIndex) -> u32 {
             }
             date.year() as u32
         }
-        DateIndex::Month => date.month(),
-        DateIndex::Day => date.day(),
-        DateIndex::Hour => date.hour(),
-        DateIndex::Minute => date.minute(),
+        DateIndex::Month => date.month() as u32,
+        DateIndex::Day => date.day() as u32,
+        DateIndex::Hour => date.hour() as u32,
+        DateIndex::Minute => date.minute() as u32,
     }
 }
 

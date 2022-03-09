@@ -3,7 +3,6 @@ use std::collections::HashMap;
 use std::default::Default;
 use std::path::Path;
 
-use chrono::{Datelike, Timelike};
 use failure::ResultExt;
 use lazy_static::lazy_static;
 use liquid::model::Value;
@@ -268,7 +267,9 @@ impl Document {
         let mut url = sitemap::structs::UrlEntry::builder();
         url = url.loc(link);
         if let Some(date) = self.front.published_date {
-            url = url.lastmod(*date);
+            let date = vimwiki::vendor::chrono::DateTime::parse_from_rfc2822(&date.to_rfc2822())
+                .expect("chrono/time compatible RFC 2822 implementations");
+            url = url.lastmod(date);
         }
         writer.url(url)?;
         Ok(())
