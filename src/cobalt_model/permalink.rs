@@ -18,7 +18,7 @@ fn explode_permalink_string(permalink: &str, attributes: &liquid::Object) -> Res
     let mut p = p.render(attributes)?;
 
     // Handle the user doing windows-style
-    p = p.replace("\\", "/");
+    p = p.replace('\\', "/");
 
     // Handle cases where substutions were blank
     p = p.replace("//", "/");

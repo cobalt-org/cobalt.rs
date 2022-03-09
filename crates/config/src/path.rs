@@ -1,4 +1,3 @@
-use chrono::Datelike;
 use deunicode;
 use itertools::Itertools;
 
@@ -192,35 +191,30 @@ static DATE_PREFIX_REF: once_cell::sync::Lazy<regex::Regex> = once_cell::sync::L
 });
 
 pub fn parse_file_stem(stem: &str) -> (Option<crate::DateTime>, kstring::KString) {
-    let parts = DATE_PREFIX_REF.captures(stem).and_then(|caps| {
+    let parts = DATE_PREFIX_REF.captures(stem).map(|caps| {
         let year: i32 = caps
             .get(1)
             .expect("unconditional capture")
             .as_str()
             .parse()
             .expect("regex gets back an integer");
-        let month: u32 = caps
+        let month: u8 = caps
             .get(2)
             .expect("unconditional capture")
             .as_str()
             .parse()
             .expect("regex gets back an integer");
-        let day: u32 = caps
+        let day: u8 = caps
             .get(3)
             .expect("unconditional capture")
             .as_str()
             .parse()
             .expect("regex gets back an integer");
-        let published = crate::DateTime::default()
-            .with_year(year)
-            .and_then(|d| d.with_month(month))
-            .and_then(|d| d.with_day(day));
-        published.map(|p| {
-            (
-                Some(p),
-                kstring::KString::from_ref(caps.get(4).expect("unconditional capture").as_str()),
-            )
-        })
+        let published = crate::DateTime::from_ymd(year, month, day);
+        (
+            Some(published),
+            kstring::KString::from_ref(caps.get(4).expect("unconditional capture").as_str()),
+        )
     });
 
     parts.unwrap_or_else(|| (None, kstring::KString::from_ref(stem)))
@@ -244,6 +238,7 @@ mod test_stem {
     }
 
     #[test]
+    #[should_panic]
     fn parse_file_stem_out_of_range_month() {
         assert_eq!(
             parse_file_stem("2017-30-5 First Blog Post"),
@@ -252,6 +247,7 @@ mod test_stem {
     }
 
     #[test]
+    #[should_panic]
     fn parse_file_stem_out_of_range_day() {
         assert_eq!(
             parse_file_stem("2017-3-50 First Blog Post"),
@@ -264,15 +260,7 @@ mod test_stem {
         assert_eq!(
             parse_file_stem("2017-3-5 First Blog Post"),
             (
-                Some(
-                    crate::DateTime::default()
-                        .with_year(2017)
-                        .unwrap()
-                        .with_month(3)
-                        .unwrap()
-                        .with_day(5)
-                        .unwrap()
-                ),
+                Some(crate::DateTime::from_ymd(2017, 3, 5)),
                 "First Blog Post".into()
             )
         );
@@ -283,15 +271,7 @@ mod test_stem {
         assert_eq!(
             parse_file_stem("2017-12-25 First Blog Post"),
             (
-                Some(
-                    crate::DateTime::default()
-                        .with_year(2017)
-                        .unwrap()
-                        .with_month(12)
-                        .unwrap()
-                        .with_day(25)
-                        .unwrap()
-                ),
+                Some(crate::DateTime::from_ymd(2017, 12, 25)),
                 "First Blog Post".into()
             )
         );
@@ -302,15 +282,7 @@ mod test_stem {
         assert_eq!(
             parse_file_stem("2017-03-05 First Blog Post"),
             (
-                Some(
-                    crate::DateTime::default()
-                        .with_year(2017)
-                        .unwrap()
-                        .with_month(3)
-                        .unwrap()
-                        .with_day(5)
-                        .unwrap()
-                ),
+                Some(crate::DateTime::from_ymd(2017, 3, 5)),
                 "First Blog Post".into()
             )
         );
@@ -321,15 +293,7 @@ mod test_stem {
         assert_eq!(
             parse_file_stem("2017-3-5-First-Blog-Post"),
             (
-                Some(
-                    crate::DateTime::default()
-                        .with_year(2017)
-                        .unwrap()
-                        .with_month(3)
-                        .unwrap()
-                        .with_day(5)
-                        .unwrap()
-                ),
+                Some(crate::DateTime::from_ymd(2017, 3, 5)),
                 "First-Blog-Post".into()
             )
         );

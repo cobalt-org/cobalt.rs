@@ -414,7 +414,7 @@ pub fn rename_document(
 fn prepend_date_to_filename(
     config: &cobalt_model::Config,
     file: &path::Path,
-    date: &cobalt_model::DateTime,
+    date: cobalt_model::DateTime,
 ) -> Result<()> {
     // avoid prepend to existing date prefix
 
@@ -424,9 +424,10 @@ fn prepend_date_to_filename(
         .to_str()
         .unwrap_or_default();
     let (_, file_stem) = cobalt_config::path::parse_file_stem(file_stem);
+    let date_prefix = date.format("%Y-%m-%d-").expect("valid format");
     let file_name = format!(
         "{}{}.{}",
-        (**date).format("%Y-%m-%d-"),
+        date_prefix,
         file_stem,
         file.extension()
             .and_then(|os| os.to_str())
@@ -506,7 +507,7 @@ pub fn publish_document(config: &cobalt_model::Config, file: &path::Path) -> Res
     };
 
     if collection.publish_date_in_filename {
-        prepend_date_to_filename(config, &file.abs_path, &date)?;
+        prepend_date_to_filename(config, &file.abs_path, date)?;
     }
     Ok(())
 }
