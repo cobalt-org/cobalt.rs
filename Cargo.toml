@@ -59,7 +59,7 @@ tempfile = "3.3"
 relative-path = { version = "1", features = ["serde"] }
 liquid = "0.24"
 liquid-core = "0.24"
-liquid-lib = { version = "0.24", features = ["jekyll", "shopify", "extra"] }
+liquid-lib = { version = "0.25", features = ["jekyll", "shopify", "extra"] }
 deunicode = "1.1.1"
 walkdir = "2.2"
 time = "0.3"
