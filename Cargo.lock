@@ -240,9 +240,9 @@ checksum = "fff857943da45f546682664a79488be82e69e43c1a7a2307679ab9afb3a66d2e"
 
 [[package]]
 name = "clap"
-version = "3.1.6"
+version = "3.1.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d8c93436c21e4698bacadf42917db28b23017027a4deccb35dbe47a7e7840123"
+checksum = "c67e7973e74896f4bba06ca2dcfd28d54f9cb8c035e940a32b88ed48f5f5ecf2"
 dependencies = [
  "atty",
  "bitflags",
@@ -267,9 +267,9 @@ dependencies = [
 
 [[package]]
 name = "clap_derive"
-version = "3.1.4"
+version = "3.1.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "da95d038ede1a964ce99f49cbe27a7fb538d1da595e4b4f70b8c8f338d17bf16"
+checksum = "a3aab4734e083b809aaf5794e14e756d1c798d2c69c7f7de7a09a2f5214993c1"
 dependencies = [
  "heck",
  "proc-macro-error",
@@ -322,7 +322,7 @@ dependencies = [
  "sitemap",
  "snapbox",
  "tempfile",
- "time 0.3.7",
+ "time 0.3.9",
  "toml",
  "trycmd",
  "vimwiki",
@@ -345,7 +345,7 @@ dependencies = [
  "serde",
  "serde_yaml",
  "status",
- "time 0.3.7",
+ "time 0.3.9",
 ]
 
 [[package]]
@@ -386,9 +386,9 @@ dependencies = [
 
 [[package]]
 name = "concolor-clap"
-version = "0.0.9"
+version = "0.0.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0efdfa40e7f50b7ac8b2e336fad01c7071b9ab935b9082174cdb4e9fd5f6dc38"
+checksum = "b35b55e880d42d4626e6a1aa5b4e63a4df61cf024472a31495ecbbb712402985"
 dependencies = [
  "clap",
  "concolor",
@@ -1201,7 +1201,7 @@ dependencies = [
  "pest",
  "pest_derive",
  "serde",
- "time 0.3.7",
+ "time 0.3.9",
 ]
 
 [[package]]
@@ -1228,7 +1228,7 @@ dependencies = [
  "once_cell",
  "percent-encoding",
  "regex",
- "time 0.3.7",
+ "time 0.3.9",
  "unicode-segmentation",
 ]
 
@@ -1591,7 +1591,7 @@ dependencies = [
  "indexmap",
  "line-wrap",
  "serde",
- "time 0.3.7",
+ "time 0.3.9",
  "xml-rs",
 ]
 
@@ -2149,9 +2149,9 @@ dependencies = [
 
 [[package]]
 name = "time"
-version = "0.3.7"
+version = "0.3.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "004cbc98f30fa233c61a38bc77e96a9106e65c88f2d3bef182ae952027e5753d"
+checksum = "c2702e08a7a860f005826c6815dcac101b19b5eb330c27fe4a5928fec1d20ddd"
 dependencies = [
  "itoa",
  "libc",
@@ -2161,9 +2161,9 @@ dependencies = [
 
 [[package]]
 name = "time-macros"
-version = "0.2.3"
+version = "0.2.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "25eb0ca3468fc0acc11828786797f6ef9aa1555e4a211a60d64cc8e4d1be47d6"
+checksum = "42657b1a6f4d817cda8e7a0ace261fe0cc946cf3a80314390b22cc61ae080792"
 
 [[package]]
 name = "tiny_http"
@@ -2174,7 +2174,7 @@ dependencies = [
  "ascii",
  "chunked_transfer",
  "log",
- "time 0.3.7",
+ "time 0.3.9",
  "url",
 ]
 

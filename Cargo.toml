@@ -51,7 +51,7 @@ clap-verbosity-flag = "1.0"
 proc-exit = "1"
 yansi = "0.5.0"
 concolor = "0.0.8"
-concolor-clap = { version = "0.0.9", features = ["api_unstable"] }
+concolor-clap = { version = "0.0.10", features = ["api_unstable"] }
 human-panic = "1"
 scrawl = "1.0"
 kstring = "1.0"
