@@ -386,9 +386,9 @@ dependencies = [
 
 [[package]]
 name = "concolor-clap"
-version = "0.0.9"
+version = "0.0.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0efdfa40e7f50b7ac8b2e336fad01c7071b9ab935b9082174cdb4e9fd5f6dc38"
+checksum = "b35b55e880d42d4626e6a1aa5b4e63a4df61cf024472a31495ecbbb712402985"
 dependencies = [
  "clap",
  "concolor",
