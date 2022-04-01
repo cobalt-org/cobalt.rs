@@ -57,7 +57,7 @@ scrawl = "1.0"
 kstring = "1.0"
 tempfile = "3.3"
 relative-path = { version = "1", features = ["serde"] }
-liquid = "0.24"
+liquid = "0.25"
 liquid-core = "0.24"
 liquid-lib = { version = "0.24", features = ["jekyll", "shopify", "extra"] }
 deunicode = "1.1.1"
