@@ -22,7 +22,7 @@ use crate::pagination;
 struct Context {
     pub destination: path::PathBuf,
     pub source_files: cobalt_core::Source,
-    pub page_extensions: Vec<kstring::KString>,
+    pub page_extensions: Vec<liquid::model::KString>,
     pub include_drafts: bool,
     pub pages: cobalt_model::Collection,
     pub posts: cobalt_model::Collection,
@@ -162,7 +162,7 @@ pub fn build(config: Config) -> Result<()> {
 fn generate_collections_var(
     posts_data: &[liquid::model::Value],
     context: &Context,
-) -> (kstring::KString, liquid::model::Value) {
+) -> (liquid::model::KString, liquid::model::Value) {
     let mut posts_variable = context.posts.attributes();
     posts_variable.insert(
         "pages".into(),
@@ -183,7 +183,7 @@ fn generate_collections_var(
 fn generate_doc(
     doc: &mut Document,
     context: &Context,
-    global_collection: (kstring::KString, liquid::model::Value),
+    global_collection: (liquid::model::KString, liquid::model::Value),
 ) -> Result<()> {
     // Everything done with `globals` is terrible for performance.  liquid#95 allows us to
     // improve this.
@@ -539,7 +539,7 @@ pub fn classify_path<'s>(
     path: &relative_path::RelativePathBuf,
     pages: &'s cobalt_model::Collection,
     posts: &'s cobalt_model::Collection,
-    page_extensions: &[kstring::KString],
+    page_extensions: &[liquid::model::KString],
 ) -> Option<(&'s str, bool)> {
     if ext_contains(page_extensions, path) {
         if path.starts_with(&posts.dir) {
@@ -558,7 +558,7 @@ pub fn classify_path<'s>(
     }
 }
 
-fn ext_contains(extensions: &[kstring::KString], file: &relative_path::RelativePath) -> bool {
+fn ext_contains(extensions: &[liquid::model::KString], file: &relative_path::RelativePath) -> bool {
     if extensions.is_empty() {
         return true;
     }

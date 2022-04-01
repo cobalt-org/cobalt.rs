@@ -18,9 +18,9 @@ use super::files;
 #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
 #[serde(deny_unknown_fields, default)]
 pub struct Site {
-    pub title: Option<kstring::KString>,
-    pub description: Option<kstring::KString>,
-    pub base_url: Option<kstring::KString>,
+    pub title: Option<liquid::model::KString>,
+    pub description: Option<liquid::model::KString>,
+    pub base_url: Option<liquid::model::KString>,
     pub sitemap: Option<cobalt_config::RelPath>,
     pub data: Option<liquid::Object>,
     pub data_dir: &'static str,
@@ -43,7 +43,7 @@ impl Site {
             if l.ends_with('/') {
                 let mut other = String::from(l.as_str());
                 other.pop();
-                l = kstring::KString::from_string(other);
+                l = liquid::model::KString::from_string(other);
             }
             l
         });
@@ -64,19 +64,19 @@ impl Site {
         if let Some(title) = self.title.as_ref() {
             attributes.insert(
                 "title".into(),
-                liquid::model::Value::scalar(kstring::KString::from_ref(title)),
+                liquid::model::Value::scalar(liquid::model::KString::from_ref(title)),
             );
         }
         if let Some(description) = self.description.as_ref() {
             attributes.insert(
                 "description".into(),
-                liquid::model::Value::scalar(kstring::KString::from_ref(description)),
+                liquid::model::Value::scalar(liquid::model::KString::from_ref(description)),
             );
         }
         if let Some(base_url) = self.base_url.as_ref() {
             attributes.insert(
                 "base_url".into(),
-                liquid::model::Value::scalar(kstring::KString::from_ref(base_url)),
+                liquid::model::Value::scalar(liquid::model::KString::from_ref(base_url)),
             );
         }
         attributes.insert("time".into(), liquid::model::Value::scalar(self.time));
@@ -109,7 +109,7 @@ fn deep_insert(
                 )
             })?;
             let cur_map = map;
-            let key = kstring::KString::from_ref(key);
+            let key = liquid::model::KString::from_ref(key);
             map = cur_map
                 .entry(key)
                 .or_insert_with(|| liquid::model::Value::Object(liquid::Object::new()))

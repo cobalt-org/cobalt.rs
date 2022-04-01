@@ -6,8 +6,8 @@ use super::*;
 #[cfg_attr(feature = "unstable", serde(deny_unknown_fields))]
 #[cfg_attr(not(feature = "unstable"), non_exhaustive)]
 pub struct Collection {
-    pub title: Option<kstring::KString>,
-    pub description: Option<kstring::KString>,
+    pub title: Option<liquid_core::model::KString>,
+    pub description: Option<liquid_core::model::KString>,
     pub dir: Option<crate::RelPath>,
     pub drafts_dir: Option<crate::RelPath>,
     pub order: SortOrder,
@@ -76,8 +76,8 @@ pub struct PageCollection {
 #[cfg_attr(feature = "unstable", serde(deny_unknown_fields))]
 #[cfg_attr(not(feature = "unstable"), non_exhaustive)]
 pub struct PostCollection {
-    pub title: Option<kstring::KString>,
-    pub description: Option<kstring::KString>,
+    pub title: Option<liquid_core::model::KString>,
+    pub description: Option<liquid_core::model::KString>,
     pub dir: crate::RelPath,
     pub drafts_dir: Option<crate::RelPath>,
     pub order: SortOrder,

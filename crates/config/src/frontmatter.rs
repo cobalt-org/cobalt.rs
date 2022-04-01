@@ -11,19 +11,19 @@ pub struct Frontmatter {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub permalink: Option<Permalink>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub slug: Option<kstring::KString>,
+    pub slug: Option<liquid_core::model::KString>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub title: Option<kstring::KString>,
+    pub title: Option<liquid_core::model::KString>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub description: Option<kstring::KString>,
+    pub description: Option<liquid_core::model::KString>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub excerpt: Option<kstring::KString>,
+    pub excerpt: Option<liquid_core::model::KString>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub categories: Option<Vec<kstring::KString>>,
+    pub categories: Option<Vec<liquid_core::model::KString>>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub tags: Option<Vec<kstring::KString>>,
+    pub tags: Option<Vec<liquid_core::model::KString>>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub excerpt_separator: Option<kstring::KString>,
+    pub excerpt_separator: Option<liquid_core::model::KString>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub published_date: Option<DateTime>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -31,7 +31,7 @@ pub struct Frontmatter {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub templated: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub layout: Option<kstring::KString>,
+    pub layout: Option<liquid_core::model::KString>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub is_draft: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -43,7 +43,7 @@ pub struct Frontmatter {
     // Controlled by where the file is found.  We might allow control over the type at a later
     // point but we need to first define those semantics.
     #[serde(skip)]
-    pub collection: Option<kstring::KString>,
+    pub collection: Option<liquid_core::model::KString>,
 }
 
 impl Frontmatter {
@@ -219,11 +219,11 @@ impl fmt::Display for Permalink {
 )]
 #[repr(transparent)]
 #[serde(try_from = "String")]
-pub struct ExplicitPermalink(kstring::KString);
+pub struct ExplicitPermalink(liquid_core::model::KString);
 
 impl ExplicitPermalink {
     pub fn from_unchecked(value: &str) -> Self {
-        Self(kstring::KString::from_ref(value))
+        Self(liquid_core::model::KString::from_ref(value))
     }
 
     pub fn as_str(&self) -> &str {
@@ -244,7 +244,7 @@ impl<'s> std::convert::TryFrom<&'s str> for ExplicitPermalink {
         if !value.starts_with('/') {
             Err("Permalinks must be absolute paths")
         } else {
-            let path = Self(kstring::KString::from_ref(value));
+            let path = Self(liquid_core::model::KString::from_ref(value));
             Ok(path)
         }
     }

@@ -175,7 +175,7 @@ fn document_attributes(
 pub struct Document {
     pub url_path: String,
     pub file_path: relative_path::RelativePathBuf,
-    pub content: kstring::KString,
+    pub content: liquid::model::KString,
     pub attributes: Object,
     pub front: cobalt_model::Frontmatter,
 }
@@ -384,8 +384,8 @@ impl Document {
             Ok(content_html)
         } else {
             let path = &[
-                kstring::KStringCow::from_static("page").into(),
-                kstring::KStringCow::from_static("content").into(),
+                liquid::model::KStringCow::from_static("page").into(),
+                liquid::model::KStringCow::from_static("content").into(),
             ];
             let content_html = liquid::model::try_find(context.globals, path)
                 .ok_or_else(|| failure::err_msg("Internal error: page isn't in globals"))?

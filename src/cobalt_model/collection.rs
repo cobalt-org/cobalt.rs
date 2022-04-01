@@ -6,9 +6,9 @@ use crate::error::*;
 
 #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize)]
 pub struct Collection {
-    pub title: kstring::KString,
-    pub slug: kstring::KString,
-    pub description: Option<kstring::KString>,
+    pub title: liquid::model::KString,
+    pub slug: liquid::model::KString,
+    pub description: Option<liquid::model::KString>,
     pub dir: cobalt_config::RelPath,
     pub drafts_dir: Option<cobalt_config::RelPath>,
     pub order: SortOrder,
@@ -68,7 +68,7 @@ impl Collection {
         } = config;
 
         let title = title.ok_or_else(|| failure::err_msg("Collection is missing a `title`"))?;
-        let slug = kstring::KString::from_ref(slug);
+        let slug = liquid::model::KString::from_ref(slug);
 
         let dir = dir.unwrap_or_else(|| cobalt_config::RelPath::from_unchecked(slug.as_str()));
         let drafts_dir = if include_drafts { drafts_dir } else { None };
