@@ -21,7 +21,7 @@ log = "0.4"
 regex = "1.1"
 serde = "1.0"
 serde_yaml = "0.8"
-kstring = "1"
+kstring = "2"
 relative-path = { version = "1", features = ["serde"] }
 once_cell = "1.2"
 status = { version = "0.0.10", features = ["send_sync"] }

@@ -54,7 +54,7 @@ concolor = "0.0.8"
 concolor-clap = { version = "0.0.10", features = ["api_unstable"] }
 human-panic = "1"
 scrawl = "1.0"
-kstring = "1.0"
+kstring = "2.0"
 tempfile = "3.3"
 relative-path = { version = "1", features = ["serde"] }
 liquid = "0.24"
