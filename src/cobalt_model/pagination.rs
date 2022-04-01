@@ -11,9 +11,9 @@ pub struct PaginationConfig {
     pub include: Include,
     pub per_page: i32,
     pub front_permalink: cobalt_config::Permalink,
-    pub permalink_suffix: kstring::KString,
+    pub permalink_suffix: liquid::model::KString,
     pub order: SortOrder,
-    pub sort_by: Vec<kstring::KString>,
+    pub sort_by: Vec<liquid::model::KString>,
     pub date_index: Vec<DateIndex>,
 }
 

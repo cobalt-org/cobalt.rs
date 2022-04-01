@@ -19,8 +19,8 @@ use super::vwiki;
 pub struct Config {
     pub source: path::PathBuf,
     pub destination: path::PathBuf,
-    pub ignore: Vec<kstring::KString>,
-    pub page_extensions: Vec<kstring::KString>,
+    pub ignore: Vec<liquid::model::KString>,
+    pub page_extensions: Vec<liquid::model::KString>,
     pub include_drafts: bool,
     pub pages: collection::Collection,
     pub posts: collection::Collection,
@@ -72,7 +72,7 @@ impl Config {
 
         let site = site::Site::from_config(site);
 
-        let mut ignore: Vec<kstring::KString> = vec![".*".into(), "_*".into()];
+        let mut ignore: Vec<liquid::model::KString> = vec![".*".into(), "_*".into()];
         if let Ok(rel_dest) = path::Path::new(&destination).strip_prefix(&source) {
             let rel_dest = rel_dest.to_str().expect("started as a utf-8 string");
             if !rel_dest.is_empty() {

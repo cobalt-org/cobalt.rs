@@ -21,8 +21,8 @@ pub struct Config {
     pub pages: PageCollection,
     pub posts: PostCollection,
     pub site: Site,
-    pub template_extensions: Vec<kstring::KString>,
-    pub ignore: Vec<kstring::KString>,
+    pub template_extensions: Vec<liquid_core::model::KString>,
+    pub ignore: Vec<liquid_core::model::KString>,
     pub syntax_highlight: SyntaxHighlight,
     #[serde(skip)]
     pub layouts_dir: &'static str,
@@ -121,7 +121,7 @@ impl fmt::Display for Config {
 #[cfg_attr(feature = "unstable", serde(deny_unknown_fields))]
 #[cfg_attr(not(feature = "unstable"), non_exhaustive)]
 pub struct SyntaxHighlight {
-    pub theme: kstring::KString,
+    pub theme: liquid_core::model::KString,
     pub enabled: bool,
 }
 

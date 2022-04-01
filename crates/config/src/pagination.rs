@@ -17,11 +17,11 @@ pub struct Pagination {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub per_page: Option<i32>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub permalink_suffix: Option<kstring::KString>,
+    pub permalink_suffix: Option<liquid_core::model::KString>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub order: Option<SortOrder>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub sort_by: Option<Vec<kstring::KString>>,
+    pub sort_by: Option<Vec<liquid_core::model::KString>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub date_index: Option<Vec<DateIndex>>,
 }

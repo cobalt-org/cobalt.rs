@@ -7,7 +7,7 @@ use crate::syntax_highlight::decorate_markdown;
 #[derive(Debug, Clone, PartialEq, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct MarkdownBuilder {
-    pub theme: Option<kstring::KString>,
+    pub theme: Option<liquid::model::KString>,
 }
 
 impl MarkdownBuilder {
@@ -18,7 +18,7 @@ impl MarkdownBuilder {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Markdown {
-    theme: Option<kstring::KString>,
+    theme: Option<liquid::model::KString>,
 }
 
 impl Markdown {

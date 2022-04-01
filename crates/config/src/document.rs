@@ -7,11 +7,11 @@ use crate::Status;
 #[derive(Debug, Eq, PartialEq, Default, Clone)]
 pub struct Document {
     front: crate::Frontmatter,
-    content: kstring::KString,
+    content: liquid_core::model::KString,
 }
 
 impl Document {
-    pub fn new(front: Frontmatter, content: kstring::KString) -> Self {
+    pub fn new(front: Frontmatter, content: liquid_core::model::KString) -> Self {
         Self { front, content }
     }
 
@@ -21,11 +21,11 @@ impl Document {
             .map(parse_frontmatter)
             .map_or(Ok(None), |r| r.map(Some))?
             .unwrap_or_default();
-        let content = kstring::KString::from_ref(content);
+        let content = liquid_core::model::KString::from_ref(content);
         Ok(Self { front, content })
     }
 
-    pub fn into_parts(self) -> (Frontmatter, kstring::KString) {
+    pub fn into_parts(self) -> (Frontmatter, liquid_core::model::KString) {
         let Self { front, content } = self;
         (front, content)
     }
@@ -203,7 +203,7 @@ mod test {
     #[test]
     fn display_empty() {
         let front = Frontmatter::empty();
-        let doc = Document::new(front, kstring::KString::new());
+        let doc = Document::new(front, liquid_core::model::KString::new());
         assert_eq!(&doc.to_string(), "");
     }
 
@@ -220,7 +220,7 @@ mod test {
             slug: Some("foo".into()),
             ..Default::default()
         };
-        let doc = Document::new(front, kstring::KString::new());
+        let doc = Document::new(front, liquid_core::model::KString::new());
         assert_eq!(&doc.to_string(), "---\nslug: foo\n---\n");
     }
 

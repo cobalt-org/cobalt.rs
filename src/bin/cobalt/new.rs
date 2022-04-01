@@ -292,9 +292,9 @@ pub fn create_new_document(
     let parsed = cobalt_model::Document::parse(&source)?;
     let (mut front, content) = parsed.into_parts();
     if let Some(title) = title {
-        front.title = Some(kstring::KString::from_ref(title));
+        front.title = Some(liquid::model::KString::from_ref(title));
     } else {
-        front.title = Some(kstring::KString::from_ref("Untitled"));
+        front.title = Some(liquid::model::KString::from_ref("Untitled"));
     }
 
     let doc = cobalt_model::Document::new(front.clone(), content);
@@ -398,7 +398,7 @@ pub fn rename_document(
 
     let full_front = cobalt_model::Frontmatter::from_config(full_front)?;
 
-    front.title = Some(kstring::KString::from_ref(title));
+    front.title = Some(liquid::model::KString::from_ref(title));
     let doc = cobalt_model::Document::new(front, content);
     let doc = doc.to_string();
     cobalt_model::files::write_document_file(doc, &target.abs_path)?;

@@ -5,11 +5,11 @@ static SLUG_INVALID_CHARS: once_cell::sync::Lazy<regex::Regex> =
     once_cell::sync::Lazy::new(|| regex::Regex::new(r"([^a-zA-Z0-9]+)").unwrap());
 
 /// Create a slug for a given file.  Correlates to Jekyll's :slug path tag
-pub fn slugify<S: AsRef<str>>(name: S) -> kstring::KString {
+pub fn slugify<S: AsRef<str>>(name: S) -> liquid_core::model::KString {
     slugify_str(name.as_ref())
 }
 
-fn slugify_str(name: &str) -> kstring::KString {
+fn slugify_str(name: &str) -> liquid_core::model::KString {
     let name = deunicode::deunicode_with_tofu(name, "-");
     let slug = SLUG_INVALID_CHARS.replace_all(&name, "-");
     let slug = slug.trim_matches('-').to_lowercase();
@@ -17,16 +17,16 @@ fn slugify_str(name: &str) -> kstring::KString {
 }
 
 /// Format a user-visible title out of a slug.  Correlates to Jekyll's "title" attribute
-pub fn titleize_slug<S: AsRef<str>>(slug: S) -> kstring::KString {
+pub fn titleize_slug<S: AsRef<str>>(slug: S) -> liquid_core::model::KString {
     titleize_slug_str(slug.as_ref())
 }
 
-fn titleize_slug_str(slug: &str) -> kstring::KString {
+fn titleize_slug_str(slug: &str) -> liquid_core::model::KString {
     slug.split('-').map(title_case).join(" ").into()
 }
 
 /// Title-case a single word
-fn title_case(s: &str) -> kstring::KString {
+fn title_case(s: &str) -> liquid_core::model::KString {
     let mut c = s.chars();
     let title = match c.next() {
         None => String::new(),
@@ -190,7 +190,7 @@ static DATE_PREFIX_REF: once_cell::sync::Lazy<regex::Regex> = once_cell::sync::L
     regex::Regex::new(r"^(\d{4})-(\d{1,2})-(\d{1,2})[- ](.*)$").unwrap()
 });
 
-pub fn parse_file_stem(stem: &str) -> (Option<crate::DateTime>, kstring::KString) {
+pub fn parse_file_stem(stem: &str) -> (Option<crate::DateTime>, liquid_core::model::KString) {
     let parts = DATE_PREFIX_REF.captures(stem).map(|caps| {
         let year: i32 = caps
             .get(1)
@@ -213,11 +213,13 @@ pub fn parse_file_stem(stem: &str) -> (Option<crate::DateTime>, kstring::KString
         let published = crate::DateTime::from_ymd(year, month, day);
         (
             Some(published),
-            kstring::KString::from_ref(caps.get(4).expect("unconditional capture").as_str()),
+            liquid_core::model::KString::from_ref(
+                caps.get(4).expect("unconditional capture").as_str(),
+            ),
         )
     });
 
-    parts.unwrap_or_else(|| (None, kstring::KString::from_ref(stem)))
+    parts.unwrap_or_else(|| (None, liquid_core::model::KString::from_ref(stem)))
 }
 
 #[cfg(test)]

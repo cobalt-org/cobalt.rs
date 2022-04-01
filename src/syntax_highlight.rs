@@ -42,9 +42,9 @@ pub fn list_syntaxes() -> Vec<String> {
 
 #[derive(Clone, Debug)]
 struct CodeBlock {
-    lang: Option<kstring::KString>,
+    lang: Option<liquid::model::KString>,
     code: String,
-    theme: kstring::KString,
+    theme: liquid::model::KString,
 }
 
 impl Renderable for CodeBlock {
@@ -66,11 +66,11 @@ impl Renderable for CodeBlock {
 
 #[derive(Clone, Debug)]
 pub struct CodeBlockParser {
-    syntax_theme: kstring::KString,
+    syntax_theme: liquid::model::KString,
 }
 
 impl CodeBlockParser {
-    pub fn new(syntax_theme: kstring::KString) -> Self {
+    pub fn new(syntax_theme: liquid::model::KString) -> Self {
         Self { syntax_theme }
     }
 }
@@ -109,7 +109,7 @@ impl liquid_core::ParseBlock for CodeBlockParser {
                 match lang.expect_literal() {
                     // Using `to_str()` on literals ensures `Strings` will have their quotes trimmed.
                     TryMatchToken::Matches(lang) => lang.to_kstr().into_owned(),
-                    TryMatchToken::Fails(lang) => kstring::KString::from_ref(lang.as_str()),
+                    TryMatchToken::Fails(lang) => liquid::model::KString::from_ref(lang.as_str()),
                 }
             });
         // no more arguments should be supplied, trying to supply them is an error
