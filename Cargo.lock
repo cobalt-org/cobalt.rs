@@ -303,7 +303,7 @@ dependencies = [
  "kstring",
  "lazy_static",
  "liquid",
- "liquid-core",
+ "liquid-core 0.25.1",
  "liquid-lib",
  "log",
  "normalize-line-endings",
@@ -337,7 +337,7 @@ dependencies = [
  "deunicode",
  "itertools",
  "kstring",
- "liquid-core",
+ "liquid-core 0.25.1",
  "log",
  "once_cell",
  "regex",
@@ -354,7 +354,7 @@ version = "0.17.0"
 dependencies = [
  "cobalt-config",
  "ignore",
- "liquid-core",
+ "liquid-core 0.25.1",
  "log",
  "once_cell",
  "relative-path",
@@ -1181,7 +1181,7 @@ checksum = "cb6e6551b4c8a2045351f0853b54807b21080176a055b754dc0ad29428edf293"
 dependencies = [
  "doc-comment",
  "kstring",
- "liquid-core",
+ "liquid-core 0.24.1",
  "liquid-derive",
  "liquid-lib",
  "serde",
@@ -1200,6 +1200,23 @@ dependencies = [
  "num-traits",
  "pest",
  "pest_derive",
+ "serde",
+ "time 0.3.9",
+]
+
+[[package]]
+name = "liquid-core"
+version = "0.25.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "99e5142dc2a31cf0e4789aab8fdeeb3190c2fbec3d3ac4863ff6e4e70f3f0ec2"
+dependencies = [
+ "anymap2",
+ "itertools",
+ "kstring",
+ "num-traits",
+ "pest",
+ "pest_derive",
+ "regex",
  "serde",
  "time 0.3.9",
 ]
@@ -1224,7 +1241,7 @@ dependencies = [
  "deunicode",
  "itertools",
  "kstring",
- "liquid-core",
+ "liquid-core 0.24.1",
  "once_cell",
  "percent-encoding",
  "regex",
