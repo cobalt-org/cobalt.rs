@@ -1,5 +1,24 @@
+//! > An HTTP Static File Server
+//!
+//! `file-serve` focuses on augmenting development of your site.  It prioritizes
+//! small size and compile times over speed, scalability, or security.
+//!
+//! # Example
+//!
+//! ```rust,no_run
+//! let path = std::env::current_dir().unwrap();
+//! let server = file_serve::Server::new(&path);
+//!
+//! println!("Serving {}", path.display());
+//! println!("See http://{}", server.addr());
+//! println!("Hit CTRL-C to stop");
+//!
+//! server.serve().unwrap();
+//! ```
+
 use std::str::FromStr;
 
+/// Custom server settings
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ServerBuilder {
     source: std::path::PathBuf,
@@ -16,16 +35,23 @@ impl ServerBuilder {
         }
     }
 
+    /// Override the hostname
     pub fn hostname(&mut self, hostname: impl Into<String>) -> &mut Self {
         self.hostname = Some(hostname.into());
         self
     }
 
+    /// Override the port
+    ///
+    /// By default, the first available port is selected.
     pub fn port(&mut self, port: u16) -> &mut Self {
         self.port = Some(port);
         self
     }
 
+    /// Create a server
+    ///
+    /// This is needed for accessing the dynamically assigned pot
     pub fn build(&self) -> Server {
         let source = self.source.clone();
         let hostname = self.hostname.as_deref().unwrap_or("localhost");
@@ -41,7 +67,8 @@ impl ServerBuilder {
         }
     }
 
-    pub fn serve(&self) -> Result<(), Error> {
+    /// Start the webserver
+    pub fn serve(&self) -> Result<std::convert::Infallible, Error> {
         self.build().serve()
     }
 }
@@ -53,19 +80,26 @@ pub struct Server {
 }
 
 impl Server {
+    /// Serve on first available port on localhost
     pub fn new(source: impl Into<std::path::PathBuf>) -> Self {
         ServerBuilder::new(source).build()
     }
 
+    /// The location being served
     pub fn source(&self) -> &std::path::Path {
         self.source.as_path()
     }
 
+    /// The address the server is available at
+    ///
+    /// This is useful for telling users how to access the served up files since the port is
+    /// dynamically assigned by default.
     pub fn addr(&self) -> &str {
         self.addr.as_str()
     }
 
-    pub fn serve(&self) -> Result<(), Error> {
+    /// Start the webserver
+    pub fn serve(&self) -> Result<std::convert::Infallible, Error> {
         // attempts to create a server
         let server = tiny_http::Server::http(self.addr()).map_err(Error::new)?;
 
@@ -74,10 +108,11 @@ impl Server {
                 log::error!("{}", e);
             }
         }
-        Ok(())
+        unreachable!("`incoming_requests` never stops")
     }
 }
 
+/// Serve Error
 #[derive(Debug)]
 pub struct Error {
     message: String,

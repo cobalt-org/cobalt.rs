@@ -127,9 +127,7 @@ impl Files {
     }
 
     pub fn subtree(&self) -> &path::Path {
-        self.subtree
-            .as_deref()
-            .unwrap_or_else(|| self.root_dir.as_path())
+        self.subtree.as_deref().unwrap_or(self.root_dir.as_path())
     }
 
     pub fn includes_file(&self, file: &path::Path) -> bool {

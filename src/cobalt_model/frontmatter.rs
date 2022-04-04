@@ -104,7 +104,7 @@ impl fmt::Display for Frontmatter {
         let converted = serde_yaml::to_string(self).expect("should always be valid");
         let subset = converted
             .strip_prefix("---")
-            .unwrap_or_else(|| converted.as_str())
+            .unwrap_or(converted.as_str())
             .trim();
         let converted = if subset == "{}" { "" } else { subset };
         if converted.is_empty() {
