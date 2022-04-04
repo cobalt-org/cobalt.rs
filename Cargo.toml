@@ -84,7 +84,7 @@ open = "2.1"
 dunce = "1.0.2"
 vimwiki = { version = "0.1", features = ["html"] }
 
-file-serve = { version = "0.1.0", path = "crates/file-serve", optional = true }
+file-serve = { version = "0.2.0", path = "crates/file-serve", optional = true }
 notify = { version = "4", optional = true }
 
 sass-rs = { version = "0.2", optional = true }

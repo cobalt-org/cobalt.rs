@@ -1,6 +1,6 @@
 [package]
 name = "file-serve"
-version = "0.1.1"
+version = "0.2.0"
 description = "HTTP Static File Server"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/cobalt-org/cobalt.rs"
