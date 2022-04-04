@@ -6,6 +6,11 @@
 ![License](https://img.shields.io/crates/l/engarde.svg)
 [![Crates Status](https://img.shields.io/crates/v/engarde.svg)](https://crates.io/crates/engarde)
 
+## About
+
+`file-serve` focuses on augmenting development of your site.  It prioritizes
+small size and compile times over speed, scalability, or security.
+
 ## License
 
 Licensed under either of
