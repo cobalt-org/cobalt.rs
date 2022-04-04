@@ -619,11 +619,11 @@ this.
 [@tak1n]: https://github.com/tak1n
 
 <!-- next-url -->
-[Unreleased]: https://github.com/assert-rs/predicates-rs/compare/v0.17.5...HEAD
-[0.17.5]: https://github.com/assert-rs/predicates-rs/compare/v0.17.4...v0.17.5
-[0.17.4]: https://github.com/assert-rs/predicates-rs/compare/v0.17.3...v0.17.4
-[0.17.3]: https://github.com/assert-rs/predicates-rs/compare/v0.17.2...v0.17.3
-[0.17.2]: https://github.com/assert-rs/predicates-rs/compare/v0.17.1...v0.17.2
-[0.17.1]: https://github.com/assert-rs/predicates-rs/compare/v0.17.0...v0.17.1
-[0.17.0]: https://github.com/assert-rs/predicates-rs/compare/v0.16.5...v0.17.0
+[Unreleased]: https://github.com/cobalt-org/cobalt.rs/compare/v0.17.5...HEAD
+[0.17.5]: https://github.com/cobalt-org/cobalt.rs/compare/v0.17.4...v0.17.5
+[0.17.4]: https://github.com/cobalt-org/cobalt.rs/compare/v0.17.3...v0.17.4
+[0.17.3]: https://github.com/cobalt-org/cobalt.rs/compare/v0.17.2...v0.17.3
+[0.17.2]: https://github.com/cobalt-org/cobalt.rs/compare/v0.17.1...v0.17.2
+[0.17.1]: https://github.com/cobalt-org/cobalt.rs/compare/v0.17.0...v0.17.1
+[0.17.0]: https://github.com/cobalt-org/cobalt.rs/compare/v0.16.5...v0.17.0
 [0.16.5]: https://github.com/cobalt-org/cobalt.rs/compare/v0.16.4...v0.16.5
