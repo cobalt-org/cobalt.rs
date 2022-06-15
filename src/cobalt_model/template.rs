@@ -26,8 +26,14 @@ fn load_partials_from_path(root: path::PathBuf) -> Result<Partials> {
             .expect("only UTF-8 characters supported in paths")
             .to_owned();
         trace!("Loading snippet `{}`", rel_path);
-        let content = files::read_file(file_path)?;
-        source.add(rel_path, content);
+        match files::read_file(file_path) {
+            Ok(content) => {
+                source.add(rel_path, content);
+            }
+            Err(err) => {
+                warn!("Ignoring snippet {}: {}", rel_path, err);
+            }
+        }
     }
     Ok(source)
 }
