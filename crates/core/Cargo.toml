@@ -1,6 +1,6 @@
 [package]
 name = "cobalt-core"
-version = "0.17.0"
+version = "0.18.0"
 authors = ["Ed Page <eopage@gmail.com>"]
 description = "Static site generator written in Rust"
 repository = "https://github.com/cobalt-org/cobalt.rs"
@@ -15,7 +15,7 @@ unstable = []
 preview_unstable = []
 
 [dependencies]
-cobalt-config = { version = "=0.17.0", path = "..//config", features = ["unstable"] }
+cobalt-config = { version = "=0.18.0", path = "..//config", features = ["unstable"] }
 ignore = "0.4"
 walkdir = "2.2"
 liquid-core = "0.26"
