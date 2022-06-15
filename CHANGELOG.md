@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 <!-- next-header -->
 ## [Unreleased] - ReleaseDate
 
+### Compatibility
+
+- `cobalt import` was dropped (#969)
+
+### Features
+
+- `cobalt new --edit` support (#967)
+
+### Fixes
+
+- Respect `enabled` with liquid syntax highlighting (#973)
+- *(build)* Don't stop build when binary file in `_include` (#1033)
+- *(serve)* Serve from a temp directory to avoid corrupting a production build (#968)
+- *(serve)* Pick an unused port  (#971)
+- Improved panic behavior
+
 ## [0.17.5] - 2021-12-09
 
 ### Features
