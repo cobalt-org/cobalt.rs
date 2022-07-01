@@ -80,7 +80,7 @@ serde_json = "1.0"
 toml = "0.5.8"
 normalize-line-endings = "0.3.0"
 sitemap = "0.4"
-open = "2.1"
+open = "3.0"
 dunce = "1.0.2"
 vimwiki = { version = "0.1", features = ["html"] }
 
