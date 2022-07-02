@@ -1,7 +1,7 @@
 ```console
 $ cobalt
 ? failed
-cobalt-bin 0.17.5
+cobalt-bin [..]
 Static site generator
 
 USAGE:
