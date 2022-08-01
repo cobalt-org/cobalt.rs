@@ -68,7 +68,7 @@ rss = "2.0"
 jsonfeed = "0.2"
 pulldown-cmark = {version="0.9", default-features = false}
 engarde = { version = "0.1", path = "crates/engarde" }
-regex = "1.5"
+regex = "1.6"
 failure = "0.1"
 exitfailure = "0.5"
 lazy_static = "1.4"
