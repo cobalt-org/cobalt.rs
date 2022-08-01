@@ -18,7 +18,7 @@ preview_unstable = []
 liquid-core = "0.26"
 time = "0.3"
 log = "0.4"
-regex = "1.1"
+regex = "1.6"
 serde = "1.0"
 serde_yaml = "0.8"
 relative-path = { version = "1", features = ["serde"] }
