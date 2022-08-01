@@ -34,7 +34,7 @@ default = []
 syntax = ["syntect"]
 
 [dependencies.syntect]
-version = "4.5.0"
+version = "5.0.0"
 optional = true
 default-features = false
-features =  ["parsing", "regex-fancy", "assets", "html", "dump-load-rs"]
+features =  ["parsing", "regex-fancy", "default-syntaxes", "default-themes", "html", "dump-load"]
