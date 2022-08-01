@@ -61,7 +61,7 @@ impl Syntax {
             let syntax = lang
                 .and_then(|l| self.syntax_set.find_syntax_by_token(l))
                 .unwrap_or_else(|| self.syntax_set.find_syntax_plain_text());
-            highlighted_html_for_string(code, &self.syntax_set, syntax, theme)
+            highlighted_html_for_string(code, &self.syntax_set, syntax, theme).unwrap()
         } else {
             crate::Raw::new().format(code, lang, theme)
         }

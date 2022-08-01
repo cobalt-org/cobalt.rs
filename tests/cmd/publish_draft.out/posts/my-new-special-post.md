@@ -1,6 +1,6 @@
 ---
 title: My New Special Post
-published_date: "[..]"
+published_date: [..]
 layout: default.liquid
 is_draft: false
 ---

@@ -14,7 +14,7 @@ DEBUG: Loading snippets from `[CWD]/_includes`
 Error: Failed to render content for index.html
 Info: caused by liquid:  --> 5:3
   |
-5 | {{{{{}}}}% endfor %}␊
+5 | {{{{{}}}}% endfor %}
   |   ^---
   |
   = expected Value
