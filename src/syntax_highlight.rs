@@ -1,4 +1,5 @@
 use std::io::Write;
+use std::path::Path;
 
 use crate::error;
 use itertools::Itertools;
@@ -19,7 +20,14 @@ use engarde::Raw as Highlight;
 use engarde::Syntax as Highlight;
 
 lazy_static! {
-    static ref HIGHLIGHT: Highlight = Highlight::new();
+    static ref HIGHLIGHT: Highlight = {
+        let mut highlight = Highlight::new();
+        let syntaxes_path = Path::new("./_syntaxes");
+        if syntaxes_path.exists() {
+            highlight.load_custom_syntaxes(syntaxes_path);
+        }
+        highlight
+    };
 }
 
 #[cfg(feature = "syntax-highlight")]

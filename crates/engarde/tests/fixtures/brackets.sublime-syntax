@@ -1,0 +1,20 @@
+%YAML 1.2
+---
+name: Brackets
+file_extensions: [brackets]
+scope: source.brackets
+
+contexts:
+  main:
+    - include: closed
+
+  closed:
+    - match: \[
+      push: opened
+    - match: \]
+      scope: invalid.illegal
+
+  opened:
+    - match: \]
+      pop: true
+    - include: closed
