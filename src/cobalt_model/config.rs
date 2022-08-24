@@ -30,6 +30,8 @@ pub struct Config {
     pub liquid: template::LiquidBuilder,
     pub markdown: mark::MarkdownBuilder,
     pub vimwiki: vwiki::VimwikiBuilder,
+    #[serde(skip)]
+    pub syntax: std::sync::Arc<SyntaxHighlight>,
     pub assets: assets::AssetsBuilder,
     pub minify: cobalt_config::Minify,
 }
@@ -130,6 +132,7 @@ impl Config {
             liquid,
             markdown,
             vimwiki,
+            syntax,
             assets,
             minify,
         };

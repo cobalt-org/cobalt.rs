@@ -2,7 +2,6 @@ use std::io::Write;
 
 use crate::error;
 use itertools::Itertools;
-use lazy_static::lazy_static;
 use liquid_core::error::ResultLiquidReplaceExt;
 use liquid_core::parser::TryMatchToken;
 use liquid_core::Language;
@@ -17,10 +16,6 @@ use pulldown_cmark::Event::{self, End, Html, Start, Text};
 pub use engarde::Raw as SyntaxHighlight;
 #[cfg(feature = "syntax-highlight")]
 pub use engarde::Syntax as SyntaxHighlight;
-
-lazy_static! {
-    static ref HIGHLIGHT: SyntaxHighlight = SyntaxHighlight::new();
-}
 
 #[cfg(feature = "syntax-highlight")]
 fn has_syntax_theme(syntax: &SyntaxHighlight, name: &str) -> error::Result<bool> {
@@ -43,14 +38,6 @@ fn verify_theme(syntax: &SyntaxHighlight, theme: Option<&str>) -> error::Result<
         };
     }
     Ok(())
-}
-
-pub fn list_syntax_themes() -> Vec<String> {
-    HIGHLIGHT.themes().collect()
-}
-
-pub fn list_syntaxes() -> Vec<String> {
-    HIGHLIGHT.syntaxes().collect()
 }
 
 #[derive(Clone, Debug)]
