@@ -99,7 +99,13 @@ impl Config {
         let includes_path = source.join(includes_dir);
         let layouts_path = source.join(layouts_dir);
 
-        let syntax = std::sync::Arc::new(SyntaxHighlight::new());
+        let mut highlight = SyntaxHighlight::new();
+        let syntaxes_path = source.join("_syntaxes");
+        if syntaxes_path.exists() {
+            highlight.load_custom_syntaxes(&syntaxes_path);
+        }
+
+        let syntax = std::sync::Arc::new(highlight);
 
         let liquid = template::LiquidBuilder {
             includes_path,

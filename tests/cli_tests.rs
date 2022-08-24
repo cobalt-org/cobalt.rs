@@ -8,6 +8,7 @@ fn cli_tests() {
         t.skip("tests/cmd/example.md");
         t.skip("tests/cmd/log_level.md");
         t.skip("tests/cmd/vimwiki_not_templated.md");
+        t.skip("tests/cmd/custom_syntax_highlighting.md");
     }
     #[cfg(not(feature = "serve"))]
     {

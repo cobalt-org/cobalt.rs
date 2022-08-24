@@ -1,3 +1,5 @@
+use std::path::Path;
+
 #[derive(Default, Debug, Clone)]
 #[non_exhaustive]
 pub struct Raw {}
@@ -6,6 +8,8 @@ impl Raw {
     pub fn new() -> Self {
         Self {}
     }
+
+    pub fn load_custom_syntaxes(&mut self, _syntaxes_path: &Path) {}
 
     pub fn has_theme(&self, _name: &str) -> bool {
         false

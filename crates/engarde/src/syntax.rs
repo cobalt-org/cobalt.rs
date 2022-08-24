@@ -1,3 +1,4 @@
+use std::path::Path;
 use syntect::highlighting::ThemeSet;
 use syntect::html::highlighted_html_for_string;
 use syntect::parsing::{SyntaxReference, SyntaxSet};
@@ -17,6 +18,12 @@ impl Syntax {
             theme_set: ThemeSet::load_defaults(),
             default_theme: None,
         }
+    }
+
+    pub fn load_custom_syntaxes(&mut self, syntaxes_path: &Path) {
+        let mut builder = self.syntax_set.clone().into_builder();
+        builder.add_from_folder(syntaxes_path, true).unwrap();
+        self.syntax_set = builder.build();
     }
 
     pub fn has_theme(&self, name: &str) -> bool {
@@ -106,5 +113,25 @@ mod test {
         let syntax = Syntax::new();
         let output = syntax.format(CODEBLOCK, Some("rust"), Some("base16-ocean.dark"));
         assert_eq!(output, CODEBLOCK_RENDERED.to_string());
+    }
+
+    const CUSTOM_CODEBLOCK: &str = "[[[]]]]";
+
+    const CUSTOM_CODEBLOCK_RENDERED: &str = "<pre style=\"background-color:#2b303b;\">\n\
+          <span style=\"color:#c0c5ce;\">[[[]]]</span>\
+          <span style=\"background-color:#bf616a;color:#2b303b;\">]</span>\
+          </pre>\n";
+
+    #[test]
+    fn highlight_custom_syntax() {
+        let mut syntax = Syntax::new();
+        let path = Path::new("./tests/fixtures/custom_syntaxes/");
+        syntax.load_custom_syntaxes(path);
+        let output = syntax.format(
+            CUSTOM_CODEBLOCK,
+            Some("brackets"),
+            Some("base16-ocean.dark"),
+        );
+        assert_eq!(output, CUSTOM_CODEBLOCK_RENDERED);
     }
 }

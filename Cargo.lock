@@ -2104,6 +2104,7 @@ dependencies = [
  "serde_json",
  "thiserror",
  "walkdir",
+ "yaml-rust",
 ]
 
 [[package]]
