@@ -38,16 +38,19 @@ fn load_partials_from_path(root: path::PathBuf) -> Result<Partials> {
     Ok(source)
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize)]
+#[derive(Debug, Clone, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct LiquidBuilder {
     pub includes_path: path::PathBuf,
     pub theme: Option<liquid::model::KString>,
+    #[serde(skip)]
+    pub syntax: std::sync::Arc<crate::SyntaxHighlight>,
 }
 
 impl LiquidBuilder {
     pub fn build(self) -> Result<Liquid> {
-        let highlight = Self::highlight(self.theme)?;
+        let highlight = syntax_highlight::CodeBlockParser::new(self.syntax, self.theme)?;
+        let highlight: Box<dyn liquid_core::ParseBlock> = Box::new(highlight);
         let parser = liquid::ParserBuilder::with_stdlib()
             .filter(liquid_lib::extra::DateInTz)
             .filter(liquid_lib::shopify::Pluralize)
@@ -62,30 +65,6 @@ impl LiquidBuilder {
             .block(highlight)
             .build()?;
         Ok(Liquid { parser })
-    }
-
-    fn highlight(
-        theme: Option<liquid::model::KString>,
-    ) -> Result<Box<dyn liquid_core::ParseBlock>> {
-        let theme = if let Some(theme) = theme {
-            let result: Result<()> = match syntax_highlight::has_syntax_theme(&theme) {
-                Ok(true) => Ok(()),
-                Ok(false) => Err(failure::format_err!(
-                    "Syntax theme '{}' is unsupported",
-                    theme
-                )),
-                Err(err) => {
-                    warn!("Syntax theme named '{}' ignored. Reason: {}", theme, err);
-                    Ok(())
-                }
-            };
-            result?;
-            theme
-        } else {
-            "".into()
-        };
-        let block = syntax_highlight::CodeBlockParser::new(theme);
-        Ok(Box::new(block))
     }
 }
 

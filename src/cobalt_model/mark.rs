@@ -4,21 +4,27 @@ use serde::Serialize;
 use crate::error::*;
 use crate::syntax_highlight::decorate_markdown;
 
-#[derive(Debug, Clone, PartialEq, Serialize)]
+#[derive(Debug, Clone, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct MarkdownBuilder {
     pub theme: Option<liquid::model::KString>,
+    #[serde(skip)]
+    pub syntax: std::sync::Arc<crate::SyntaxHighlight>,
 }
 
 impl MarkdownBuilder {
     pub fn build(self) -> Markdown {
-        Markdown { theme: self.theme }
+        Markdown {
+            theme: self.theme,
+            syntax: self.syntax,
+        }
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone)]
 pub struct Markdown {
     theme: Option<liquid::model::KString>,
+    syntax: std::sync::Arc<crate::SyntaxHighlight>,
 }
 
 impl Markdown {
@@ -29,7 +35,10 @@ impl Markdown {
             | cmark::Options::ENABLE_STRIKETHROUGH
             | cmark::Options::ENABLE_TASKLISTS;
         let parser = cmark::Parser::new_ext(content, options);
-        cmark::html::push_html(&mut buf, decorate_markdown(parser, self.theme.as_deref()));
+        cmark::html::push_html(
+            &mut buf,
+            decorate_markdown(parser, self.syntax.clone(), self.theme.as_deref())?,
+        );
         Ok(buf)
     }
 }
