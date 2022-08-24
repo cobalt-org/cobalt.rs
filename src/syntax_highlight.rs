@@ -14,27 +14,27 @@ use pulldown_cmark as cmark;
 use pulldown_cmark::Event::{self, End, Html, Start, Text};
 
 #[cfg(not(feature = "syntax-highlight"))]
-use engarde::Raw as Highlight;
+pub use engarde::Raw as SyntaxHighlight;
 #[cfg(feature = "syntax-highlight")]
-use engarde::Syntax as Highlight;
+pub use engarde::Syntax as SyntaxHighlight;
 
 lazy_static! {
-    static ref HIGHLIGHT: Highlight = Highlight::new();
+    static ref HIGHLIGHT: SyntaxHighlight = SyntaxHighlight::new();
 }
 
 #[cfg(feature = "syntax-highlight")]
-fn has_syntax_theme(name: &str) -> error::Result<bool> {
-    Ok(HIGHLIGHT.has_theme(name))
+fn has_syntax_theme(syntax: &SyntaxHighlight, name: &str) -> error::Result<bool> {
+    Ok(syntax.has_theme(name))
 }
 
 #[cfg(not(feature = "syntax-highlight"))]
-fn has_syntax_theme(name: &str) -> error::Result<bool> {
+fn has_syntax_theme(syntax: &SyntaxHighlight, name: &str) -> error::Result<bool> {
     failure::bail!("Themes are unsupported in this build.");
 }
 
-fn verify_theme(theme: Option<&str>) -> error::Result<()> {
+fn verify_theme(syntax: &SyntaxHighlight, theme: Option<&str>) -> error::Result<()> {
     if let Some(theme) = &theme {
-        match has_syntax_theme(theme) {
+        match has_syntax_theme(syntax, theme) {
             Ok(true) => {}
             Ok(false) => failure::bail!("Syntax theme '{}' is unsupported", theme),
             Err(err) => {
@@ -55,6 +55,7 @@ pub fn list_syntaxes() -> Vec<String> {
 
 #[derive(Clone, Debug)]
 struct CodeBlock {
+    syntax: std::sync::Arc<SyntaxHighlight>,
     lang: Option<liquid::model::KString>,
     code: String,
     theme: Option<liquid::model::KString>,
@@ -69,7 +70,8 @@ impl Renderable for CodeBlock {
         write!(
             writer,
             "{}",
-            HIGHLIGHT.format(&self.code, self.lang.as_deref(), self.theme.as_deref())
+            self.syntax
+                .format(&self.code, self.lang.as_deref(), self.theme.as_deref())
         )
         .replace("Failed to render")?;
 
@@ -79,13 +81,18 @@ impl Renderable for CodeBlock {
 
 #[derive(Clone, Debug)]
 pub struct CodeBlockParser {
+    syntax: std::sync::Arc<SyntaxHighlight>,
     syntax_theme: Option<liquid::model::KString>,
 }
 
 impl CodeBlockParser {
-    pub fn new(theme: Option<liquid::model::KString>) -> error::Result<Self> {
-        verify_theme(theme.as_deref())?;
+    pub fn new(
+        syntax: std::sync::Arc<SyntaxHighlight>,
+        theme: Option<liquid::model::KString>,
+    ) -> error::Result<Self> {
+        verify_theme(&syntax, theme.as_deref())?;
         Ok(Self {
+            syntax,
             syntax_theme: theme,
         })
     }
@@ -138,6 +145,7 @@ impl liquid_core::ParseBlock for CodeBlockParser {
         tokens.assert_empty();
 
         Ok(Box::new(CodeBlock {
+            syntax: self.syntax.clone(),
             code: content,
             lang,
             theme: self.syntax_theme.clone(),
@@ -147,16 +155,22 @@ impl liquid_core::ParseBlock for CodeBlockParser {
 
 pub struct DecoratedParser<'a> {
     parser: cmark::Parser<'a, 'a>,
+    syntax: std::sync::Arc<SyntaxHighlight>,
     theme: Option<&'a str>,
     lang: Option<String>,
     code: Option<Vec<pulldown_cmark::CowStr<'a>>>,
 }
 
 impl<'a> DecoratedParser<'a> {
-    pub fn new(parser: cmark::Parser<'a, 'a>, theme: Option<&'a str>) -> error::Result<Self> {
-        verify_theme(theme)?;
+    pub fn new(
+        parser: cmark::Parser<'a, 'a>,
+        syntax: std::sync::Arc<SyntaxHighlight>,
+        theme: Option<&'a str>,
+    ) -> error::Result<Self> {
+        verify_theme(&syntax, theme)?;
         Ok(DecoratedParser {
             parser,
+            syntax,
             theme,
             lang: None,
             code: None,
@@ -189,9 +203,9 @@ impl<'a> Iterator for DecoratedParser<'a> {
             Some(End(cmark::Tag::CodeBlock(_))) => {
                 let html = if let Some(code) = self.code.as_deref() {
                     let code = code.iter().join("\n");
-                    HIGHLIGHT.format(&code, self.lang.as_deref(), self.theme)
+                    self.syntax.format(&code, self.lang.as_deref(), self.theme)
                 } else {
-                    HIGHLIGHT.format("", self.lang.as_deref(), self.theme)
+                    self.syntax.format("", self.lang.as_deref(), self.theme)
                 };
                 // reset highlighter
                 self.lang = None;
@@ -206,9 +220,10 @@ impl<'a> Iterator for DecoratedParser<'a> {
 
 pub fn decorate_markdown<'a>(
     parser: cmark::Parser<'a, 'a>,
+    syntax: std::sync::Arc<SyntaxHighlight>,
     theme_name: Option<&'a str>,
 ) -> error::Result<DecoratedParser<'a>> {
-    DecoratedParser::new(parser, theme_name)
+    DecoratedParser::new(parser, syntax, theme_name)
 }
 
 #[cfg(test)]
@@ -241,8 +256,9 @@ mod test_syntsx {
 
     #[test]
     fn highlight_block_renders_rust() {
+        let syntax = std::sync::Arc::new(SyntaxHighlight::new());
         let highlight: Box<dyn liquid_core::ParseBlock> =
-            Box::new(CodeBlockParser::new(Some("base16-ocean.dark".into())).unwrap());
+            Box::new(CodeBlockParser::new(syntax, Some("base16-ocean.dark".into())).unwrap());
         let parser = liquid::ParserBuilder::new()
             .block(highlight)
             .build()
@@ -284,9 +300,10 @@ mod test_syntsx {
 
         let mut buf = String::new();
         let parser = cmark::Parser::new(&html);
+        let syntax = std::sync::Arc::new(SyntaxHighlight::new());
         cmark::html::push_html(
             &mut buf,
-            decorate_markdown(parser, Some("base16-ocean.dark")).unwrap(),
+            decorate_markdown(parser, syntax, Some("base16-ocean.dark")).unwrap(),
         );
         snapbox::assert_eq(MARKDOWN_RENDERED, &buf);
     }
@@ -315,8 +332,9 @@ mod test_raw {
 
     #[test]
     fn codeblock_renders_rust() {
+        let syntax = std::sync::Arc::new(SyntaxHighlight::new());
         let highlight: Box<dyn liquid_core::ParseBlock> =
-            Box::new(CodeBlockParser::new("base16-ocean.dark".into()));
+            Box::new(CodeBlockParser::new(syntax, "base16-ocean.dark".into()));
         let parser = liquid::ParserBuilder::new()
             .block(highlight)
             .build()
@@ -351,9 +369,10 @@ mod test_raw {
 
         let mut buf = String::new();
         let parser = cmark::Parser::new(&html);
+        let syntax = std::sync::Arc::new(SyntaxHighlight::new());
         cmark::html::push_html(
             &mut buf,
-            decorate_markdown(parser, Some("base16-ocean.dark")),
+            decorate_markdown(parser, syntax, Some("base16-ocean.dark")),
         );
         assert_eq!(buf, MARKDOWN_RENDERED);
     }

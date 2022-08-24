@@ -14,4 +14,5 @@ mod document;
 mod pagination;
 mod syntax_highlight;
 
+pub use crate::syntax_highlight::SyntaxHighlight;
 pub use crate::syntax_highlight::{list_syntax_themes, list_syntaxes};

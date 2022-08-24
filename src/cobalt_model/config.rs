@@ -13,8 +13,9 @@ use super::mark;
 use super::site;
 use super::template;
 use super::vwiki;
+use crate::SyntaxHighlight;
 
-#[derive(Debug, Clone, PartialEq, Serialize)]
+#[derive(Debug, Clone, Serialize)]
 #[serde(deny_unknown_fields, default)]
 pub struct Config {
     pub source: path::PathBuf,
@@ -96,13 +97,17 @@ impl Config {
         let includes_path = source.join(includes_dir);
         let layouts_path = source.join(layouts_dir);
 
+        let syntax = std::sync::Arc::new(SyntaxHighlight::new());
+
         let liquid = template::LiquidBuilder {
             includes_path,
+            syntax: syntax.clone(),
             theme: syntax_highlight
                 .enabled
                 .then(|| syntax_highlight.theme.clone()),
         };
         let markdown = mark::MarkdownBuilder {
+            syntax: syntax.clone(),
             theme: syntax_highlight
                 .enabled
                 .then(|| syntax_highlight.theme.clone()),
