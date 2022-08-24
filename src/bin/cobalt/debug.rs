@@ -26,8 +26,14 @@ pub enum DebugCommands {
 
 #[derive(Clone, Debug, PartialEq, Eq, clap::Subcommand)]
 pub enum HighlightCommands {
-    Themes {},
-    Syntaxes {},
+    Themes {
+        #[clap(flatten, next_help_heading = "CONFIG")]
+        config: args::ConfigArgs,
+    },
+    Syntaxes {
+        #[clap(flatten, next_help_heading = "CONFIG")]
+        config: args::ConfigArgs,
+    },
 }
 
 impl DebugCommands {
@@ -38,13 +44,17 @@ impl DebugCommands {
                 let config = cobalt::cobalt_model::Config::from_config(config)?;
                 println!("{}", config);
             }
-            Self::Highlight(HighlightCommands::Themes {}) => {
-                for name in cobalt::list_syntax_themes() {
+            Self::Highlight(HighlightCommands::Themes { config }) => {
+                let config = config.load_config()?;
+                let config = cobalt::cobalt_model::Config::from_config(config)?;
+                for name in config.syntax.themes() {
                     println!("{}", name);
                 }
             }
-            Self::Highlight(HighlightCommands::Syntaxes {}) => {
-                for name in cobalt::list_syntaxes() {
+            Self::Highlight(HighlightCommands::Syntaxes { config }) => {
+                let config = config.load_config()?;
+                let config = cobalt::cobalt_model::Config::from_config(config)?;
+                for name in config.syntax.syntaxes() {
                     println!("{}", name);
                 }
             }

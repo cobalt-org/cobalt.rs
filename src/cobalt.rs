@@ -51,6 +51,7 @@ impl Context {
             liquid,
             markdown,
             vimwiki,
+            syntax: _,
             assets,
             minify,
         } = config;
