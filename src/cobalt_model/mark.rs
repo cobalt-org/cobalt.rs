@@ -29,7 +29,7 @@ impl Markdown {
             | cmark::Options::ENABLE_STRIKETHROUGH
             | cmark::Options::ENABLE_TASKLISTS;
         let parser = cmark::Parser::new_ext(content, options);
-        cmark::html::push_html(&mut buf, decorate_markdown(parser, self.theme.as_deref()));
+        cmark::html::push_html(&mut buf, decorate_markdown(parser, self.theme.as_deref())?);
         Ok(buf)
     }
 }

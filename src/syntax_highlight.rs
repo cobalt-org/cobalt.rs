@@ -32,6 +32,19 @@ pub fn has_syntax_theme(name: &str) -> error::Result<bool> {
     failure::bail!("Themes are unsupported in this build.");
 }
 
+pub fn verify_theme(theme: Option<&str>) -> error::Result<()> {
+    if let Some(theme) = &theme {
+        match has_syntax_theme(theme) {
+            Ok(true) => {}
+            Ok(false) => failure::bail!("Syntax theme '{}' is unsupported", theme),
+            Err(err) => {
+                log::warn!("Syntax theme named '{}' ignored. Reason: {}", theme, err);
+            }
+        };
+    }
+    Ok(())
+}
+
 pub fn list_syntax_themes() -> Vec<String> {
     HIGHLIGHT.themes().collect()
 }
@@ -71,16 +84,7 @@ pub struct CodeBlockParser {
 
 impl CodeBlockParser {
     pub fn new(theme: Option<liquid::model::KString>) -> error::Result<Self> {
-        if let Some(theme) = &theme {
-            match has_syntax_theme(theme) {
-                Ok(true) => {}
-                Ok(false) => failure::bail!("Syntax theme '{}' is unsupported", theme),
-                Err(err) => {
-                    log::warn!("Syntax theme named '{}' ignored. Reason: {}", theme, err);
-                }
-            };
-        }
-
+        verify_theme(theme.as_deref())?;
         Ok(Self {
             syntax_theme: theme,
         })
@@ -149,13 +153,14 @@ pub struct DecoratedParser<'a> {
 }
 
 impl<'a> DecoratedParser<'a> {
-    pub fn new(parser: cmark::Parser<'a, 'a>, theme: Option<&'a str>) -> Self {
-        DecoratedParser {
+    pub fn new(parser: cmark::Parser<'a, 'a>, theme: Option<&'a str>) -> error::Result<Self> {
+        verify_theme(theme)?;
+        Ok(DecoratedParser {
             parser,
             theme,
             lang: None,
             code: None,
-        }
+        })
     }
 }
 
@@ -202,7 +207,7 @@ impl<'a> Iterator for DecoratedParser<'a> {
 pub fn decorate_markdown<'a>(
     parser: cmark::Parser<'a, 'a>,
     theme_name: Option<&'a str>,
-) -> DecoratedParser<'a> {
+) -> error::Result<DecoratedParser<'a>> {
     DecoratedParser::new(parser, theme_name)
 }
 
@@ -281,7 +286,7 @@ mod test_syntsx {
         let parser = cmark::Parser::new(&html);
         cmark::html::push_html(
             &mut buf,
-            decorate_markdown(parser, Some("base16-ocean.dark")),
+            decorate_markdown(parser, Some("base16-ocean.dark")).unwrap(),
         );
         snapbox::assert_eq(MARKDOWN_RENDERED, &buf);
     }
