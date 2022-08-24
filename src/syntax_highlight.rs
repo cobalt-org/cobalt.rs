@@ -44,7 +44,7 @@ pub fn list_syntaxes() -> Vec<String> {
 struct CodeBlock {
     lang: Option<liquid::model::KString>,
     code: String,
-    theme: liquid::model::KString,
+    theme: Option<liquid::model::KString>,
 }
 
 impl Renderable for CodeBlock {
@@ -56,7 +56,7 @@ impl Renderable for CodeBlock {
         write!(
             writer,
             "{}",
-            HIGHLIGHT.format(&self.code, self.lang.as_deref(), Some(self.theme.as_str()))
+            HIGHLIGHT.format(&self.code, self.lang.as_deref(), self.theme.as_deref())
         )
         .replace("Failed to render")?;
 
@@ -66,28 +66,20 @@ impl Renderable for CodeBlock {
 
 #[derive(Clone, Debug)]
 pub struct CodeBlockParser {
-    syntax_theme: liquid::model::KString,
+    syntax_theme: Option<liquid::model::KString>,
 }
 
 impl CodeBlockParser {
     pub fn new(theme: Option<liquid::model::KString>) -> error::Result<Self> {
-        let theme = if let Some(theme) = theme {
-            let result: error::Result<()> = match has_syntax_theme(&theme) {
-                Ok(true) => Ok(()),
-                Ok(false) => Err(failure::format_err!(
-                    "Syntax theme '{}' is unsupported",
-                    theme
-                )),
+        if let Some(theme) = &theme {
+            match has_syntax_theme(theme) {
+                Ok(true) => {}
+                Ok(false) => failure::bail!("Syntax theme '{}' is unsupported", theme),
                 Err(err) => {
                     log::warn!("Syntax theme named '{}' ignored. Reason: {}", theme, err);
-                    Ok(())
                 }
             };
-            result?;
-            theme
-        } else {
-            "".into()
-        };
+        }
 
         Ok(Self {
             syntax_theme: theme,
