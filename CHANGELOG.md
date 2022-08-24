@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 <!-- next-header -->
 ## [Unreleased] - ReleaseDate
 
+### Features
+
+- Loading of custom syntaxes in `_syntaxes/`
+
+### Fixes
+
+- Report theme errors for markdown, like liquid
+- Consistently handle theme between markdown and liquid
+
 ## [0.18.0] - 2022-06-15
 
 ### Compatibility
