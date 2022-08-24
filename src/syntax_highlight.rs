@@ -321,7 +321,7 @@ mod test_raw {
     fn codeblock_renders_rust() {
         let syntax = std::sync::Arc::new(SyntaxHighlight::new());
         let highlight: Box<dyn liquid_core::ParseBlock> =
-            Box::new(CodeBlockParser::new(syntax, "base16-ocean.dark".into()));
+            Box::new(CodeBlockParser::new(syntax, Some("base16-ocean.dark".into())).unwrap());
         let parser = liquid::ParserBuilder::new()
             .block(highlight)
             .build()
@@ -359,7 +359,7 @@ mod test_raw {
         let syntax = std::sync::Arc::new(SyntaxHighlight::new());
         cmark::html::push_html(
             &mut buf,
-            decorate_markdown(parser, syntax, Some("base16-ocean.dark")),
+            decorate_markdown(parser, syntax, Some("base16-ocean.dark")).unwrap(),
         );
         assert_eq!(buf, MARKDOWN_RENDERED);
     }
