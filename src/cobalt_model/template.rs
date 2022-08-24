@@ -67,24 +67,7 @@ impl LiquidBuilder {
     fn highlight(
         theme: Option<liquid::model::KString>,
     ) -> Result<Box<dyn liquid_core::ParseBlock>> {
-        let theme = if let Some(theme) = theme {
-            let result: Result<()> = match syntax_highlight::has_syntax_theme(&theme) {
-                Ok(true) => Ok(()),
-                Ok(false) => Err(failure::format_err!(
-                    "Syntax theme '{}' is unsupported",
-                    theme
-                )),
-                Err(err) => {
-                    warn!("Syntax theme named '{}' ignored. Reason: {}", theme, err);
-                    Ok(())
-                }
-            };
-            result?;
-            theme
-        } else {
-            "".into()
-        };
-        let block = syntax_highlight::CodeBlockParser::new(theme);
+        let block = syntax_highlight::CodeBlockParser::new(theme)?;
         Ok(Box::new(block))
     }
 }

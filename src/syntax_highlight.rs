@@ -70,8 +70,28 @@ pub struct CodeBlockParser {
 }
 
 impl CodeBlockParser {
-    pub fn new(syntax_theme: liquid::model::KString) -> Self {
-        Self { syntax_theme }
+    pub fn new(theme: Option<liquid::model::KString>) -> error::Result<Self> {
+        let theme = if let Some(theme) = theme {
+            let result: error::Result<()> = match has_syntax_theme(&theme) {
+                Ok(true) => Ok(()),
+                Ok(false) => Err(failure::format_err!(
+                    "Syntax theme '{}' is unsupported",
+                    theme
+                )),
+                Err(err) => {
+                    log::warn!("Syntax theme named '{}' ignored. Reason: {}", theme, err);
+                    Ok(())
+                }
+            };
+            result?;
+            theme
+        } else {
+            "".into()
+        };
+
+        Ok(Self {
+            syntax_theme: theme,
+        })
     }
 }
 
@@ -225,7 +245,7 @@ mod test_syntsx {
     #[test]
     fn highlight_block_renders_rust() {
         let highlight: Box<dyn liquid_core::ParseBlock> =
-            Box::new(CodeBlockParser::new("base16-ocean.dark".into()));
+            Box::new(CodeBlockParser::new(Some("base16-ocean.dark".into())).unwrap());
         let parser = liquid::ParserBuilder::new()
             .block(highlight)
             .build()
