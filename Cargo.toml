@@ -5,7 +5,7 @@ members = [
 
 [package]
 name = "cobalt-bin"
-version = "0.18.0"
+version = "0.18.1"
 description = "Static site generator written in Rust"
 authors = ["Benny Klotz <r3qnbenni@gmail.com>", "Johann Hofmann <mail@johann-hofmann.com>", "Ed Page <eopage@gmail.com>"]
 repository = "https://github.com/cobalt-org/cobalt.rs"
@@ -44,8 +44,8 @@ name = "cobalt"
 doc = false
 
 [dependencies]
-cobalt-config = { version = "=0.18.0", path = "crates/config", features = ["unstable"] }
-cobalt-core = { version = "=0.18.0", path = "crates/core", features = ["unstable"] }
+cobalt-config = { version = "=0.18.1", path = "crates/config", features = ["unstable"] }
+cobalt-core = { version = "=0.18.1", path = "crates/core", features = ["unstable"] }
 clap = { version = "3.2", features = ["derive"] }
 clap-verbosity-flag = "1.0"
 proc-exit = "1"

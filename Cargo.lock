@@ -271,7 +271,7 @@ dependencies = [
 
 [[package]]
 name = "cobalt-bin"
-version = "0.18.0"
+version = "0.18.1"
 dependencies = [
  "clap",
  "clap-verbosity-flag",
@@ -322,7 +322,7 @@ dependencies = [
 
 [[package]]
 name = "cobalt-config"
-version = "0.18.0"
+version = "0.18.1"
 dependencies = [
  "deunicode",
  "itertools",
@@ -339,7 +339,7 @@ dependencies = [
 
 [[package]]
 name = "cobalt-core"
-version = "0.18.0"
+version = "0.18.1"
 dependencies = [
  "cobalt-config",
  "ignore",
@@ -703,7 +703,7 @@ dependencies = [
 
 [[package]]
 name = "engarde"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "syntect 5.0.0",
 ]
