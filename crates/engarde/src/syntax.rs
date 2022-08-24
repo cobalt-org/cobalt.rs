@@ -125,7 +125,7 @@ mod test {
     #[test]
     fn highlight_custom_syntax() {
         let mut syntax = Syntax::new();
-        let path = Path::new("./tests/fixtures/");
+        let path = Path::new("./tests/fixtures/custom_syntaxes/");
         syntax.load_custom_syntaxes(path);
         let output = syntax.format(
             CUSTOM_CODEBLOCK,
