@@ -23,16 +23,16 @@ lazy_static! {
 }
 
 #[cfg(feature = "syntax-highlight")]
-pub fn has_syntax_theme(name: &str) -> error::Result<bool> {
+fn has_syntax_theme(name: &str) -> error::Result<bool> {
     Ok(HIGHLIGHT.has_theme(name))
 }
 
 #[cfg(not(feature = "syntax-highlight"))]
-pub fn has_syntax_theme(name: &str) -> error::Result<bool> {
+fn has_syntax_theme(name: &str) -> error::Result<bool> {
     failure::bail!("Themes are unsupported in this build.");
 }
 
-pub fn verify_theme(theme: Option<&str>) -> error::Result<()> {
+fn verify_theme(theme: Option<&str>) -> error::Result<()> {
     if let Some(theme) = &theme {
         match has_syntax_theme(theme) {
             Ok(true) => {}
