@@ -271,7 +271,7 @@ dependencies = [
 
 [[package]]
 name = "cobalt-bin"
-version = "0.18.2"
+version = "0.18.3"
 dependencies = [
  "clap",
  "clap-verbosity-flag",
@@ -703,7 +703,7 @@ dependencies = [
 
 [[package]]
 name = "engarde"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "syntect 5.0.0",
 ]
