@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 <!-- next-header -->
 ## [Unreleased] - ReleaseDate
 
+### Fixes
+
+- Error, instead of panic, on bad CWD
+
 ## [0.18.1] - 2022-08-24
 
 ### Features

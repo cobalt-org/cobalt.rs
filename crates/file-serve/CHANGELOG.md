@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 <!-- next-header -->
 ## [Unreleased] - ReleaseDate
 
+### Fixes
+
+- Error, instead of panic, on bad CWD for the bin
+
 ## [0.2.0] - 2022-04-04
 
 ## [0.1.1] - 2022-04-04
