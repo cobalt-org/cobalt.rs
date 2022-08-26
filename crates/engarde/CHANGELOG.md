@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 <!-- next-header -->
 ## [Unreleased] - ReleaseDate
 
+### Fixes
+
+- Wrap code fences in `<pre><code>` instead of just `<pre>`
+
 ## [0.1.2] - 2022-08-24
 
 ## [0.1.1] - 2022-04-04
