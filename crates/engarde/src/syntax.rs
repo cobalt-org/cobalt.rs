@@ -1,7 +1,11 @@
 use std::path::Path;
+use syntect::easy::HighlightLines;
 use syntect::highlighting::ThemeSet;
-use syntect::html::highlighted_html_for_string;
+use syntect::html::{
+    append_highlighted_html_for_styled_line, start_highlighted_html_snippet, IncludeBackground,
+};
 use syntect::parsing::{SyntaxReference, SyntaxSet};
+use syntect::util::LinesWithEndings;
 
 #[derive(Debug)]
 #[non_exhaustive]
@@ -68,7 +72,25 @@ impl Syntax {
             let syntax = lang
                 .and_then(|l| self.syntax_set.find_syntax_by_token(l))
                 .unwrap_or_else(|| self.syntax_set.find_syntax_plain_text());
-            highlighted_html_for_string(code, &self.syntax_set, syntax, theme).unwrap()
+
+            // Essentially the same as `syntect::html::highlighted_html_for_string`,
+            // but adding <code> tags between the <pre> tags
+            // See: https://docs.rs/syntect/5.0.0/src/syntect/html.rs.html#269
+            let mut highlighter = HighlightLines::new(syntax, theme);
+            let (mut output, bg) = start_highlighted_html_snippet(theme);
+            output.push_str("<code>");
+
+            for line in LinesWithEndings::from(code) {
+                let regions = highlighter.highlight_line(line, &self.syntax_set).unwrap();
+                append_highlighted_html_for_styled_line(
+                    &regions[..],
+                    IncludeBackground::IfDifferent(bg),
+                    &mut output,
+                )
+                .unwrap();
+            }
+            output.push_str("</code></pre>\n");
+            output
         } else {
             crate::Raw::new().format(code, lang, theme)
         }

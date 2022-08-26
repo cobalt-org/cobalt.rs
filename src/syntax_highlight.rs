@@ -228,7 +228,7 @@ mod test_syntsx {
 
     const CODEBLOCK_RENDERED: &str =
         "<pre style=\"background-color:#2b303b;\">\n\
-         <span style=\"color:#b48ead;\">mod </span>\
+         <code><span style=\"color:#b48ead;\">mod </span>\
          <span style=\"color:#c0c5ce;\">test {\n\
          </span><span style=\"color:#c0c5ce;\">        </span>\
          <span style=\"color:#b48ead;\">fn \
@@ -239,7 +239,7 @@ mod test_syntsx {
          </span><span style=\"color:#d08770;\">true\n\
          </span><span style=\"color:#c0c5ce;\">        }\n\
          </span><span style=\"color:#c0c5ce;\">    }\n\
-         </span><span style=\"color:#c0c5ce;\">    </span></pre>\n";
+         </span><span style=\"color:#c0c5ce;\">    </span></code></pre>\n";
 
     #[test]
     fn highlight_block_renders_rust() {
@@ -262,7 +262,7 @@ mod test_syntsx {
 
     const MARKDOWN_RENDERED: &str =
         "<pre style=\"background-color:#2b303b;\">\n\
-         <span style=\"color:#b48ead;\">mod </span>\
+         <code><span style=\"color:#b48ead;\">mod </span>\
          <span style=\"color:#c0c5ce;\">test {\n\
          </span><span style=\"color:#c0c5ce;\">        </span>\
          <span style=\"color:#b48ead;\">fn \
@@ -274,7 +274,7 @@ mod test_syntsx {
          </span><span style=\"color:#c0c5ce;\">        }\n\
          </span><span style=\"color:#c0c5ce;\">    }\n\
          </span><span style=\"color:#c0c5ce;\">    \n\
-         </span></pre>\n";
+         </span></code></pre>\n";
 
     #[test]
     fn markdown_renders_rust() {
