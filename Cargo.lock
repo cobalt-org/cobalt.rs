@@ -271,7 +271,7 @@ dependencies = [
 
 [[package]]
 name = "cobalt-bin"
-version = "0.18.1"
+version = "0.18.2"
 dependencies = [
  "clap",
  "clap-verbosity-flag",
@@ -796,7 +796,7 @@ dependencies = [
 
 [[package]]
 name = "file-serve"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "log",
  "mime_guess",
