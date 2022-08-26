@@ -35,7 +35,7 @@ impl ConfigArgs {
                 failure::format_err!("Error reading config file {:?}", config_path)
             })?
         } else {
-            let cwd = env::current_dir().expect("How does this fail?");
+            let cwd = env::current_dir().unwrap_or_default();
             cobalt_config::Config::from_cwd(cwd)?
         };
 

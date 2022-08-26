@@ -1,5 +1,11 @@
 fn main() {
-    let path = std::env::current_dir().unwrap();
+    let path = match std::env::current_dir() {
+        Ok(path) => path,
+        Err(err) => {
+            eprintln!("Cannot serve CWD: {}", err);
+            std::process::exit(1);
+        }
+    };
     let server = file_serve::Server::new(&path);
 
     println!("Serving {}", path.display());
