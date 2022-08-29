@@ -1,5 +1,6 @@
 use std::path::Path;
 
+/// No highlighting, defer to frontend
 #[derive(Default, Debug, Clone)]
 #[non_exhaustive]
 pub struct Raw {}

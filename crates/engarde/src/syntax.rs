@@ -7,6 +7,7 @@ use syntect::html::{
 use syntect::parsing::{SyntaxReference, SyntaxSet};
 use syntect::util::LinesWithEndings;
 
+/// Highlight code block
 #[derive(Debug)]
 #[non_exhaustive]
 pub struct Syntax {

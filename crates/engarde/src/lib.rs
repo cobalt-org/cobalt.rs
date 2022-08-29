@@ -1,3 +1,5 @@
+/// Markdown Fenced Code Block Highlighting
+
 #[cfg(feature = "syntax")]
 mod syntax;
 #[cfg(feature = "syntax")]
