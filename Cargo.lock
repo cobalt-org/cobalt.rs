@@ -703,7 +703,7 @@ dependencies = [
 
 [[package]]
 name = "engarde"
-version = "0.1.3"
+version = "0.1.4"
 dependencies = [
  "syntect 5.0.0",
 ]
