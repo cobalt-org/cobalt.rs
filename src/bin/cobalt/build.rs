@@ -1,6 +1,5 @@
 use std::env;
 use std::fs;
-use std::path;
 
 use crate::args;
 use crate::error::*;
