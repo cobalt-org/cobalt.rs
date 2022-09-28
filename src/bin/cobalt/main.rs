@@ -25,17 +25,17 @@ static GLOBAL: alloc::System = alloc::System;
 
 /// Static site generator
 #[derive(Clone, Debug, Parser)]
-#[clap(propagate_version = true)]
-#[clap(color = concolor_clap::color_choice())]
-#[clap(version)]
+#[command(propagate_version = true)]
+#[command(color = concolor_clap::color_choice())]
+#[command(version)]
 struct Cli {
-    #[clap(flatten)]
+    #[command(flatten)]
     pub logging: clap_verbosity_flag::Verbosity<clap_verbosity_flag::InfoLevel>,
 
-    #[clap(flatten)]
+    #[command(flatten)]
     pub color: concolor_clap::Color,
 
-    #[clap(subcommand)]
+    #[command(subcommand)]
     command: Command,
 }
 
@@ -49,7 +49,7 @@ enum Command {
     Clean(build::CleanArgs),
     #[cfg(feature = "serve")]
     Serve(serve::ServeArgs),
-    #[clap(subcommand)]
+    #[command(subcommand)]
     Debug(debug::DebugCommands),
 }
 
