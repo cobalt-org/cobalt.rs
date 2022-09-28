@@ -16,22 +16,22 @@ use crate::error::*;
 #[derive(Clone, Debug, PartialEq, Eq, clap::Args)]
 pub struct ServeArgs {
     /// Open a browser
-    #[clap(long)]
+    #[arg(long)]
     pub open: bool,
 
     /// Host to serve from
-    #[clap(long, value_name = "HOSTNAME_OR_IP", default_value = "localhost")]
+    #[arg(long, value_name = "HOSTNAME_OR_IP", default_value = "localhost")]
     pub host: String,
 
     /// Port to serve from
-    #[clap(short = 'P', long, value_name = "NUM")]
+    #[arg(short = 'P', long, value_name = "NUM")]
     pub port: Option<u16>,
 
     /// Disable rebuilding on change
-    #[clap(long)]
+    #[arg(long)]
     pub no_watch: bool,
 
-    #[clap(flatten, next_help_heading = "CONFIG")]
+    #[command(flatten, next_help_heading = "Config")]
     pub config: args::ConfigArgs,
 }
 

@@ -14,7 +14,7 @@ use crate::error::*;
 #[derive(Clone, Debug, PartialEq, Eq, clap::Args)]
 pub struct InitArgs {
     /// Target directory
-    #[clap(default_value = "./", parse(from_os_str))]
+    #[arg(default_value = "./")]
     pub directory: path::PathBuf,
 }
 
@@ -35,18 +35,18 @@ pub struct NewArgs {
     pub title: Option<String>,
 
     /// New document's parent directory or file (default: `<CWD>/title.ext`)
-    #[clap(short, long, value_name = "DIR_OR_FILE", parse(from_os_str))]
+    #[arg(short, long, value_name = "DIR_OR_FILE")]
     pub file: Option<path::PathBuf>,
 
     /// The default file's extension (e.g. `liquid`)
-    #[clap(long, value_name = "EXT")]
+    #[arg(long, value_name = "EXT")]
     pub with_ext: Option<String>,
 
     /// Open the new document in your configured EDITOR
-    #[clap(long)]
+    #[arg(long)]
     pub edit: bool,
 
-    #[clap(flatten, next_help_heading = "CONFIG")]
+    #[command(flatten, next_help_heading = "Config")]
     pub config: args::ConfigArgs,
 }
 
@@ -76,17 +76,17 @@ impl NewArgs {
 #[derive(Clone, Debug, PartialEq, Eq, clap::Args)]
 pub struct RenameArgs {
     /// File to rename
-    #[clap(value_name = "FILE", parse(from_os_str))]
+    #[arg(value_name = "FILE")]
     pub src: path::PathBuf,
 
     /// Title of the post
     pub title: String,
 
     /// New document's parent directory or file (default: `<CWD>/title.ext`)
-    #[clap(short, long, value_name = "DIR_OR_FILE", parse(from_os_str))]
+    #[arg(short, long, value_name = "DIR_OR_FILE")]
     pub file: Option<path::PathBuf>,
 
-    #[clap(flatten, next_help_heading = "CONFIG")]
+    #[command(flatten, next_help_heading = "Config")]
     pub config: args::ConfigArgs,
 }
 
@@ -116,10 +116,10 @@ impl RenameArgs {
 #[derive(Clone, Debug, PartialEq, Eq, clap::Args)]
 pub struct PublishArgs {
     /// Document to publish
-    #[clap(value_name = "FILE", parse(from_os_str))]
+    #[arg(value_name = "FILE")]
     pub filename: path::PathBuf,
 
-    #[clap(flatten, next_help_heading = "CONFIG")]
+    #[command(flatten, next_help_heading = "Config")]
     pub config: args::ConfigArgs,
 }
 

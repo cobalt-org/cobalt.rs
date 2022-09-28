@@ -6,12 +6,12 @@ use crate::error::*;
 pub enum DebugCommands {
     /// Prints post-processed config
     Config {
-        #[clap(flatten, next_help_heading = "CONFIG")]
+        #[command(flatten, next_help_heading = "Confg")]
         config: args::ConfigArgs,
     },
 
     /// Print syntax-highlight information
-    #[clap(subcommand)]
+    #[command(subcommand)]
     Highlight(HighlightCommands),
 
     /// Print files associated with a collection
@@ -19,7 +19,7 @@ pub enum DebugCommands {
         /// Collection name
         collection: Option<String>,
 
-        #[clap(flatten, next_help_heading = "CONFIG")]
+        #[command(flatten, next_help_heading = "Config")]
         config: args::ConfigArgs,
     },
 }
@@ -27,11 +27,11 @@ pub enum DebugCommands {
 #[derive(Clone, Debug, PartialEq, Eq, clap::Subcommand)]
 pub enum HighlightCommands {
     Themes {
-        #[clap(flatten, next_help_heading = "CONFIG")]
+        #[command(flatten, next_help_heading = "Config")]
         config: args::ConfigArgs,
     },
     Syntaxes {
-        #[clap(flatten, next_help_heading = "CONFIG")]
+        #[command(flatten, next_help_heading = "Config")]
         config: args::ConfigArgs,
     },
 }

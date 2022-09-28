@@ -9,19 +9,19 @@ use crate::error::*;
 #[derive(Clone, Debug, PartialEq, Eq, clap::Args)]
 pub struct ConfigArgs {
     /// Config file to use [default: _cobalt.yml]
-    #[clap(short, long, value_name = "FILE", parse(from_os_str))]
+    #[arg(short, long, value_name = "FILE")]
     config: Option<path::PathBuf>,
 
     /// Site destination folder [default: ./]
-    #[clap(short, long, value_name = "DIR", parse(from_os_str))]
+    #[arg(short, long, value_name = "DIR")]
     destination: Option<path::PathBuf>,
 
     /// Include drafts.
-    #[clap(long)]
+    #[arg(long)]
     drafts: bool,
 
     /// Ignore drafts.
-    #[clap(long, conflicts_with = "drafts")]
+    #[arg(long, conflicts_with = "drafts")]
     no_drafts: bool,
 }
 

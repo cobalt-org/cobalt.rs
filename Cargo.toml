@@ -46,12 +46,12 @@ doc = false
 [dependencies]
 cobalt-config = { version = "=0.18.1", path = "crates/config", features = ["unstable"] }
 cobalt-core = { version = "=0.18.1", path = "crates/core", features = ["unstable"] }
-clap = { version = "3.2", features = ["derive"] }
-clap-verbosity-flag = "1.0"
+clap = { version = "4.0", features = ["derive", "wrap_help"] }
+clap-verbosity-flag = "2.0"
 proc-exit = "1"
 yansi = "0.5.1"
 concolor = "0.0.8"
-concolor-clap = { version = "0.0.10", features = ["api_unstable"] }
+concolor-clap = { version = "0.0.11", features = ["api_unstable"] }
 human-panic = "1"
 scrawl = "1.1"
 tempfile = "3.3"
