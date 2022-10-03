@@ -320,7 +320,7 @@ dependencies = [
  "serde_json",
  "serde_yaml",
  "sitemap",
- "snapbox",
+ "snapbox 0.4.0",
  "tempfile",
  "time 0.3.14",
  "toml",
@@ -481,12 +481,11 @@ dependencies = [
 
 [[package]]
 name = "crossbeam-utils"
-version = "0.8.11"
+version = "0.8.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "51887d4adc7b564537b15adcfb307936f8075dfcd5f00dde9a9f1d29383682bc"
+checksum = "edbafec5fa1f196ca66527c1b12c2ec4745ca14b50f1ad8f9f6f720b55d11fac"
 dependencies = [
  "cfg-if 1.0.0",
- "once_cell",
 ]
 
 [[package]]
@@ -1212,9 +1211,9 @@ dependencies = [
 
 [[package]]
 name = "libc"
-version = "0.2.133"
+version = "0.2.134"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c0f80d65747a3e43d1596c7c5492d95d5edddaabd45a7fcdb02b95f644164966"
+checksum = "329c933548736bc49fd575ee68c89e8be4d260064184389a5b77517cddd99ffb"
 
 [[package]]
 name = "line-wrap"
@@ -1528,9 +1527,9 @@ dependencies = [
 
 [[package]]
 name = "once_cell"
-version = "1.13.1"
+version = "1.15.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "074864da206b4973b84eb91683020dbefd6a8c3f0f38e054d93954e891935e4e"
+checksum = "e82dad04139b71a90c080c8463fe0dc7902db5192d939bd0950f074d014339e1"
 
 [[package]]
 name = "open"
@@ -1544,9 +1543,9 @@ dependencies = [
 
 [[package]]
 name = "os_pipe"
-version = "1.0.1"
+version = "1.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2c92f2b54f081d635c77e7120862d48db8e91f7f21cef23ab1b4fe9971c59f55"
+checksum = "0dceb7e43f59c35ee1548045b2c72945a5a3bb6ce6d6f07cdc13dc8f6bc4930a"
 dependencies = [
  "libc",
  "winapi 0.3.9",
@@ -2069,10 +2068,23 @@ dependencies = [
 ]
 
 [[package]]
-name = "snapbox-macros"
-version = "0.3.0"
+name = "snapbox"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8a253e6f894cfa440cba00600a249fa90869d8e0ec45ab274a456e043a0ce8f2"
+checksum = "f98a96656eecd1621c5830831b48eb6903a9f86aaeb61b9f358a9bd462414ddd"
+dependencies = [
+ "concolor",
+ "normalize-line-endings",
+ "similar",
+ "snapbox-macros",
+ "yansi",
+]
+
+[[package]]
+name = "snapbox-macros"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "485e65c1203eb37244465e857d15a26d3a85a5410648ccb53b18bd44cb3a7336"
 
 [[package]]
 name = "static_assertions"
@@ -2330,7 +2342,7 @@ dependencies = [
  "rayon",
  "serde",
  "shlex",
- "snapbox",
+ "snapbox 0.3.3",
  "toml_edit",
 ]
 
