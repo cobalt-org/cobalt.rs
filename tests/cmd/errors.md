@@ -28,8 +28,6 @@ $ cobalt --non-existent
 ? failed
 error: Found argument '--non-existent' which wasn't expected, or isn't valid in this context
 
-  If you tried to supply `--non-existent` as a value rather than a flag, use `-- --non-existent`
-
 Usage: cobalt[EXE] [OPTIONS] <COMMAND>
 
 For more information try '--help'

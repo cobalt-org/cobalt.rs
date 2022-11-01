@@ -22,6 +22,6 @@ walkdir = "2.3"
 liquid-core = "0.26"
 log = "0.4"
 serde = "1.0"
-once_cell = "1.15"
+once_cell = "1.16"
 status = { version = "0.0.10", features = ["send_sync"] }
 relative-path = { version = "1", features = ["serde"] }
