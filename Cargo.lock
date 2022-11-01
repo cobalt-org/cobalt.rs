@@ -283,6 +283,7 @@ dependencies = [
 name = "cobalt-bin"
 version = "0.18.3"
 dependencies = [
+ "atom_syndication",
  "clap",
  "clap-verbosity-flag",
  "cobalt-config",

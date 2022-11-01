@@ -142,6 +142,16 @@ pub fn build(config: Config) -> Result<()> {
             context.site.base_url.as_deref(),
         )?;
     }
+    // check if we should creeate an atom file and create it!
+    if let Some(ref path) = context.posts.atom {
+        let path = path.to_path(&context.destination);
+        create_atom(
+            &path,
+            &context.posts,
+            &posts,
+            context.site.base_url.as_deref(),
+        )?;
+    }
     if let Some(ref path) = context.site.sitemap {
         let path = path.to_path(&context.destination);
         create_sitemap(&path, &posts, &documents, context.site.base_url.as_deref())?;
@@ -502,6 +512,40 @@ fn create_jsonfeed(
 
     let jsonfeed_string = jsonfeed::to_string(&feed).unwrap();
     files::write_document_file(jsonfeed_string, path)?;
+
+    Ok(())
+}
+
+fn create_atom(
+    path: &std::path::Path,
+    collection: &Collection,
+    documents: &[Document],
+    base_url: Option<&str>,
+) -> Result<()> {
+    debug!("Creating atom file at {}", path.display());
+
+    let title = &collection.title;
+    let description = collection.description.as_deref().unwrap_or("");
+    let link = base_url
+        .as_ref()
+        .ok_or_else(|| failure::err_msg("`base_url` is required for atom support"))?;
+
+    let feed = atom_syndication::Feed {
+        id: link.to_string(),
+        subtitle: Some(atom_syndication::Text::from(description.to_string())),
+        links: vec![
+            atom_syndication::Link {
+                href: link.to_string(),
+                ..Default::default()
+            }
+        ],
+        title: atom_syndication::Text::from(title.to_string()),
+        entries: documents.iter().map(|doc| doc.to_atom(link)).collect(),
+        ..Default::default()
+    };
+
+    let atom_string = feed.to_string();
+    files::write_document_file(atom_string, path)?;
 
     Ok(())
 }

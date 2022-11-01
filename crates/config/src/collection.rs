@@ -13,6 +13,7 @@ pub struct Collection {
     pub order: SortOrder,
     pub rss: Option<crate::RelPath>,
     pub jsonfeed: Option<crate::RelPath>,
+    pub atom: Option<crate::RelPath>,
     pub publish_date_in_filename: bool,
     pub default: Frontmatter,
 }
@@ -27,6 +28,7 @@ impl From<PostCollection> for Collection {
             order,
             rss,
             jsonfeed,
+            atom,
             publish_date_in_filename,
             default,
         } = other;
@@ -38,6 +40,7 @@ impl From<PostCollection> for Collection {
             order,
             rss,
             jsonfeed,
+            atom,
             publish_date_in_filename,
             default,
         }
@@ -83,6 +86,7 @@ pub struct PostCollection {
     pub order: SortOrder,
     pub rss: Option<crate::RelPath>,
     pub jsonfeed: Option<crate::RelPath>,
+    pub atom: Option<crate::RelPath>,
     pub publish_date_in_filename: bool,
     pub default: Frontmatter,
 }
@@ -97,6 +101,7 @@ impl Default for PostCollection {
             order: Default::default(),
             rss: Default::default(),
             jsonfeed: Default::default(),
+            atom: Default::default(),
             publish_date_in_filename: true,
             default: Default::default(),
         }

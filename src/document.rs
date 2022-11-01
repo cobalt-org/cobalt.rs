@@ -258,6 +258,29 @@ impl Document {
         }
     }
 
+    // Metadata for generating Atom feeds
+    pub fn to_atom(&self, root_url: &str) -> atom_syndication::Entry {
+        let link = format!("{}/{}", root_url, &self.url_path);
+
+        atom_syndication::Entry {
+            id: link.clone(),
+            updated: self.front.published_date.map(|date|
+                atom_syndication::FixedDateTime::parse_from_rfc2822(date.to_rfc2822().as_str()).unwrap()
+            ).unwrap_or_default(),
+            links: vec![atom_syndication::Link {
+                href: link.clone(),
+                ..Default::default()
+            }],
+            title: atom_syndication::Text::from(self.front.title.to_string()),
+            summary: self.description_to_str()
+                .map(|s| atom_syndication::Text::html(s)),
+            published: self.front.published_date.map(|date|
+                atom_syndication::FixedDateTime::parse_from_rfc2822(date.to_rfc2822().as_str()).unwrap()
+            ),
+            ..Default::default()
+        }
+    }
+
     pub fn to_sitemap<T: std::io::Write>(
         &self,
         root_url: &str,

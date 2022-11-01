@@ -14,6 +14,7 @@ pub struct Collection {
     pub order: SortOrder,
     pub rss: Option<cobalt_config::RelPath>,
     pub jsonfeed: Option<cobalt_config::RelPath>,
+    pub atom: Option<cobalt_config::RelPath>,
     pub publish_date_in_filename: bool,
     pub default: Frontmatter,
 }
@@ -63,6 +64,7 @@ impl Collection {
             order,
             rss,
             jsonfeed,
+            atom,
             default,
             publish_date_in_filename,
         } = config;
@@ -87,6 +89,7 @@ impl Collection {
             order,
             rss,
             jsonfeed,
+            atom,
             publish_date_in_filename,
             default,
         };

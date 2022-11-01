@@ -67,6 +67,7 @@ log = "0.4"
 env_logger = "0.9"
 rss = "2.0"
 jsonfeed = "0.2"
+atom_syndication = "0.11"
 pulldown-cmark = {version="0.9", default-features = false}
 engarde = { version = "0.1", path = "crates/engarde" }
 regex = "1.6"
