@@ -82,7 +82,7 @@ toml = "0.5.9"
 normalize-line-endings = "0.3.0"
 sitemap = "0.4"
 open = "3"
-dunce = "1.0.2"
+dunce = "1.0.3"
 vimwiki = { version = "0.1", features = ["html"] }
 
 file-serve = { version = "0.2.1", path = "crates/file-serve", optional = true }
