@@ -320,7 +320,7 @@ dependencies = [
  "serde_json",
  "serde_yaml",
  "sitemap",
- "snapbox 0.4.0",
+ "snapbox",
  "tempfile",
  "time 0.3.14",
  "toml",
@@ -1130,9 +1130,9 @@ dependencies = [
 
 [[package]]
 name = "itertools"
-version = "0.10.3"
+version = "0.10.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a9a9d19fa1e79b6215ff29b9d6880b706147f16e9b1dbb1e4e5947b5b02bc5e3"
+checksum = "b0fd2260e829bddf4cb6ea802289de2f86d6a7a690192fbe91b3f46e0f2c8473"
 dependencies = [
  "either",
 ]
@@ -1930,18 +1930,18 @@ checksum = "93f6841e709003d68bb2deee8c343572bf446003ec20a583e76f7b15cebf3711"
 
 [[package]]
 name = "serde"
-version = "1.0.144"
+version = "1.0.147"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0f747710de3dcd43b88c9168773254e809d8ddbdf9653b84e2554ab219f17860"
+checksum = "d193d69bae983fc11a79df82342761dfbf28a99fc8d203dca4c3c1b590948965"
 dependencies = [
  "serde_derive",
 ]
 
 [[package]]
 name = "serde_derive"
-version = "1.0.144"
+version = "1.0.147"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "94ed3a816fb1d101812f83e789f888322c34e291f894f19590dc310963e87a00"
+checksum = "4f1d362ca8fc9c3e3a7484440752472d68a6caa98f1ab81d99b5dfe517cec852"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -2049,9 +2049,9 @@ dependencies = [
 
 [[package]]
 name = "snapbox"
-version = "0.3.3"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "44d199ccf8f606592df2d145db26f2aa45344e23c64b074cc5a4047f1d99b0f7"
+checksum = "f98a96656eecd1621c5830831b48eb6903a9f86aaeb61b9f358a9bd462414ddd"
 dependencies = [
  "concolor",
  "content_inspector",
@@ -2064,19 +2064,6 @@ dependencies = [
  "tempfile",
  "wait-timeout",
  "walkdir",
- "yansi",
-]
-
-[[package]]
-name = "snapbox"
-version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f98a96656eecd1621c5830831b48eb6903a9f86aaeb61b9f358a9bd462414ddd"
-dependencies = [
- "concolor",
- "normalize-line-endings",
- "similar",
- "snapbox-macros",
  "yansi",
 ]
 
@@ -2319,22 +2306,32 @@ dependencies = [
 ]
 
 [[package]]
-name = "toml_edit"
-version = "0.14.4"
+name = "toml_datetime"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5376256e44f2443f8896ac012507c19a012df0fe8758b55246ae51a2279db51f"
+checksum = "808b51e57d0ef8f71115d8f3a01e7d3750d01c79cac4b3eda910f4389fdf92fd"
+dependencies = [
+ "serde",
+]
+
+[[package]]
+name = "toml_edit"
+version = "0.15.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b1541ba70885967e662f69d31ab3aeca7b1aaecfcd58679590b893e9239c3646"
 dependencies = [
  "combine",
  "indexmap",
  "itertools",
  "serde",
+ "toml_datetime",
 ]
 
 [[package]]
 name = "trycmd"
-version = "0.13.6"
+version = "0.14.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9ac9fa73959e252e7c5a4e6260544b952f5bf3989e0b7ad229f4fd6f14671b02"
+checksum = "7ea164949c690a45580a50ebb8b4d5e3f907b134d26009dbe45878225ebb0374"
 dependencies = [
  "glob",
  "humantime",
@@ -2342,7 +2339,7 @@ dependencies = [
  "rayon",
  "serde",
  "shlex",
- "snapbox 0.3.3",
+ "snapbox",
  "toml_edit",
 ]
 

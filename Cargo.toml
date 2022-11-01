@@ -93,7 +93,7 @@ sass-rs = { version = "0.2", optional = true }
 html-minifier = {version="3.0", optional = true }
 
 [dev-dependencies]
-trycmd = "0.13"
+trycmd = "0.14"
 snapbox = { version = "0.4.0", features = ["diff"] }
 
 [features]
