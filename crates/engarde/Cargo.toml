@@ -10,7 +10,7 @@ readme = "README.md"
 keywords = ["syntax", "highlighting", "highlighter", "colouring", "parsing"]
 categories = ["parser-implementations", "parsing", "text-processing"]
 edition = "2021"
-rust-version = "1.60.0"  # MSRV
+rust-version = "1.64.0"  # MSRV
 include = [
   "build.rs",
   "src/**/*",

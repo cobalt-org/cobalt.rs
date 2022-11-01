@@ -10,7 +10,7 @@ readme = "README.md"
 categories = ["development-tools::testing", "web-programming::http-server"]
 keywords = ["serve", "http-server", "static-files", "http", "server"]
 edition = "2021"
-rust-version = "1.60.0"  # MSRV
+rust-version = "1.64.0"  # MSRV
 include = [
   "build.rs",
   "src/**/*",
