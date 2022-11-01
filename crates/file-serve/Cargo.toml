@@ -2,24 +2,16 @@
 name = "file-serve"
 version = "0.2.1"
 description = "HTTP Static File Server"
-license = "MIT OR Apache-2.0"
-repository = "https://github.com/cobalt-org/cobalt.rs"
 homepage = "https://github.com/cobalt-org/cobalt.rs/tree/master/crates/file-serve"
 documentation = "http://docs.rs/file-serve"
 readme = "README.md"
 categories = ["development-tools::testing", "web-programming::http-server"]
 keywords = ["serve", "http-server", "static-files", "http", "server"]
-edition = "2021"
-rust-version = "1.64.0"  # MSRV
-include = [
-  "build.rs",
-  "src/**/*",
-  "Cargo.toml",
-  "LICENSE*",
-  "README.md",
-  "benches/**/*",
-  "examples/**/*"
-]
+license.workspace = true
+repository.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+include.workspace = true
 
 [package.metadata.release]
 pre-release-replacements = [
