@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::fs;
 use std::io::Write;
 use std::path;
+use std::time::SystemTime;
 
 use failure::ResultExt;
 use jsonfeed::Feed;
@@ -9,6 +10,8 @@ use log::debug;
 use log::trace;
 use log::warn;
 use sitemap::writer::SiteMapWriter;
+use vimwiki::vendor::chrono::DateTime;
+use vimwiki::vendor::chrono::Utc;
 
 use crate::cobalt_model;
 use crate::cobalt_model::files;
@@ -534,9 +537,21 @@ fn create_atom(
         documents.iter().map(|doc| doc.to_atom(link)).collect();
     let entries = entries?;
 
+    // Assume the feed's "updated" is the same as the most recent
+    // updated/published post.
+    // If no entries exist, use the current time.
+    let feed_updated = entries
+        .iter()
+        .map(|entry| entry.updated)
+        .max()
+        .unwrap_or_else(|| {
+            atom_syndication::FixedDateTime::from(DateTime::<Utc>::from(SystemTime::now()))
+        });
+
     // Build the feed object
     let feed = atom_syndication::FeedBuilder::default()
         .id(link.to_string())
+        .updated(feed_updated)
         .subtitle(Some(atom_syndication::Text::plain(description.to_string())))
         .links(vec![atom_syndication::Link {
             href: link.to_string(),
