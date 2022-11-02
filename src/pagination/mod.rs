@@ -73,7 +73,7 @@ fn create_all_paginators(
 }
 
 // sort posts by multiple criteria
-fn sort_posts(posts: &mut Vec<&liquid::model::Value>, config: &PaginationConfig) {
+fn sort_posts(posts: &mut [&liquid::model::Value], config: &PaginationConfig) {
     let order: fn(liquid::model::ScalarCow<'_>, liquid::model::ScalarCow<'_>) -> Ordering =
         match config.order {
             SortOrder::Desc => {

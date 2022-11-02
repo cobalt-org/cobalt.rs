@@ -10,7 +10,7 @@ use crate::cobalt_model::Minify;
 use crate::error::*;
 pub use cobalt_config::SassOutputStyle;
 
-#[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize)]
 #[serde(deny_unknown_fields, default)]
 pub struct SassBuilder {
     pub import_dir: Option<String>,
@@ -35,7 +35,7 @@ impl SassBuilder {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct SassCompiler {
     import_dir: Option<String>,
     style: SassOutputStyle,

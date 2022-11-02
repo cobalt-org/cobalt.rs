@@ -4,7 +4,7 @@ use std::path;
 
 use super::*;
 
-#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(default)]
 #[serde(rename_all = "snake_case")]
 #[cfg_attr(feature = "unstable", serde(deny_unknown_fields))]
@@ -115,7 +115,7 @@ impl fmt::Display for Config {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(default)]
 #[serde(rename_all = "snake_case")]
 #[cfg_attr(feature = "unstable", serde(deny_unknown_fields))]
@@ -134,7 +134,7 @@ impl Default for SyntaxHighlight {
     }
 }
 
-#[derive(Debug, Default, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(default)]
 #[serde(rename_all = "snake_case")]
 #[cfg_attr(feature = "unstable", serde(deny_unknown_fields))]

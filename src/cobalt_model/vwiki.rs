@@ -2,7 +2,7 @@ use crate::error::*;
 use serde::{Deserialize, Serialize};
 use vimwiki::{HtmlCodeConfig, HtmlConfig, Language, Page, ParseError, ToHtmlString};
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct VimwikiBuilder {
     pub theme: liquid::model::KString,
@@ -18,7 +18,7 @@ impl VimwikiBuilder {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Vimwiki {
     theme: liquid::model::KString,
     syntax_highlight_enabled: bool,
