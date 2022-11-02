@@ -10,7 +10,7 @@ use super::{files, Minify};
 
 use crate::error::*;
 
-#[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize)]
 #[serde(deny_unknown_fields, default)]
 pub struct AssetsBuilder {
     pub sass: sass::SassBuilder,

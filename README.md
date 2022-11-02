@@ -14,4 +14,4 @@ A straightforward static site generator written in [Rust](http://www.rust-lang.o
 
 
 # Minimum Supported Rust Version (MSRV)
-- Rust **1.60.0**
+- Rust **1.64.0**

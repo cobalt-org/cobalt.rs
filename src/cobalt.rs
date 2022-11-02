@@ -299,7 +299,7 @@ fn generate_pages(posts: Vec<Document>, documents: Vec<Document>, context: &Cont
     Ok(())
 }
 
-fn generate_posts(posts: &mut Vec<Document>, context: &Context) -> Result<()> {
+fn generate_posts(posts: &mut [Document], context: &Context) -> Result<()> {
     // collect all posts attributes to pass them to other posts for rendering
     let simple_posts_data: Vec<liquid::model::Value> = posts
         .iter()
@@ -336,7 +336,7 @@ fn generate_posts(posts: &mut Vec<Document>, context: &Context) -> Result<()> {
     Ok(())
 }
 
-fn sort_pages(posts: &mut Vec<Document>, collection: &Collection) -> Result<()> {
+fn sort_pages(posts: &mut [Document], collection: &Collection) -> Result<()> {
     // January 1, 1970 0:00:00 UTC, the beginning of time
     let default_date = cobalt_model::DateTime::default();
 
