@@ -273,16 +273,32 @@ impl Document {
                 format!("Atom feed can only be generated if `published_date' or `updated_date' is added to the frontmatter of {}", self.url_path)
             ))?;
 
+        let authors = self
+            .front
+            .authors
+            .as_ref()
+            .ok_or_else(|| failure::err_msg(
+                format!("Atom feed requires authors. Please add it to the default frontmatter or the frontmatter of {}", self.url_path)
+            ))?
+            .iter()
+            .map(|au| {
+                atom_syndication::PersonBuilder::default()
+                    .name(au.to_string())
+                    .build()
+            })
+            .collect();
+
         let entry = atom_syndication::Entry {
             id: link.clone(),
             title: atom_syndication::Text::plain(self.front.title.to_string()),
+            updated,
             summary: self
                 .description_to_str()
                 .map(|s| atom_syndication::Text::html(s)),
             published: self.front.published_date.map(|date| {
                 atom_syndication::FixedDateTime::parse_from_rfc2822(&date.to_rfc2822()).unwrap()
             }),
-            updated,
+            authors,
             links: vec![atom_syndication::Link {
                 href: link.clone(),
                 ..Default::default()

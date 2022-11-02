@@ -21,6 +21,8 @@ pub struct Frontmatter {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub categories: Option<Vec<liquid_core::model::KString>>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub authors: Option<Vec<liquid_core::model::KString>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub tags: Option<Vec<liquid_core::model::KString>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub excerpt_separator: Option<liquid_core::model::KString>,
@@ -101,6 +103,7 @@ impl Frontmatter {
             slug,
             title,
             description,
+            authors,
             excerpt,
             categories,
             tags,
@@ -121,6 +124,7 @@ impl Frontmatter {
             slug: slug.or_else(|| other.slug.clone()),
             title: title.or_else(|| other.title.clone()),
             description: description.or_else(|| other.description.clone()),
+            authors: authors.or_else(|| other.authors.clone()),
             excerpt: excerpt.or_else(|| other.excerpt.clone()),
             categories: categories.or_else(|| other.categories.clone()),
             tags: tags.or_else(|| other.tags.clone()),
