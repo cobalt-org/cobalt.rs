@@ -530,20 +530,22 @@ fn create_atom(
         .as_ref()
         .ok_or_else(|| failure::err_msg("`base_url` is required for atom support"))?;
 
-    let feed = atom_syndication::Feed {
-        id: link.to_string(),
-        subtitle: Some(atom_syndication::Text::plain(description.to_string())),
-        links: vec![atom_syndication::Link {
+    // Build the feed object
+    let feed = atom_syndication::FeedBuilder::default()
+        .id(link.to_string())
+        .subtitle(Some(atom_syndication::Text::plain(description.to_string())))
+        .links(vec![atom_syndication::Link {
             href: link.to_string(),
             ..Default::default()
-        }],
-        title: atom_syndication::Text::plain(title.to_string()),
-        entries: documents
-            .iter()
-            .map(|doc| doc.to_atom(link))
-            .collect::<std::result::Result<Vec<atom_syndication::Entry>, failure::Error>>()?,
-        ..Default::default()
-    };
+        }])
+        .title(atom_syndication::Text::plain(title.to_string()))
+        .entries(
+            documents
+                .iter()
+                .map(|doc| doc.to_atom(link))
+                .collect::<std::result::Result<Vec<atom_syndication::Entry>, failure::Error>>()?,
+        )
+        .build();
 
     // create target directories if any exist
     if let Some(parent) = path.parent() {
