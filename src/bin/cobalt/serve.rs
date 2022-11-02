@@ -2,11 +2,10 @@ use std::path;
 use std::process;
 use std::sync::mpsc::channel;
 use std::thread;
-use std::time;
 
 use cobalt::cobalt_model;
 use failure::ResultExt;
-use notify::Watcher;
+use notify::Watcher as _;
 
 use crate::args;
 use crate::build;
@@ -118,27 +117,27 @@ fn watch(config: &cobalt_model::Config) -> Result<()> {
         .with_context(|_| failure::err_msg("Failed to canonicalize destination folder"))?;
 
     let (tx, rx) = channel();
-    let mut watcher = notify::watcher(tx, time::Duration::from_secs(1))
-        .with_context(|_| failure::err_msg("Notify error"))?;
+    let mut watcher =
+        notify::recommended_watcher(tx).with_context(|_| failure::err_msg("Notify error"))?;
     watcher
         .watch(&source, notify::RecursiveMode::Recursive)
         .with_context(|_| failure::err_msg("Notify error"))?;
     info!("Watching {:?} for changes", &config.source);
 
-    loop {
-        let event = rx
-            .recv()
-            .with_context(|_| failure::err_msg("Notify error"))?;
-        let event_path = match event {
-            notify::DebouncedEvent::Create(ref path)
-            | notify::DebouncedEvent::NoticeWrite(ref path)
-            | notify::DebouncedEvent::Write(ref path)
-            | notify::DebouncedEvent::NoticeRemove(ref path)
-            | notify::DebouncedEvent::Remove(ref path) => Some(path),
-            notify::DebouncedEvent::Rename(_, ref to) => Some(to),
-            _ => None,
+    for event in rx {
+        let event = event.with_context(|_| failure::err_msg("Notify error"))?;
+        let event_paths = match event.kind {
+            notify::EventKind::Create(_)
+            | notify::EventKind::Modify(_)
+            | notify::EventKind::Remove(_) => {
+                log::trace!("Noticed {:?} for {:#?}", event.kind, event.paths);
+                &event.paths
+            }
+            _ => {
+                continue;
+            }
         };
-        let rebuild = if let Some(event_path) = event_path {
+        let rebuild = event_paths.iter().any(|event_path| {
             // Be as broad as possible in what can cause a rebuild to
             // ensure we don't miss anything (normal file walks will miss
             // `_layouts`, etc).
@@ -149,10 +148,7 @@ fn watch(config: &cobalt_model::Config) -> Result<()> {
                 debug!("Page changed {:?}", event);
                 true
             }
-        } else {
-            trace!("Assuming change {:?} is relevant", event);
-            true
-        };
+        });
         if rebuild {
             let result = build::build(config.clone());
             if let Err(fail) = result {
@@ -161,4 +157,6 @@ fn watch(config: &cobalt_model::Config) -> Result<()> {
             }
         }
     }
+
+    Ok(())
 }
