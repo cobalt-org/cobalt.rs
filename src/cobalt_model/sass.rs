@@ -1,8 +1,6 @@
 use std::ffi;
 use std::path;
 
-#[cfg(feature = "sass")]
-use sass_rs;
 use serde::{Deserialize, Serialize};
 
 use super::files;
@@ -13,7 +11,7 @@ pub(crate) use cobalt_config::SassOutputStyle;
 #[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize)]
 #[serde(deny_unknown_fields, default)]
 pub struct SassBuilder {
-    pub import_dir: Option<String>,
+    pub import_dir: path::PathBuf,
     pub style: SassOutputStyle,
 }
 
@@ -21,11 +19,7 @@ impl SassBuilder {
     pub fn from_config(config: cobalt_config::Sass, source: &path::Path) -> Self {
         Self {
             style: config.style,
-            import_dir: source
-                .join(config.import_dir)
-                .into_os_string()
-                .into_string()
-                .ok(),
+            import_dir: source.join(config.import_dir),
         }
     }
 
@@ -37,7 +31,7 @@ impl SassBuilder {
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct SassCompiler {
-    import_dir: Option<String>,
+    import_dir: path::PathBuf,
     style: SassOutputStyle,
 }
 
@@ -60,18 +54,20 @@ impl SassCompiler {
         file_path: &path::Path,
         minify: &Minify,
     ) -> Result<()> {
-        let sass_opts = sass_rs::Options {
-            include_paths: self.import_dir.iter().cloned().collect(),
-            output_style: match self.style {
-                SassOutputStyle::Nested => sass_rs::OutputStyle::Nested,
-                SassOutputStyle::Expanded => sass_rs::OutputStyle::Expanded,
-                SassOutputStyle::Compact => sass_rs::OutputStyle::Compact,
-                SassOutputStyle::Compressed => sass_rs::OutputStyle::Compressed,
-            },
-            ..Default::default()
+        let sass_opts = grass::Options::default()
+            .style(match self.style {
+                SassOutputStyle::Nested | SassOutputStyle::Expanded => grass::OutputStyle::Expanded,
+                SassOutputStyle::Compact | SassOutputStyle::Compressed => {
+                    grass::OutputStyle::Compressed
+                }
+            })
+            .load_path(&self.import_dir);
+        let content = if let Some(file_path) = file_path.to_str() {
+            grass::from_path(file_path, &sass_opts)?
+        } else {
+            let raw = std::fs::read_to_string(file_path)?;
+            grass::from_string(raw, &sass_opts)?
         };
-        let content =
-            sass_rs::compile_file(file_path, sass_opts).map_err(|e| anyhow::format_err!("{e}"))?;
 
         let rel_src = file_path
             .strip_prefix(source)

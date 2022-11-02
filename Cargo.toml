@@ -173,7 +173,7 @@ dunce = "1.0.5"
 file-serve = { version = "0.3.8", path = "crates/file-serve", optional = true }
 notify = { version = "8.0.0", optional = true, default-features = false, features = ["macos_fsevent"] }
 
-sass-rs = { version = "0.2.2", optional = true }
+grass = { version = "0.13.4", features = ["random"], default-features = false, optional = true }
 
 html-minifier = {version="5.0.0", optional = true }
 anyhow = "1.0.97"
@@ -192,7 +192,7 @@ preview_unstable = ["cobalt-config/preview_unstable"]
 
 serve = ["file-serve", "notify"]
 syntax-highlight = ["engarde/syntax"]
-sass = ['sass-rs']
+sass = ["dep:grass"]
 
 [profile.dev]
 panic = "abort"
