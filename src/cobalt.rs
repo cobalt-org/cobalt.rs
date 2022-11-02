@@ -522,7 +522,7 @@ fn create_atom(
     documents: &[Document],
     base_url: Option<&str>,
 ) -> Result<()> {
-    debug!("Creating atom file at {}", path.display());
+    debug!("Creating Atom file at {}", path.display());
 
     let title = &collection.title;
     let description = collection.description.as_deref().unwrap_or("");
