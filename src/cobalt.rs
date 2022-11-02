@@ -531,7 +531,8 @@ fn create_atom(
         .ok_or_else(|| failure::err_msg("`base_url` is required for atom support"))?;
 
     let entries: Result<Vec<atom_syndication::Entry>> =
-        documents.iter().map(|doc| doc.to_atom(link)).collect()?;
+        documents.iter().map(|doc| doc.to_atom(link)).collect();
+    let entries = entries?;
 
     // Build the feed object
     let feed = atom_syndication::FeedBuilder::default()
