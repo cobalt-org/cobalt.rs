@@ -1,5 +1,9 @@
 posts:
   atom: atom.xml
+  default:
+    authors:
+      - Alice
+      - Bob
 site:
   title: "My blog!"
   description: Blog description
