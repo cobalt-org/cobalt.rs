@@ -532,17 +532,24 @@ fn create_atom(
 
     let feed = atom_syndication::Feed {
         id: link.to_string(),
-        subtitle: Some(atom_syndication::Text::from(description.to_string())),
-        links: vec![
-            atom_syndication::Link {
-                href: link.to_string(),
-                ..Default::default()
-            }
-        ],
-        title: atom_syndication::Text::from(title.to_string()),
-        entries: documents.iter().map(|doc| doc.to_atom(link)).collect(),
+        subtitle: Some(atom_syndication::Text::plain(description.to_string())),
+        links: vec![atom_syndication::Link {
+            href: link.to_string(),
+            ..Default::default()
+        }],
+        title: atom_syndication::Text::plain(title.to_string()),
+        entries: documents
+            .iter()
+            .map(|doc| doc.to_atom(link))
+            .collect::<std::result::Result<Vec<atom_syndication::Entry>, failure::Error>>()?,
         ..Default::default()
     };
+
+    // create target directories if any exist
+    if let Some(parent) = path.parent() {
+        fs::create_dir_all(parent)
+            .with_context(|_| failure::format_err!("Could not create {}", parent.display()))?;
+    }
 
     let atom_string = feed.to_string();
     files::write_document_file(atom_string, path)?;

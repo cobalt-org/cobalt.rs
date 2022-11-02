@@ -27,6 +27,8 @@ pub struct Frontmatter {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub published_date: Option<DateTime>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub updated_date: Option<DateTime>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub format: Option<SourceFormat>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub templated: Option<bool>,
@@ -104,6 +106,7 @@ impl Frontmatter {
             tags,
             excerpt_separator,
             published_date,
+            updated_date,
             format,
             templated,
             layout,
@@ -123,6 +126,7 @@ impl Frontmatter {
             tags: tags.or_else(|| other.tags.clone()),
             excerpt_separator: excerpt_separator.or_else(|| other.excerpt_separator.clone()),
             published_date: published_date.or(other.published_date),
+            updated_date: updated_date.or(other.updated_date),
             format: format.or(other.format),
             templated: templated.or(other.templated),
             layout: layout.or_else(|| other.layout.clone()),

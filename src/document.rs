@@ -259,26 +259,48 @@ impl Document {
     }
 
     // Metadata for generating Atom feeds
-    pub fn to_atom(&self, root_url: &str) -> atom_syndication::Entry {
+    pub fn to_atom(&self, root_url: &str) -> Result<atom_syndication::Entry> {
         let link = format!("{}/{}", root_url, &self.url_path);
 
-        atom_syndication::Entry {
+        // Try updated_date first; then try published_date
+        let updated = self.front
+            .updated_date
+            .or(self.front.published_date)
+            .map(|date|
+                atom_syndication::FixedDateTime::parse_from_rfc2822(&date.to_rfc2822()).unwrap()
+            )
+            .ok_or_else(|| failure::err_msg(
+                format!("Atom feed can only be generated if `published_date' or `updated_date' is added to the frontmatter of {}", self.url_path)
+            ))?;
+
+        let entry = atom_syndication::Entry {
             id: link.clone(),
-            updated: self.front.published_date.map(|date|
-                atom_syndication::FixedDateTime::parse_from_rfc2822(date.to_rfc2822().as_str()).unwrap()
-            ).unwrap_or_default(),
+            title: atom_syndication::Text::plain(self.front.title.to_string()),
+            summary: self
+                .description_to_str()
+                .map(|s| atom_syndication::Text::html(s)),
+            published: self.front.published_date.map(|date| {
+                atom_syndication::FixedDateTime::parse_from_rfc2822(&date.to_rfc2822()).unwrap()
+            }),
+            updated,
             links: vec![atom_syndication::Link {
                 href: link.clone(),
                 ..Default::default()
             }],
-            title: atom_syndication::Text::from(self.front.title.to_string()),
-            summary: self.description_to_str()
-                .map(|s| atom_syndication::Text::html(s)),
-            published: self.front.published_date.map(|date|
-                atom_syndication::FixedDateTime::parse_from_rfc2822(date.to_rfc2822().as_str()).unwrap()
-            ),
+            categories: self
+                .front
+                .categories
+                .iter()
+                .map(|c| atom_syndication::Category {
+                    term: c.as_str().to_owned(),
+                    scheme: None,
+                    label: None,
+                })
+                .collect(),
             ..Default::default()
-        }
+        };
+
+        Ok(entry)
     }
 
     pub fn to_sitemap<T: std::io::Write>(
