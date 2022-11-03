@@ -101,7 +101,7 @@ dunce = "1.0.3"
 vimwiki = { version = "0.1", features = ["html"] }
 
 file-serve = { version = "0.2.1", path = "crates/file-serve", optional = true }
-notify = { version = "4", optional = true }
+notify = { version = "5", optional = true, default-features = false, features = ["macos_fsevent"] }
 
 sass-rs = { version = "0.2", optional = true }
 
