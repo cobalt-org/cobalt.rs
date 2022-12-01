@@ -1021,9 +1021,9 @@ dependencies = [
 
 [[package]]
 name = "html-minifier"
-version = "3.0.15"
+version = "4.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d9909bfe02da0a2a85a5e4684c2e7b637a59d84f516738fe5d75308eab25b88a"
+checksum = "18f74036e4be1b97eaf78bcf795d55002eccf613d5c4705bf78d3b92649ab00f"
 dependencies = [
  "cow-utils",
  "educe",
@@ -1366,12 +1366,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "macro-utils"
-version = "0.1.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0e72f7deb758fea9ea7d290aebfa788763d0bffae12caa6406a25baaf8fa68a8"
-
-[[package]]
 name = "memchr"
 version = "2.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1404,12 +1398,9 @@ dependencies = [
 
 [[package]]
 name = "minifier"
-version = "0.0.43"
+version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d81352bda6f4d04af1720afaa762054f66e16caffd93c1f86461a1c0ac4e695e"
-dependencies = [
- "macro-utils",
-]
+checksum = "8eb022374af2f446981254e6bf9efb6e2c9e1a53176d395fca02792fd4435729"
 
 [[package]]
 name = "miniz_oxide"
