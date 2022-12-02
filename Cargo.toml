@@ -67,7 +67,7 @@ clap-verbosity-flag = "2.0"
 proc-exit = "2"
 yansi = "0.5.1"
 concolor = "0.0.9"
-concolor-clap = { version = "0.0.12", features = ["api_unstable"] }
+concolor-clap = { version = "0.0.13", features = ["api_unstable"] }
 human-panic = "1"
 scrawl = "1.1"
 tempfile = "3.3"
