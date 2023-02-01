@@ -21,15 +21,15 @@ Options:
   -q, --quiet...      Less output per occurrence
       --color <WHEN>  Controls when to use color [default: auto] [possible values: auto, always,
                       never]
-  -h, --help          Print help information
-  -V, --version       Print version information
+  -h, --help          Print help
+  -V, --version       Print version
 
 $ cobalt --non-existent
 ? failed
-error: Found argument '--non-existent' which wasn't expected, or isn't valid in this context
+error: unexpected argument '--non-existent' found
 
 Usage: cobalt[EXE] [OPTIONS] <COMMAND>
 
-For more information try '--help'
+For more information, try '--help'.
 
 ```
