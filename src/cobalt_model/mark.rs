@@ -74,9 +74,11 @@ impl AbstractMarkdown for CustomMarkdown {
             .spawn()
             .unwrap();
 
-        let stdin = child.stdin.as_mut().unwrap();
-        stdin.write_all(content.as_bytes()).unwrap();
-        std::mem::drop(stdin);
+        {
+          let mut stdin = child.stdin.take().unwrap();
+          stdin.write_all(content.as_bytes()).unwrap();
+          // EOF gets sent here.
+        }
 
         let stdout = child.stdout.as_mut().unwrap();
         let mut html = String::new();
