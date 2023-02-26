@@ -20,7 +20,7 @@ use crate::error::*;
 
 pub struct RenderContext<'a> {
     pub parser: &'a cobalt_model::Liquid,
-    pub markdown: &'a cobalt_model::Markdown,
+    pub markdown: &'a Box<dyn cobalt_model::AbstractMarkdown>,
     pub vimwiki: &'a cobalt_model::Vimwiki,
     pub globals: &'a Object,
     pub minify: Minify,

@@ -55,6 +55,8 @@ impl Config {
             includes_dir,
             assets,
             minify,
+            custom_markdown_executable,
+            custom_markdown_executable_args,
         } = source;
 
         if include_drafts {
@@ -115,6 +117,8 @@ impl Config {
                 .then(|| syntax_highlight.theme.clone()),
         };
         let markdown = mark::MarkdownBuilder {
+            custom_executable: custom_markdown_executable.clone(),
+            custom_executable_args: custom_markdown_executable_args.clone(),
             syntax: syntax.clone(),
             theme: syntax_highlight
                 .enabled

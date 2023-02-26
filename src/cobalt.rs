@@ -30,7 +30,7 @@ struct Context {
     pub site_attributes: liquid::Object,
     pub layouts: HashMap<String, String>,
     pub liquid: cobalt_model::Liquid,
-    pub markdown: cobalt_model::Markdown,
+    pub markdown: Box<dyn cobalt_model::AbstractMarkdown>,
     pub vimwiki: cobalt_model::Vimwiki,
     pub assets: cobalt_model::Assets,
     pub minify: Minify,

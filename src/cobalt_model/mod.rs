@@ -26,6 +26,7 @@ pub use self::assets::AssetsBuilder;
 pub use self::collection::Collection;
 pub use self::config::Config;
 pub use self::frontmatter::Frontmatter;
+pub use self::mark::AbstractMarkdown;
 pub use self::mark::Markdown;
 pub use self::mark::MarkdownBuilder;
 pub use self::sass::SassBuilder;

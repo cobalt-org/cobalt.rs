@@ -30,6 +30,8 @@ pub struct Config {
     pub includes_dir: &'static str,
     pub assets: Assets,
     pub minify: Minify,
+    pub custom_markdown_executable: Option<String>,
+    pub custom_markdown_executable_args: Vec<String>,
 }
 
 impl Default for Config {
@@ -51,6 +53,8 @@ impl Default for Config {
             includes_dir: "_includes",
             assets: Assets::default(),
             minify: Minify::default(),
+            custom_markdown_executable: None,
+            custom_markdown_executable_args: vec![],
         }
     }
 }
