@@ -301,9 +301,11 @@ pub fn create_new_document(
     let mut doc = doc.to_string();
     if edit || title.is_none() {
         doc = scrawl::editor::new()
-            .extension(extension.as_str())
-            .contents(doc.as_str())
-            .open()?;
+            .ext(extension.as_str())
+            .open(scrawl::Contents::FromString(&doc.as_str()))
+            .map_err(|e| failure::format_err!("{}", e))?
+            .to_string()
+            .map_err(|e| failure::format_err!("{}", e))?;
         let parsed = cobalt_model::Document::parse(&doc)?;
         front = parsed.into_parts().0;
     }
