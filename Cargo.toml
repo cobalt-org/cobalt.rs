@@ -69,7 +69,7 @@ yansi = "0.5.1"
 concolor = "0.0.11"
 concolor-clap = { version = "0.0.13", features = ["api_unstable"] }
 human-panic = "1"
-scrawl = "1.1"
+scrawl = "2.0"
 tempfile = "3.4"
 relative-path = { version = "1", features = ["serde"] }
 liquid = "0.26"
