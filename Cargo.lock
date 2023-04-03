@@ -310,7 +310,7 @@ dependencies = [
  "clap-verbosity-flag",
  "cobalt-config",
  "cobalt-core",
- "concolor 0.0.12",
+ "concolor 0.1.1",
  "concolor-clap",
  "deunicode",
  "dunce",
@@ -416,6 +416,12 @@ dependencies = [
  "concolor-query 0.1.0",
  "is-terminal",
 ]
+
+[[package]]
+name = "concolor"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0b946244a988c390a94667ae0e3958411fa40cc46ea496a929b263d883f5f9c3"
 
 [[package]]
 name = "concolor-clap"
