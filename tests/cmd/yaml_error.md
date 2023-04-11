@@ -12,9 +12,11 @@ DEBUG: glob converted to regex: Glob { glob: "**/_*", re: "(?-u)^(?:/?|.*/)_[^/]
 DEBUG: built glob set; 0 literals, 0 basenames, 0 extensions, 0 prefixes, 0 suffixes, 0 required extensions, 2 regexes
 DEBUG: Loading snippets from `[CWD]/_includes`
 Error: Failed to parse index.liquid
-Info: caused by Failed to parse frontmatter
 
-
-Info: caused by found character that cannot start any token, while scanning for the next token
+Caused by:
+    0: Failed to parse frontmatter
+       
+       
+    1: found character that cannot start any token, while scanning for the next token
 
 ```

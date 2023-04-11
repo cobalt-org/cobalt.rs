@@ -12,6 +12,8 @@ DEBUG: glob converted to regex: Glob { glob: "**/_*", re: "(?-u)^(?:/?|.*/)_[^/]
 DEBUG: built glob set; 0 literals, 0 basenames, 0 extensions, 0 prefixes, 0 suffixes, 0 required extensions, 2 regexes
 DEBUG: Loading snippets from `[CWD]/_includes`
 Error: Failed to render for index.html
-Info: caused by Layout default_nonexistent.liquid does not exist (referenced in index.html).
+
+Caused by:
+    Layout default_nonexistent.liquid does not exist (referenced in index.html).
 
 ```

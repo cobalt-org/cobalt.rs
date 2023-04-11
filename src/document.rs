@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use std::default::Default;
 use std::path::Path;
 
-use failure::ResultExt;
+use anyhow::Context as _;
 use lazy_static::lazy_static;
 use liquid::model::Value;
 use liquid::Object;
@@ -188,7 +188,7 @@ impl Document {
     ) -> Result<Document> {
         trace!("Parsing {:?}", rel_path);
         let content = files::read_file(src_path)?;
-        let builder = cobalt_config::Document::parse(&content).map_err_with_sources()?;
+        let builder = cobalt_config::Document::parse(&content)?;
         let (front, content) = builder.into_parts();
         let front = front.merge_path(rel_path).merge(&default_front);
 
@@ -198,8 +198,8 @@ impl Document {
             let perma_attributes = permalink_attributes(&front, rel_path);
             let url_path =
                 permalink::explode_permalink(front.permalink.as_str(), &perma_attributes)
-                    .with_context(|_| {
-                        failure::format_err!("Failed to create permalink `{}`", front.permalink)
+                    .with_context(|| {
+                        anyhow::format_err!("Failed to create permalink `{}`", front.permalink)
                     })?;
             let file_path = permalink::format_url_as_file(&url_path);
             (file_path, url_path)
@@ -366,7 +366,7 @@ impl Document {
     ) -> Result<String> {
         if let Some(ref layout) = self.front.layout {
             let layout_data_ref = layouts.get(layout.as_str()).ok_or_else(|| {
-                failure::format_err!(
+                anyhow::format_err!(
                     "Layout {} does not exist (referenced in {}).",
                     layout,
                     self.file_path
@@ -376,10 +376,10 @@ impl Document {
             let template = context
                 .parser
                 .parse(layout_data_ref)
-                .with_context(|_| failure::format_err!("Failed to parse layout {:?}", layout))?;
+                .with_context(|| anyhow::format_err!("Failed to parse layout {:?}", layout))?;
             let content_html = template
                 .render(context.globals)
-                .with_context(|_| failure::format_err!("Failed to render layout {:?}", layout))?;
+                .with_context(|| anyhow::format_err!("Failed to render layout {:?}", layout))?;
             let content_html = minify_if_enabled(content_html, context, &self.file_path)?;
             Ok(content_html)
         } else {
@@ -388,7 +388,7 @@ impl Document {
                 liquid::model::KStringCow::from_static("content").into(),
             ];
             let content_html = liquid::model::try_find(context.globals, path)
-                .ok_or_else(|| failure::err_msg("Internal error: page isn't in globals"))?
+                .ok_or_else(|| anyhow::format_err!("Internal error: page isn't in globals"))?
                 .render()
                 .to_string();
 

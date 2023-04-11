@@ -62,7 +62,7 @@ pub fn clean(config: &cobalt::Config) -> Result<()> {
         }
     };
     if cwd.starts_with(&destdir) {
-        failure::bail!(
+        anyhow::bail!(
             "Attempting to delete current directory ({:?}), \
              Cancelling the operation",
             destdir

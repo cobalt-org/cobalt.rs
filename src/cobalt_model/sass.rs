@@ -70,7 +70,8 @@ impl SassCompiler {
             },
             ..Default::default()
         };
-        let content = sass_rs::compile_file(file_path, sass_opts).map_err(failure::err_msg)?;
+        let content =
+            sass_rs::compile_file(file_path, sass_opts).map_err(|e| anyhow::format_err!("{e}"))?;
 
         let rel_src = file_path
             .strip_prefix(source)
@@ -82,7 +83,7 @@ impl SassCompiler {
         let content = if minify.css {
             use html_minifier::css::minify;
             minify(&content).map_err(|e| {
-                failure::format_err!(
+                anyhow::format_err!(
                     "Could not minify saas file {} error {}",
                     source.to_string_lossy(),
                     e

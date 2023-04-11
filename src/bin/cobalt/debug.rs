@@ -64,13 +64,13 @@ impl DebugCommands {
 
                 match collection.as_deref() {
                     Some("assets") => {
-                        failure::bail!("TODO Re-implement");
+                        anyhow::bail!("TODO Re-implement");
                     }
                     Some("pages") => {
-                        failure::bail!("TODO Re-implement");
+                        anyhow::bail!("TODO Re-implement");
                     }
                     Some("posts") => {
-                        failure::bail!("TODO Re-implement");
+                        anyhow::bail!("TODO Re-implement");
                     }
                     None => {
                         let source_files = cobalt_core::Source::new(
@@ -82,7 +82,7 @@ impl DebugCommands {
                         }
                     }
                     _ => {
-                        failure::bail!("Collection is not yet supported");
+                        anyhow::bail!("Collection is not yet supported");
                     }
                 }
             }

@@ -2,8 +2,8 @@ use std::ffi::OsStr;
 use std::fs;
 use std::path;
 
+use anyhow::Context as _;
 use cobalt_config::DateTime;
-use failure::ResultExt;
 use liquid;
 use log::debug;
 use serde::{Deserialize, Serialize};
@@ -103,7 +103,7 @@ fn deep_insert(
         let mut map = data_map;
         for part in path.iter() {
             let key = part.to_str().ok_or_else(|| {
-                failure::format_err!(
+                anyhow::format_err!(
                     "The data from {:?} can't be loaded as it contains non utf-8 characters",
                     path
                 )
@@ -115,7 +115,7 @@ fn deep_insert(
                 .or_insert_with(|| liquid::model::Value::Object(liquid::Object::new()))
                 .as_object_mut()
                 .ok_or_else(|| {
-                    failure::format_err!(
+                    anyhow::format_err!(
                         "Aborting: Duplicate in data tree. Would overwrite {:?} ",
                         path
                     )
@@ -128,7 +128,7 @@ fn deep_insert(
 
     match target_map.insert(target_key.into(), data) {
         None => Ok(()),
-        _ => Err(failure::format_err!(
+        _ => Err(anyhow::format_err!(
             "The data from {:?} can't be loaded: the key already exists",
             file_path
         )),
@@ -150,7 +150,7 @@ fn load_data(data_path: &path::Path) -> Result<liquid::model::Value> {
         let text = files::read_file(data_path)?;
         data = toml::from_str(&text)?;
     } else {
-        failure::bail!(
+        anyhow::bail!(
             "Failed to load of data {:?}: unknown file type '{:?}'.\n\
              Supported data files extensions are: yml, yaml, json and toml.",
             data_path,
@@ -176,10 +176,10 @@ fn insert_data_dir(data: &mut liquid::Object, data_root: &path::Path) -> Result<
             .expect("Files will always return with a stem");
         let file_stem = String::from(file_stem.to_str().unwrap());
         let data_fragment = load_data(&full_path)
-            .with_context(|_| format!("Loading data from `{}` failed", full_path.display()))?;
+            .with_context(|| format!("Loading data from `{}` failed", full_path.display()))?;
 
         deep_insert(data, rel_path, file_stem, data_fragment)
-            .with_context(|_| format!("Merging data into `{}` failed", rel_path.display()))?;
+            .with_context(|| format!("Merging data into `{}` failed", rel_path.display()))?;
     }
 
     Ok(())

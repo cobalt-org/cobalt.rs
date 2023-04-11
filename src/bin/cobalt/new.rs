@@ -4,8 +4,8 @@ use std::fs;
 use std::io::Write;
 use std::path;
 
+use anyhow::Context as _;
 use cobalt::cobalt_model;
-use failure::ResultExt;
 
 use crate::args;
 use crate::error::*;
@@ -21,7 +21,7 @@ pub struct InitArgs {
 impl InitArgs {
     pub fn run(&self) -> Result<()> {
         create_new_project(&self.directory)
-            .with_context(|_| failure::err_msg("Could not create a new cobalt project"))?;
+            .with_context(|| anyhow::format_err!("Could not create a new cobalt project"))?;
         info!("Created new project at {}", self.directory.display());
 
         Ok(())
@@ -66,7 +66,7 @@ impl NewArgs {
         let ext = self.with_ext.as_deref();
 
         create_new_document(&config, title, file, ext, self.edit)
-            .with_context(|_| failure::format_err!("Could not create document"))?;
+            .with_context(|| anyhow::format_err!("Could not create document"))?;
 
         Ok(())
     }
@@ -106,7 +106,7 @@ impl RenameArgs {
         }
 
         rename_document(&config, source, title, file)
-            .with_context(|_| failure::format_err!("Could not rename `{}`", title))?;
+            .with_context(|| anyhow::format_err!("Could not rename `{}`", title))?;
 
         Ok(())
     }
@@ -134,7 +134,7 @@ impl PublishArgs {
         file.push(path::Path::new(filename));
 
         publish_document(&config, &file)
-            .with_context(|_| failure::format_err!("Could not publish `{:?}`", file))?;
+            .with_context(|| anyhow::format_err!("Could not publish `{:?}`", file))?;
 
         Ok(())
     }
@@ -247,7 +247,7 @@ pub fn create_new_document(
     let interim_path = parent_dir.join(format!("NON_EXISTENT.{}", extension));
     let interim_path = cobalt_core::SourcePath::from_root(&config.source, &interim_path)
         .ok_or_else(|| {
-            failure::format_err!(
+            anyhow::format_err!(
                 "New file {} not project directory ({})",
                 file.display(),
                 config.source.display()
@@ -264,10 +264,10 @@ pub fn create_new_document(
             &config.page_extensions,
         ) {
             Some((slug, _)) => slug,
-            None => failure::bail!("Target file is an asset: {}", file.display()),
+            None => anyhow::bail!("Target file is an asset: {}", file.display()),
         }
     } else {
-        failure::bail!("Target file is ignored: {}", file.display());
+        anyhow::bail!("Target file is ignored: {}", file.display());
     };
 
     let source_path = config
@@ -275,14 +275,14 @@ pub fn create_new_document(
         .join(format!("_defaults/{}.{}", collection_slug, extension));
     let source = if source_path.is_file() {
         cobalt_model::files::read_file(&source_path)
-            .with_context(|_| failure::format_err!("Failed to read default: {:?}", source_path))?
+            .with_context(|| anyhow::format_err!("Failed to read default: {:?}", source_path))?
     } else {
         debug!(
             "No custom default provided ({:?}), falling back to built-in",
             source_path
         );
         if extension != "md" {
-            failure::bail!("No builtin default for `{}` files, only `md`", extension,);
+            anyhow::bail!("No builtin default for `{}` files, only `md`", extension,);
         }
         // For custom collections, use a post default.
         let default = *DEFAULT.get(collection_slug).unwrap_or(&POST_MD);
@@ -303,9 +303,9 @@ pub fn create_new_document(
         doc = scrawl::editor::new()
             .ext(extension.as_str())
             .open(scrawl::Contents::FromString(&doc.as_str()))
-            .map_err(|e| failure::format_err!("{}", e))?
+            .map_err(|e| anyhow::format_err!("{}", e))?
             .to_string()
-            .map_err(|e| failure::format_err!("{}", e))?;
+            .map_err(|e| anyhow::format_err!("{}", e))?;
         let parsed = cobalt_model::Document::parse(&doc)?;
         front = parsed.into_parts().0;
     }
@@ -313,7 +313,7 @@ pub fn create_new_document(
     let title = title
         .map(|t| t.to_owned())
         .or_else(|| front.title.map(|s| s.into_string()))
-        .ok_or_else(|| failure::format_err!("Title is missing"))?;
+        .ok_or_else(|| anyhow::format_err!("Title is missing"))?;
     let filename = filename
         .unwrap_or_else(|| format!("{}.{}", cobalt_model::slug::slugify(&title), extension));
     let mut file = interim_path;
@@ -340,7 +340,7 @@ fn create_file_for_path(path: &path::Path, content: &str) -> Result<()> {
         .write(true)
         .create_new(true)
         .open(path)
-        .with_context(|_| failure::format_err!("Failed to create file {}", path.display()))?;
+        .with_context(|| anyhow::format_err!("Failed to create file {}", path.display()))?;
 
     file.write_all(content.as_bytes())?;
 
@@ -368,7 +368,7 @@ pub fn rename_document(
     let (mut front, content) = doc.into_parts();
 
     let target = cobalt_core::SourcePath::from_root(&config.source, &target).ok_or_else(|| {
-        failure::format_err!(
+        anyhow::format_err!(
             "New file {} not project directory ({})",
             target.display(),
             config.source.display()
@@ -387,10 +387,10 @@ pub fn rename_document(
             Some((slug, _)) if config.pages.slug == slug => &config.pages,
             Some((slug, _)) if config.posts.slug == slug => &config.posts,
             Some((slug, _)) => unreachable!("Unknown collection: {}", slug),
-            None => failure::bail!("Target file is an asset: {}", target.rel_path),
+            None => anyhow::bail!("Target file is an asset: {}", target.rel_path),
         }
     } else {
-        failure::bail!("Target file is ignored: {}", target.rel_path);
+        anyhow::bail!("Target file is ignored: {}", target.rel_path);
     };
     // Can't rely on this for drafts atm
     let full_front = front
@@ -456,8 +456,8 @@ fn move_from_drafts_to_posts(
                 target.display()
             );
             if let Some(parent) = target.parent() {
-                fs::create_dir_all(parent).with_context(|_| {
-                    failure::format_err!("Could not create {}", parent.display())
+                fs::create_dir_all(parent).with_context(|| {
+                    anyhow::format_err!("Could not create {}", parent.display())
                 })?;
             }
             fs::rename(file, &target)?;
@@ -483,7 +483,7 @@ pub fn publish_document(config: &cobalt_model::Config, file: &path::Path) -> Res
 
     let file = move_from_drafts_to_posts(config, file)?;
     let file = cobalt_core::SourcePath::from_root(&config.source, &file).ok_or_else(|| {
-        failure::format_err!(
+        anyhow::format_err!(
             "New file {} not project directory ({})",
             file.display(),
             config.source.display()
@@ -502,10 +502,10 @@ pub fn publish_document(config: &cobalt_model::Config, file: &path::Path) -> Res
             Some((slug, _)) if config.pages.slug == slug => &config.pages,
             Some((slug, _)) if config.posts.slug == slug => &config.posts,
             Some((slug, _)) => unreachable!("Unknown collection: {}", slug),
-            None => failure::bail!("Target file is an asset: {}", file.rel_path),
+            None => anyhow::bail!("Target file is an asset: {}", file.rel_path),
         }
     } else {
-        failure::bail!("Target file is ignored: {}", file.rel_path);
+        anyhow::bail!("Target file is ignored: {}", file.rel_path);
     };
 
     if collection.publish_date_in_filename {

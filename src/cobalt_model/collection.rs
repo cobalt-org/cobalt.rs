@@ -67,7 +67,7 @@ impl Collection {
             publish_date_in_filename,
         } = config;
 
-        let title = title.ok_or_else(|| failure::err_msg("Collection is missing a `title`"))?;
+        let title = title.ok_or_else(|| anyhow::format_err!("Collection is missing a `title`"))?;
         let slug = liquid::model::KString::from_ref(slug);
 
         let dir = dir.unwrap_or_else(|| cobalt_config::RelPath::from_unchecked(slug.as_str()));

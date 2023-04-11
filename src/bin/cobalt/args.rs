@@ -2,7 +2,7 @@ use std::env;
 use std::io::Write;
 use std::path;
 
-use failure::ResultExt;
+use anyhow::Context as _;
 
 use crate::error::*;
 
@@ -31,8 +31,8 @@ impl ConfigArgs {
 
         // Fetch config information if available
         let mut config = if let Some(config_path) = config_path {
-            cobalt_config::Config::from_file(config_path).with_context(|_| {
-                failure::format_err!("Error reading config file {:?}", config_path)
+            cobalt_config::Config::from_file(config_path).with_context(|| {
+                anyhow::format_err!("Error reading config file {:?}", config_path)
             })?
         } else {
             let cwd = env::current_dir().unwrap_or_default();

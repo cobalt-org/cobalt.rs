@@ -17,7 +17,7 @@ fn distribute_posts_by_tags<'a>(
             for tag in tags.values() {
                 let tag = tag
                     .as_scalar()
-                    .ok_or_else(|| failure::err_msg("Should have string tags"))?
+                    .ok_or_else(|| anyhow::format_err!("Should have string tags"))?
                     .to_kstr()
                     .into_string();
                 let cur_tag = per_tags.entry(tag).or_insert_with(Vec::new);
@@ -57,7 +57,7 @@ pub fn create_tags_paginators(
             acc.paginators.extend(cur_tag_paginators.into_iter());
             Ok(acc)
         })
-        .or_else(std::result::Result::<_, failure::Error>::Err)?;
+        .or_else(std::result::Result::<_, anyhow::Error>::Err)?;
 
     tag_paginators.firsts_of_tags.sort_unstable_by_key(|p| {
         p.index_title
