@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 <!-- next-header -->
 ## [Unreleased] - ReleaseDate
 
+### Fixes
+
+- Improve frontmatter parsing errors
+
+### Compatibility
+
+- MSRV is now 1.64.0
+
 ## [0.18.3] - 2022-08-26
 
 ### Fixes
