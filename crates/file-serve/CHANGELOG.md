@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 <!-- next-header -->
 ## [Unreleased] - ReleaseDate
 
+## [0.2.2] - 2023-04-20
+
 ### Compatibility
 
 - MSRV is now 1.64.0
@@ -22,7 +24,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [0.1.1] - 2022-04-04
 
 <!-- next-url -->
-[Unreleased]: https://github.com/cobalt-org/cobalt.rs/compare/file-serve-v0.2.1...HEAD
+[Unreleased]: https://github.com/cobalt-org/cobalt.rs/compare/file-serve-v0.2.2...HEAD
+[0.2.2]: https://github.com/cobalt-org/cobalt.rs/compare/file-serve-v0.2.1...file-serve-v0.2.2
 [0.2.1]: https://github.com/cobalt-org/cobalt.rs/compare/file-serve-v0.2.0...file-serve-v0.2.1
 [0.2.0]: https://github.com/cobalt-org/cobalt.rs/compare/file-serve-v0.1.1...file-serve-v0.2.0
 [0.1.1]: https://github.com/cobalt-org/cobalt.rs/compare/2030b59e4632a0a618821274205a54741dffea52...file-serve-v0.1.1

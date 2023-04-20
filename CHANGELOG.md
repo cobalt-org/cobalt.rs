@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 <!-- next-header -->
 ## [Unreleased] - ReleaseDate
 
+## [0.18.4] - 2023-04-20
+
 ### Fixes
 
 - Improve frontmatter parsing errors
@@ -668,7 +670,8 @@ this.
 [@tak1n]: https://github.com/tak1n
 
 <!-- next-url -->
-[Unreleased]: https://github.com/cobalt-org/cobalt.rs/compare/v0.18.3...HEAD
+[Unreleased]: https://github.com/cobalt-org/cobalt.rs/compare/v0.18.4...HEAD
+[0.18.4]: https://github.com/cobalt-org/cobalt.rs/compare/v0.18.3...v0.18.4
 [0.18.3]: https://github.com/cobalt-org/cobalt.rs/compare/v0.18.2...v0.18.3
 [0.18.2]: https://github.com/cobalt-org/cobalt.rs/compare/v0.18.1...v0.18.2
 [0.18.1]: https://github.com/cobalt-org/cobalt.rs/compare/v0.18.0...v0.18.1

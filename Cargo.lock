@@ -310,7 +310,7 @@ checksum = "8a2dd5a6fe8c6e3502f568a6353e5273bbb15193ad9a89e457b9970798efbea1"
 
 [[package]]
 name = "cobalt-bin"
-version = "0.18.3"
+version = "0.18.4"
 dependencies = [
  "anyhow",
  "clap",
@@ -360,7 +360,7 @@ dependencies = [
 
 [[package]]
 name = "cobalt-config"
-version = "0.18.1"
+version = "0.18.2"
 dependencies = [
  "deunicode",
  "itertools",
@@ -377,7 +377,7 @@ dependencies = [
 
 [[package]]
 name = "cobalt-core"
-version = "0.18.1"
+version = "0.18.2"
 dependencies = [
  "cobalt-config",
  "ignore",
@@ -809,7 +809,7 @@ dependencies = [
 
 [[package]]
 name = "engarde"
-version = "0.1.5"
+version = "0.1.6"
 dependencies = [
  "syntect 5.0.0",
 ]
@@ -903,7 +903,7 @@ dependencies = [
 
 [[package]]
 name = "file-serve"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "log",
  "mime_guess",
