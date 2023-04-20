@@ -3,8 +3,8 @@ use std::process;
 use std::sync::mpsc::channel;
 use std::thread;
 
+use anyhow::Context as _;
 use cobalt::cobalt_model;
-use failure::ResultExt;
 use notify::Watcher as _;
 
 use crate::args;
@@ -91,9 +91,7 @@ fn serve(server: &file_serve::Server) -> Result<std::convert::Infallible> {
     info!("Server Listening on http://{}", server.addr());
     info!("Ctrl-c to stop the server");
 
-    server
-        .serve()
-        .map_err(|e| Error::from_boxed_compat(Box::new(e)))
+    Ok(server.serve()?)
 }
 
 fn open_browser(url: String) -> Result<()> {
@@ -108,24 +106,24 @@ fn watch(config: &cobalt_model::Config) -> Result<()> {
     // canonicalize is to ensure there is no question that `watcher`s paths come back safe for
     // Files::includes_file
     let source = dunce::canonicalize(path::Path::new(&config.source))
-        .with_context(|_| failure::err_msg("Failed in processing source"))?;
+        .with_context(|| anyhow::format_err!("Failed in processing source"))?;
 
     // Also canonicalize the destination folder. In particular for Windows, notify-rs
     // generates the absolute path by prepending the above source path.
     // On Windows canonicalize() adds a \\?\ to the start of the path.
     let destination = dunce::canonicalize(&config.destination)
-        .with_context(|_| failure::err_msg("Failed to canonicalize destination folder"))?;
+        .with_context(|| anyhow::format_err!("Failed to canonicalize destination folder"))?;
 
     let (tx, rx) = channel();
     let mut watcher =
-        notify::recommended_watcher(tx).with_context(|_| failure::err_msg("Notify error"))?;
+        notify::recommended_watcher(tx).with_context(|| anyhow::format_err!("Notify error"))?;
     watcher
         .watch(&source, notify::RecursiveMode::Recursive)
-        .with_context(|_| failure::err_msg("Notify error"))?;
+        .with_context(|| anyhow::format_err!("Notify error"))?;
     info!("Watching {:?} for changes", &config.source);
 
     for event in rx {
-        let event = event.with_context(|_| failure::err_msg("Notify error"))?;
+        let event = event.with_context(|| anyhow::format_err!("Notify error"))?;
         let event_paths = match event.kind {
             notify::EventKind::Create(_)
             | notify::EventKind::Modify(_)
@@ -152,7 +150,6 @@ fn watch(config: &cobalt_model::Config) -> Result<()> {
         if rebuild {
             let result = build::build(config.clone());
             if let Err(fail) = result {
-                let fail: exitfailure::ExitFailure = fail.into();
                 error!("build failed\n{:?}", fail);
             }
         }

@@ -12,12 +12,14 @@ DEBUG: glob converted to regex: Glob { glob: "**/_*", re: "(?-u)^(?:/?|.*/)_[^/]
 DEBUG: built glob set; 0 literals, 0 basenames, 0 extensions, 0 prefixes, 0 suffixes, 0 required extensions, 2 regexes
 DEBUG: Loading snippets from `[CWD]/_includes`
 Error: Failed to render content for index.html
-Info: caused by liquid:  --> 5:3
-  |
-5 | {{{{{}}}}% endfor %}
-  |   ^---
-  |
-  = expected Value
 
+Caused by:
+    liquid:  --> 5:3
+      |
+    5 | {{{{{}}}}% endfor %}
+      |   ^---
+      |
+      = expected Value
+    
 
 ```

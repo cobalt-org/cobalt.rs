@@ -24,14 +24,14 @@ fn has_syntax_theme(syntax: &SyntaxHighlight, name: &str) -> error::Result<bool>
 
 #[cfg(not(feature = "syntax-highlight"))]
 fn has_syntax_theme(syntax: &SyntaxHighlight, name: &str) -> error::Result<bool> {
-    failure::bail!("Themes are unsupported in this build.");
+    anyhow::bail!("Themes are unsupported in this build.");
 }
 
 fn verify_theme(syntax: &SyntaxHighlight, theme: Option<&str>) -> error::Result<()> {
     if let Some(theme) = &theme {
         match has_syntax_theme(syntax, theme) {
             Ok(true) => {}
-            Ok(false) => failure::bail!("Syntax theme '{}' is unsupported", theme),
+            Ok(false) => anyhow::bail!("Syntax theme '{}' is unsupported", theme),
             Err(err) => {
                 log::warn!("Syntax theme named '{}' ignored. Reason: {}", theme, err);
             }

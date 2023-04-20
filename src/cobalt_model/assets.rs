@@ -1,7 +1,7 @@
 use std::ffi::OsStr;
 use std::path;
 
-use failure::ResultExt;
+use anyhow::Context as _;
 use log::debug;
 use serde::{Deserialize, Serialize};
 
@@ -73,7 +73,7 @@ fn copy_and_minify_css(src_file: &path::Path, dest_file: &path::Path, minify: bo
         // create target directories if any exist
         if let Some(parent) = dest_file.parent() {
             std::fs::create_dir_all(parent)
-                .with_context(|_| failure::format_err!("Could not create {}", parent.display()))?;
+                .with_context(|| anyhow::format_err!("Could not create {}", parent.display()))?;
         }
 
         debug!(
@@ -83,7 +83,7 @@ fn copy_and_minify_css(src_file: &path::Path, dest_file: &path::Path, minify: bo
         );
         let content = std::fs::read_to_string(src_file)?;
         let minified = minify(&content).map_err(|e| {
-            failure::format_err!(
+            anyhow::format_err!(
                 "Could not minify css file {} error {}",
                 src_file.to_string_lossy(),
                 e
@@ -103,7 +103,7 @@ fn copy_and_minify_js(src_file: &path::Path, dest_file: &path::Path, minify: boo
         // create target directories if any exist
         if let Some(parent) = dest_file.parent() {
             std::fs::create_dir_all(parent)
-                .with_context(|_| failure::format_err!("Could not create {}", parent.display()))?;
+                .with_context(|| anyhow::format_err!("Could not create {}", parent.display()))?;
         }
 
         debug!(

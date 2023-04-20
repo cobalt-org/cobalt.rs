@@ -3,7 +3,7 @@ use std::fs;
 use std::io::Write;
 use std::path;
 
-use failure::ResultExt;
+use anyhow::Context as _;
 use jsonfeed::Feed;
 use log::debug;
 use log::trace;
@@ -210,11 +210,11 @@ fn generate_doc(
             minify: context.minify.clone(),
         };
 
-        doc.render_excerpt(&render_context).with_context(|_| {
-            failure::format_err!("Failed to render excerpt for {}", doc.file_path)
+        doc.render_excerpt(&render_context).with_context(|| {
+            anyhow::format_err!("Failed to render excerpt for {}", doc.file_path)
         })?;
-        doc.render_content(&render_context).with_context(|_| {
-            failure::format_err!("Failed to render content for {}", doc.file_path)
+        doc.render_content(&render_context).with_context(|| {
+            anyhow::format_err!("Failed to render content for {}", doc.file_path)
         })?;
     }
 
@@ -232,7 +232,7 @@ fn generate_doc(
     };
     let doc_html = doc
         .render(&render_context, &context.layouts)
-        .with_context(|_| failure::format_err!("Failed to render for {}", doc.file_path))?;
+        .with_context(|| anyhow::format_err!("Failed to render for {}", doc.file_path))?;
     files::write_document_file(doc_html, doc.file_path.to_path(&context.destination))?;
     Ok(())
 }
@@ -369,7 +369,7 @@ fn parse_drafts(
         .merge(&collection.default);
 
         let doc = Document::parse(&file_path.abs_path, &new_path, default_front)
-            .with_context(|_| failure::format_err!("Failed to parse {}", file_path.rel_path))?;
+            .with_context(|| anyhow::format_err!("Failed to parse {}", file_path.rel_path))?;
         documents.push(doc);
     }
     Ok(())
@@ -385,7 +385,7 @@ fn parse_pages(
         let default_front = collection.default.clone();
 
         let doc = Document::parse(&file_path.abs_path, &file_path.rel_path, default_front)
-            .with_context(|_| failure::format_err!("Failed to parse {}", file_path.rel_path))?;
+            .with_context(|| anyhow::format_err!("Failed to parse {}", file_path.rel_path))?;
         if !doc.front.is_draft || include_drafts {
             documents.push(doc);
         } else {
@@ -409,14 +409,14 @@ fn parse_layouts(files: &files::Files) -> HashMap<String, String> {
                 .strip_prefix(files.root())
                 .expect("file was found under the root");
 
-            let layout_data = files::read_file(&file_path).with_context(|_| {
-                failure::format_err!("Failed to load layout {}", rel_src.display())
+            let layout_data = files::read_file(&file_path).with_context(|| {
+                anyhow::format_err!("Failed to load layout {}", rel_src.display())
             })?;
 
             let path = rel_src
                 .to_str()
                 .ok_or_else(|| {
-                    failure::format_err!("File name not valid liquid path: {}", rel_src.display())
+                    anyhow::format_err!("File name not valid liquid path: {}", rel_src.display())
                 })?
                 .to_owned();
 
@@ -447,7 +447,7 @@ fn create_rss(
     let description = collection.description.as_deref().unwrap_or("");
     let link = base_url
         .as_ref()
-        .ok_or_else(|| failure::err_msg("`base_url` is required for RSS support"))?;
+        .ok_or_else(|| anyhow::format_err!("`base_url` is required for RSS support"))?;
 
     let items: Result<Vec<rss::Item>> = documents.iter().map(|doc| doc.to_rss(link)).collect();
     let items = items?;
@@ -465,7 +465,7 @@ fn create_rss(
     // create target directories if any exist
     if let Some(parent) = path.parent() {
         fs::create_dir_all(parent)
-            .with_context(|_| failure::format_err!("Could not create {}", parent.display()))?;
+            .with_context(|| anyhow::format_err!("Could not create {}", parent.display()))?;
     }
 
     let mut rss_file = fs::File::create(&path)?;
@@ -488,7 +488,7 @@ fn create_jsonfeed(
     let description = collection.description.as_deref().unwrap_or("");
     let link = base_url
         .as_ref()
-        .ok_or_else(|| failure::err_msg("`base_url` is required for jsonfeed support"))?;
+        .ok_or_else(|| anyhow::format_err!("`base_url` is required for jsonfeed support"))?;
 
     let jsonitems = documents.iter().map(|doc| doc.to_jsonfeed(link)).collect();
 
@@ -517,7 +517,7 @@ fn create_sitemap(
     let writer = SiteMapWriter::new(&mut buff);
     let link = base_url
         .as_ref()
-        .ok_or_else(|| failure::err_msg("`base_url` is required for sitemap support"))?;
+        .ok_or_else(|| anyhow::format_err!("`base_url` is required for sitemap support"))?;
     let mut urls = writer.start_urlset()?;
     for doc in documents {
         doc.to_sitemap(link, &mut urls)?;
@@ -525,7 +525,7 @@ fn create_sitemap(
 
     let link = base_url
         .as_ref()
-        .ok_or_else(|| failure::err_msg("`base_url` is required for sitemap support"))?;
+        .ok_or_else(|| anyhow::format_err!("`base_url` is required for sitemap support"))?;
     for doc in documents_pages {
         doc.to_sitemap(link, &mut urls)?;
     }

@@ -5,7 +5,7 @@ use std::io::Write;
 use std::path;
 
 use crate::error::Result;
-use failure::ResultExt;
+use anyhow::Context as _;
 use ignore::gitignore::{Gitignore, GitignoreBuilder};
 use ignore::Match;
 use log::debug;
@@ -270,7 +270,7 @@ pub fn copy_file(src_file: &path::Path, dest_file: &path::Path) -> Result<()> {
     // create target directories if any exist
     if let Some(parent) = dest_file.parent() {
         fs::create_dir_all(parent)
-            .with_context(|_| failure::format_err!("Could not create {}", parent.display()))?;
+            .with_context(|| anyhow::format_err!("Could not create {}", parent.display()))?;
     }
 
     debug!(
@@ -278,8 +278,8 @@ pub fn copy_file(src_file: &path::Path, dest_file: &path::Path) -> Result<()> {
         src_file.display(),
         dest_file.display()
     );
-    fs::copy(src_file, dest_file).with_context(|_| {
-        failure::format_err!(
+    fs::copy(src_file, dest_file).with_context(|| {
+        anyhow::format_err!(
             "Could not copy {} into {}",
             src_file.display(),
             dest_file.display()
@@ -299,11 +299,11 @@ fn write_document_file_internal(content: &str, dest_file: &path::Path) -> Result
     // create target directories if any exist
     if let Some(parent) = dest_file.parent() {
         fs::create_dir_all(parent)
-            .with_context(|_| failure::format_err!("Could not create {}", parent.display()))?;
+            .with_context(|| anyhow::format_err!("Could not create {}", parent.display()))?;
     }
 
     let mut file = fs::File::create(dest_file)
-        .with_context(|_| failure::format_err!("Could not create {}", dest_file.display()))?;
+        .with_context(|| anyhow::format_err!("Could not create {}", dest_file.display()))?;
 
     file.write_all(content.as_bytes())?;
     trace!("Wrote {}", dest_file.display());

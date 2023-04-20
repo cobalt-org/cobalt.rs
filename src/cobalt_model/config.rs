@@ -62,7 +62,7 @@ impl Config {
         }
 
         if template_extensions.is_empty() {
-            failure::bail!("`template_extensions` should not be empty.");
+            anyhow::bail!("`template_extensions` should not be empty.");
         }
 
         let source = source.to_path(&root);

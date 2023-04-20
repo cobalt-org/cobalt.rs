@@ -73,7 +73,7 @@ impl Cli {
     }
 }
 
-fn main() -> std::result::Result<(), exitfailure::ExitFailure> {
+fn main() -> Result<()> {
     human_panic::setup_panic!();
     let cli = Cli::parse();
     cli.run()?;
