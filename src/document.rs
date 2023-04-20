@@ -188,7 +188,7 @@ impl Document {
     ) -> Result<Document> {
         trace!("Parsing {:?}", rel_path);
         let content = files::read_file(src_path)?;
-        let builder = cobalt_config::Document::parse(&content)?;
+        let builder = cobalt_config::Document::parse(&content).map_err_with_sources()?;
         let (front, content) = builder.into_parts();
         let front = front.merge_path(rel_path).merge(&default_front);
 
