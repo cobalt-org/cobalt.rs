@@ -6,7 +6,7 @@ Static site generator
 Usage: cobalt[EXE] [OPTIONS] <COMMAND>
 
 Commands:
-  init     Create a document
+  init     Create a site
   new      Create a document
   rename   Rename a document
   publish  Publish a document
