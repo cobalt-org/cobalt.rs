@@ -84,7 +84,7 @@ rss = "2.0"
 jsonfeed = "0.2"
 pulldown-cmark = {version="0.9", default-features = false}
 engarde = { version = "0.1", path = "crates/engarde" }
-regex = "1.7"
+regex = "1.8"
 lazy_static = "1.4"
 itertools = "0.10"
 ignore = "0.4"
@@ -95,7 +95,7 @@ toml = "0.7.3"
 normalize-line-endings = "0.3.0"
 sitemap = "0.4"
 open = "3"
-dunce = "1.0.3"
+dunce = "1.0.4"
 vimwiki = { version = "0.1", features = ["html"] }
 
 file-serve = { version = "0.2.2", path = "crates/file-serve", optional = true }
@@ -104,11 +104,11 @@ notify = { version = "5", optional = true, default-features = false, features = 
 sass-rs = { version = "0.2", optional = true }
 
 html-minifier = {version="3.0", optional = true }
-anyhow = "1.0.70"
+anyhow = "1.0.71"
 
 [dev-dependencies]
 trycmd = "0.14"
-snapbox = { version = "0.4.10", features = ["diff"] }
+snapbox = { version = "0.4.11", features = ["diff"] }
 
 [features]
 default = ["syntax-highlight", "sass", "serve", "html-minifier"]
