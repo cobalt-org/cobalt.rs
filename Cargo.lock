@@ -370,13 +370,14 @@ checksum = "8a2dd5a6fe8c6e3502f568a6353e5273bbb15193ad9a89e457b9970798efbea1"
 name = "cobalt-bin"
 version = "0.18.4"
 dependencies = [
+ "anstream 0.3.1",
  "anyhow",
  "clap",
  "clap-verbosity-flag",
  "cobalt-config",
  "cobalt-core",
- "concolor 0.1.1",
- "concolor-clap",
+ "colorchoice",
+ "colorchoice-clap",
  "deunicode",
  "dunce",
  "engarde",
@@ -465,6 +466,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "acbf1af155f9b9ef647e42cdc158db4b64a1b61f743629225fde6f3e0be2a7c7"
 
 [[package]]
+name = "colorchoice-clap"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "412e88a3a3a3f52e436909b49beb467a05649e8b0dda0e6202bd05c1b63dbc49"
+dependencies = [
+ "clap",
+ "colorchoice",
+]
+
+[[package]]
 name = "concolor"
 version = "0.0.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -473,33 +484,6 @@ dependencies = [
  "bitflags",
  "concolor-query 0.1.0",
  "is-terminal",
-]
-
-[[package]]
-name = "concolor"
-version = "0.0.12"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f7b3e3c41e9488eeda196b6806dbf487742107d61b2e16485bcca6c25ed5755b"
-dependencies = [
- "bitflags",
- "concolor-query 0.1.0",
- "is-terminal",
-]
-
-[[package]]
-name = "concolor"
-version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0b946244a988c390a94667ae0e3958411fa40cc46ea496a929b263d883f5f9c3"
-
-[[package]]
-name = "concolor-clap"
-version = "0.0.14"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0bf2a9ab06b97f9c7a0413cffaa2573c67497b41f59b6c4188b5464e0078a2cb"
-dependencies = [
- "clap",
- "concolor 0.0.12",
 ]
 
 [[package]]
@@ -1133,7 +1117,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "87eb03e654582b31967d414b86711a7bbd7c6b28a6b7d32857b7d1d45c0926f9"
 dependencies = [
  "backtrace",
- "concolor 0.0.11",
+ "concolor",
  "os_info",
  "serde",
  "serde_derive",

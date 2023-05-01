@@ -66,8 +66,8 @@ clap = { version = "4.2", features = ["derive", "wrap_help"] }
 clap-verbosity-flag = "2.0"
 proc-exit = "2"
 yansi = "0.5.1"
-concolor = "0.1.1"
-concolor-clap = { version = "0.0.14", features = ["api_unstable"] }
+colorchoice = "1.0.0"
+colorchoice-clap = "1.0.0"
 human-panic = "1"
 scrawl = "2.0"
 tempfile = "3.5"
@@ -105,6 +105,7 @@ sass-rs = { version = "0.2", optional = true }
 
 html-minifier = {version="3.0", optional = true }
 anyhow = "1.0.71"
+anstream = "0.3.1"
 
 [dev-dependencies]
 trycmd = "0.14"
