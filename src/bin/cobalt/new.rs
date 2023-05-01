@@ -10,7 +10,7 @@ use cobalt::cobalt_model;
 use crate::args;
 use crate::error::*;
 
-/// Create a document
+/// Create a site
 #[derive(Clone, Debug, PartialEq, Eq, clap::Args)]
 pub struct InitArgs {
     /// Target directory
