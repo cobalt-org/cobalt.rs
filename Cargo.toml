@@ -99,7 +99,7 @@ dunce = "1.0.4"
 vimwiki = { version = "0.1", features = ["html"] }
 
 file-serve = { version = "0.2.2", path = "crates/file-serve", optional = true }
-notify = { version = "5", optional = true, default-features = false, features = ["macos_fsevent"] }
+notify = { version = "6", optional = true, default-features = false, features = ["macos_fsevent"] }
 
 sass-rs = { version = "0.2", optional = true }
 
