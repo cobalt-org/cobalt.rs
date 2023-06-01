@@ -246,13 +246,18 @@ impl Document {
                 self.description_to_str().unwrap_or_else(|| "".into()),
             ),
             date_published: self.front.published_date.map(|date| date.to_rfc2822()),
-            // TODO completely implement categories, see Issue 131
             tags: Some(
                 self.front
-                    .categories
-                    .iter()
-                    .map(|s| s.as_str().to_owned())
-                    .collect(),
+                    .tags
+                    .as_ref()
+                    .map(|tags| tags.iter().map(|s| s.as_str().to_owned()).collect())
+                    .unwrap_or_else(|| {
+                        self.front
+                            .categories
+                            .iter()
+                            .map(|s| s.as_str().to_owned())
+                            .collect()
+                    }),
             ),
             ..Default::default()
         }
