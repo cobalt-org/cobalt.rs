@@ -65,7 +65,6 @@ impl Frontmatter {
 
             let format = match split_name.1 {
                 Some("md") => SourceFormat::Markdown,
-                Some("wiki") => SourceFormat::Vimwiki,
                 _ => SourceFormat::Raw,
             };
             self.format.get_or_insert(format);
@@ -284,7 +283,6 @@ pub enum SourceFormat {
     #[default]
     Raw,
     Markdown,
-    Vimwiki,
     #[cfg(not(feature = "unstable"))]
     #[doc(hidden)]
     #[serde(other)]

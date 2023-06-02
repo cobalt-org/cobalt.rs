@@ -21,7 +21,6 @@ use crate::error::*;
 pub struct RenderContext<'a> {
     pub parser: &'a cobalt_model::Liquid,
     pub markdown: &'a cobalt_model::Markdown,
-    pub vimwiki: &'a cobalt_model::Vimwiki,
     pub globals: &'a Object,
     pub minify: Minify,
 }
@@ -272,7 +271,7 @@ impl Document {
         let mut url = sitemap::structs::UrlEntry::builder();
         url = url.loc(link);
         if let Some(date) = self.front.published_date {
-            let date = vimwiki::vendor::chrono::DateTime::parse_from_rfc2822(&date.to_rfc2822())
+            let date = chrono::DateTime::parse_from_rfc2822(&date.to_rfc2822())
                 .expect("chrono/time compatible RFC 2822 implementations");
             url = url.lastmod(date);
         }
@@ -317,7 +316,6 @@ impl Document {
         let html = match self.front.format {
             cobalt_model::SourceFormat::Raw => html,
             cobalt_model::SourceFormat::Markdown => context.markdown.parse(&html)?,
-            cobalt_model::SourceFormat::Vimwiki => context.vimwiki.parse(&html)?,
         };
 
         Ok(html)
@@ -436,8 +434,6 @@ fn extract_excerpt(
         cobalt_model::SourceFormat::Markdown => {
             extract_excerpt_markdown(content, excerpt_separator)
         }
-        cobalt_model::SourceFormat::Vimwiki | cobalt_model::SourceFormat::Raw => {
-            extract_excerpt_raw(content, excerpt_separator)
-        }
+        cobalt_model::SourceFormat::Raw => extract_excerpt_raw(content, excerpt_separator),
     }
 }
