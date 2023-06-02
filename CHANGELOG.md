@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 <!-- next-header -->
 ## [Unreleased] - ReleaseDate
 
+### Fixes
+
+- Include frontmatter tags in jsonfeed
+
 ## [0.18.4] - 2023-04-20
 
 ### Fixes
