@@ -360,7 +360,7 @@ fn parse_drafts(
             .rel_path
             .strip_prefix(drafts_dir)
             .expect("file was found under the root");
-        let new_path = dir.join(&rel_src);
+        let new_path = dir.join(rel_src);
 
         let default_front = cobalt_config::Frontmatter {
             is_draft: Some(true),
@@ -468,7 +468,7 @@ fn create_rss(
             .with_context(|| anyhow::format_err!("Could not create {}", parent.display()))?;
     }
 
-    let mut rss_file = fs::File::create(&path)?;
+    let mut rss_file = fs::File::create(path)?;
     rss_file.write_all(&rss_string.into_bytes())?;
     rss_file.write_all(b"\n")?;
 

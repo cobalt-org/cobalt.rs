@@ -11,7 +11,3 @@ A straightforward static site generator written in [Rust](http://www.rust-lang.o
 - [API documentation](https://docs.rs/cobalt-bin)
 - [Contributing](https://github.com/cobalt-org/cobalt.rs/blob/master/CONTRIBUTING.md)
 - [LICENSE](https://github.com/cobalt-org/cobalt.rs/blob/master/LICENSE-MIT)
-
-
-# Minimum Supported Rust Version (MSRV)
-- Rust **1.64.0**

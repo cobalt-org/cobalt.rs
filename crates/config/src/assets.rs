@@ -31,7 +31,9 @@ impl Default for Sass {
 #[cfg_attr(feature = "preview_unstable", serde(rename_all = "snake_case"))]
 #[cfg_attr(feature = "unstable", serde(deny_unknown_fields))]
 #[cfg_attr(not(feature = "unstable"), non_exhaustive)]
+#[derive(Default)]
 pub enum SassOutputStyle {
+    #[default]
     Nested,
     Expanded,
     Compact,
@@ -40,10 +42,4 @@ pub enum SassOutputStyle {
     #[doc(hidden)]
     #[serde(other)]
     Unknown,
-}
-
-impl Default for SassOutputStyle {
-    fn default() -> Self {
-        SassOutputStyle::Nested
-    }
 }

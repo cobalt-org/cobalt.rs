@@ -107,18 +107,14 @@ impl Default for PostCollection {
 #[cfg_attr(feature = "preview_unstable", serde(rename_all = "snake_case"))]
 #[cfg_attr(feature = "unstable", serde(deny_unknown_fields))]
 #[cfg_attr(not(feature = "unstable"), non_exhaustive)]
+#[derive(Default)]
 pub enum SortOrder {
     None,
     Asc,
+    #[default]
     Desc,
     #[cfg(not(feature = "unstable"))]
     #[doc(hidden)]
     #[serde(other)]
     Unknown,
-}
-
-impl Default for SortOrder {
-    fn default() -> SortOrder {
-        SortOrder::Desc
-    }
 }
