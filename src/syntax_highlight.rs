@@ -257,7 +257,7 @@ mod test_syntsx {
             ))
             .unwrap();
         let output = template.render(&liquid::Object::new());
-        snapbox::assert_eq(CODEBLOCK_RENDERED, &output.unwrap());
+        snapbox::assert_eq(CODEBLOCK_RENDERED, output.unwrap());
     }
 
     const MARKDOWN_RENDERED: &str =

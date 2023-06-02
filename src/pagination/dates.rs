@@ -97,8 +97,8 @@ fn walk_dates(
     Ok(cur_date_holder_paginators)
 }
 
-fn find_or_create_date_holder_and_put_post<'a, 'b>(
-    date_holder: &'b mut DateIndexHolder<'a>,
+fn find_or_create_date_holder_and_put_post<'a>(
+    date_holder: &mut DateIndexHolder<'a>,
     published_date: &DateTime,
     wanted_field: DateIndex,
     post: &'a liquid::model::Value,
