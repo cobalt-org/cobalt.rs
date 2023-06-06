@@ -706,7 +706,7 @@ dependencies = [
 
 [[package]]
 name = "file-serve"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "log",
  "mime_guess",
