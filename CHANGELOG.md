@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Compatibility
 
+- Removed support for vimwiki (parser/renderer was unmaintained)
 - MSRV is now 1.70.0
 
 ## [0.18.5] - 2023-06-02
