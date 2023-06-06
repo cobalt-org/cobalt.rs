@@ -1,6 +1,6 @@
 [package]
 name = "cobalt-core"
-version = "0.18.3"
+version = "0.19.0"
 description = "Static site generator written in Rust"
 readme = "../../README.md"
 keywords = ["static", "site", "generator"]
