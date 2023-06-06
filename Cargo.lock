@@ -303,7 +303,7 @@ checksum = "2da6da31387c7e4ef160ffab6d5e7f00c42626fe39aea70a7b0f1773f7dd6c1b"
 
 [[package]]
 name = "cobalt-bin"
-version = "0.18.5"
+version = "0.19.0"
 dependencies = [
  "anstream",
  "anyhow",
