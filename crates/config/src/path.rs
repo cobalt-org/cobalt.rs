@@ -164,13 +164,13 @@ mod test_slug {
     #[test]
     fn test_slugify() {
         let actual = slugify("___filE-worldD-__09___");
-        assert_eq!(actual, "file-world-09");
+        assert_eq!(actual, "file-worldd-09");
     }
 
     #[test]
     fn test_slugify_unicode() {
         let actual = slugify("__Æneid__北亰-worldD-__09___");
-        assert_eq!(actual, "aeneid-bei-jing-world-09");
+        assert_eq!(actual, "aeneid-bei-jing-worldd-09");
     }
 
     #[test]
