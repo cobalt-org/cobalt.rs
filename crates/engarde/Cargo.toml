@@ -14,7 +14,8 @@ rust-version.workspace = true
 include.workspace = true
 
 [package.metadata.docs.rs]
-features = ["syntax"]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
 
 [package.metadata.release]
 pre-release-replacements = [

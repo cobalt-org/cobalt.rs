@@ -13,6 +13,7 @@ include = [
   "build.rs",
   "src/**/*",
   "Cargo.toml",
+  "Cargo.lock",
   "LICENSE*",
   "README.md",
   "benches/**/*",
@@ -42,6 +43,10 @@ exclude = [
     "tests/**",
     "benches/**",
 ]
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
 
 [package.metadata.release]
 pre-release-replacements = [

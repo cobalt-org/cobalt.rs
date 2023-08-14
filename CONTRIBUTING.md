@@ -1,26 +1,68 @@
-Thanks for contributing! :snowman:
+# Contributing to cobalt.rs
 
-Feel free to create issues and make pull requests, we'll try to quickly review them.
+Thanks for wanting to contribute! There are many ways to contribute and we
+appreciate any level you're willing to do.
 
-If you're looking for things to do check out the [open issues](https://github.com/cobalt-org/cobalt.rs/issues), especially those with the [easy](https://github.com/cobalt-org/cobalt.rs/issues?q=is%3Aissue+is%3Aopen+label%3Aeasy) flag. Or take a grep through [all TODO comments](https://github.com/cobalt-org/cobalt.rs/search?q=TODO) in the code and feel free to help us out there!
+## Feature Requests
 
-🌈 **Here's a checklist for the perfect pull request:**
-- [ ] Make sure existing tests still work by running `cargo test` locally.
-- [ ] Add new tests for any new feature or regression tests for bugfixes.
-- [ ] Install [Clippy](https://github.com/Manishearth/rust-clippy) and run `rustup run nightly cargo clippy` to catch common mistakes (will be checked by Travis)
-- [ ] Install [Rustfmt](https://github.com/rust-lang-nursery/rustfmt) and run `cargo fmt` to format your code (will also be checked by Travis)
+Need some new functionality to help?  You can let us know by opening an
+[issue][new issue]. It's helpful to look through [all issues][all issues] in
+case its already being talked about.
 
-If you need assistance, you can join the `#cobalt` channel on `irc.mozilla.org` or the Gitter chat [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/cobalt-org/cobalt.rs)
+## Bug Reports
 
-We want you to feel safe and welcome and will enforce the [The Rust Code of Conduct](https://www.rust-lang.org/conduct.html) on all communication platforms of this project.
-Please contact [@johannhof](https://github.com/johannhof) for questions or in cases of violation.
+Please let us know about what problems you run into, whether in behavior or
+ergonomics of API.  You can do this by opening an [issue][new issue]. It's
+helpful to look through [all issues][all issues] in case its already being
+talked about.
 
-# Releasing
+## Pull Requests
+
+Looking for an idea? Check our [issues][issues]. If it's look more open ended,
+it is probably best to post on the issue how you are thinking of resolving the
+issue so you can get feedback early in the process. We want you to be
+successful and it can be discouraging to find out a lot of re-work is needed.
+
+Already have an idea?  It might be good to first [create an issue][new issue]
+to propose it so we can make sure we are aligned and lower the risk of having
+to re-work some of it and the discouragement that goes along with that.
+
+### Process
+
+Before posting a PR, we request that the commit history get cleaned up.
+However, we recommend avoiding this during the review to make it easier to
+check how feedback was handled. Once the PR is ready, we'll ask you to clean up
+the commit history from the review.  Once you let us know this is done, we can
+move forward with merging!  If you are uncomfortable with these parts of git,
+let us know and we can help.
+
+For commit messages, we use [Conventional](https://www.conventionalcommits.org)
+style.  If you already wrote your commits and don't feel comfortable changing
+them, don't worry and go ahead and create your PR.  We'll work with you on the
+best route forward. You can check your branch locally with
+[`committed`](https://github.com/crate-ci/committed).
+
+As a heads up, we'll be running your PR through the following gauntlet:
+- warnings turned to compile errors
+- `cargo test`
+- `rustfmt`
+- `clippy`
+- `rustdoc`
+- [`committed`](https://github.com/crate-ci/committed)
+- [`typos`](https://github.com/crate-ci/typos)
+
+## Releasing
+
+Pre-requisites
+- Running `cargo login`
+- Push permission to the repo
+- [`cargo-release`](https://github.com/crate-ci/cargo-release/)
 
 When we're ready to release, a project owner should do the following
-- Determine what the next version is, according to semver
-- Bump version in a commit
-  - Run `clog --setversion <X>.<Y>.<Z>`, touch up the log
-  - Update the version in `Cargo.toml`
-  - Run `cargo check` to update `Cargo.lock`
-- Run `cargo release <level>`
+1. Update the changelog (see `cargo release changes` for ideas)
+2. Determine what the next version is, according to semver
+3. Run [`cargo release -x <level>`](https://github.com/crate-ci/cargo-release)
+
+[issues]: https://github.com/cobalt-rs/cobalt.rs/issues
+[new issue]: https://github.com/cobalt-rs/cobalt.rs/issues/new
+[all issues]: https://github.com/cobalt-rs/cobalt.rs/issues?utf8=%E2%9C%93&q=is%3Aissue

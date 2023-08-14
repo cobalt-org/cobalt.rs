@@ -1,4 +1,4 @@
-#![warn(warnings)]
+#![cfg_attr(docsrs, feature(doc_auto_cfg))]
 
 pub use crate::cobalt::build;
 pub use crate::cobalt::classify_path;
