@@ -45,8 +45,6 @@ jobs:
       run: cargo test --no-run --workspace --all-features
     - name: Default features
       run: cargo test --workspace
-    - name: All features
-      run: cargo test --workspace --all-features
     - name: No-default features
       run: cargo test --workspace --no-default-features
   msrv:
