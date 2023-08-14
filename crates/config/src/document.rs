@@ -19,7 +19,8 @@ impl Document {
         let (front, content) = split_document(content);
         let front = front
             .map(parse_frontmatter)
-            .map_or(Ok(None), |r| r.map(Some))?
+            .map(|r| r.map(Some))
+            .unwrap_or(Ok(None))?
             .unwrap_or_default();
         let content = liquid_core::model::KString::from_ref(content);
         Ok(Self { front, content })
