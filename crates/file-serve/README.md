@@ -3,8 +3,8 @@
 > HTTP Static File Server
 
 [![Documentation](https://img.shields.io/badge/docs-master-blue.svg)][Documentation]
-![License](https://img.shields.io/crates/l/engarde.svg)
-[![Crates Status](https://img.shields.io/crates/v/engarde.svg)](https://crates.io/crates/engarde)
+![License](https://img.shields.io/crates/l/file-serve.svg)
+[![Crates Status](https://img.shields.io/crates/v/file-serve.svg)][Crates.io]
 
 ## About
 
@@ -27,5 +27,5 @@ submitted for inclusion in the work by you, as defined in the Apache-2.0
 license, shall be dual licensed as above, without any additional terms or
 conditions.
 
-[Crates.io]: https://crates.io/crates/engarde
-[Documentation]: https://docs.rs/engarde
+[Crates.io]: https://crates.io/crates/file-serve
+[Documentation]: https://docs.rs/file-serve
