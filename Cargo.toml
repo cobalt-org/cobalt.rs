@@ -102,7 +102,7 @@ sitemap = "0.4"
 open = "4"
 dunce = "1.0.4"
 
-file-serve = { version = "0.2.4", path = "crates/file-serve", optional = true }
+file-serve = { version = "0.3.0", path = "crates/file-serve", optional = true }
 notify = { version = "6", optional = true, default-features = false, features = ["macos_fsevent"] }
 
 sass-rs = { version = "0.2", optional = true }

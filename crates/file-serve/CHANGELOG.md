@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 <!-- next-header -->
 ## [Unreleased] - ReleaseDate
 
+## [0.3.0] - 2023-08-22
+
 ### Breaking Change
 
 - `serve` now returns `()`
@@ -40,7 +42,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [0.1.1] - 2022-04-04
 
 <!-- next-url -->
-[Unreleased]: https://github.com/cobalt-org/cobalt.rs/compare/file-serve-v0.2.4...HEAD
+[Unreleased]: https://github.com/cobalt-org/cobalt.rs/compare/file-serve-v0.3.0...HEAD
+[0.3.0]: https://github.com/cobalt-org/cobalt.rs/compare/file-serve-v0.2.4...file-serve-v0.3.0
 [0.2.4]: https://github.com/cobalt-org/cobalt.rs/compare/file-serve-v0.2.3...file-serve-v0.2.4
 [0.2.3]: https://github.com/cobalt-org/cobalt.rs/compare/file-serve-v0.2.2...file-serve-v0.2.3
 [0.2.2]: https://github.com/cobalt-org/cobalt.rs/compare/file-serve-v0.2.1...file-serve-v0.2.2
