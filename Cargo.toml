@@ -109,7 +109,7 @@ sass-rs = { version = "0.2", optional = true }
 
 html-minifier = {version="3.0", optional = true }
 anyhow = "1.0.75"
-anstream = "0.3.2"
+anstream = "0.5.0"
 chrono = "0.4.28"
 
 [dev-dependencies]
