@@ -99,7 +99,7 @@ serde_json = "1.0"
 toml = "0.7.6"
 normalize-line-endings = "0.3.0"
 sitemap = "0.4"
-open = "4"
+open = "5"
 dunce = "1.0.4"
 
 file-serve = { version = "0.3.0", path = "crates/file-serve", optional = true }
