@@ -16,7 +16,12 @@
 //! server.serve().unwrap();
 //! ```
 
-use std::str::FromStr;
+#![cfg_attr(docsrs, feature(doc_auto_cfg))]
+
+use std::{
+    str::FromStr,
+    sync::{RwLock, TryLockError},
+};
 
 /// Custom server settings
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -64,19 +69,20 @@ impl ServerBuilder {
         Server {
             source,
             addr: format!("{}:{}", hostname, port),
+            server: RwLock::new(None),
         }
     }
 
     /// Start the webserver
-    pub fn serve(&self) -> Result<std::convert::Infallible, Error> {
+    pub fn serve(&self) -> Result<(), Error> {
         self.build().serve()
     }
 }
 
-#[derive(Debug)]
 pub struct Server {
     source: std::path::PathBuf,
     addr: String,
+    server: RwLock<Option<tiny_http::Server>>,
 }
 
 impl Server {
@@ -98,17 +104,45 @@ impl Server {
         self.addr.as_str()
     }
 
-    /// Start the webserver
-    pub fn serve(&self) -> Result<std::convert::Infallible, Error> {
-        // attempts to create a server
-        let server = tiny_http::Server::http(self.addr()).map_err(Error::new)?;
+    /// Whether the server was running at the instant the call happened
+    pub fn is_running(&self) -> bool {
+        matches!(self.server.read().as_deref(), Ok(Some(_)))
+    }
 
-        for request in server.incoming_requests() {
-            if let Err(e) = static_file_handler(self.source(), request) {
-                log::error!("{}", e);
+    /// Start the webserver
+    pub fn serve(&self) -> Result<(), Error> {
+        match self.server.try_write().as_deref_mut() {
+            Ok(server @ None) => {
+                // attempts to create a server
+                *server = Some(tiny_http::Server::http(self.addr()).map_err(Error::new)?);
+            }
+            Ok(Some(_)) | Err(TryLockError::WouldBlock) => {
+                return Err(Error::new("the server is running"))
+            }
+            Err(error @ TryLockError::Poisoned(_)) => return Err(Error::new(error)),
+        }
+
+        {
+            let server = self.server.read().map_err(Error::new)?;
+            // unwrap is safe here
+            for request in server.as_ref().unwrap().incoming_requests() {
+                // handles the request
+                if let Err(e) = static_file_handler(self.source(), request) {
+                    log::error!("{}", e);
+                }
             }
         }
-        unreachable!("`incoming_requests` never stops")
+
+        *self.server.write().map_err(Error::new)? = None;
+
+        Ok(())
+    }
+
+    /// Closes the server gracefully
+    pub fn close(&self) {
+        if let Ok(Some(server)) = self.server.read().as_deref() {
+            server.unblock();
+        }
     }
 }
 

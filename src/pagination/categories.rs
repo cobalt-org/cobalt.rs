@@ -62,8 +62,8 @@ fn next_category(cur_idx: usize) -> usize {
 }
 
 // construct a hierarchy of Categories with their posts from a list of categories
-fn parse_categories_list<'a, 'b>(
-    parent: &'b mut Category<'a>,
+fn parse_categories_list<'a>(
+    parent: &mut Category<'a>,
     cur_idx: usize,
     cur_post_categories: &[&dyn liquid::ValueView],
     post: &'a liquid::model::Value,
@@ -116,8 +116,8 @@ fn distribute_posts_by_categories<'a>(
 
 // walk the categories tree and construct Paginator for each node,
 // filling `pages` and `indexes` accordingly
-fn walk_categories<'a, 'b>(
-    category: &'b mut Category<'a>,
+fn walk_categories(
+    category: &mut Category<'_>,
     config: &PaginationConfig,
     doc: &Document,
 ) -> Result<Vec<Paginator>> {

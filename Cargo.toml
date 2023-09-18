@@ -8,11 +8,12 @@ resolver = "2"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/cobalt-org/cobalt.rs"
 edition = "2021"
-rust-version = "1.64.0"  # MSRV
+rust-version = "1.70.0"  # MSRV
 include = [
   "build.rs",
   "src/**/*",
   "Cargo.toml",
+  "Cargo.lock",
   "LICENSE*",
   "README.md",
   "benches/**/*",
@@ -21,7 +22,7 @@ include = [
 
 [package]
 name = "cobalt-bin"
-version = "0.18.4"
+version = "0.19.0"
 description = "Static site generator written in Rust"
 readme = "README.md"
 categories = ["command-line-utilities"]
@@ -43,6 +44,10 @@ exclude = [
     "benches/**",
 ]
 
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
+
 [package.metadata.release]
 pre-release-replacements = [
   {file="CHANGELOG.md", search="Unreleased", replace="{{version}}", min=1},
@@ -60,17 +65,17 @@ name = "cobalt"
 doc = false
 
 [dependencies]
-cobalt-config = { version = "=0.18.2", path = "crates/config", features = ["unstable"] }
-cobalt-core = { version = "=0.18.2", path = "crates/core", features = ["unstable"] }
-clap = { version = "4.2", features = ["derive", "wrap_help"] }
+cobalt-config = { version = "=0.19.0", path = "crates/config", features = ["unstable"] }
+cobalt-core = { version = "=0.19.0", path = "crates/core", features = ["unstable"] }
+clap = { version = "4.4", features = ["derive", "wrap_help"] }
 clap-verbosity-flag = "2.0"
 proc-exit = "2"
 yansi = "0.5.1"
 colorchoice = "1.0.0"
-colorchoice-clap = "1.0.0"
+colorchoice-clap = "1.0.2"
 human-panic = "1"
 scrawl = "2.0"
-tempfile = "3.5"
+tempfile = "3.8"
 relative-path = { version = "1", features = ["serde"] }
 liquid = "0.26"
 liquid-core = "0.26"
@@ -84,32 +89,32 @@ rss = "2.0"
 jsonfeed = "0.2"
 pulldown-cmark = {version="0.9", default-features = false}
 engarde = { version = "0.1", path = "crates/engarde" }
-regex = "1.8"
+regex = "1.9"
 lazy_static = "1.4"
-itertools = "0.10"
+itertools = "0.11"
 ignore = "0.4"
 serde = "1.0"
 serde_yaml = "0.9"
 serde_json = "1.0"
-toml = "0.7.3"
+toml = "0.7.6"
 normalize-line-endings = "0.3.0"
 sitemap = "0.4"
-open = "4"
+open = "5"
 dunce = "1.0.4"
-vimwiki = { version = "0.1", features = ["html"] }
 
-file-serve = { version = "0.2.2", path = "crates/file-serve", optional = true }
-notify = { version = "5", optional = true, default-features = false, features = ["macos_fsevent"] }
+file-serve = { version = "0.3.0", path = "crates/file-serve", optional = true }
+notify = { version = "6", optional = true, default-features = false, features = ["macos_fsevent"] }
 
 sass-rs = { version = "0.2", optional = true }
 
 html-minifier = {version="3.0", optional = true }
-anyhow = "1.0.71"
-anstream = "0.3.1"
+anyhow = "1.0.75"
+anstream = "0.5.0"
+chrono = "0.4.28"
 
 [dev-dependencies]
 trycmd = "0.14"
-snapbox = { version = "0.4.11", features = ["diff"] }
+snapbox = { version = "0.4.12", features = ["diff"] }
 
 [features]
 default = ["syntax-highlight", "sass", "serve", "html-minifier"]

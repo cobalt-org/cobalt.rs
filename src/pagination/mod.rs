@@ -145,37 +145,33 @@ fn interpret_permalink(
     let mut attributes = document::permalink_attributes(&doc.front, &doc.file_path);
     let permalink = permalink::explode_permalink(&config.front_permalink, &attributes)?;
     let permalink_path = std::path::Path::new(&permalink);
-    let pagination_root = permalink_path.extension().map_or_else(
-        || permalink.clone(),
-        |os_str| {
+    let pagination_root = permalink_path
+        .extension()
+        .map(|os_str| {
             permalink
                 .trim_end_matches(&format!(".{}", os_str.to_string_lossy()))
                 .to_string()
-        },
-    );
+        })
+        .unwrap_or_else(|| permalink.clone());
     let interpreted_permalink = if page_num == 1 {
-        index.map_or_else(
-            || doc.url_path.clone(),
-            |index| {
+        index
+            .map(|index| {
                 if pagination_root.is_empty() {
                     index_to_string(index)
                 } else {
                     format!("{}/{}", pagination_root, index_to_string(index))
                 }
-            },
-        )
+            })
+            .unwrap_or_else(|| doc.url_path.clone())
     } else {
         let pagination_attr = pagination_attributes(page_num as i32);
         attributes.extend(pagination_attr.into_iter());
-        let index = index.map_or_else(
-            || {
-                if config.include != Include::All {
-                    unreachable!("Include is not All and no index");
-                }
-                "all".to_string()
-            },
-            index_to_string,
-        );
+        let index = index.map(index_to_string).unwrap_or_else(|| {
+            if config.include != Include::All {
+                unreachable!("Include is not All and no index");
+            }
+            "all".to_string()
+        });
         if pagination_root.is_empty() {
             format!(
                 "{}/{}",

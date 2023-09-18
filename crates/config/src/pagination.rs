@@ -66,7 +66,9 @@ impl Pagination {
 #[cfg_attr(feature = "preview_unstable", serde(rename_all = "snake_case"))]
 #[cfg_attr(feature = "unstable", serde(deny_unknown_fields))]
 #[cfg_attr(not(feature = "unstable"), non_exhaustive)]
+#[derive(Default)]
 pub enum Include {
+    #[default]
     None,
     All,
     Tags,
@@ -76,12 +78,6 @@ pub enum Include {
     #[doc(hidden)]
     #[serde(other)]
     Unknown,
-}
-
-impl Default for Include {
-    fn default() -> Include {
-        Include::None
-    }
 }
 
 #[derive(

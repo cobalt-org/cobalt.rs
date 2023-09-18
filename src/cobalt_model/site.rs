@@ -82,7 +82,7 @@ impl Site {
         attributes.insert("time".into(), liquid::model::Value::scalar(self.time));
 
         let mut data = self.data.clone().unwrap_or_default();
-        let data_path = source.join(&self.data_dir);
+        let data_path = source.join(self.data_dir);
         insert_data_dir(&mut data, &data_path)?;
         if !data.is_empty() {
             attributes.insert("data".into(), liquid::model::Value::Object(data));

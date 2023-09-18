@@ -83,7 +83,7 @@ impl ServeArgs {
     }
 }
 
-fn serve(server: &file_serve::Server) -> Result<std::convert::Infallible> {
+fn serve(server: &file_serve::Server) -> Result<()> {
     info!(
         "Serving {} through static file server",
         server.source().display()

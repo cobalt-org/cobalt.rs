@@ -94,7 +94,6 @@ impl Frontmatter {
 
             let format = match split_name.1 {
                 Some("md") => SourceFormat::Markdown,
-                Some("wiki") => SourceFormat::Vimwiki,
                 _ => SourceFormat::Raw,
             };
             self.format.get_or_insert(format);
@@ -308,20 +307,15 @@ impl AsRef<str> for ExplicitPermalink {
 #[cfg_attr(feature = "preview_unstable", serde(rename_all = "snake_case"))]
 #[cfg_attr(feature = "unstable", serde(deny_unknown_fields))]
 #[cfg_attr(not(feature = "unstable"), non_exhaustive)]
+#[derive(Default)]
 pub enum SourceFormat {
+    #[default]
     Raw,
     Markdown,
-    Vimwiki,
     #[cfg(not(feature = "unstable"))]
     #[doc(hidden)]
     #[serde(other)]
     Unknown,
-}
-
-impl Default for SourceFormat {
-    fn default() -> SourceFormat {
-        SourceFormat::Raw
-    }
 }
 
 /// Shallow merge of `liquid_core::Object`'s

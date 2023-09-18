@@ -12,7 +12,6 @@ use super::collection;
 use super::mark;
 use super::site;
 use super::template;
-use super::vwiki;
 use crate::SyntaxHighlight;
 
 #[derive(Debug, Clone, Serialize)]
@@ -29,7 +28,6 @@ pub struct Config {
     pub layouts_path: path::PathBuf,
     pub liquid: template::LiquidBuilder,
     pub markdown: mark::MarkdownBuilder,
-    pub vimwiki: vwiki::VimwikiBuilder,
     #[serde(skip)]
     pub syntax: std::sync::Arc<SyntaxHighlight>,
     pub assets: assets::AssetsBuilder,
@@ -120,10 +118,6 @@ impl Config {
                 .enabled
                 .then(|| syntax_highlight.theme.clone()),
         };
-        let vimwiki = vwiki::VimwikiBuilder {
-            theme: syntax_highlight.theme,
-            syntax_highlight_enabled: syntax_highlight.enabled,
-        };
 
         let config = Config {
             source,
@@ -137,7 +131,6 @@ impl Config {
             layouts_path,
             liquid,
             markdown,
-            vimwiki,
             syntax,
             assets,
             minify,

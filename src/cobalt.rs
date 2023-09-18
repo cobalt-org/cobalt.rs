@@ -31,7 +31,6 @@ struct Context {
     pub layouts: HashMap<String, String>,
     pub liquid: cobalt_model::Liquid,
     pub markdown: cobalt_model::Markdown,
-    pub vimwiki: cobalt_model::Vimwiki,
     pub assets: cobalt_model::Assets,
     pub minify: Minify,
 }
@@ -50,7 +49,6 @@ impl Context {
             layouts_path,
             liquid,
             markdown,
-            vimwiki,
             syntax: _,
             assets,
             minify,
@@ -60,7 +58,6 @@ impl Context {
         let site_attributes = site.load(&source)?;
         let liquid = liquid.build()?;
         let markdown = markdown.build();
-        let vimwiki = vimwiki.build();
         let assets = assets.build()?;
 
         let layouts = find_layouts(&layouts_path)?;
@@ -78,7 +75,6 @@ impl Context {
             layouts,
             liquid,
             markdown,
-            vimwiki,
             assets,
             minify,
         };
@@ -205,7 +201,6 @@ fn generate_doc(
         let render_context = RenderContext {
             parser: &context.liquid,
             markdown: &context.markdown,
-            vimwiki: &context.vimwiki,
             globals: &globals,
             minify: context.minify.clone(),
         };
@@ -226,7 +221,6 @@ fn generate_doc(
     let render_context = RenderContext {
         parser: &context.liquid,
         markdown: &context.markdown,
-        vimwiki: &context.vimwiki,
         globals: &globals,
         minify: context.minify.clone(),
     };
@@ -360,7 +354,7 @@ fn parse_drafts(
             .rel_path
             .strip_prefix(drafts_dir)
             .expect("file was found under the root");
-        let new_path = dir.join(&rel_src);
+        let new_path = dir.join(rel_src);
 
         let default_front = cobalt_config::Frontmatter {
             is_draft: Some(true),
@@ -468,7 +462,7 @@ fn create_rss(
             .with_context(|| anyhow::format_err!("Could not create {}", parent.display()))?;
     }
 
-    let mut rss_file = fs::File::create(&path)?;
+    let mut rss_file = fs::File::create(path)?;
     rss_file.write_all(&rss_string.into_bytes())?;
     rss_file.write_all(b"\n")?;
 
