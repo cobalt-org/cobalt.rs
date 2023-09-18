@@ -125,6 +125,9 @@ serve = ["file-serve", "notify"]
 syntax-highlight = ["engarde/syntax"]
 sass = ['sass-rs']
 
-[profile.release]
-lto = "thin"
+[profile.dev]
 panic = "abort"
+
+[profile.release]
+panic = "abort"
+codegen-units = 1
