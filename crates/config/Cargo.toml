@@ -29,5 +29,5 @@ serde_yaml = "0.9"
 relative-path = { version = "1", features = ["serde"] }
 once_cell = "1.18"
 status = { version = "0.0.10", features = ["send_sync"] }
-deunicode = "1.3"
+deunicode = "1.4"
 itertools = "0.11"
