@@ -34,6 +34,16 @@ pub struct NewArgs {
     /// Title of the post
     pub title: Option<String>,
 
+    /// Publish date of the post
+    ///
+    /// Supported formats:
+    ///
+    /// "now" - current date, "YYYY-MM-DD HH:MM:SS", "DD Month YYYY HH:MM:SS",
+    /// "DD Mon YYYY HH:MM:SS", "MM/DD/YYYY HH:MM:SS", "Dow Mon DD HH:MM:SS YYYY"
+    ///
+    #[arg(long, value_name = "date")]
+    pub date: Option<String>,
+
     /// New document's parent directory or file (default: `<CWD>/title.ext`)
     #[arg(short, long, value_name = "DIR_OR_FILE")]
     pub file: Option<path::PathBuf>,
@@ -57,6 +67,7 @@ impl NewArgs {
         let config = cobalt::cobalt_model::Config::from_config(config)?;
 
         let title = self.title.as_deref();
+        let date = self.date.as_deref();
 
         let mut file = env::current_dir().unwrap_or_default();
         if let Some(rel_file) = self.file.as_deref() {
@@ -65,7 +76,7 @@ impl NewArgs {
 
         let ext = self.with_ext.as_deref();
 
-        create_new_document(&config, title, file, ext, self.edit)
+        create_new_document(&config, title, date, file, ext, self.edit)
             .with_context(|| anyhow::format_err!("Could not create document"))?;
 
         Ok(())
@@ -222,6 +233,7 @@ pub fn create_new_project_for_path(dest: &path::Path) -> Result<()> {
 pub fn create_new_document(
     config: &cobalt_model::Config,
     title: Option<&str>,
+    date: Option<&str>,
     mut file: path::PathBuf,
     extension: Option<&str>,
     edit: bool,
@@ -295,6 +307,13 @@ pub fn create_new_document(
         front.title = Some(liquid::model::KString::from_ref(title));
     } else {
         front.title = Some(liquid::model::KString::from_ref("Untitled"));
+    }
+
+    if let Some(date) = date {
+        front.published_date = Some(
+            liquid::model::DateTime::from_str(date)
+                .ok_or_else(|| anyhow::format_err!("Wrong date format"))?,
+        );
     }
 
     let doc = cobalt_model::Document::new(front.clone(), content);
