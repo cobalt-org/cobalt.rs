@@ -75,12 +75,12 @@ colorchoice = "1.0.0"
 colorchoice-clap = "1.0.3"
 human-panic = "1"
 scrawl = "2.0"
-tempfile = "3.8"
+tempfile = "3.9"
 relative-path = { version = "1", features = ["serde"] }
 liquid = "0.26"
 liquid-core = "0.26"
 liquid-lib = { version = "0.26", features = ["jekyll", "shopify", "extra"] }
-deunicode = "1.4.1"
+deunicode = "1.4.2"
 walkdir = "2.4"
 time = "0.3"
 log = "0.4"
@@ -108,13 +108,13 @@ notify = { version = "6", optional = true, default-features = false, features = 
 sass-rs = { version = "0.2", optional = true }
 
 html-minifier = {version="3.0", optional = true }
-anyhow = "1.0.75"
-anstream = "0.6.4"
+anyhow = "1.0.78"
+anstream = "0.6.5"
 chrono = "0.4.31"
 
 [dev-dependencies]
 trycmd = "0.14"
-snapbox = { version = "0.4.14", features = ["diff"] }
+snapbox = { version = "0.4.15", features = ["diff"] }
 
 [features]
 default = ["syntax-highlight", "sass", "serve", "html-minifier"]
