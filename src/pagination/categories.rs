@@ -131,7 +131,7 @@ fn walk_categories(
             Some(&liquid::model::Value::array(category.cat_path.clone())),
         )?;
         if !cur_cat_paginators.is_empty() {
-            cur_cat_paginators_holder.extend(cur_cat_paginators.into_iter());
+            cur_cat_paginators_holder.extend(cur_cat_paginators);
         } else {
             let p = Paginator {
                 index_title: Some(liquid::model::Value::array(category.cat_path.clone())),

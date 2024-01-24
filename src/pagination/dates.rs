@@ -73,7 +73,7 @@ fn walk_dates(
         let cur_date_paginators =
             create_all_paginators(&date_holder.posts, doc, config, Some(&index_title))?;
         if !cur_date_paginators.is_empty() {
-            cur_date_holder_paginators.extend(cur_date_paginators.into_iter());
+            cur_date_holder_paginators.extend(cur_date_paginators);
         } else {
             let p = Paginator {
                 index_title: Some(index_title),

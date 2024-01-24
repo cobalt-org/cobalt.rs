@@ -165,7 +165,7 @@ fn interpret_permalink(
             .unwrap_or_else(|| doc.url_path.clone())
     } else {
         let pagination_attr = pagination_attributes(page_num as i32);
-        attributes.extend(pagination_attr.into_iter());
+        attributes.extend(pagination_attr);
         let index = index.map(index_to_string).unwrap_or_else(|| {
             if config.include != Include::All {
                 unreachable!("Include is not All and no index");
