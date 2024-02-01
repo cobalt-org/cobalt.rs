@@ -96,7 +96,7 @@ ignore = "0.4"
 serde = "1.0"
 serde_yaml = "0.9"
 serde_json = "1.0"
-toml = "0.8.8"
+toml = "0.8.9"
 normalize-line-endings = "0.3.0"
 sitemap = "0.4"
 open = "5"
@@ -108,13 +108,13 @@ notify = { version = "6", optional = true, default-features = false, features = 
 sass-rs = { version = "0.2", optional = true }
 
 html-minifier = {version="3.0", optional = true }
-anyhow = "1.0.78"
-anstream = "0.6.5"
-chrono = "0.4.31"
+anyhow = "1.0.79"
+anstream = "0.6.11"
+chrono = "0.4.33"
 
 [dev-dependencies]
 trycmd = "0.14"
-snapbox = { version = "0.4.15", features = ["diff"] }
+snapbox = { version = "0.4.16", features = ["diff"] }
 
 [features]
 default = ["syntax-highlight", "sass", "serve", "html-minifier"]
