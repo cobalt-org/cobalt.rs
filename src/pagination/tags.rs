@@ -20,7 +20,7 @@ fn distribute_posts_by_tags<'a>(
                     .ok_or_else(|| anyhow::format_err!("Should have string tags"))?
                     .to_kstr()
                     .into_string();
-                let cur_tag = per_tags.entry(tag).or_insert_with(Vec::new);
+                let cur_tag = per_tags.entry(tag).or_default();
                 cur_tag.push(post);
             }
         }
