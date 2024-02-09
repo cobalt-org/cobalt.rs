@@ -435,7 +435,7 @@ fn prepend_date_to_filename(
             .and_then(|os| os.to_str())
             .unwrap_or_else(|| config
                 .page_extensions
-                .get(0)
+                .first()
                 .expect("at least one element is enforced by config validator"))
     );
     trace!("`publish_date_in_filename` setting is activated, prefix filename with date, new filename: {}", file_name);

@@ -47,7 +47,7 @@ jobs:
     - name: No-default features
       run: cargo test --workspace --no-default-features
   msrv:
-    name: "Check MSRV: 1.72"
+    name: "Check MSRV: 1.73"
     runs-on: ubuntu-latest
     steps:
     - name: Checkout repository
@@ -55,7 +55,7 @@ jobs:
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable
       with:
-        toolchain: "1.72"  # MSRV
+        toolchain: "1.73"  # MSRV
     - uses: Swatinem/rust-cache@v2
     - name: Default features
       run: cargo check --workspace --all-targets
@@ -117,7 +117,7 @@ jobs:
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable
       with:
-        toolchain: "1.72"  # MSRV
+        toolchain: "1.73"  # MSRV
         components: clippy
     - uses: Swatinem/rust-cache@v2
     - name: Install SARIF tools
