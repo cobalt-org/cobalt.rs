@@ -113,8 +113,8 @@ anstream = "0.6.11"
 chrono = "0.4.33"
 
 [dev-dependencies]
-trycmd = "0.14"
-snapbox = { version = "0.4.16", features = ["diff"] }
+trycmd = "0.15"
+snapbox = { version = "0.5.0", features = ["diff"] }
 
 [features]
 default = ["syntax-highlight", "sass", "serve", "html-minifier"]
