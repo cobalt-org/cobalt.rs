@@ -46,8 +46,8 @@ impl ServeArgs {
         let server = server.build();
 
         let mut config = self.config.load_config()?;
-        debug!("Overriding config `site.base_url` with `{}`", server.addr());
-        config.site.base_url = Some(format!("http://{}", server.addr()).into());
+        debug!("Overriding config `site.base_url` with `/`");
+        config.site.base_url = Some("/".into());
         let mut config = cobalt::cobalt_model::Config::from_config(config)?;
         debug!(
             "Overriding config `destination` with `{}`",
