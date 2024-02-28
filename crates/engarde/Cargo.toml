@@ -1,6 +1,6 @@
 [package]
 name = "engarde"
-version = "0.1.6"
+version = "0.1.7"
 description = "Fenced Code Formatting"
 homepage = "https://github.com/cobalt-org/cobalt.rs/tree/master/crates/engarde"
 documentation = "http://docs.rs/engarde"

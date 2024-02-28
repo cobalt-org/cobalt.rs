@@ -22,7 +22,7 @@ include = [
 
 [package]
 name = "cobalt-bin"
-version = "0.19.0"
+version = "0.19.1"
 description = "Static site generator written in Rust"
 readme = "README.md"
 categories = ["command-line-utilities"]
@@ -65,8 +65,8 @@ name = "cobalt"
 doc = false
 
 [dependencies]
-cobalt-config = { version = "=0.19.0", path = "crates/config", features = ["unstable"] }
-cobalt-core = { version = "=0.19.0", path = "crates/core", features = ["unstable"] }
+cobalt-config = { version = "=0.19.1", path = "crates/config", features = ["unstable"] }
+cobalt-core = { version = "=0.19.1", path = "crates/core", features = ["unstable"] }
 clap = { version = "4.4", features = ["derive", "wrap_help"] }
 clap-verbosity-flag = "2.1"
 proc-exit = "2"
@@ -102,7 +102,7 @@ sitemap = "0.4"
 open = "5"
 dunce = "1.0.4"
 
-file-serve = { version = "0.3.0", path = "crates/file-serve", optional = true }
+file-serve = { version = "0.3.1", path = "crates/file-serve", optional = true }
 notify = { version = "6", optional = true, default-features = false, features = ["macos_fsevent"] }
 
 sass-rs = { version = "0.2", optional = true }
