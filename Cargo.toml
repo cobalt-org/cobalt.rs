@@ -22,7 +22,7 @@ include = [
 
 [package]
 name = "cobalt-bin"
-version = "0.19.1"
+version = "0.19.2"
 description = "Static site generator written in Rust"
 readme = "README.md"
 categories = ["command-line-utilities"]
