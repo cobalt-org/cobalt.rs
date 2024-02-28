@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Compatibility
 
-- MSRV is now 1.70.0
+- MSRV is now 1.73
 
 ## [0.1.6] - 2023-04-20
 

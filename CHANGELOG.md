@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 <!-- next-header -->
 ## [Unreleased] - ReleaseDate
 
+### Compatibility
+
+- MSRV is now 1.73
+
+### Fixes
+
+- Put the base url for `cobalt serve` at `/` to work with tunnelling
+
 ## [0.19.0] - 2023-06-06
 
 ### Compatibility
