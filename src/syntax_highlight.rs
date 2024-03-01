@@ -141,7 +141,7 @@ impl liquid_core::ParseBlock for CodeBlockParser {
 }
 
 pub struct DecoratedParser<'a> {
-    parser: cmark::Parser<'a, 'a>,
+    parser: cmark::Parser<'a>,
     syntax: std::sync::Arc<SyntaxHighlight>,
     theme: Option<&'a str>,
     lang: Option<String>,
@@ -150,7 +150,7 @@ pub struct DecoratedParser<'a> {
 
 impl<'a> DecoratedParser<'a> {
     pub fn new(
-        parser: cmark::Parser<'a, 'a>,
+        parser: cmark::Parser<'a>,
         syntax: std::sync::Arc<SyntaxHighlight>,
         theme: Option<&'a str>,
     ) -> error::Result<Self> {
@@ -187,7 +187,7 @@ impl<'a> Iterator for DecoratedParser<'a> {
                 self.code = Some(vec![]);
                 Some(Text(pulldown_cmark::CowStr::Borrowed("")))
             }
-            Some(End(cmark::Tag::CodeBlock(_))) => {
+            Some(End(cmark::TagEnd::CodeBlock)) => {
                 let html = if let Some(code) = self.code.as_deref() {
                     let code = code.iter().join("\n");
                     self.syntax.format(&code, self.lang.as_deref(), self.theme)
@@ -206,7 +206,7 @@ impl<'a> Iterator for DecoratedParser<'a> {
 }
 
 pub fn decorate_markdown<'a>(
-    parser: cmark::Parser<'a, 'a>,
+    parser: cmark::Parser<'a>,
     syntax: std::sync::Arc<SyntaxHighlight>,
     theme_name: Option<&'a str>,
 ) -> error::Result<DecoratedParser<'a>> {
