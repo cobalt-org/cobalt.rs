@@ -17,8 +17,8 @@ Commands:
   help     Print this message or the help of the given subcommand(s)
 
 Options:
-  -v, --verbose...    More output per occurrence
-  -q, --quiet...      Less output per occurrence
+  -v, --verbose...    Increase logging verbosity
+  -q, --quiet...      Decrease logging verbosity
       --color <WHEN>  Controls when to use color [default: auto] [possible values: auto, always,
                       never]
   -h, --help          Print help
