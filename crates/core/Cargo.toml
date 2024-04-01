@@ -22,7 +22,7 @@ preview_unstable = []
 [dependencies]
 cobalt-config = { version = "=0.19.1", path = "..//config", features = ["unstable"] }
 ignore = "0.4"
-walkdir = "2.4"
+walkdir = "2.5"
 liquid-core = "0.26"
 log = "0.4"
 serde = "1.0"
