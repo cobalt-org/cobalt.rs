@@ -185,7 +185,7 @@ impl Document {
         rel_path: &relative_path::RelativePath,
         default_front: cobalt_config::Frontmatter,
     ) -> Result<Document> {
-        trace!("Parsing {:?}", rel_path);
+        trace!("Parsing `{}`", rel_path);
         let content = files::read_file(src_path)?;
         let builder = cobalt_config::Document::parse(&content)?;
         let (front, content) = builder.into_parts();
@@ -379,10 +379,10 @@ impl Document {
             let template = context
                 .parser
                 .parse(layout_data_ref)
-                .with_context(|| anyhow::format_err!("Failed to parse layout {:?}", layout))?;
+                .with_context(|| anyhow::format_err!("Failed to parse layout `{}`", layout))?;
             let content_html = template
                 .render(context.globals)
-                .with_context(|| anyhow::format_err!("Failed to render layout {:?}", layout))?;
+                .with_context(|| anyhow::format_err!("Failed to render layout `{}`", layout))?;
             let content_html = minify_if_enabled(content_html, context, &self.file_path)?;
             Ok(content_html)
         } else {

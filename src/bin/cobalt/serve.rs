@@ -67,7 +67,7 @@ impl ServeArgs {
 
             dest.close()?;
         } else {
-            info!("Watching {:?} for changes", &config.source);
+            info!("Watching {} for changes", &config.source.display());
             thread::spawn(move || {
                 let e = serve(&server);
                 if let Some(e) = e.err() {
@@ -105,14 +105,19 @@ fn open_browser(url: String) -> Result<()> {
 fn watch(config: &cobalt_model::Config) -> Result<()> {
     // canonicalize is to ensure there is no question that `watcher`s paths come back safe for
     // Files::includes_file
-    let source = dunce::canonicalize(path::Path::new(&config.source))
-        .with_context(|| anyhow::format_err!("Failed in processing source"))?;
+    let source = dunce::canonicalize(path::Path::new(&config.source)).with_context(|| {
+        anyhow::format_err!("Failed in processing source `{}`", config.source.display())
+    })?;
 
     // Also canonicalize the destination folder. In particular for Windows, notify-rs
     // generates the absolute path by prepending the above source path.
     // On Windows canonicalize() adds a \\?\ to the start of the path.
-    let destination = dunce::canonicalize(&config.destination)
-        .with_context(|| anyhow::format_err!("Failed to canonicalize destination folder"))?;
+    let destination = dunce::canonicalize(&config.destination).with_context(|| {
+        anyhow::format_err!(
+            "Failed to canonicalize destination folder `{}`",
+            config.destination.display()
+        )
+    })?;
 
     let (tx, rx) = channel();
     let mut watcher =
@@ -120,7 +125,7 @@ fn watch(config: &cobalt_model::Config) -> Result<()> {
     watcher
         .watch(&source, notify::RecursiveMode::Recursive)
         .with_context(|| anyhow::format_err!("Notify error"))?;
-    info!("Watching {:?} for changes", &config.source);
+    info!("Watching {} for changes", config.source.display());
 
     for event in rx {
         let event = event.with_context(|| anyhow::format_err!("Notify error"))?;

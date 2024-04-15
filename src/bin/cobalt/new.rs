@@ -1,5 +1,4 @@
 use std::collections;
-use std::env;
 use std::fs;
 use std::io::Write;
 use std::path;
@@ -58,7 +57,7 @@ impl NewArgs {
 
         let title = self.title.as_deref();
 
-        let mut file = env::current_dir().unwrap_or_default();
+        let mut file = path::Path::new(".").to_owned();
         if let Some(rel_file) = self.file.as_deref() {
             file.push(rel_file)
         }
@@ -100,7 +99,7 @@ impl RenameArgs {
 
         let title = self.title.as_ref();
 
-        let mut file = env::current_dir().unwrap_or_default();
+        let mut file = path::Path::new(".").to_owned();
         if let Some(rel_file) = self.file.as_deref() {
             file.push(rel_file)
         }
@@ -130,7 +129,7 @@ impl PublishArgs {
         let config = cobalt::cobalt_model::Config::from_config(config)?;
 
         let filename = self.filename.as_path();
-        let mut file = env::current_dir().unwrap_or_default();
+        let mut file = path::Path::new(".").to_owned();
         file.push(path::Path::new(filename));
 
         publish_document(&config, &file)
@@ -248,7 +247,7 @@ pub fn create_new_document(
     let interim_path = cobalt_core::SourcePath::from_root(&config.source, &interim_path)
         .ok_or_else(|| {
             anyhow::format_err!(
-                "New file {} not project directory ({})",
+                "New file {} not in project in directory ({})",
                 file.display(),
                 config.source.display()
             )
@@ -369,7 +368,7 @@ pub fn rename_document(
 
     let target = cobalt_core::SourcePath::from_root(&config.source, &target).ok_or_else(|| {
         anyhow::format_err!(
-            "New file {} not project directory ({})",
+            "New file {} not in project directory ({})",
             target.display(),
             config.source.display()
         )
@@ -484,7 +483,7 @@ pub fn publish_document(config: &cobalt_model::Config, file: &path::Path) -> Res
     let file = move_from_drafts_to_posts(config, file)?;
     let file = cobalt_core::SourcePath::from_root(&config.source, &file).ok_or_else(|| {
         anyhow::format_err!(
-            "New file {} not project directory ({})",
+            "New file {} not in project directory ({})",
             file.display(),
             config.source.display()
         )
