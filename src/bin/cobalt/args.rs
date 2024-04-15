@@ -32,7 +32,7 @@ impl ConfigArgs {
         // Fetch config information if available
         let mut config = if let Some(config_path) = config_path {
             cobalt_config::Config::from_file(config_path).with_context(|| {
-                anyhow::format_err!("Error reading config file {:?}", config_path)
+                anyhow::format_err!("Error reading config file {}", config_path.display())
             })?
         } else {
             let cwd = env::current_dir().unwrap_or_default();
