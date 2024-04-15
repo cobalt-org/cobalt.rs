@@ -1,4 +1,3 @@
-use std::env;
 use std::io::Write;
 use std::path;
 
@@ -35,8 +34,7 @@ impl ConfigArgs {
                 anyhow::format_err!("Error reading config file {}", config_path.display())
             })?
         } else {
-            let cwd = env::current_dir().unwrap_or_default();
-            cobalt_config::Config::from_cwd(cwd)?
+            cobalt_config::Config::from_cwd(".")?
         };
 
         config.abs_dest = self

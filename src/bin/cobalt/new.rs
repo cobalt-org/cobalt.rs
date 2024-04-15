@@ -1,5 +1,4 @@
 use std::collections;
-use std::env;
 use std::fs;
 use std::io::Write;
 use std::path;
@@ -58,7 +57,7 @@ impl NewArgs {
 
         let title = self.title.as_deref();
 
-        let mut file = env::current_dir().unwrap_or_default();
+        let mut file = path::Path::new(".").to_owned();
         if let Some(rel_file) = self.file.as_deref() {
             file.push(rel_file)
         }
@@ -100,7 +99,7 @@ impl RenameArgs {
 
         let title = self.title.as_ref();
 
-        let mut file = env::current_dir().unwrap_or_default();
+        let mut file = path::Path::new(".").to_owned();
         if let Some(rel_file) = self.file.as_deref() {
             file.push(rel_file)
         }
@@ -130,7 +129,7 @@ impl PublishArgs {
         let config = cobalt::cobalt_model::Config::from_config(config)?;
 
         let filename = self.filename.as_path();
-        let mut file = env::current_dir().unwrap_or_default();
+        let mut file = path::Path::new(".").to_owned();
         file.push(path::Path::new(filename));
 
         publish_document(&config, &file)
