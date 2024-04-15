@@ -79,6 +79,9 @@ impl Config {
 
         let mut root = path;
         root.pop(); // Remove filename
+        if root == std::path::Path::new("") {
+            root = std::path::Path::new(".").to_owned();
+        }
         config.root = root;
 
         Ok(config)
