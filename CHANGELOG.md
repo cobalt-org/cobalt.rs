@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 <!-- next-header -->
 ## [Unreleased] - ReleaseDate
 
+### Compatibility
+
+- MSRV is now 1.76.0
+
+### Fixes
+
+- `cobalt serve -c <file>` should now work
+- Cleaned up error messages
+
 ## [0.19.2] - 2024-02-28
 
 ## [0.19.1] - 2024-02-28
