@@ -73,7 +73,7 @@ proc-exit = "2"
 yansi = "0.5.1"
 colorchoice = "1.0.0"
 colorchoice-clap = "1.0.3"
-human-panic = "1"
+human-panic = "2"
 scrawl = "2.0"
 tempfile = "3.10"
 relative-path = { version = "1", features = ["serde"] }
