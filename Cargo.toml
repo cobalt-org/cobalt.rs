@@ -70,7 +70,7 @@ cobalt-core = { version = "=0.19.2", path = "crates/core", features = ["unstable
 clap = { version = "4.5", features = ["derive", "wrap_help"] }
 clap-verbosity-flag = "2.2"
 proc-exit = "2"
-yansi = "0.5.1"
+yansi = "1.0.0"
 colorchoice = "1.0.0"
 colorchoice-clap = "1.0.3"
 human-panic = "2"
