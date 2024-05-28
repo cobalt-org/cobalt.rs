@@ -218,6 +218,10 @@ pub fn decorate_markdown<'a>(
 mod test_syntsx {
     use super::*;
 
+    use snapbox::assert_data_eq;
+    use snapbox::prelude::*;
+    use snapbox::str;
+
     const CODE_BLOCK: &str = "mod test {
         fn hello(arg: int) -> bool {
             \
@@ -243,7 +247,7 @@ mod test_syntsx {
             .unwrap();
         let output = template.render(&liquid::Object::new());
         let expected =
-        snapbox::str!["<pre style=\"background-color:#2b303b;\">\n\
+        str!["<pre style=\"background-color:#2b303b;\">\n\
          <code><span style=\"color:#b48ead;\">mod </span>\
          <span style=\"color:#c0c5ce;\">test {\n\
          </span><span style=\"color:#c0c5ce;\">        </span>\
@@ -257,7 +261,7 @@ mod test_syntsx {
          </span><span style=\"color:#c0c5ce;\">    }\n\
          </span><span style=\"color:#c0c5ce;\">    </span></code></pre>\n"];
 
-        snapbox::assert_eq(expected, output.unwrap());
+        assert_data_eq!(output.unwrap(), expected.raw());
     }
 
     #[test]
@@ -277,7 +281,7 @@ mod test_syntsx {
             decorate_markdown(parser, syntax, Some("base16-ocean.dark")).unwrap(),
         );
         let expected =
-        snapbox::str!["<pre style=\"background-color:#2b303b;\">\n\
+        str!["<pre style=\"background-color:#2b303b;\">\n\
          <code><span style=\"color:#b48ead;\">mod </span>\
          <span style=\"color:#c0c5ce;\">test {\n\
          </span><span style=\"color:#c0c5ce;\">        </span>\
@@ -292,7 +296,7 @@ mod test_syntsx {
          </span><span style=\"color:#c0c5ce;\">    \n\
          </span></code></pre>\n"];
 
-        snapbox::assert_eq(expected, &buf);
+        assert_data_eq!(&buf, expected.raw());
     }
 }
 
@@ -300,6 +304,10 @@ mod test_syntsx {
 #[cfg(not(feature = "syntax-highlight"))]
 mod test_raw {
     use super::*;
+
+    use snapbox::assert_data_eq;
+    use snapbox::prelude::*;
+    use snapbox::str;
 
     const CODE_BLOCK: &str = "mod test {
         fn hello(arg: int) -> bool {
@@ -325,7 +333,7 @@ mod test_raw {
             ))
             .unwrap();
         let output = template.render(&liquid::Object::new());
-        let expected = snapbox::str![
+        let expected = str![
             r#"<pre><code class="language-rust">mod test {
         fn hello(arg: int) -&gt; bool {
             true
@@ -335,7 +343,7 @@ mod test_raw {
 "#
         ];
 
-        snapbox::assert_eq(expected, output.unwrap());
+        assert_data_eq!(output.unwrap(), expected.raw());
     }
 
     #[test]
@@ -354,7 +362,7 @@ mod test_raw {
             &mut buf,
             decorate_markdown(parser, syntax, Some("base16-ocean.dark")).unwrap(),
         );
-        let expected = snapbox::str![
+        let expected = str![
             r#"<pre><code class="language-rust">mod test {
         fn hello(arg: int) -&gt; bool {
             true
@@ -365,6 +373,6 @@ mod test_raw {
 "#
         ];
 
-        snapbox::assert_eq(expected, buf);
+        assert_data_eq!(&buf, expected.raw());
     }
 }
