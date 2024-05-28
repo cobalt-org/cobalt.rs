@@ -345,7 +345,7 @@ dependencies = [
  "serde_json",
  "serde_yaml",
  "sitemap",
- "snapbox",
+ "snapbox 0.6.5",
  "tempfile",
  "time",
  "toml",
@@ -1739,6 +1739,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "snapbox"
+version = "0.6.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9ad8c7be18cc9ec7f4d7948ad6b9df0e04fc649663e3c0ed59f304ed17ca69e9"
+dependencies = [
+ "anstream",
+ "anstyle",
+ "normalize-line-endings",
+ "similar",
+ "snapbox-macros",
+]
+
+[[package]]
 name = "snapbox-macros"
 version = "0.3.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1969,7 +1982,7 @@ dependencies = [
  "rayon",
  "serde",
  "shlex",
- "snapbox",
+ "snapbox 0.5.14",
  "toml_edit",
 ]
 
