@@ -114,7 +114,7 @@ chrono = "0.4.38"
 
 [dev-dependencies]
 trycmd = "0.15"
-snapbox = { version = "0.5.9", features = ["diff"] }
+snapbox = { version = "0.6.5", features = ["diff"] }
 
 [features]
 default = ["syntax-highlight", "sass", "serve", "html-minifier"]
