@@ -29,3 +29,6 @@ serde = "1.0"
 once_cell = "1.19"
 status = { version = "0.0.10", features = ["send_sync"] }
 relative-path = { version = "1", features = ["serde"] }
+
+[lints]
+workspace = true
