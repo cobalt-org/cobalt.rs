@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 <!-- next-header -->
 ## [Unreleased] - ReleaseDate
 
+### Fixes
+
+- *(build)* List correct default for `--destination`
+- *(serve)* Remove unused `--destination`
+
 ## [0.19.4] - 2024-07-05
 
 ## [0.19.3] - 2024-04-15
