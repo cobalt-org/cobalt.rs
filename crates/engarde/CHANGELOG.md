@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 <!-- next-header -->
 ## [Unreleased] - ReleaseDate
 
+### Fixes
+
+- Don't crash when escaping HTML with UTF-8 characters
+
+### Compatibility
+
+- MSRV is now 1.76
+
 ## [0.1.8] - 2024-04-15
 
 ## [0.1.7] - 2024-02-28
