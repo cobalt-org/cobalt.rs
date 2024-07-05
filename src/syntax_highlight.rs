@@ -67,13 +67,13 @@ impl Renderable for CodeBlock {
 }
 
 #[derive(Clone, Debug)]
-pub struct CodeBlockParser {
+pub(crate) struct CodeBlockParser {
     syntax: std::sync::Arc<SyntaxHighlight>,
     syntax_theme: Option<liquid::model::KString>,
 }
 
 impl CodeBlockParser {
-    pub fn new(
+    pub(crate) fn new(
         syntax: std::sync::Arc<SyntaxHighlight>,
         theme: Option<liquid::model::KString>,
     ) -> error::Result<Self> {
@@ -140,7 +140,7 @@ impl liquid_core::ParseBlock for CodeBlockParser {
     }
 }
 
-pub struct DecoratedParser<'a> {
+pub(crate) struct DecoratedParser<'a> {
     parser: cmark::Parser<'a>,
     syntax: std::sync::Arc<SyntaxHighlight>,
     theme: Option<&'a str>,
@@ -149,7 +149,7 @@ pub struct DecoratedParser<'a> {
 }
 
 impl<'a> DecoratedParser<'a> {
-    pub fn new(
+    pub(crate) fn new(
         parser: cmark::Parser<'a>,
         syntax: std::sync::Arc<SyntaxHighlight>,
         theme: Option<&'a str>,
@@ -205,7 +205,7 @@ impl<'a> Iterator for DecoratedParser<'a> {
     }
 }
 
-pub fn decorate_markdown<'a>(
+pub(crate) fn decorate_markdown<'a>(
     parser: cmark::Parser<'a>,
     syntax: std::sync::Arc<SyntaxHighlight>,
     theme_name: Option<&'a str>,

@@ -53,12 +53,12 @@ impl Frontmatter {
 
     pub fn merge_path(mut self, relpath: &relative_path::RelativePath) -> Self {
         if let Some(name) = relpath.file_name() {
-            let mut split_name = crate::path::split_ext(name);
+            let mut split_name = path::split_ext(name);
 
             #[cfg(feature = "preview_unstable")]
             if split_name.1 == Some("liquid") {
                 self.templated.get_or_insert(true);
-                split_name = crate::path::split_ext(split_name.0);
+                split_name = path::split_ext(split_name.0);
             } else {
                 self.templated.get_or_insert(false);
             }
@@ -70,19 +70,19 @@ impl Frontmatter {
             self.format.get_or_insert(format);
 
             while split_name.1.is_some() {
-                split_name = crate::path::split_ext(split_name.0);
+                split_name = path::split_ext(split_name.0);
             }
 
             if self.published_date.is_none() || self.slug.is_none() {
                 let file_stem = split_name.0;
-                let (file_date, file_stem) = crate::path::parse_file_stem(file_stem);
+                let (file_date, file_stem) = path::parse_file_stem(file_stem);
                 if self.published_date.is_none() {
                     self.published_date = file_date;
                 }
                 if self.slug.is_none() {
-                    let slug = crate::path::slugify(file_stem);
+                    let slug = path::slugify(file_stem);
                     if self.title.is_none() {
-                        self.title = Some(crate::path::titleize_slug(&slug));
+                        self.title = Some(path::titleize_slug(&slug));
                     }
                     self.slug = Some(slug);
                 }
@@ -135,7 +135,7 @@ impl Frontmatter {
 }
 
 impl fmt::Display for Frontmatter {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let converted = serde_yaml::to_string(self).expect("should always be valid");
         let subset = converted
             .strip_prefix("---")
@@ -199,7 +199,7 @@ impl Default for Permalink {
 }
 
 impl fmt::Display for Permalink {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.as_str())
     }
 }
@@ -230,13 +230,13 @@ impl ExplicitPermalink {
     }
 }
 
-impl std::fmt::Display for ExplicitPermalink {
-    fn fmt(&self, fmt: &mut std::fmt::Formatter) -> std::fmt::Result {
+impl fmt::Display for ExplicitPermalink {
+    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.0.fmt(fmt)
     }
 }
 
-impl<'s> std::convert::TryFrom<&'s str> for ExplicitPermalink {
+impl<'s> TryFrom<&'s str> for ExplicitPermalink {
     type Error = &'static str;
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
@@ -249,7 +249,7 @@ impl<'s> std::convert::TryFrom<&'s str> for ExplicitPermalink {
     }
 }
 
-impl std::convert::TryFrom<String> for ExplicitPermalink {
+impl TryFrom<String> for ExplicitPermalink {
     type Error = &'static str;
 
     fn try_from(value: String) -> Result<Self, Self::Error> {

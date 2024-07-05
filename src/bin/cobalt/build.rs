@@ -2,17 +2,17 @@ use std::env;
 use std::fs;
 
 use crate::args;
-use crate::error::*;
+use crate::error::Result;
 
 /// Build the cobalt project at the source dir
 #[derive(Clone, Debug, PartialEq, Eq, clap::Args)]
-pub struct BuildArgs {
+pub(crate) struct BuildArgs {
     #[command(flatten, next_help_heading = "Config")]
-    pub config: args::ConfigArgs,
+    pub(crate) config: args::ConfigArgs,
 }
 
 impl BuildArgs {
-    pub fn run(&self) -> Result<()> {
+    pub(crate) fn run(&self) -> Result<()> {
         let config = self.config.load_config()?;
         let config = cobalt::cobalt_model::Config::from_config(config)?;
 
@@ -23,7 +23,7 @@ impl BuildArgs {
     }
 }
 
-pub fn build(config: cobalt::Config) -> Result<()> {
+pub(crate) fn build(config: cobalt::Config) -> Result<()> {
     info!(
         "Building from `{}` into `{}`",
         config.source.display(),
@@ -36,13 +36,13 @@ pub fn build(config: cobalt::Config) -> Result<()> {
 
 /// Cleans `destination` directory
 #[derive(Clone, Debug, PartialEq, Eq, clap::Args)]
-pub struct CleanArgs {
+pub(crate) struct CleanArgs {
     #[command(flatten, next_help_heading = "Config")]
-    pub config: args::ConfigArgs,
+    pub(crate) config: args::ConfigArgs,
 }
 
 impl CleanArgs {
-    pub fn run(&self) -> Result<()> {
+    pub(crate) fn run(&self) -> Result<()> {
         let config = self.config.load_config()?;
         let config = cobalt::cobalt_model::Config::from_config(config)?;
 
@@ -50,7 +50,7 @@ impl CleanArgs {
     }
 }
 
-pub fn clean(config: &cobalt::Config) -> Result<()> {
+pub(crate) fn clean(config: &cobalt::Config) -> Result<()> {
     let cwd = env::current_dir().unwrap_or_default();
     let destdir = dunce::canonicalize(&config.destination);
     let destdir = match destdir {

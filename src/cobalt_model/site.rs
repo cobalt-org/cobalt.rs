@@ -11,7 +11,7 @@ use serde_json;
 use serde_yaml;
 use toml;
 
-use crate::error::*;
+use crate::error::Result;
 
 use super::files;
 
@@ -59,7 +59,7 @@ impl Site {
         }
     }
 
-    pub fn load(&self, source: &std::path::Path) -> Result<liquid::Object> {
+    pub fn load(&self, source: &path::Path) -> Result<liquid::Object> {
         let mut attributes = liquid::Object::new();
         if let Some(title) = self.title.as_ref() {
             attributes.insert(

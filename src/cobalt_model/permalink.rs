@@ -1,7 +1,7 @@
 use lazy_static::lazy_static;
 use liquid;
 
-use crate::error::*;
+use crate::error::Result;
 
 pub fn explode_permalink<S: AsRef<str>>(
     permalink: S,
@@ -48,7 +48,7 @@ fn format_url_as_file_str(permalink: &str) -> relative_path::RelativePathBuf {
 
     // explode the url if no extension was specified
     if path_buf.extension().is_none() {
-        path_buf.push("index.html")
+        path_buf.push("index.html");
     }
 
     path_buf

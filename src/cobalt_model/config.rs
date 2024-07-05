@@ -5,7 +5,7 @@ use log::debug;
 use serde::Serialize;
 use serde_yaml;
 
-use crate::error::*;
+use crate::error::Result;
 
 use super::assets;
 use super::collection;

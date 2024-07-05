@@ -2,7 +2,7 @@ use cobalt_config::Frontmatter;
 use cobalt_config::SortOrder;
 use liquid;
 
-use crate::error::*;
+use crate::error::Result;
 
 #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize)]
 pub struct Collection {
@@ -22,7 +22,7 @@ impl Collection {
     pub fn from_page_config(
         config: cobalt_config::PageCollection,
         site: &cobalt_config::Site,
-        common_default: &cobalt_config::Frontmatter,
+        common_default: &Frontmatter,
     ) -> Result<Self> {
         let mut config: cobalt_config::Collection = config.into();
         // Use `site` because the pages are effectively the site
@@ -35,7 +35,7 @@ impl Collection {
         config: cobalt_config::PostCollection,
         site: &cobalt_config::Site,
         include_drafts: bool,
-        common_default: &cobalt_config::Frontmatter,
+        common_default: &Frontmatter,
     ) -> Result<Self> {
         let mut config: cobalt_config::Collection = config.into();
         // Default with `site` for people quickly bootstrapping a blog, the blog and site are
@@ -53,7 +53,7 @@ impl Collection {
         config: cobalt_config::Collection,
         slug: &str,
         include_drafts: bool,
-        common_default: &cobalt_config::Frontmatter,
+        common_default: &Frontmatter,
     ) -> Result<Self> {
         let cobalt_config::Collection {
             title,

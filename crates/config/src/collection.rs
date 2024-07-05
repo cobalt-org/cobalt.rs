@@ -8,11 +8,11 @@ use super::*;
 pub struct Collection {
     pub title: Option<liquid_core::model::KString>,
     pub description: Option<liquid_core::model::KString>,
-    pub dir: Option<crate::RelPath>,
-    pub drafts_dir: Option<crate::RelPath>,
+    pub dir: Option<RelPath>,
+    pub drafts_dir: Option<RelPath>,
     pub order: SortOrder,
-    pub rss: Option<crate::RelPath>,
-    pub jsonfeed: Option<crate::RelPath>,
+    pub rss: Option<RelPath>,
+    pub jsonfeed: Option<RelPath>,
     pub publish_date_in_filename: bool,
     pub default: Frontmatter,
 }
@@ -54,7 +54,7 @@ impl From<PageCollection> for Collection {
         });
         Self {
             default,
-            dir: Some(crate::RelPath::new()),
+            dir: Some(RelPath::new()),
             order: SortOrder::None,
             ..Default::default()
         }
@@ -78,11 +78,11 @@ pub struct PageCollection {
 pub struct PostCollection {
     pub title: Option<liquid_core::model::KString>,
     pub description: Option<liquid_core::model::KString>,
-    pub dir: crate::RelPath,
-    pub drafts_dir: Option<crate::RelPath>,
+    pub dir: RelPath,
+    pub drafts_dir: Option<RelPath>,
     pub order: SortOrder,
-    pub rss: Option<crate::RelPath>,
-    pub jsonfeed: Option<crate::RelPath>,
+    pub rss: Option<RelPath>,
+    pub jsonfeed: Option<RelPath>,
     pub publish_date_in_filename: bool,
     pub default: Frontmatter,
 }
@@ -92,7 +92,7 @@ impl Default for PostCollection {
         Self {
             title: Default::default(),
             description: Default::default(),
-            dir: crate::RelPath::from_unchecked("posts"),
+            dir: RelPath::from_unchecked("posts"),
             drafts_dir: Default::default(),
             order: Default::default(),
             rss: Default::default(),

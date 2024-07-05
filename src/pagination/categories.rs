@@ -2,7 +2,9 @@ use std::cmp::Ordering;
 
 use crate::document::Document;
 
-use super::*;
+use super::{
+    create_all_paginators, helpers, paginator, sort_posts, PaginationConfig, Result, ValueView,
+};
 use helpers::extract_categories;
 use paginator::Paginator;
 
@@ -22,7 +24,7 @@ impl<'a> Category<'a> {
         }
     }
 
-    fn with_path<'v>(path: impl Iterator<Item = &'v dyn liquid::ValueView>) -> Self {
+    fn with_path<'v>(path: impl Iterator<Item = &'v dyn ValueView>) -> Self {
         Category {
             cat_path: path.map(|v| v.to_value()).collect(),
             posts: vec![],
@@ -31,14 +33,14 @@ impl<'a> Category<'a> {
     }
 
     fn add_post(&mut self, post: &'a liquid::model::Value) {
-        self.posts.push(post)
+        self.posts.push(post);
     }
 }
 
 fn compare_category_path<'a, C, S>(cur_path: C, seek: S) -> Ordering
 where
-    C: Iterator<Item = &'a dyn liquid::ValueView>,
-    S: Iterator<Item = &'a dyn liquid::ValueView>,
+    C: Iterator<Item = &'a dyn ValueView>,
+    S: Iterator<Item = &'a dyn ValueView>,
 {
     cur_path
         .map(liquid::model::ValueViewCmp::new)
@@ -46,14 +48,14 @@ where
         .expect("Arrays of same hierarchy level should be fully comparable")
 }
 
-fn is_leaf_category(cur_idx: usize, categories: &[&dyn liquid::ValueView]) -> bool {
+fn is_leaf_category(cur_idx: usize, categories: &[&dyn ValueView]) -> bool {
     cur_idx == categories.len()
 }
 
 fn construct_cat_full_path<'v>(
     cur_idx: usize,
-    categories: &[&'v dyn liquid::model::ValueView],
-) -> Vec<&'v dyn liquid::model::ValueView> {
+    categories: &[&'v dyn ValueView],
+) -> Vec<&'v dyn ValueView> {
     categories[..cur_idx].to_vec()
 }
 
@@ -65,7 +67,7 @@ fn next_category(cur_idx: usize) -> usize {
 fn parse_categories_list<'a>(
     parent: &mut Category<'a>,
     cur_idx: usize,
-    cur_post_categories: &[&dyn liquid::ValueView],
+    cur_post_categories: &[&dyn ValueView],
     post: &'a liquid::model::Value,
 ) -> Result<()> {
     if cur_idx <= cur_post_categories.len() {
@@ -155,7 +157,7 @@ fn walk_categories(
     Ok(cur_cat_paginators_holder)
 }
 
-pub fn create_categories_paginators(
+pub(crate) fn create_categories_paginators(
     all_posts: &[&liquid::model::Value],
     doc: &Document,
     pagination_cfg: &PaginationConfig,

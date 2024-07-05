@@ -8,13 +8,13 @@ use serde::{Deserialize, Serialize};
 use super::sass;
 use super::{files, Minify};
 
-use crate::error::*;
+use crate::error::Result;
 
 #[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize)]
 #[serde(deny_unknown_fields, default)]
 pub struct AssetsBuilder {
     pub sass: sass::SassBuilder,
-    pub source: std::path::PathBuf,
+    pub source: path::PathBuf,
 }
 
 impl AssetsBuilder {
@@ -38,14 +38,14 @@ impl AssetsBuilder {
 #[derive(Debug)]
 pub struct Assets {
     sass: sass::SassCompiler,
-    source: std::path::PathBuf,
+    source: path::PathBuf,
 }
 
 impl Assets {
     pub fn process(
         &self,
-        path: &std::path::Path,
-        dest_root: &std::path::Path,
+        path: &path::Path,
+        dest_root: &path::Path,
         minify: &Minify,
     ) -> Result<()> {
         let rel_src = path

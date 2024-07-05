@@ -35,3 +35,6 @@ version = "5.2.0"
 optional = true
 default-features = false
 features =  ["parsing", "regex-fancy", "default-syntaxes", "default-themes", "html", "dump-load", "yaml-load"]
+
+[lints]
+workspace = true
