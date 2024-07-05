@@ -66,7 +66,7 @@ doc = false
 
 [dependencies]
 cobalt-config = { version = "=0.19.3", path = "crates/config", features = ["unstable"] }
-cobalt-core = { version = "=0.19.2", path = "crates/core", features = ["unstable"] }
+cobalt-core = { version = "=0.19.3", path = "crates/core", features = ["unstable"] }
 clap = { version = "4.5", features = ["derive", "wrap_help"] }
 clap-verbosity-flag = "2.2"
 proc-exit = "2"
