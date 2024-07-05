@@ -359,7 +359,7 @@ dependencies = [
 
 [[package]]
 name = "cobalt-config"
-version = "0.19.2"
+version = "0.19.3"
 dependencies = [
  "deunicode",
  "itertools 0.13.0",
