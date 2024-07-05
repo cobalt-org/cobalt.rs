@@ -11,7 +11,7 @@ pub struct ConfigArgs {
     #[arg(short, long, value_name = "FILE")]
     config: Option<path::PathBuf>,
 
-    /// Site destination folder [default: ./]
+    /// Site destination folder [default: ./_site]
     #[arg(short, long, value_name = "DIR")]
     destination: Option<path::PathBuf>,
 
