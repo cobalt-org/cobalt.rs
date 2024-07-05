@@ -7,13 +7,26 @@ use crate::error::Result;
 /// Build the cobalt project at the source dir
 #[derive(Clone, Debug, PartialEq, Eq, clap::Args)]
 pub(crate) struct BuildArgs {
+    /// Site destination folder [default: ./_site]
+    #[arg(short, long, value_name = "DIR", help_heading = "Config")]
+    destination: Option<std::path::PathBuf>,
+
     #[command(flatten, next_help_heading = "Config")]
     pub(crate) config: args::ConfigArgs,
 }
 
 impl BuildArgs {
     pub(crate) fn run(&self) -> Result<()> {
-        let config = self.config.load_config()?;
+        let mut config = self.config.load_config()?;
+        config.abs_dest = self
+            .destination
+            .as_deref()
+            .map(|d| {
+                fs::create_dir_all(d)?;
+                dunce::canonicalize(d)
+            })
+            .transpose()?;
+
         let config = cobalt::cobalt_model::Config::from_config(config)?;
 
         build(config)?;

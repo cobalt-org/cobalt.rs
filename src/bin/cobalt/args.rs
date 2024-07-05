@@ -11,10 +11,6 @@ pub(crate) struct ConfigArgs {
     #[arg(short, long, value_name = "FILE")]
     config: Option<path::PathBuf>,
 
-    /// Site destination folder [default: ./_site]
-    #[arg(short, long, value_name = "DIR")]
-    destination: Option<path::PathBuf>,
-
     /// Include drafts.
     #[arg(long)]
     drafts: bool,
@@ -36,15 +32,6 @@ impl ConfigArgs {
         } else {
             cobalt_config::Config::from_cwd(".")?
         };
-
-        config.abs_dest = self
-            .destination
-            .as_deref()
-            .map(|d| {
-                std::fs::create_dir_all(d)?;
-                dunce::canonicalize(d)
-            })
-            .transpose()?;
 
         if let Some(drafts) = self.drafts() {
             config.include_drafts = drafts;
