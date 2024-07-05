@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 <!-- next-header -->
 ## [Unreleased] - ReleaseDate
 
+## [0.3.4] - 2024-07-05
+
 ## [0.3.3] - 2024-07-05
 
 ### Compatibility
@@ -56,7 +58,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [0.1.1] - 2022-04-04
 
 <!-- next-url -->
-[Unreleased]: https://github.com/cobalt-org/cobalt.rs/compare/file-serve-v0.3.3...HEAD
+[Unreleased]: https://github.com/cobalt-org/cobalt.rs/compare/file-serve-v0.3.4...HEAD
+[0.3.4]: https://github.com/cobalt-org/cobalt.rs/compare/file-serve-v0.3.3...file-serve-v0.3.4
 [0.3.3]: https://github.com/cobalt-org/cobalt.rs/compare/file-serve-v0.3.2...file-serve-v0.3.3
 [0.3.2]: https://github.com/cobalt-org/cobalt.rs/compare/file-serve-v0.3.1...file-serve-v0.3.2
 [0.3.1]: https://github.com/cobalt-org/cobalt.rs/compare/file-serve-v0.3.0...file-serve-v0.3.1

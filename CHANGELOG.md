@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 <!-- next-header -->
 ## [Unreleased] - ReleaseDate
 
+## [0.19.5] - 2024-07-05
+
 ### Fixes
 
 - *(build)* List correct default for `--destination`
@@ -713,7 +715,8 @@ this.
 [@tak1n]: https://github.com/tak1n
 
 <!-- next-url -->
-[Unreleased]: https://github.com/cobalt-org/cobalt.rs/compare/v0.19.4...HEAD
+[Unreleased]: https://github.com/cobalt-org/cobalt.rs/compare/v0.19.5...HEAD
+[0.19.5]: https://github.com/cobalt-org/cobalt.rs/compare/v0.19.4...v0.19.5
 [0.19.4]: https://github.com/cobalt-org/cobalt.rs/compare/v0.19.3...v0.19.4
 [0.19.3]: https://github.com/cobalt-org/cobalt.rs/compare/v0.19.2...v0.19.3
 [0.19.2]: https://github.com/cobalt-org/cobalt.rs/compare/v0.19.1...v0.19.2
