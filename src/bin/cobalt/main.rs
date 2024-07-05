@@ -18,7 +18,7 @@ use std::alloc;
 
 use clap::Parser;
 
-use crate::error::*;
+use crate::error::Result;
 
 #[global_allocator]
 static GLOBAL: alloc::System = alloc::System;
@@ -29,10 +29,10 @@ static GLOBAL: alloc::System = alloc::System;
 #[command(version)]
 struct Cli {
     #[command(flatten)]
-    pub logging: clap_verbosity_flag::Verbosity<clap_verbosity_flag::InfoLevel>,
+    pub(crate) logging: clap_verbosity_flag::Verbosity<clap_verbosity_flag::InfoLevel>,
 
     #[command(flatten)]
-    pub color: colorchoice_clap::Color,
+    pub(crate) color: colorchoice_clap::Color,
 
     #[command(subcommand)]
     command: Command,
@@ -53,7 +53,7 @@ enum Command {
 }
 
 impl Cli {
-    pub fn run(&self) -> Result<()> {
+    pub(crate) fn run(&self) -> Result<()> {
         self.color.write_global();
         let colored_stderr = !matches!(
             anstream::AutoStream::choice(&std::io::stderr()),
@@ -85,5 +85,5 @@ fn main() -> Result<()> {
 #[test]
 fn verify_app() {
     use clap::CommandFactory;
-    Cli::command().debug_assert()
+    Cli::command().debug_assert();
 }

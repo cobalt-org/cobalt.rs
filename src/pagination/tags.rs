@@ -4,7 +4,7 @@ use crate::cobalt_model::pagination::PaginationConfig;
 use crate::cobalt_model::slug;
 use crate::document::Document;
 
-use super::*;
+use super::{create_all_paginators, helpers, paginator, sort_posts, Result, ValueView};
 use helpers::extract_tags;
 use paginator::Paginator;
 
@@ -35,7 +35,7 @@ struct TagPaginators {
 }
 
 #[allow(clippy::bind_instead_of_map)]
-pub fn create_tags_paginators(
+pub(crate) fn create_tags_paginators(
     all_posts: &[&liquid::model::Value],
     doc: &Document,
     pagination_cfg: &PaginationConfig,

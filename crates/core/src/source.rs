@@ -13,7 +13,7 @@ impl Source {
         ignores: impl IntoIterator<Item = &'i str>,
     ) -> Result<Self> {
         let mut ignore = ignore::gitignore::GitignoreBuilder::new(root);
-        for line in ignores.into_iter() {
+        for line in ignores {
             ignore
                 .add_line(None, line)
                 .map_err(|e| Status::new("Invalid ignore entry").with_source(e))?;

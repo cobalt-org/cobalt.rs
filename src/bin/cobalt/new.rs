@@ -7,18 +7,18 @@ use anyhow::Context as _;
 use cobalt::cobalt_model;
 
 use crate::args;
-use crate::error::*;
+use crate::error::Result;
 
 /// Create a site
 #[derive(Clone, Debug, PartialEq, Eq, clap::Args)]
-pub struct InitArgs {
+pub(crate) struct InitArgs {
     /// Target directory
     #[arg(default_value = "./")]
-    pub directory: path::PathBuf,
+    pub(crate) directory: path::PathBuf,
 }
 
 impl InitArgs {
-    pub fn run(&self) -> Result<()> {
+    pub(crate) fn run(&self) -> Result<()> {
         create_new_project(&self.directory)
             .with_context(|| anyhow::format_err!("Could not create a new cobalt project"))?;
         info!("Created new project at {}", self.directory.display());
@@ -29,37 +29,37 @@ impl InitArgs {
 
 /// Create a document
 #[derive(Clone, Debug, PartialEq, Eq, clap::Args)]
-pub struct NewArgs {
+pub(crate) struct NewArgs {
     /// Title of the post
-    pub title: Option<String>,
+    pub(crate) title: Option<String>,
 
     /// New document's parent directory or file (default: `<CWD>/title.ext`)
     #[arg(short, long, value_name = "DIR_OR_FILE")]
-    pub file: Option<path::PathBuf>,
+    pub(crate) file: Option<path::PathBuf>,
 
     /// The default file's extension (e.g. `liquid`)
     #[arg(long, value_name = "EXT")]
-    pub with_ext: Option<String>,
+    pub(crate) with_ext: Option<String>,
 
     /// Open the new document in your configured EDITOR
     #[arg(long)]
-    pub edit: bool,
+    pub(crate) edit: bool,
 
     #[command(flatten, next_help_heading = "Config")]
-    pub config: args::ConfigArgs,
+    pub(crate) config: args::ConfigArgs,
 }
 
 impl NewArgs {
-    pub fn run(&self) -> Result<()> {
+    pub(crate) fn run(&self) -> Result<()> {
         let mut config = self.config.load_config()?;
         config.include_drafts = true;
-        let config = cobalt::cobalt_model::Config::from_config(config)?;
+        let config = cobalt_model::Config::from_config(config)?;
 
         let title = self.title.as_deref();
 
         let mut file = path::Path::new(".").to_owned();
         if let Some(rel_file) = self.file.as_deref() {
-            file.push(rel_file)
+            file.push(rel_file);
         }
 
         let ext = self.with_ext.as_deref();
@@ -73,27 +73,27 @@ impl NewArgs {
 
 /// Rename a document
 #[derive(Clone, Debug, PartialEq, Eq, clap::Args)]
-pub struct RenameArgs {
+pub(crate) struct RenameArgs {
     /// File to rename
     #[arg(value_name = "FILE")]
-    pub src: path::PathBuf,
+    pub(crate) src: path::PathBuf,
 
     /// Title of the post
-    pub title: String,
+    pub(crate) title: String,
 
     /// New document's parent directory or file (default: `<CWD>/title.ext`)
     #[arg(short, long, value_name = "DIR_OR_FILE")]
-    pub file: Option<path::PathBuf>,
+    pub(crate) file: Option<path::PathBuf>,
 
     #[command(flatten, next_help_heading = "Config")]
-    pub config: args::ConfigArgs,
+    pub(crate) config: args::ConfigArgs,
 }
 
 impl RenameArgs {
-    pub fn run(&self) -> Result<()> {
+    pub(crate) fn run(&self) -> Result<()> {
         let mut config = self.config.load_config()?;
         config.include_drafts = true;
-        let config = cobalt::cobalt_model::Config::from_config(config)?;
+        let config = cobalt_model::Config::from_config(config)?;
 
         let source = self.src.clone();
 
@@ -101,7 +101,7 @@ impl RenameArgs {
 
         let mut file = path::Path::new(".").to_owned();
         if let Some(rel_file) = self.file.as_deref() {
-            file.push(rel_file)
+            file.push(rel_file);
         }
 
         rename_document(&config, source, title, file)
@@ -113,20 +113,20 @@ impl RenameArgs {
 
 /// Publish a document
 #[derive(Clone, Debug, PartialEq, Eq, clap::Args)]
-pub struct PublishArgs {
+pub(crate) struct PublishArgs {
     /// Document to publish
     #[arg(value_name = "FILE")]
-    pub filename: path::PathBuf,
+    pub(crate) filename: path::PathBuf,
 
     #[command(flatten, next_help_heading = "Config")]
-    pub config: args::ConfigArgs,
+    pub(crate) config: args::ConfigArgs,
 }
 
 impl PublishArgs {
-    pub fn run(&self) -> Result<()> {
+    pub(crate) fn run(&self) -> Result<()> {
         let mut config = self.config.load_config()?;
         config.include_drafts = true;
-        let config = cobalt::cobalt_model::Config::from_config(config)?;
+        let config = cobalt_model::Config::from_config(config)?;
 
         let filename = self.filename.as_path();
         let mut file = path::Path::new(".").to_owned();
@@ -195,11 +195,11 @@ lazy_static! {
             .collect();
 }
 
-pub fn create_new_project<P: AsRef<path::Path>>(dest: P) -> Result<()> {
+pub(crate) fn create_new_project<P: AsRef<path::Path>>(dest: P) -> Result<()> {
     create_new_project_for_path(dest.as_ref())
 }
 
-pub fn create_new_project_for_path(dest: &path::Path) -> Result<()> {
+pub(crate) fn create_new_project_for_path(dest: &path::Path) -> Result<()> {
     fs::create_dir_all(dest)?;
 
     create_file(dest.join("_cobalt.yml"), COBALT_YML)?;
@@ -218,7 +218,7 @@ pub fn create_new_project_for_path(dest: &path::Path) -> Result<()> {
     Ok(())
 }
 
-pub fn create_new_document(
+pub(crate) fn create_new_document(
     config: &cobalt_model::Config,
     title: Option<&str>,
     mut file: path::PathBuf,
@@ -320,7 +320,7 @@ pub fn create_new_document(
     file.push(&filename);
 
     if let Some(parent) = file.abs_path.parent() {
-        std::fs::create_dir_all(parent)?;
+        fs::create_dir_all(parent)?;
     }
     create_file(&file.abs_path, &doc)?;
     info!("Created new {} {}", collection_slug, file.rel_path);
@@ -346,7 +346,7 @@ fn create_file_for_path(path: &path::Path, content: &str) -> Result<()> {
     Ok(())
 }
 
-pub fn rename_document(
+pub(crate) fn rename_document(
     config: &cobalt_model::Config,
     source: path::PathBuf,
     title: &str,
@@ -467,7 +467,7 @@ fn move_from_drafts_to_posts(
     Ok(file.to_owned())
 }
 
-pub fn publish_document(config: &cobalt_model::Config, file: &path::Path) -> Result<()> {
+pub(crate) fn publish_document(config: &cobalt_model::Config, file: &path::Path) -> Result<()> {
     let doc = cobalt_model::files::read_file(file)?;
     let doc = cobalt_model::Document::parse(&doc)?;
     let (mut front, content) = doc.into_parts();

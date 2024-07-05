@@ -20,7 +20,7 @@ mod tags;
 
 use paginator::Paginator;
 
-pub fn generate_paginators(
+pub(crate) fn generate_paginators(
     doc: &mut Document,
     posts_data: &[liquid::model::Value],
 ) -> Result<Vec<Paginator>> {
@@ -108,7 +108,7 @@ fn sort_posts(posts: &mut [&liquid::model::Value], config: &PaginationConfig) {
             }
         }
         cmp
-    })
+    });
 }
 
 fn pagination_attributes(page_num: i32) -> liquid::Object {

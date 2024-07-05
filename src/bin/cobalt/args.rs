@@ -3,10 +3,10 @@ use std::path;
 
 use anyhow::Context as _;
 
-use crate::error::*;
+use crate::error::Result;
 
 #[derive(Clone, Debug, PartialEq, Eq, clap::Args)]
-pub struct ConfigArgs {
+pub(crate) struct ConfigArgs {
     /// Config file to use [default: _cobalt.yml]
     #[arg(short, long, value_name = "FILE")]
     config: Option<path::PathBuf>,
@@ -25,7 +25,7 @@ pub struct ConfigArgs {
 }
 
 impl ConfigArgs {
-    pub fn load_config(&self) -> Result<cobalt_config::Config> {
+    pub(crate) fn load_config(&self) -> Result<cobalt_config::Config> {
         let config_path = self.config.as_deref();
 
         // Fetch config information if available
@@ -53,7 +53,7 @@ impl ConfigArgs {
         Ok(config)
     }
 
-    pub fn drafts(&self) -> Option<bool> {
+    pub(crate) fn drafts(&self) -> Option<bool> {
         resolve_bool_arg(self.drafts, self.no_drafts)
     }
 }
@@ -67,7 +67,7 @@ fn resolve_bool_arg(yes: bool, no: bool) -> Option<bool> {
     }
 }
 
-pub fn init_logging(
+pub(crate) fn init_logging(
     level: clap_verbosity_flag::Verbosity<clap_verbosity_flag::InfoLevel>,
     colored: bool,
 ) {
@@ -132,7 +132,7 @@ struct Palette {
 }
 
 impl Palette {
-    pub fn colored() -> Self {
+    pub(crate) fn colored() -> Self {
         Self {
             error: yansi::Style::new(yansi::Color::Red).bold(),
             warn: yansi::Style::new(yansi::Color::Yellow),
@@ -141,7 +141,7 @@ impl Palette {
         }
     }
 
-    pub fn plain() -> Self {
+    pub(crate) fn plain() -> Self {
         Self {
             error: yansi::Style::default(),
             warn: yansi::Style::default(),

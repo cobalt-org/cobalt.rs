@@ -16,13 +16,13 @@ use crate::cobalt_model::files;
 use crate::cobalt_model::permalink;
 use crate::cobalt_model::slug;
 use crate::cobalt_model::Minify;
-use crate::error::*;
+use crate::error::Result;
 
-pub struct RenderContext<'a> {
-    pub parser: &'a cobalt_model::Liquid,
-    pub markdown: &'a cobalt_model::Markdown,
-    pub globals: &'a Object,
-    pub minify: Minify,
+pub(crate) struct RenderContext<'a> {
+    pub(crate) parser: &'a cobalt_model::Liquid,
+    pub(crate) markdown: &'a cobalt_model::Markdown,
+    pub(crate) globals: &'a Object,
+    pub(crate) minify: Minify,
 }
 
 #[cfg(not(feature = "html-minifier"))]
@@ -48,7 +48,7 @@ fn minify_if_enabled(
     }
 }
 
-pub fn permalink_attributes(
+pub(crate) fn permalink_attributes(
     front: &cobalt_model::Frontmatter,
     dest_file: &relative_path::RelativePath,
 ) -> Object {
@@ -171,16 +171,16 @@ fn document_attributes(
 }
 
 #[derive(Debug, Clone)]
-pub struct Document {
-    pub url_path: String,
-    pub file_path: relative_path::RelativePathBuf,
-    pub content: liquid::model::KString,
-    pub attributes: Object,
-    pub front: cobalt_model::Frontmatter,
+pub(crate) struct Document {
+    pub(crate) url_path: String,
+    pub(crate) file_path: relative_path::RelativePathBuf,
+    pub(crate) content: liquid::model::KString,
+    pub(crate) attributes: Object,
+    pub(crate) front: cobalt_model::Frontmatter,
 }
 
 impl Document {
-    pub fn parse(
+    pub(crate) fn parse(
         src_path: &Path,
         rel_path: &relative_path::RelativePath,
         default_front: cobalt_config::Frontmatter,
@@ -216,7 +216,7 @@ impl Document {
     }
 
     /// Metadata for generating RSS feeds
-    pub fn to_rss(&self, root_url: &str) -> Result<rss::Item> {
+    pub(crate) fn to_rss(&self, root_url: &str) -> Result<rss::Item> {
         let link = format!("{}/{}", root_url, &self.url_path);
         let guid = rss::GuidBuilder::default()
             .value(link.clone())
@@ -234,7 +234,7 @@ impl Document {
     }
 
     /// Metadata for generating JSON feeds
-    pub fn to_jsonfeed(&self, root_url: &str) -> jsonfeed::Item {
+    pub(crate) fn to_jsonfeed(&self, root_url: &str) -> jsonfeed::Item {
         let link = format!("{}/{}", root_url, &self.url_path);
 
         jsonfeed::Item {
@@ -262,7 +262,7 @@ impl Document {
         }
     }
 
-    pub fn to_sitemap<T: std::io::Write>(
+    pub(crate) fn to_sitemap<T: std::io::Write>(
         &self,
         root_url: &str,
         writer: &mut sitemap::writer::UrlSetWriter<T>,
@@ -327,7 +327,7 @@ impl Document {
     /// given, or extracted from the content, if `excerpt_separator` is not
     /// empty. When neither condition applies, the excerpt is set to the `Nil`
     /// value.
-    pub fn render_excerpt(&mut self, context: &RenderContext<'_>) -> Result<()> {
+    pub(crate) fn render_excerpt(&mut self, context: &RenderContext<'_>) -> Result<()> {
         let value = if let Some(excerpt_str) = self.front.excerpt.as_ref() {
             let excerpt = self.render_html(excerpt_str, context)?;
             Value::scalar(excerpt)
@@ -350,7 +350,7 @@ impl Document {
     /// Renders the content and adds it to attributes of the document.
     ///
     /// When we say "content" we mean only this document without extended layout.
-    pub fn render_content(&mut self, context: &RenderContext<'_>) -> Result<()> {
+    pub(crate) fn render_content(&mut self, context: &RenderContext<'_>) -> Result<()> {
         let content_html = self.render_html(&self.content, context)?;
         self.attributes
             .insert("content".into(), Value::scalar(content_html));
@@ -362,7 +362,7 @@ impl Document {
     /// Side effects:
     ///
     /// * layout may be inserted to layouts cache
-    pub fn render(
+    pub(crate) fn render(
         &mut self,
         context: &RenderContext<'_>,
         layouts: &HashMap<String, String>,

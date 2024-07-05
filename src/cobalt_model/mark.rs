@@ -1,7 +1,7 @@
 use pulldown_cmark as cmark;
 use serde::Serialize;
 
-use crate::error::*;
+use crate::error::Result;
 use crate::syntax_highlight::decorate_markdown;
 
 #[derive(Debug, Clone, Serialize)]
