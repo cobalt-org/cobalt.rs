@@ -138,7 +138,6 @@ cobalt-core = { version = "=0.19.4", path = "crates/core", features = ["unstable
 clap = { version = "4.5", features = ["derive", "wrap_help"] }
 clap-verbosity-flag = "2.2"
 proc-exit = "2"
-yansi = "0.5.1"
 colorchoice = "1.0.0"
 colorchoice-clap = "1.0.3"
 human-panic = "2"
@@ -179,6 +178,7 @@ html-minifier = {version="3.0", optional = true }
 anyhow = "1.0.82"
 anstream = "0.6.13"
 chrono = "0.4.38"
+anstyle = "1.0.7"
 
 [dev-dependencies]
 trycmd = "0.15"
