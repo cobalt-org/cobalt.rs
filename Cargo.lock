@@ -311,6 +311,7 @@ name = "cobalt-bin"
 version = "0.19.5"
 dependencies = [
  "anstream",
+ "anstyle",
  "anyhow",
  "chrono",
  "clap",
@@ -354,7 +355,6 @@ dependencies = [
  "toml",
  "trycmd",
  "walkdir",
- "yansi",
 ]
 
 [[package]]
@@ -2272,9 +2272,3 @@ checksum = "56c1936c4cc7a1c9ab21a1ebb602eb942ba868cbd44a99cb7cdc5892335e1c85"
 dependencies = [
  "linked-hash-map",
 ]
-
-[[package]]
-name = "yansi"
-version = "0.5.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "09041cd90cf85f7f8b2df60c646f853b7f535ce68f85244eb6731cf89fa498ec"
