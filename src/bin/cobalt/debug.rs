@@ -1,9 +1,9 @@
 use crate::args;
-use crate::error::*;
+use crate::error::Result;
 
 /// Print site debug information
 #[derive(Clone, Debug, PartialEq, Eq, clap::Subcommand)]
-pub enum DebugCommands {
+pub(crate) enum DebugCommands {
     /// Prints post-processed config
     Config {
         #[command(flatten, next_help_heading = "Confg")]
@@ -25,7 +25,7 @@ pub enum DebugCommands {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, clap::Subcommand)]
-pub enum HighlightCommands {
+pub(crate) enum HighlightCommands {
     Themes {
         #[command(flatten, next_help_heading = "Config")]
         config: args::ConfigArgs,
@@ -37,7 +37,7 @@ pub enum HighlightCommands {
 }
 
 impl DebugCommands {
-    pub fn run(&self) -> Result<()> {
+    pub(crate) fn run(&self) -> Result<()> {
         match self {
             Self::Config { config } => {
                 let config = config.load_config()?;

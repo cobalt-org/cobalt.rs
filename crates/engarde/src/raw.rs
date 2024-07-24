@@ -44,7 +44,7 @@ fn html_escape(input: &str) -> String {
     let mut result = String::new();
     let mut last = 0;
     let mut skip = 0;
-    for (i, c) in input.chars().enumerate() {
+    for (i, c) in input.char_indices() {
         if skip > 0 {
             skip -= 1;
             continue;
@@ -98,5 +98,13 @@ mod test {
         let syntax = Raw::new();
         let output = syntax.format(CODEBLOCK, Some("rust"), Some(""));
         assert_eq!(output, CODEBLOCK_RENDERED.to_string());
+    }
+
+    const CODEBLOCK2: &str = r#"// comment with utf-8 你好 😎 <hello>"#;
+
+    #[test]
+    fn codeblock_renders_rust_utf8() {
+        let syntax = Raw::new();
+        let _output = syntax.format(CODEBLOCK2, Some("rust"), Some(""));
     }
 }

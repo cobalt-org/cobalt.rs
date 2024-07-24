@@ -7,9 +7,25 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 <!-- next-header -->
 ## [Unreleased] - ReleaseDate
 
+## [0.1.10] - 2024-07-05
+
+## [0.1.9] - 2024-07-05
+
+### Fixes
+
+- Don't crash when escaping HTML with UTF-8 characters
+
 ### Compatibility
 
-- MSRV is now 1.70.0
+- MSRV is now 1.76
+
+## [0.1.8] - 2024-04-15
+
+## [0.1.7] - 2024-02-28
+
+### Compatibility
+
+- MSRV is now 1.73
 
 ## [0.1.6] - 2023-04-20
 
@@ -32,7 +48,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [0.1.1] - 2022-04-04
 
 <!-- next-url -->
-[Unreleased]: https://github.com/cobalt-org/cobalt.rs/compare/engarde-v0.1.6...HEAD
+[Unreleased]: https://github.com/cobalt-org/cobalt.rs/compare/engarde-v0.1.10...HEAD
+[0.1.10]: https://github.com/cobalt-org/cobalt.rs/compare/engarde-v0.1.9...engarde-v0.1.10
+[0.1.9]: https://github.com/cobalt-org/cobalt.rs/compare/engarde-v0.1.8...engarde-v0.1.9
+[0.1.8]: https://github.com/cobalt-org/cobalt.rs/compare/engarde-v0.1.7...engarde-v0.1.8
+[0.1.7]: https://github.com/cobalt-org/cobalt.rs/compare/engarde-v0.1.6...engarde-v0.1.7
 [0.1.6]: https://github.com/cobalt-org/cobalt.rs/compare/engarde-v0.1.5...engarde-v0.1.6
 [0.1.5]: https://github.com/cobalt-org/cobalt.rs/compare/engarde-v0.1.4...engarde-v0.1.5
 [0.1.4]: https://github.com/cobalt-org/cobalt.rs/compare/engarde-v0.1.3...engarde-v0.1.4

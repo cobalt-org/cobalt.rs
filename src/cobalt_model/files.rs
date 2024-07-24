@@ -1,6 +1,5 @@
 use std::ffi;
 use std::fs;
-use std::io::Read;
 use std::io::Write;
 use std::path;
 
@@ -39,7 +38,11 @@ impl FilesBuilder {
     }
 
     pub fn add_ignore(&mut self, line: &str) -> Result<&mut Self> {
-        trace!("{:?}: adding '{}' ignore pattern", self.root_dir, line);
+        trace!(
+            "{}: adding '{}' ignore pattern",
+            self.root_dir.display(),
+            line
+        );
         self.ignore.push(line.to_owned());
         Ok(self)
     }
@@ -55,7 +58,7 @@ impl FilesBuilder {
     }
 
     pub fn add_extension(&mut self, ext: &str) -> Result<&mut FilesBuilder> {
-        trace!("{:?}: adding '{}' extension", self.root_dir, ext);
+        trace!("{}: adding '{}' extension", self.root_dir.display(), ext);
         self.extensions.push(ext.into());
         Ok(self)
     }
@@ -211,11 +214,11 @@ impl Files {
         match self.ignore.matched(path, is_dir) {
             Match::None => true,
             Match::Ignore(glob) => {
-                trace!("{:?}: ignored {:?}", path, glob.original());
+                trace!("{}: ignored {:?}", path.display(), glob.original());
                 false
             }
             Match::Whitelist(glob) => {
-                trace!("{:?}: allowed {:?}", path, glob.original());
+                trace!("{}: allowed {:?}", path.display(), glob.original());
                 true
             }
         }
@@ -259,9 +262,7 @@ pub fn cleanup_path(path: &str) -> String {
 }
 
 pub fn read_file<P: AsRef<path::Path>>(path: P) -> Result<String> {
-    let mut file = fs::File::open(path.as_ref())?;
-    let mut text = String::new();
-    file.read_to_string(&mut text)?;
+    let text = fs::read_to_string(path.as_ref())?;
     let text: String = normalized(text.chars()).collect();
     Ok(text)
 }

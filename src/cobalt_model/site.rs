@@ -11,7 +11,7 @@ use serde_json;
 use serde_yaml;
 use toml;
 
-use crate::error::*;
+use crate::error::Result;
 
 use super::files;
 
@@ -59,7 +59,7 @@ impl Site {
         }
     }
 
-    pub fn load(&self, source: &std::path::Path) -> Result<liquid::Object> {
+    pub fn load(&self, source: &path::Path) -> Result<liquid::Object> {
         let mut attributes = liquid::Object::new();
         if let Some(title) = self.title.as_ref() {
             attributes.insert(
@@ -104,8 +104,8 @@ fn deep_insert(
         for part in path.iter() {
             let key = part.to_str().ok_or_else(|| {
                 anyhow::format_err!(
-                    "The data from {:?} can't be loaded as it contains non utf-8 characters",
-                    path
+                    "The data from `{}` can't be loaded as it contains non utf-8 characters",
+                    path.display()
                 )
             })?;
             let cur_map = map;
@@ -116,8 +116,8 @@ fn deep_insert(
                 .as_object_mut()
                 .ok_or_else(|| {
                     anyhow::format_err!(
-                        "Aborting: Duplicate in data tree. Would overwrite {:?} ",
-                        path
+                        "Aborting: Duplicate in data tree. Would overwrite {} ",
+                        path.display()
                     )
                 })?;
         }
@@ -129,8 +129,8 @@ fn deep_insert(
     match target_map.insert(target_key.into(), data) {
         None => Ok(()),
         _ => Err(anyhow::format_err!(
-            "The data from {:?} can't be loaded: the key already exists",
-            file_path
+            "The data from {} can't be loaded: the key already exists",
+            file_path.display()
         )),
     }
 }
@@ -151,9 +151,9 @@ fn load_data(data_path: &path::Path) -> Result<liquid::model::Value> {
         data = toml::from_str(&text)?;
     } else {
         anyhow::bail!(
-            "Failed to load of data {:?}: unknown file type '{:?}'.\n\
+            "Failed to load of data `{}`: unknown file type '{:?}'.\n\
              Supported data files extensions are: yml, yaml, json and toml.",
-            data_path,
+            data_path.display(),
             ext
         );
     }

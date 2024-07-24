@@ -6,7 +6,7 @@ use crate::Status;
 
 #[derive(Debug, Eq, PartialEq, Default, Clone)]
 pub struct Document {
-    front: crate::Frontmatter,
+    front: Frontmatter,
     content: liquid_core::model::KString,
 }
 
@@ -33,7 +33,7 @@ impl Document {
 }
 
 impl fmt::Display for Document {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let front = self.front.to_string();
         if front.is_empty() {
             write!(f, "{}", self.content)

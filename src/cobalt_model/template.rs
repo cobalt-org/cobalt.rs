@@ -2,7 +2,7 @@ use std::fmt;
 use std::path;
 
 use super::files;
-use crate::error::*;
+use crate::error::Result;
 use crate::syntax_highlight;
 use liquid;
 use log::warn;

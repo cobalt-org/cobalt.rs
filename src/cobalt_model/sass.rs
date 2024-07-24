@@ -7,8 +7,8 @@ use serde::{Deserialize, Serialize};
 
 use super::files;
 use crate::cobalt_model::Minify;
-use crate::error::*;
-pub use cobalt_config::SassOutputStyle;
+use crate::error::Result;
+pub(crate) use cobalt_config::SassOutputStyle;
 
 #[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize)]
 #[serde(deny_unknown_fields, default)]
@@ -118,7 +118,7 @@ impl Default for SassCompiler {
     }
 }
 
-pub fn is_sass_file(file_path: &path::Path) -> bool {
+pub(crate) fn is_sass_file(file_path: &path::Path) -> bool {
     file_path.extension() == Some(ffi::OsStr::new("scss"))
         || file_path.extension() == Some(ffi::OsStr::new("sass"))
 }

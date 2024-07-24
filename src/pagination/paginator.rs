@@ -1,26 +1,26 @@
 use crate::document::Document;
 
-use super::*;
+use super::{interpret_permalink, PaginationConfig, Result};
 
 #[derive(Default, Clone, Debug)]
-pub struct Paginator {
-    pub pages: Option<Vec<liquid::model::Value>>,
-    pub indexes: Option<Vec<Paginator>>,
-    pub index: usize,
-    pub index_title: Option<liquid::model::Value>,
-    pub index_permalink: String,
-    pub previous_index: usize,
-    pub previous_index_permalink: Option<String>,
-    pub next_index: usize,
-    pub next_index_permalink: Option<String>,
-    pub first_index_permalink: String,
-    pub last_index_permalink: String,
-    pub total_indexes: usize,
-    pub total_pages: usize,
+pub(crate) struct Paginator {
+    pub(crate) pages: Option<Vec<liquid::model::Value>>,
+    pub(crate) indexes: Option<Vec<Paginator>>,
+    pub(crate) index: usize,
+    pub(crate) index_title: Option<liquid::model::Value>,
+    pub(crate) index_permalink: String,
+    pub(crate) previous_index: usize,
+    pub(crate) previous_index_permalink: Option<String>,
+    pub(crate) next_index: usize,
+    pub(crate) next_index_permalink: Option<String>,
+    pub(crate) first_index_permalink: String,
+    pub(crate) last_index_permalink: String,
+    pub(crate) total_indexes: usize,
+    pub(crate) total_pages: usize,
 }
 
 impl Paginator {
-    pub fn new(total_indexes: usize, total_pages: usize) -> Paginator {
+    pub(crate) fn new(total_indexes: usize, total_pages: usize) -> Paginator {
         Paginator {
             pages: None,   // pages in current index
             indexes: None, // list of the available indexes, use when include is tags for instance
@@ -38,7 +38,7 @@ impl Paginator {
         }
     }
 
-    pub fn set_first_last(
+    pub(crate) fn set_first_last(
         &mut self,
         doc: &Document,
         config: &PaginationConfig,
@@ -50,7 +50,7 @@ impl Paginator {
         Ok(())
     }
 
-    pub fn set_current_index_info(
+    pub(crate) fn set_current_index_info(
         &mut self,
         index: usize,
         all_pages: &[&liquid::model::Value],
@@ -65,7 +65,7 @@ impl Paginator {
         Ok(())
     }
 
-    pub fn set_previous_next_info(
+    pub(crate) fn set_previous_next_info(
         &mut self,
         index: usize,
         total_indexes: usize,
@@ -90,7 +90,7 @@ impl Paginator {
     }
 }
 
-pub fn create_paginator(
+pub(crate) fn create_paginator(
     i: usize,
     total_indexes: usize,
     total_pages: usize,

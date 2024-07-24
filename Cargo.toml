@@ -5,10 +5,10 @@ members = [
 resolver = "2"
 
 [workspace.package]
-license = "MIT OR Apache-2.0"
 repository = "https://github.com/cobalt-org/cobalt.rs"
+license = "MIT OR Apache-2.0"
 edition = "2021"
-rust-version = "1.70.0"  # MSRV
+rust-version = "1.76"  # MSRV
 include = [
   "build.rs",
   "src/**/*",
@@ -20,9 +20,77 @@ include = [
   "examples/**/*"
 ]
 
+[workspace.lints.rust]
+rust_2018_idioms = "warn"
+unreachable_pub = "warn"
+unsafe_op_in_unsafe_fn = "warn"
+unused_lifetimes = "warn"
+unused_macro_rules = "warn"
+unused_qualifications = "warn"
+
+[workspace.lints.clippy]
+bool_assert_comparison = "allow"
+branches_sharing_code = "allow"
+checked_conversions = "warn"
+collapsible_else_if = "allow"
+create_dir = "warn"
+dbg_macro = "warn"
+debug_assert_with_mut_call = "warn"
+doc_markdown = "warn"
+empty_enum = "warn"
+enum_glob_use = "warn"
+expl_impl_clone_on_copy = "warn"
+explicit_deref_methods = "warn"
+explicit_into_iter_loop = "warn"
+fallible_impl_from = "warn"
+filter_map_next = "warn"
+flat_map_option = "warn"
+float_cmp_const = "warn"
+fn_params_excessive_bools = "warn"
+from_iter_instead_of_collect = "warn"
+if_same_then_else = "allow"
+implicit_clone = "warn"
+imprecise_flops = "warn"
+inconsistent_struct_constructor = "warn"
+inefficient_to_string = "warn"
+infinite_loop = "warn"
+invalid_upcast_comparisons = "warn"
+large_digit_groups = "warn"
+large_stack_arrays = "warn"
+large_types_passed_by_value = "warn"
+let_and_return = "allow"  # sometimes good to name what you are returning
+linkedlist = "warn"
+lossy_float_literal = "warn"
+macro_use_imports = "warn"
+mem_forget = "warn"
+mutex_integer = "warn"
+needless_continue = "warn"
+needless_for_each = "warn"
+negative_feature_names = "warn"
+path_buf_push_overwrite = "warn"
+ptr_as_ptr = "warn"
+rc_mutex = "warn"
+redundant_feature_names = "warn"
+ref_option_ref = "warn"
+rest_pat_in_fully_bound_structs = "warn"
+same_functions_in_if_condition = "warn"
+self_named_module_files = "warn"
+semicolon_if_nothing_returned = "warn"
+# str_to_string = "warn"
+# string_add = "warn"
+string_add_assign = "warn"
+string_lit_as_bytes = "warn"
+# string_to_string = "warn"
+todo = "warn"
+trait_duplication_in_bounds = "warn"
+verbose_file_reads = "warn"
+# wildcard_imports = "warn"
+zero_sized_map_values = "warn"
+assigning_clones = "allow"  # TODO
+
 [package]
 name = "cobalt-bin"
-version = "0.19.0"
+version = "0.19.5"
 description = "Static site generator written in Rust"
 readme = "README.md"
 categories = ["command-line-utilities"]
@@ -65,56 +133,56 @@ name = "cobalt"
 doc = false
 
 [dependencies]
-cobalt-config = { version = "=0.19.0", path = "crates/config", features = ["unstable"] }
-cobalt-core = { version = "=0.19.0", path = "crates/core", features = ["unstable"] }
-clap = { version = "4.4", features = ["derive", "wrap_help"] }
-clap-verbosity-flag = "2.0"
+cobalt-config = { version = "=0.19.4", path = "crates/config", features = ["unstable"] }
+cobalt-core = { version = "=0.19.4", path = "crates/core", features = ["unstable"] }
+clap = { version = "4.5", features = ["derive", "wrap_help"] }
+clap-verbosity-flag = "2.2"
 proc-exit = "2"
-yansi = "0.5.1"
 colorchoice = "1.0.0"
-colorchoice-clap = "1.0.2"
-human-panic = "1"
+colorchoice-clap = "1.0.3"
+human-panic = "2"
 scrawl = "2.0"
-tempfile = "3.8"
+tempfile = "3.10"
 relative-path = { version = "1", features = ["serde"] }
 liquid = "0.26"
 liquid-core = "0.26"
 liquid-lib = { version = "0.26", features = ["jekyll", "shopify", "extra"] }
-deunicode = "1.3.3"
-walkdir = "2.3"
+deunicode = "1.4.4"
+walkdir = "2.5"
 time = "0.3"
 log = "0.4"
-env_logger = "0.10"
+env_logger = "0.11"
 rss = "2.0"
 jsonfeed = "0.2"
-pulldown-cmark = {version="0.9", default-features = false}
+pulldown-cmark = {version="0.11", default-features = false, features = ["html"] }
 engarde = { version = "0.1", path = "crates/engarde" }
-regex = "1.9"
+regex = "1.10"
 lazy_static = "1.4"
-itertools = "0.11"
+itertools = "0.13"
 ignore = "0.4"
 serde = "1.0"
 serde_yaml = "0.9"
 serde_json = "1.0"
-toml = "0.7.6"
+toml = "0.8.12"
 normalize-line-endings = "0.3.0"
 sitemap = "0.4"
 open = "5"
 dunce = "1.0.4"
 
-file-serve = { version = "0.3.0", path = "crates/file-serve", optional = true }
+file-serve = { version = "0.3.4", path = "crates/file-serve", optional = true }
 notify = { version = "6", optional = true, default-features = false, features = ["macos_fsevent"] }
 
 sass-rs = { version = "0.2", optional = true }
 
 html-minifier = {version="3.0", optional = true }
-anyhow = "1.0.75"
-anstream = "0.5.0"
-chrono = "0.4.28"
+anyhow = "1.0.82"
+anstream = "0.6.13"
+chrono = "0.4.38"
+anstyle = "1.0.7"
 
 [dev-dependencies]
-trycmd = "0.14"
-snapbox = { version = "0.4.12", features = ["diff"] }
+trycmd = "0.15"
+snapbox = { version = "0.6.5", features = ["diff"] }
 
 [features]
 default = ["syntax-highlight", "sass", "serve", "html-minifier"]
@@ -125,6 +193,12 @@ serve = ["file-serve", "notify"]
 syntax-highlight = ["engarde/syntax"]
 sass = ['sass-rs']
 
-[profile.release]
-lto = "thin"
+[profile.dev]
 panic = "abort"
+
+[profile.release]
+panic = "abort"
+codegen-units = 1
+
+[lints]
+workspace = true

@@ -16,23 +16,23 @@ use crate::cobalt_model::permalink;
 use crate::cobalt_model::Collection;
 use crate::cobalt_model::{Config, Minify, SortOrder};
 use crate::document::{Document, RenderContext};
-use crate::error::*;
+use crate::error::Result;
 use crate::pagination;
 
 struct Context {
-    pub destination: path::PathBuf,
-    pub source_files: cobalt_core::Source,
-    pub page_extensions: Vec<liquid::model::KString>,
-    pub include_drafts: bool,
-    pub pages: cobalt_model::Collection,
-    pub posts: cobalt_model::Collection,
-    pub site: cobalt_model::Site,
-    pub site_attributes: liquid::Object,
-    pub layouts: HashMap<String, String>,
-    pub liquid: cobalt_model::Liquid,
-    pub markdown: cobalt_model::Markdown,
-    pub assets: cobalt_model::Assets,
-    pub minify: Minify,
+    pub(crate) destination: path::PathBuf,
+    pub(crate) source_files: cobalt_core::Source,
+    pub(crate) page_extensions: Vec<liquid::model::KString>,
+    pub(crate) include_drafts: bool,
+    pub(crate) pages: Collection,
+    pub(crate) posts: Collection,
+    pub(crate) site: cobalt_model::Site,
+    pub(crate) site_attributes: liquid::Object,
+    pub(crate) layouts: HashMap<String, String>,
+    pub(crate) liquid: cobalt_model::Liquid,
+    pub(crate) markdown: cobalt_model::Markdown,
+    pub(crate) assets: cobalt_model::Assets,
+    pub(crate) minify: Minify,
 }
 
 impl Context {
@@ -430,7 +430,7 @@ fn parse_layouts(files: &files::Files) -> HashMap<String, String> {
 
 // creates a new RSS file with the contents of the site blog
 fn create_rss(
-    path: &std::path::Path,
+    path: &path::Path,
     collection: &Collection,
     documents: &[Document],
     base_url: Option<&str>,
@@ -471,7 +471,7 @@ fn create_rss(
 
 // creates a new jsonfeed file with the contents of the site blog
 fn create_jsonfeed(
-    path: &std::path::Path,
+    path: &path::Path,
     collection: &Collection,
     documents: &[Document],
     base_url: Option<&str>,
@@ -489,7 +489,7 @@ fn create_jsonfeed(
     let feed = Feed {
         title: title.to_string(),
         items: jsonitems,
-        home_page_url: Some(link.to_string()),
+        home_page_url: Some((*link).to_string()),
         description: Some(description.to_string()),
         ..Default::default()
     };
@@ -532,8 +532,8 @@ fn create_sitemap(
 
 pub fn classify_path<'s>(
     path: &relative_path::RelativePathBuf,
-    pages: &'s cobalt_model::Collection,
-    posts: &'s cobalt_model::Collection,
+    pages: &'s Collection,
+    posts: &'s Collection,
     page_extensions: &[liquid::model::KString],
 ) -> Option<(&'s str, bool)> {
     if ext_contains(page_extensions, path) {

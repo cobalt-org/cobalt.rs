@@ -67,13 +67,13 @@ impl Renderable for CodeBlock {
 }
 
 #[derive(Clone, Debug)]
-pub struct CodeBlockParser {
+pub(crate) struct CodeBlockParser {
     syntax: std::sync::Arc<SyntaxHighlight>,
     syntax_theme: Option<liquid::model::KString>,
 }
 
 impl CodeBlockParser {
-    pub fn new(
+    pub(crate) fn new(
         syntax: std::sync::Arc<SyntaxHighlight>,
         theme: Option<liquid::model::KString>,
     ) -> error::Result<Self> {
@@ -140,8 +140,8 @@ impl liquid_core::ParseBlock for CodeBlockParser {
     }
 }
 
-pub struct DecoratedParser<'a> {
-    parser: cmark::Parser<'a, 'a>,
+pub(crate) struct DecoratedParser<'a> {
+    parser: cmark::Parser<'a>,
     syntax: std::sync::Arc<SyntaxHighlight>,
     theme: Option<&'a str>,
     lang: Option<String>,
@@ -149,8 +149,8 @@ pub struct DecoratedParser<'a> {
 }
 
 impl<'a> DecoratedParser<'a> {
-    pub fn new(
-        parser: cmark::Parser<'a, 'a>,
+    pub(crate) fn new(
+        parser: cmark::Parser<'a>,
         syntax: std::sync::Arc<SyntaxHighlight>,
         theme: Option<&'a str>,
     ) -> error::Result<Self> {
@@ -187,7 +187,7 @@ impl<'a> Iterator for DecoratedParser<'a> {
                 self.code = Some(vec![]);
                 Some(Text(pulldown_cmark::CowStr::Borrowed("")))
             }
-            Some(End(cmark::Tag::CodeBlock(_))) => {
+            Some(End(cmark::TagEnd::CodeBlock)) => {
                 let html = if let Some(code) = self.code.as_deref() {
                     let code = code.iter().join("\n");
                     self.syntax.format(&code, self.lang.as_deref(), self.theme)
@@ -205,8 +205,8 @@ impl<'a> Iterator for DecoratedParser<'a> {
     }
 }
 
-pub fn decorate_markdown<'a>(
-    parser: cmark::Parser<'a, 'a>,
+pub(crate) fn decorate_markdown<'a>(
+    parser: cmark::Parser<'a>,
     syntax: std::sync::Arc<SyntaxHighlight>,
     theme_name: Option<&'a str>,
 ) -> error::Result<DecoratedParser<'a>> {
@@ -218,6 +218,10 @@ pub fn decorate_markdown<'a>(
 mod test_syntsx {
     use super::*;
 
+    use snapbox::assert_data_eq;
+    use snapbox::prelude::*;
+    use snapbox::str;
+
     const CODE_BLOCK: &str = "mod test {
         fn hello(arg: int) -> bool {
             \
@@ -225,21 +229,6 @@ mod test_syntsx {
         }
     }
     ";
-
-    const CODEBLOCK_RENDERED: &str =
-        "<pre style=\"background-color:#2b303b;\">\n\
-         <code><span style=\"color:#b48ead;\">mod </span>\
-         <span style=\"color:#c0c5ce;\">test {\n\
-         </span><span style=\"color:#c0c5ce;\">        </span>\
-         <span style=\"color:#b48ead;\">fn \
-         </span><span style=\"color:#8fa1b3;\">hello</span><span style=\"color:#c0c5ce;\">(\
-         </span><span style=\"color:#bf616a;\">arg</span><span style=\"color:#c0c5ce;\">: int) -&gt; \
-         </span><span style=\"color:#b48ead;\">bool </span><span style=\"color:#c0c5ce;\">{\n\
-         </span><span style=\"color:#c0c5ce;\">            \
-         </span><span style=\"color:#d08770;\">true\n\
-         </span><span style=\"color:#c0c5ce;\">        }\n\
-         </span><span style=\"color:#c0c5ce;\">    }\n\
-         </span><span style=\"color:#c0c5ce;\">    </span></code></pre>\n";
 
     #[test]
     fn highlight_block_renders_rust() {
@@ -257,24 +246,19 @@ mod test_syntsx {
             ))
             .unwrap();
         let output = template.render(&liquid::Object::new());
-        snapbox::assert_eq(CODEBLOCK_RENDERED, output.unwrap());
-    }
+        let expected = str![[r#"
+<pre style="background-color:#2b303b;">
+<code><span style="color:#b48ead;">mod </span><span style="color:#c0c5ce;">test {
+</span><span style="color:#c0c5ce;">        </span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">hello</span><span style="color:#c0c5ce;">(</span><span style="color:#bf616a;">arg</span><span style="color:#c0c5ce;">: int) -&gt; </span><span style="color:#b48ead;">bool </span><span style="color:#c0c5ce;">{
+</span><span style="color:#c0c5ce;">            </span><span style="color:#d08770;">true
+</span><span style="color:#c0c5ce;">        }
+</span><span style="color:#c0c5ce;">    }
+</span><span style="color:#c0c5ce;">    </span></code></pre>
 
-    const MARKDOWN_RENDERED: &str =
-        "<pre style=\"background-color:#2b303b;\">\n\
-         <code><span style=\"color:#b48ead;\">mod </span>\
-         <span style=\"color:#c0c5ce;\">test {\n\
-         </span><span style=\"color:#c0c5ce;\">        </span>\
-         <span style=\"color:#b48ead;\">fn \
-         </span><span style=\"color:#8fa1b3;\">hello</span><span style=\"color:#c0c5ce;\">(\
-         </span><span style=\"color:#bf616a;\">arg</span><span style=\"color:#c0c5ce;\">: int) -&gt; \
-         </span><span style=\"color:#b48ead;\">bool </span><span style=\"color:#c0c5ce;\">{\n\
-         </span><span style=\"color:#c0c5ce;\">            \
-         </span><span style=\"color:#d08770;\">true\n\
-         </span><span style=\"color:#c0c5ce;\">        }\n\
-         </span><span style=\"color:#c0c5ce;\">    }\n\
-         </span><span style=\"color:#c0c5ce;\">    \n\
-         </span></code></pre>\n";
+"#]];
+
+        assert_data_eq!(output.unwrap(), expected.raw());
+    }
 
     #[test]
     fn markdown_renders_rust() {
@@ -292,7 +276,19 @@ mod test_syntsx {
             &mut buf,
             decorate_markdown(parser, syntax, Some("base16-ocean.dark")).unwrap(),
         );
-        snapbox::assert_eq(MARKDOWN_RENDERED, &buf);
+        let expected = str![[r#"
+<pre style="background-color:#2b303b;">
+<code><span style="color:#b48ead;">mod </span><span style="color:#c0c5ce;">test {
+</span><span style="color:#c0c5ce;">        </span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">hello</span><span style="color:#c0c5ce;">(</span><span style="color:#bf616a;">arg</span><span style="color:#c0c5ce;">: int) -&gt; </span><span style="color:#b48ead;">bool </span><span style="color:#c0c5ce;">{
+</span><span style="color:#c0c5ce;">            </span><span style="color:#d08770;">true
+</span><span style="color:#c0c5ce;">        }
+</span><span style="color:#c0c5ce;">    }
+</span><span style="color:#c0c5ce;">    
+</span></code></pre>
+
+"#]];
+
+        assert_data_eq!(&buf, expected.raw());
     }
 }
 
@@ -301,6 +297,10 @@ mod test_syntsx {
 mod test_raw {
     use super::*;
 
+    use snapbox::assert_data_eq;
+    use snapbox::prelude::*;
+    use snapbox::str;
+
     const CODE_BLOCK: &str = "mod test {
         fn hello(arg: int) -> bool {
             \
@@ -308,14 +308,6 @@ mod test_raw {
         }
     }
 ";
-
-    const CODEBLOCK_RENDERED: &str = r#"<pre><code class="language-rust">mod test {
-        fn hello(arg: int) -&gt; bool {
-            true
-        }
-    }
-</code></pre>
-"#;
 
     #[test]
     fn codeblock_renders_rust() {
@@ -333,17 +325,18 @@ mod test_raw {
             ))
             .unwrap();
         let output = template.render(&liquid::Object::new());
-        assert_eq!(output.unwrap(), CODEBLOCK_RENDERED.to_string());
-    }
-
-    const MARKDOWN_RENDERED: &str = r#"<pre><code class="language-rust">mod test {
+        let expected = str![[r#"
+<pre><code class="language-rust">mod test {
         fn hello(arg: int) -&gt; bool {
             true
         }
     }
-
 </code></pre>
-"#;
+
+"#]];
+
+        assert_data_eq!(output.unwrap(), expected.raw());
+    }
 
     #[test]
     fn decorate_markdown_renders_rust() {
@@ -361,6 +354,17 @@ mod test_raw {
             &mut buf,
             decorate_markdown(parser, syntax, Some("base16-ocean.dark")).unwrap(),
         );
-        assert_eq!(buf, MARKDOWN_RENDERED);
+        let expected = str![[r#"
+<pre><code class="language-rust">mod test {
+        fn hello(arg: int) -&gt; bool {
+            true
+        }
+    }
+
+</code></pre>
+
+"#]];
+
+        assert_data_eq!(&buf, expected.raw());
     }
 }

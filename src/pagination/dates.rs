@@ -2,7 +2,9 @@ use crate::cobalt_model::pagination::DateIndex;
 use crate::cobalt_model::DateTime;
 use crate::document::Document;
 
-use super::*;
+use super::{
+    create_all_paginators, helpers, paginator, sort_posts, PaginationConfig, Result, ValueView,
+};
 use helpers::extract_scalar;
 use paginator::Paginator;
 
@@ -25,12 +27,12 @@ impl<'a> DateIndexHolder<'a> {
     }
 }
 
-fn extract_published_date(value: &'_ dyn liquid::ValueView) -> Option<DateTime> {
+fn extract_published_date(value: &'_ dyn ValueView) -> Option<DateTime> {
     let published_date = extract_scalar(value, "published_date")?;
     published_date.to_date_time()
 }
 
-pub fn create_dates_paginators(
+pub(crate) fn create_dates_paginators(
     all_posts: &[&liquid::model::Value],
     doc: &Document,
     pagination_cfg: &PaginationConfig,
@@ -61,11 +63,7 @@ fn walk_dates(
     parent_dates: Option<Vec<DateIndexHolder<'_>>>,
 ) -> Result<Vec<Paginator>> {
     let mut cur_date_holder_paginators: Vec<Paginator> = vec![];
-    let mut current_date = if let Some(parent_dates) = parent_dates {
-        parent_dates
-    } else {
-        vec![]
-    };
+    let mut current_date = parent_dates.unwrap_or_default();
     if let Some(_field) = date_holder.field {
         sort_posts(&mut date_holder.posts, config);
         current_date.push(date_holder.clone());
@@ -73,7 +71,7 @@ fn walk_dates(
         let cur_date_paginators =
             create_all_paginators(&date_holder.posts, doc, config, Some(&index_title))?;
         if !cur_date_paginators.is_empty() {
-            cur_date_holder_paginators.extend(cur_date_paginators.into_iter());
+            cur_date_holder_paginators.extend(cur_date_paginators);
         } else {
             let p = Paginator {
                 index_title: Some(index_title),

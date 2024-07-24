@@ -1,4 +1,4 @@
-pub fn extract_scalar<'a>(
+pub(crate) fn extract_scalar<'a>(
     a: &'a dyn liquid::ValueView,
     key: &str,
 ) -> Option<liquid::model::ScalarCow<'a>> {
@@ -6,12 +6,14 @@ pub fn extract_scalar<'a>(
     v.as_scalar()
 }
 
-pub fn extract_tags(value: &dyn liquid::ValueView) -> Option<&dyn liquid::model::ArrayView> {
+pub(crate) fn extract_tags(value: &dyn liquid::ValueView) -> Option<&dyn liquid::model::ArrayView> {
     let v = extract_value(value, "tags")?;
     v.as_array()
 }
 
-pub fn extract_categories(value: &dyn liquid::ValueView) -> Option<&dyn liquid::model::ArrayView> {
+pub(crate) fn extract_categories(
+    value: &dyn liquid::ValueView,
+) -> Option<&dyn liquid::model::ArrayView> {
     let v = extract_value(value, "categories")?;
     v.as_array()
 }

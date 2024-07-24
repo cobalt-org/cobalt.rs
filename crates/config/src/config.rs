@@ -12,12 +12,12 @@ use super::*;
 pub struct Config {
     #[serde(skip)]
     pub root: path::PathBuf,
-    pub source: crate::RelPath,
-    pub destination: crate::RelPath,
+    pub source: RelPath,
+    pub destination: RelPath,
     #[serde(skip)]
     pub abs_dest: Option<path::PathBuf>,
     pub include_drafts: bool,
-    pub default: frontmatter::Frontmatter,
+    pub default: Frontmatter,
     pub pages: PageCollection,
     pub posts: PostCollection,
     pub site: Site,
@@ -79,6 +79,9 @@ impl Config {
 
         let mut root = path;
         root.pop(); // Remove filename
+        if root == path::Path::new("") {
+            root = path::Path::new(".").to_owned();
+        }
         config.root = root;
 
         Ok(config)
@@ -108,7 +111,7 @@ impl Config {
 }
 
 impl fmt::Display for Config {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut converted = serde_yaml::to_string(self).map_err(|_| fmt::Error)?;
         converted.drain(..4);
         write!(f, "{}", converted)

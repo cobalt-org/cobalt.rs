@@ -20,7 +20,7 @@ mod tags;
 
 use paginator::Paginator;
 
-pub fn generate_paginators(
+pub(crate) fn generate_paginators(
     doc: &mut Document,
     posts_data: &[liquid::model::Value],
 ) -> Result<Vec<Paginator>> {
@@ -108,7 +108,7 @@ fn sort_posts(posts: &mut [&liquid::model::Value], config: &PaginationConfig) {
             }
         }
         cmp
-    })
+    });
 }
 
 fn pagination_attributes(page_num: i32) -> liquid::Object {
@@ -165,7 +165,7 @@ fn interpret_permalink(
             .unwrap_or_else(|| doc.url_path.clone())
     } else {
         let pagination_attr = pagination_attributes(page_num as i32);
-        attributes.extend(pagination_attr.into_iter());
+        attributes.extend(pagination_attr);
         let index = index.map(index_to_string).unwrap_or_else(|| {
             if config.include != Include::All {
                 unreachable!("Include is not All and no index");
