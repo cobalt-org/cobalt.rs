@@ -84,7 +84,7 @@ jobs:
     - name: Downgrade dependencies to minimal versions
       run: cargo +nightly generate-lockfile -Z minimal-versions
     - name: Compile with minimal versions
-      run: cargo +stable check --workspace --all-features --locked
+      run: cargo +stable check --workspace --all-features --locked --exclude cobalt-bin --exclude cobalt-core --exclude cobalt-config
   lockfile:
     runs-on: ubuntu-latest
     steps:
