@@ -28,7 +28,7 @@ pre-release-replacements = [
 
 [dependencies]
 tiny_http = "0.12.0"
-mime_guess = "2"
+mime_guess = "2.0.5"
 log = "0.4"
 
 [lints]
