@@ -623,6 +623,7 @@ name = "engarde"
 version = "0.1.10"
 dependencies = [
  "syntect",
+ "thiserror",
 ]
 
 [[package]]
@@ -714,6 +715,7 @@ name = "file-serve"
 version = "0.3.4"
 dependencies = [
  "log",
+ "mime",
  "mime_guess",
  "tiny_http",
 ]
