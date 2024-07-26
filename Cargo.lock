@@ -623,6 +623,7 @@ name = "engarde"
 version = "0.1.10"
 dependencies = [
  "syntect",
+ "thiserror",
 ]
 
 [[package]]
