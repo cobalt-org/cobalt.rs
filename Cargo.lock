@@ -714,6 +714,7 @@ name = "file-serve"
 version = "0.3.4"
 dependencies = [
  "log",
+ "mime",
  "mime_guess",
  "tiny_http",
 ]
