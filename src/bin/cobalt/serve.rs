@@ -47,14 +47,14 @@ impl ServeArgs {
 
         let mut config = self.config.load_config()?;
         debug!("Overriding config `site.base_url` with `/`");
-        config.site.base_url = Some("/".into());
+        let host = format!("http://{}/", server.addr());
+        config.site.base_url = Some(host.into());
         let mut config = cobalt_model::Config::from_config(config)?;
         debug!(
             "Overriding config `destination` with `{}`",
             dest.path().display()
         );
         config.destination = dest.path().to_owned();
-
         build::build(config.clone())?;
 
         if self.open {
