@@ -90,7 +90,7 @@ assigning_clones = "allow"  # TODO
 
 [package]
 name = "cobalt-bin"
-version = "0.19.5"
+version = "0.19.6"
 description = "Static site generator written in Rust"
 readme = "README.md"
 categories = ["command-line-utilities"]
@@ -169,7 +169,7 @@ sitemap = "0.4"
 open = "5"
 dunce = "1.0.4"
 
-file-serve = { version = "0.3.4", path = "crates/file-serve", optional = true }
+file-serve = { version = "0.3.5", path = "crates/file-serve", optional = true }
 notify = { version = "6", optional = true, default-features = false, features = ["macos_fsevent"] }
 
 sass-rs = { version = "0.2", optional = true }
