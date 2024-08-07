@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 <!-- next-header -->
 ## [Unreleased] - ReleaseDate
 
+### Fixes
+
+- `cobalt serve` will now work correctly with sitemap
+
 ## [0.19.5] - 2024-07-05
 
 ### Fixes
