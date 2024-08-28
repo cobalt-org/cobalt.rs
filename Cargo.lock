@@ -847,9 +847,9 @@ dependencies = [
 
 [[package]]
 name = "html-minifier"
-version = "3.0.15"
+version = "5.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d9909bfe02da0a2a85a5e4684c2e7b637a59d84f516738fe5d75308eab25b88a"
+checksum = "cb8f62e1c8ee7bbdda853aebbbfb78b75a549a45ab031665a5da07a1579a1ad8"
 dependencies = [
  "cow-utils",
  "educe",
@@ -1170,12 +1170,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a7a70ba024b9dc04c27ea2f0c0548feb474ec5c54bba33a7f72f873a39d07b24"
 
 [[package]]
-name = "macro-utils"
-version = "0.1.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0e72f7deb758fea9ea7d290aebfa788763d0bffae12caa6406a25baaf8fa68a8"
-
-[[package]]
 name = "memchr"
 version = "2.7.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1199,11 +1193,11 @@ dependencies = [
 
 [[package]]
 name = "minifier"
-version = "0.0.43"
+version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d81352bda6f4d04af1720afaa762054f66e16caffd93c1f86461a1c0ac4e695e"
+checksum = "9aa3f302fe0f8de065d4a2d1ed64f60204623cac58b80cd3c2a83a25d5a7d437"
 dependencies = [
- "macro-utils",
+ "clap",
 ]
 
 [[package]]
