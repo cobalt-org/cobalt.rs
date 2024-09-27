@@ -27,12 +27,9 @@ impl Raw {
     pub fn format(&self, code: &str, lang: Option<&str>, _theme: Option<&str>) -> String {
         let code = html_escape(code);
         if let Some(ref lang) = lang {
-            format!(
-                "<pre><code class=\"language-{}\">{}</code></pre>\n",
-                lang, code
-            )
+            format!("<pre><code class=\"language-{lang}\">{code}</code></pre>\n")
         } else {
-            format!("<pre><code>{}</code></pre>\n", code)
+            format!("<pre><code>{code}</code></pre>\n")
         }
     }
 }

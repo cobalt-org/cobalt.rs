@@ -70,7 +70,7 @@ impl ServerBuilder {
 
         Server {
             source,
-            addr: format!("{}:{}", hostname, port),
+            addr: format!("{hostname}:{port}"),
             server: RwLock::new(None),
         }
     }
@@ -198,7 +198,7 @@ fn static_file_handler(dest: &std::path::Path, req: tiny_http::Request) -> Resul
         let file = std::fs::File::open(&serve_path).map_err(Error::new)?;
         let mut response = tiny_http::Response::from_file(file);
         if let Some(mime) = mime_guess::MimeGuess::from_path(&serve_path).first_raw() {
-            let content_type = format!("Content-Type:{}", mime);
+            let content_type = format!("Content-Type:{mime}");
             let content_type =
                 tiny_http::Header::from_str(&content_type).expect("formatted correctly");
             response.add_header(content_type);

@@ -324,7 +324,7 @@ mod test_rel_path {
     #[test]
     fn test_try_from_abspath_fails() {
         let case = RelPath::try_from("/foo/bar");
-        println!("{:?}", case);
+        println!("{case:?}");
         assert!(case.is_err());
     }
 }

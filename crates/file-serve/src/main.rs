@@ -2,7 +2,7 @@ fn main() {
     let path = match std::env::current_dir() {
         Ok(path) => path,
         Err(err) => {
-            eprintln!("Cannot serve CWD: {}", err);
+            eprintln!("Cannot serve CWD: {err}");
             std::process::exit(1);
         }
     };

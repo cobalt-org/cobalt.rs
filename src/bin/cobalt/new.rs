@@ -243,7 +243,7 @@ pub(crate) fn create_new_document(
         (parent_dir, filename, ext)
     };
 
-    let interim_path = parent_dir.join(format!("NON_EXISTENT.{}", extension));
+    let interim_path = parent_dir.join(format!("NON_EXISTENT.{extension}"));
     let interim_path = cobalt_core::SourcePath::from_root(&config.source, &interim_path)
         .ok_or_else(|| {
             anyhow::format_err!(
@@ -271,7 +271,7 @@ pub(crate) fn create_new_document(
 
     let source_path = config
         .source
-        .join(format!("_defaults/{}.{}", collection_slug, extension));
+        .join(format!("_defaults/{collection_slug}.{extension}"));
     let source = if source_path.is_file() {
         cobalt_model::files::read_file(&source_path)
             .with_context(|| anyhow::format_err!("Failed to read default: {:?}", source_path))?

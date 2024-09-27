@@ -97,7 +97,7 @@ fn serve(server: &file_serve::Server) -> Result<()> {
 fn open_browser(url: String) -> Result<()> {
     match open::that(url) {
         Ok(()) => info!("Please check your browser!"),
-        Err(why) => eprintln!("Failure to execute command: {}", why),
+        Err(why) => eprintln!("Failure to execute command: {why}"),
     }
     Ok(())
 }

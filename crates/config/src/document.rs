@@ -187,7 +187,7 @@ mod test {
     fn split_document_no_new_line_after_front_matter() {
         let input = "invalid_front_matter---\nbody";
         let (cobalt_model, content) = split_document(input);
-        println!("{:?}", cobalt_model);
+        println!("{cobalt_model:?}");
         assert!(cobalt_model.is_none());
         assert_eq!(content, input);
     }
@@ -196,7 +196,7 @@ mod test {
     fn split_document_multiline_body() {
         let input = "---\ncobalt_model\n---\nfirst\nsecond";
         let (cobalt_model, content) = split_document(input);
-        println!("{:?}", cobalt_model);
+        println!("{cobalt_model:?}");
         assert_eq!(cobalt_model.unwrap(), "cobalt_model\n");
         assert_eq!(content, "first\nsecond");
     }

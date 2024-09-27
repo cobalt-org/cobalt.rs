@@ -80,15 +80,15 @@ impl Config {
                 ignore.push(format!("/{}", rel_dest.to_owned()).into());
             }
         }
-        ignore.push(format!("/{}", includes_dir).into());
-        ignore.push(format!("/{}", layouts_dir).into());
+        ignore.push(format!("/{includes_dir}").into());
+        ignore.push(format!("/{layouts_dir}").into());
         ignore.push("/_defaults".into());
         ignore.push(format!("/{}", assets.sass.import_dir).into());
         assert_eq!(pages.dir, "");
         assert_eq!(pages.drafts_dir, None);
         ignore.push(format!("!/{}", posts.dir).into());
         if let Some(dir) = posts.drafts_dir.as_deref() {
-            ignore.push(format!("!/{}", dir).into());
+            ignore.push(format!("!/{dir}").into());
         }
         ignore.extend(custom_ignore);
 
@@ -151,7 +151,7 @@ impl fmt::Display for Config {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut converted = serde_yaml::to_string(self).map_err(|_| fmt::Error)?;
         converted.drain(..4);
-        write!(f, "{}", converted)
+        write!(f, "{converted}")
     }
 }
 

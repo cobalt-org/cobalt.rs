@@ -42,20 +42,20 @@ impl DebugCommands {
             Self::Config { config } => {
                 let config = config.load_config()?;
                 let config = cobalt::cobalt_model::Config::from_config(config)?;
-                println!("{}", config);
+                println!("{config}");
             }
             Self::Highlight(HighlightCommands::Themes { config }) => {
                 let config = config.load_config()?;
                 let config = cobalt::cobalt_model::Config::from_config(config)?;
                 for name in config.syntax.themes() {
-                    println!("{}", name);
+                    println!("{name}");
                 }
             }
             Self::Highlight(HighlightCommands::Syntaxes { config }) => {
                 let config = config.load_config()?;
                 let config = cobalt::cobalt_model::Config::from_config(config)?;
                 for name in config.syntax.syntaxes() {
-                    println!("{}", name);
+                    println!("{name}");
                 }
             }
             Self::Files { collection, config } => {
