@@ -114,7 +114,7 @@ impl fmt::Display for Config {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut converted = serde_yaml::to_string(self).map_err(|_| fmt::Error)?;
         converted.drain(..4);
-        write!(f, "{}", converted)
+        write!(f, "{converted}")
     }
 }
 

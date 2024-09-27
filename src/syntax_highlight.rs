@@ -241,8 +241,7 @@ mod test_syntsx {
             .unwrap();
         let template = parser
             .parse(&format!(
-                "{{% highlight rust %}}{}{{% endhighlight %}}",
-                CODE_BLOCK
+                "{{% highlight rust %}}{CODE_BLOCK}{{% endhighlight %}}"
             ))
             .unwrap();
         let output = template.render(&liquid::Object::new());
@@ -264,9 +263,8 @@ mod test_syntsx {
     fn markdown_renders_rust() {
         let html = format!(
             "```rust
-{}
-```",
-            CODE_BLOCK
+{CODE_BLOCK}
+```"
         );
 
         let mut buf = String::new();

@@ -145,7 +145,7 @@ impl fmt::Display for Frontmatter {
         if converted.is_empty() {
             Ok(())
         } else {
-            write!(f, "{}", converted)
+            write!(f, "{converted}")
         }
     }
 }
