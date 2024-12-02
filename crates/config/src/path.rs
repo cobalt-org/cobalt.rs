@@ -105,7 +105,7 @@ impl std::fmt::Display for RelPath {
     }
 }
 
-impl<'s> TryFrom<&'s str> for RelPath {
+impl TryFrom<&str> for RelPath {
     type Error = &'static str;
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {

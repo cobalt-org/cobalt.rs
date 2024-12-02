@@ -16,7 +16,7 @@ struct DateIndexHolder<'a> {
     sub_date: Vec<DateIndexHolder<'a>>,
 }
 
-impl<'a> DateIndexHolder<'a> {
+impl DateIndexHolder<'_> {
     fn new(value: u32, field: Option<DateIndex>) -> Self {
         DateIndexHolder {
             value,

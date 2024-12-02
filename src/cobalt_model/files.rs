@@ -108,7 +108,7 @@ impl<'a> FilesIterator<'a> {
     }
 }
 
-impl<'a> Iterator for FilesIterator<'a> {
+impl Iterator for FilesIterator<'_> {
     type Item = path::PathBuf;
 
     fn next(&mut self) -> Option<path::PathBuf> {

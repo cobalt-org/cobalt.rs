@@ -236,7 +236,7 @@ impl fmt::Display for ExplicitPermalink {
     }
 }
 
-impl<'s> TryFrom<&'s str> for ExplicitPermalink {
+impl TryFrom<&str> for ExplicitPermalink {
     type Error = &'static str;
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
