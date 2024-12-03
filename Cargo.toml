@@ -138,7 +138,7 @@ doc = false
 cobalt-config = { version = "=0.19.4", path = "crates/config", features = ["unstable"] }
 cobalt-core = { version = "=0.19.4", path = "crates/core", features = ["unstable"] }
 clap = { version = "4.5", features = ["derive", "wrap_help"] }
-clap-verbosity-flag = "2.2"
+clap-verbosity-flag = "3.0"
 proc-exit = "2"
 colorchoice = "1.0.0"
 colorchoice-clap = "1.0.3"
