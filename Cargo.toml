@@ -160,7 +160,7 @@ pulldown-cmark = {version="0.12", default-features = false, features = ["html"] 
 engarde = { version = "0.1", path = "crates/engarde" }
 regex = "1.10"
 lazy_static = "1.4"
-itertools = "0.13"
+itertools = "0.14"
 ignore = "0.4"
 serde = "1.0"
 serde_yaml = "0.9"
