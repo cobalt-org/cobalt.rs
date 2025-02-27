@@ -1,11 +1,11 @@
+use std::sync::LazyLock;
+
 use deunicode;
 use itertools::Itertools;
-use lazy_static::lazy_static;
 use regex::Regex;
 
-lazy_static! {
-    static ref SLUG_INVALID_CHARS: Regex = Regex::new(r"([^a-zA-Z0-9]+)").unwrap();
-}
+static SLUG_INVALID_CHARS: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"([^a-zA-Z0-9]+)").unwrap());
 
 /// Create a slug for a given file.  Correlates to Jekyll's :slug path tag
 pub fn slugify<S: AsRef<str>>(name: S) -> String {

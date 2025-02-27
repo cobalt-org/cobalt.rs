@@ -2,6 +2,7 @@ use std::collections;
 use std::fs;
 use std::io::Write;
 use std::path;
+use std::sync::LazyLock;
 
 use anyhow::Context as _;
 use cobalt::cobalt_model;
@@ -187,13 +188,12 @@ layout: default.liquid
 {% endfor %}
 ";
 
-lazy_static! {
-    static ref DEFAULT: collections::HashMap<&'static str, &'static str> =
-        [("pages", INDEX_MD), ("posts", POST_MD)]
-            .iter()
-            .cloned()
-            .collect();
-}
+static DEFAULT: LazyLock<collections::HashMap<&'static str, &'static str>> = LazyLock::new(|| {
+    [("pages", INDEX_MD), ("posts", POST_MD)]
+        .iter()
+        .cloned()
+        .collect()
+});
 
 pub(crate) fn create_new_project<P: AsRef<path::Path>>(dest: P) -> Result<()> {
     create_new_project_for_path(dest.as_ref())

@@ -2,9 +2,9 @@ use std::clone::Clone;
 use std::collections::HashMap;
 use std::default::Default;
 use std::path::Path;
+use std::sync::LazyLock;
 
 use anyhow::Context as _;
-use lazy_static::lazy_static;
 use liquid::model::Value;
 use liquid::Object;
 use liquid::ValueView;
@@ -410,9 +410,8 @@ fn extract_excerpt_raw(content: &str, excerpt_separator: &str) -> String {
 }
 
 fn extract_excerpt_markdown(content: &str, excerpt_separator: &str) -> String {
-    lazy_static! {
-        static ref MARKDOWN_REF: Regex = Regex::new(r"(?m:^ {0,3}\[[^\]]+\]:.+$)").unwrap();
-    }
+    static MARKDOWN_REF: LazyLock<Regex> =
+        LazyLock::new(|| Regex::new(r"(?m:^ {0,3}\[[^\]]+\]:.+$)").unwrap());
 
     let mut trail = String::new();
 

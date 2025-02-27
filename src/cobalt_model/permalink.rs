@@ -1,4 +1,5 @@
-use lazy_static::lazy_static;
+use std::sync::LazyLock;
+
 use liquid;
 
 use crate::error::Result;
@@ -11,9 +12,7 @@ pub fn explode_permalink<S: AsRef<str>>(
 }
 
 fn explode_permalink_string(permalink: &str, attributes: &liquid::Object) -> Result<String> {
-    lazy_static! {
-        static ref PERMALINK_PARSER: liquid::Parser = liquid::Parser::new();
-    }
+    static PERMALINK_PARSER: LazyLock<liquid::Parser> = LazyLock::new(liquid::Parser::new);
     let p = PERMALINK_PARSER.parse(permalink)?;
     let mut p = p.render(attributes)?;
 
