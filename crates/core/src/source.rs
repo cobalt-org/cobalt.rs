@@ -98,7 +98,7 @@ mod tests {
     use super::*;
 
     macro_rules! assert_includes_dir {
-        ($root:expr, $ignores:expr, $test:expr, $included:expr) => {
+        ($root:expr_2021, $ignores:expr_2021, $test:expr_2021, $included:expr_2021) => {
             let root = $root;
             let ignores = $ignores.clone();
             let files = Source::new(std::path::Path::new(root), ignores).unwrap();
@@ -106,7 +106,7 @@ mod tests {
         };
     }
     macro_rules! assert_includes_file {
-        ($root:expr, $ignores:expr, $test:expr, $included:expr) => {
+        ($root:expr_2021, $ignores:expr_2021, $test:expr_2021, $included:expr_2021) => {
             let root = $root;
             let ignores = $ignores.clone();
             let files = Source::new(std::path::Path::new(root), ignores).unwrap();

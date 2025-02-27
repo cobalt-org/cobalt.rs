@@ -3,7 +3,7 @@ use std::cmp::Ordering;
 use crate::document::Document;
 
 use super::{
-    create_all_paginators, helpers, paginator, sort_posts, PaginationConfig, Result, ValueView,
+    PaginationConfig, Result, ValueView, create_all_paginators, helpers, paginator, sort_posts,
 };
 use helpers::extract_categories;
 use paginator::Paginator;

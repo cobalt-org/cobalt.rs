@@ -4,7 +4,7 @@ use crate::cobalt_model::pagination::PaginationConfig;
 use crate::cobalt_model::slug;
 use crate::document::Document;
 
-use super::{create_all_paginators, helpers, paginator, sort_posts, Result, ValueView};
+use super::{Result, ValueView, create_all_paginators, helpers, paginator, sort_posts};
 use helpers::extract_tags;
 use paginator::Paginator;
 

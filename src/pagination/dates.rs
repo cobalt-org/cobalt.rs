@@ -1,9 +1,9 @@
-use crate::cobalt_model::pagination::DateIndex;
 use crate::cobalt_model::DateTime;
+use crate::cobalt_model::pagination::DateIndex;
 use crate::document::Document;
 
 use super::{
-    create_all_paginators, helpers, paginator, sort_posts, PaginationConfig, Result, ValueView,
+    PaginationConfig, Result, ValueView, create_all_paginators, helpers, paginator, sort_posts,
 };
 use helpers::extract_scalar;
 use paginator::Paginator;

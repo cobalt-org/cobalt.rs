@@ -2,11 +2,11 @@ use std::cmp::Ordering;
 
 use liquid::ValueView;
 
+use crate::cobalt_model::SortOrder;
 use crate::cobalt_model::pagination::Include;
 use crate::cobalt_model::pagination::PaginationConfig;
 use crate::cobalt_model::permalink;
 use crate::cobalt_model::slug;
-use crate::cobalt_model::SortOrder;
 
 use crate::document;
 use crate::document::Document;

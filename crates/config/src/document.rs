@@ -119,7 +119,9 @@ fn deprecated_split_front_matter(content: &str) -> (Option<&str>, &str) {
                 .unwrap()
         });
     if FRONT_MATTER_DIVIDE.is_match(content) {
-        log::warn!("Trailing separators are deprecated. We recommend frontmatters be surrounded, above and below, with ---");
+        log::warn!(
+            "Trailing separators are deprecated. We recommend frontmatters be surrounded, above and below, with ---"
+        );
 
         let mut splits = FRONT_MATTER_DIVIDE.splitn(content, 2);
 

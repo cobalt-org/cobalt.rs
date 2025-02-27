@@ -2,12 +2,12 @@ use std::io::Write;
 
 use crate::error;
 use itertools::Itertools;
-use liquid_core::error::ResultLiquidReplaceExt;
-use liquid_core::parser::TryMatchToken;
 use liquid_core::Language;
 use liquid_core::TagBlock;
 use liquid_core::TagTokenIter;
 use liquid_core::ValueView;
+use liquid_core::error::ResultLiquidReplaceExt;
+use liquid_core::parser::TryMatchToken;
 use liquid_core::{Renderable, Runtime};
 use pulldown_cmark as cmark;
 use pulldown_cmark::Event::{self, End, Html, Start, Text};

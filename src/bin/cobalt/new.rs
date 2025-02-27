@@ -437,7 +437,10 @@ fn prepend_date_to_filename(
                 .first()
                 .expect("at least one element is enforced by config validator"))
     );
-    log::trace!("`publish_date_in_filename` setting is activated, prefix filename with date, new filename: {}", file_name);
+    log::trace!(
+        "`publish_date_in_filename` setting is activated, prefix filename with date, new filename: {}",
+        file_name
+    );
     fs::rename(file, file.with_file_name(file_name))?;
     Ok(())
 }

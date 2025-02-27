@@ -1,6 +1,6 @@
 use crate::document::Document;
 
-use super::{interpret_permalink, PaginationConfig, Result};
+use super::{PaginationConfig, Result, interpret_permalink};
 
 #[derive(Default, Clone, Debug)]
 pub(crate) struct Paginator {

@@ -5,17 +5,17 @@ use std::path::Path;
 use std::sync::LazyLock;
 
 use anyhow::Context as _;
-use liquid::model::Value;
 use liquid::Object;
 use liquid::ValueView;
+use liquid::model::Value;
 use log::trace;
 use regex::Regex;
 
 use crate::cobalt_model;
+use crate::cobalt_model::Minify;
 use crate::cobalt_model::files;
 use crate::cobalt_model::permalink;
 use crate::cobalt_model::slug;
-use crate::cobalt_model::Minify;
 use crate::error::Result;
 
 pub(crate) struct RenderContext<'a> {
