@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 <!-- next-header -->
 ## [Unreleased] - ReleaseDate
 
+### Compatibility
+
+- MSRV is now 1.85
+
+### Fixes
+
+- *(pagination)* Put posts under the correct category
+
 ## [0.19.6] - 2024-08-07
 
 ### Fixes
