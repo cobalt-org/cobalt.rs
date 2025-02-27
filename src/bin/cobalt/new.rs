@@ -22,7 +22,7 @@ impl InitArgs {
     pub(crate) fn run(&self) -> Result<()> {
         create_new_project(&self.directory)
             .with_context(|| anyhow::format_err!("Could not create a new cobalt project"))?;
-        info!("Created new project at {}", self.directory.display());
+        log::info!("Created new project at {}", self.directory.display());
 
         Ok(())
     }
@@ -276,7 +276,7 @@ pub(crate) fn create_new_document(
         cobalt_model::files::read_file(&source_path)
             .with_context(|| anyhow::format_err!("Failed to read default: {:?}", source_path))?
     } else {
-        debug!(
+        log::debug!(
             "No custom default provided ({:?}), falling back to built-in",
             source_path
         );
@@ -323,7 +323,7 @@ pub(crate) fn create_new_document(
         fs::create_dir_all(parent)?;
     }
     create_file(&file.abs_path, &doc)?;
-    info!("Created new {} {}", collection_slug, file.rel_path);
+    log::info!("Created new {} {}", collection_slug, file.rel_path);
 
     Ok(())
 }
@@ -333,7 +333,7 @@ fn create_file<P: AsRef<path::Path>>(path: P, content: &str) -> Result<()> {
 }
 
 fn create_file_for_path(path: &path::Path, content: &str) -> Result<()> {
-    trace!("Creating file {:?}", path);
+    log::trace!("Creating file {:?}", path);
 
     let mut file = fs::OpenOptions::new()
         .write(true)
@@ -405,7 +405,7 @@ pub(crate) fn rename_document(
     cobalt_model::files::write_document_file(doc, &target.abs_path)?;
 
     if !full_front.is_draft {
-        warn!("Renaming a published page might invalidate links");
+        log::warn!("Renaming a published page might invalidate links");
     }
     fs::remove_file(source)?;
 
@@ -437,7 +437,7 @@ fn prepend_date_to_filename(
                 .first()
                 .expect("at least one element is enforced by config validator"))
     );
-    trace!("`publish_date_in_filename` setting is activated, prefix filename with date, new filename: {}", file_name);
+    log::trace!("`publish_date_in_filename` setting is activated, prefix filename with date, new filename: {}", file_name);
     fs::rename(file, file.with_file_name(file_name))?;
     Ok(())
 }

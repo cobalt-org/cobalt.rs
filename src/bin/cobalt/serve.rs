@@ -46,11 +46,11 @@ impl ServeArgs {
         let server = server.build();
 
         let mut config = self.config.load_config()?;
-        debug!("Overriding config `site.base_url` with `/`");
+        log::debug!("Overriding config `site.base_url` with `/`");
         let host = format!("http://{}/", server.addr());
         config.site.base_url = Some(host.into());
         let mut config = cobalt_model::Config::from_config(config)?;
-        debug!(
+        log::debug!(
             "Overriding config `destination` with `{}`",
             dest.path().display()
         );
@@ -67,11 +67,11 @@ impl ServeArgs {
 
             dest.close()?;
         } else {
-            info!("Watching {} for changes", &config.source.display());
+            log::info!("Watching {} for changes", &config.source.display());
             thread::spawn(move || {
                 let e = serve(&server);
                 if let Some(e) = e.err() {
-                    error!("{}", e);
+                    log::error!("{}", e);
                 }
                 process::exit(1)
             });
@@ -84,19 +84,19 @@ impl ServeArgs {
 }
 
 fn serve(server: &file_serve::Server) -> Result<()> {
-    info!(
+    log::info!(
         "Serving {} through static file server",
         server.source().display()
     );
-    info!("Server Listening on http://{}", server.addr());
-    info!("Ctrl-c to stop the server");
+    log::info!("Server Listening on http://{}", server.addr());
+    log::info!("Ctrl-c to stop the server");
 
     Ok(server.serve()?)
 }
 
 fn open_browser(url: String) -> Result<()> {
     match open::that(url) {
-        Ok(()) => info!("Please check your browser!"),
+        Ok(()) => log::info!("Please check your browser!"),
         Err(why) => eprintln!("Failure to execute command: {why}"),
     }
     Ok(())
@@ -125,7 +125,7 @@ fn watch(config: &cobalt_model::Config) -> Result<()> {
     watcher
         .watch(&source, notify::RecursiveMode::Recursive)
         .with_context(|| anyhow::format_err!("Notify error"))?;
-    info!("Watching {} for changes", config.source.display());
+    log::info!("Watching {} for changes", config.source.display());
 
     for event in rx {
         let event = event.with_context(|| anyhow::format_err!("Notify error"))?;
@@ -145,17 +145,17 @@ fn watch(config: &cobalt_model::Config) -> Result<()> {
             // ensure we don't miss anything (normal file walks will miss
             // `_layouts`, etc).
             if event_path.starts_with(&destination) {
-                trace!("Ignored file changed {:?}", event);
+                log::trace!("Ignored file changed {:?}", event);
                 false
             } else {
-                debug!("Page changed {:?}", event);
+                log::debug!("Page changed {:?}", event);
                 true
             }
         });
         if rebuild {
             let result = build::build(config.clone());
             if let Err(fail) = result {
-                error!("build failed\n{:?}", fail);
+                log::error!("build failed\n{:?}", fail);
             }
         }
     }

@@ -1,8 +1,5 @@
 #![warn(warnings)]
 
-#[macro_use]
-extern crate log;
-
 mod args;
 mod build;
 mod debug;
