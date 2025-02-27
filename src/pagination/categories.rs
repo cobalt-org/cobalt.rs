@@ -1,4 +1,4 @@
-use std::cmp::Ordering;
+use std::collections::BTreeMap;
 
 use crate::document::Document;
 
@@ -25,7 +25,7 @@ fn distribute_posts_by_categories<'a>(
     for post in all_posts {
         if let Some(categories) = extract_categories(post.as_view()) {
             let categories: Vec<_> = categories.values().collect();
-            parse_categories_list(&mut root, 1, categories.as_slice(), post)?;
+            parse_categories_list(&mut root, categories.as_slice(), post)?;
         }
     }
     Ok(root)
@@ -33,97 +33,42 @@ fn distribute_posts_by_categories<'a>(
 
 /// construct a hierarchy of Categories with their posts from a list of categories
 fn parse_categories_list<'a>(
-    parent: &mut Category<'a>,
-    cur_idx: usize,
-    cur_post_categories: &[&dyn ValueView],
+    mut parent: &mut Category<'a>,
+    post_categories: &[&dyn ValueView],
     post: &'a liquid::model::Value,
 ) -> Result<()> {
-    if cur_idx <= cur_post_categories.len() {
-        let cat_full_path = construct_cat_full_path(cur_idx, cur_post_categories);
-        let cur_cat = if let Ok(idx) = parent.sub_cats.binary_search_by(|c| {
-            compare_category_path(
-                c.cat_path.iter().map(|v| v.as_view()),
-                cat_full_path.iter().copied(),
-            )
-        }) {
-            &mut parent.sub_cats[idx]
-        } else {
-            let last_idx = parent.sub_cats.len();
-            parent
-                .sub_cats
-                .push(Category::with_path(cat_full_path.into_iter()));
-            // need to sort for binary_search_by
-            parent.sub_cats.sort_by(|c1, c2| {
-                compare_category_path(
-                    c1.cat_path.iter().map(|v| v.as_view()),
-                    c2.cat_path.iter().map(|v| v.as_view()),
-                )
-            });
-            &mut parent.sub_cats[last_idx]
-        };
-
-        if is_leaf_category(cur_idx, cur_post_categories) {
-            cur_cat.add_post(post);
-        } else {
-            parse_categories_list(cur_cat, next_category(cur_idx), cur_post_categories, post)?;
-        }
+    for i in 0..post_categories.len() {
+        let cat_name = post_categories[i].to_kstr().to_string();
+        parent = parent
+            .sub_cats
+            .entry(cat_name)
+            .or_insert_with(|| Category::with_path(post_categories[0..=i].iter().copied()));
     }
+    parent.add_post(post);
     Ok(())
 }
 
-#[derive(Debug)]
+#[derive(Default, Debug)]
 struct Category<'a> {
     cat_path: liquid::model::Array,
     posts: Vec<&'a liquid::model::Value>,
-    sub_cats: Vec<Category<'a>>,
+    sub_cats: BTreeMap<String, Category<'a>>,
 }
 
 impl<'a> Category<'a> {
     fn new() -> Self {
-        Category {
-            cat_path: vec![],
-            posts: vec![],
-            sub_cats: vec![],
-        }
+        Default::default()
     }
 
     fn with_path<'v>(path: impl Iterator<Item = &'v dyn ValueView>) -> Self {
-        Category {
-            cat_path: path.map(|v| v.to_value()).collect(),
-            posts: vec![],
-            sub_cats: vec![],
-        }
+        let mut c = Self::new();
+        c.cat_path = path.map(|v| v.to_value()).collect();
+        c
     }
 
     fn add_post(&mut self, post: &'a liquid::model::Value) {
         self.posts.push(post);
     }
-}
-
-fn compare_category_path<'a, C, S>(cur_path: C, seek: S) -> Ordering
-where
-    C: Iterator<Item = &'a dyn ValueView>,
-    S: Iterator<Item = &'a dyn ValueView>,
-{
-    cur_path
-        .map(liquid::model::ValueViewCmp::new)
-        .partial_cmp(seek.map(liquid::model::ValueViewCmp::new))
-        .expect("Arrays of same hierarchy level should be fully comparable")
-}
-
-fn is_leaf_category(cur_idx: usize, categories: &[&dyn ValueView]) -> bool {
-    cur_idx == categories.len()
-}
-
-fn construct_cat_full_path<'v>(
-    cur_idx: usize,
-    categories: &[&'v dyn ValueView],
-) -> Vec<&'v dyn ValueView> {
-    categories[..cur_idx].to_vec()
-}
-
-fn next_category(cur_idx: usize) -> usize {
-    cur_idx + 1
 }
 
 // walk the categories tree and construct Paginator for each node,
@@ -154,7 +99,7 @@ fn walk_categories(
     } else {
         cur_cat_paginators_holder.push(Paginator::default());
     }
-    for c in &mut category.sub_cats {
+    for c in category.sub_cats.values_mut() {
         let mut sub_paginators_holder = walk_categories(c, config, doc)?;
 
         if let Some(indexes) = cur_cat_paginators_holder[0].indexes.as_mut() {
@@ -165,25 +110,4 @@ fn walk_categories(
         cur_cat_paginators_holder.append(&mut sub_paginators_holder);
     }
     Ok(cur_cat_paginators_holder)
-}
-
-#[cfg(test)]
-mod test {
-    use super::*;
-
-    use liquid::model::ArrayView;
-
-    #[test]
-    fn compare_category_path_test() {
-        let a = liquid::model::array!(["A"]);
-        let b = liquid::model::array!(["B"]);
-        assert_eq!(
-            Ordering::Less,
-            compare_category_path(a.values(), b.values())
-        );
-        assert_eq!(
-            Ordering::Greater,
-            compare_category_path(b.values(), a.values())
-        );
-    }
 }
