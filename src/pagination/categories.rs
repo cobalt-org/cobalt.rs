@@ -3,10 +3,73 @@ use std::cmp::Ordering;
 use crate::document::Document;
 
 use super::{
-    create_all_paginators, helpers, paginator, sort_posts, PaginationConfig, Result, ValueView,
+    PaginationConfig, Result, ValueView, create_all_paginators, helpers, paginator, sort_posts,
 };
 use helpers::extract_categories;
 use paginator::Paginator;
+
+pub(crate) fn create_categories_paginators(
+    all_posts: &[&liquid::model::Value],
+    doc: &Document,
+    pagination_cfg: &PaginationConfig,
+) -> Result<Vec<Paginator>> {
+    let mut root_cat = distribute_posts_by_categories(all_posts)?;
+    let paginators_holder = walk_categories(&mut root_cat, pagination_cfg, doc)?;
+    Ok(paginators_holder)
+}
+
+fn distribute_posts_by_categories<'a>(
+    all_posts: &[&'a liquid::model::Value],
+) -> Result<Category<'a>> {
+    let mut root = Category::new();
+    for post in all_posts {
+        if let Some(categories) = extract_categories(post.as_view()) {
+            let categories: Vec<_> = categories.values().collect();
+            parse_categories_list(&mut root, 1, categories.as_slice(), post)?;
+        }
+    }
+    Ok(root)
+}
+
+/// construct a hierarchy of Categories with their posts from a list of categories
+fn parse_categories_list<'a>(
+    parent: &mut Category<'a>,
+    cur_idx: usize,
+    cur_post_categories: &[&dyn ValueView],
+    post: &'a liquid::model::Value,
+) -> Result<()> {
+    if cur_idx <= cur_post_categories.len() {
+        let cat_full_path = construct_cat_full_path(cur_idx, cur_post_categories);
+        let cur_cat = if let Ok(idx) = parent.sub_cats.binary_search_by(|c| {
+            compare_category_path(
+                c.cat_path.iter().map(|v| v.as_view()),
+                cat_full_path.iter().copied(),
+            )
+        }) {
+            &mut parent.sub_cats[idx]
+        } else {
+            let last_idx = parent.sub_cats.len();
+            parent
+                .sub_cats
+                .push(Category::with_path(cat_full_path.into_iter()));
+            // need to sort for binary_search_by
+            parent.sub_cats.sort_by(|c1, c2| {
+                compare_category_path(
+                    c1.cat_path.iter().map(|v| v.as_view()),
+                    c2.cat_path.iter().map(|v| v.as_view()),
+                )
+            });
+            &mut parent.sub_cats[last_idx]
+        };
+
+        if is_leaf_category(cur_idx, cur_post_categories) {
+            cur_cat.add_post(post);
+        } else {
+            parse_categories_list(cur_cat, next_category(cur_idx), cur_post_categories, post)?;
+        }
+    }
+    Ok(())
+}
 
 #[derive(Debug)]
 struct Category<'a> {
@@ -63,59 +126,6 @@ fn next_category(cur_idx: usize) -> usize {
     cur_idx + 1
 }
 
-// construct a hierarchy of Categories with their posts from a list of categories
-fn parse_categories_list<'a>(
-    parent: &mut Category<'a>,
-    cur_idx: usize,
-    cur_post_categories: &[&dyn ValueView],
-    post: &'a liquid::model::Value,
-) -> Result<()> {
-    if cur_idx <= cur_post_categories.len() {
-        let cat_full_path = construct_cat_full_path(cur_idx, cur_post_categories);
-        let cur_cat = if let Ok(idx) = parent.sub_cats.binary_search_by(|c| {
-            compare_category_path(
-                c.cat_path.iter().map(|v| v.as_view()),
-                cat_full_path.iter().copied(),
-            )
-        }) {
-            &mut parent.sub_cats[idx]
-        } else {
-            let last_idx = parent.sub_cats.len();
-            parent
-                .sub_cats
-                .push(Category::with_path(cat_full_path.into_iter()));
-            // need to sort for binary_search_by
-            parent.sub_cats.sort_by(|c1, c2| {
-                compare_category_path(
-                    c1.cat_path.iter().map(|v| v.as_view()),
-                    c2.cat_path.iter().map(|v| v.as_view()),
-                )
-            });
-            &mut parent.sub_cats[last_idx]
-        };
-
-        if is_leaf_category(cur_idx, cur_post_categories) {
-            cur_cat.add_post(post);
-        } else {
-            parse_categories_list(cur_cat, next_category(cur_idx), cur_post_categories, post)?;
-        }
-    }
-    Ok(())
-}
-
-fn distribute_posts_by_categories<'a>(
-    all_posts: &[&'a liquid::model::Value],
-) -> Result<Category<'a>> {
-    let mut root = Category::new();
-    for post in all_posts {
-        if let Some(categories) = extract_categories(post.as_view()) {
-            let categories: Vec<_> = categories.values().collect();
-            parse_categories_list(&mut root, 1, categories.as_slice(), post)?;
-        }
-    }
-    Ok(root)
-}
-
 // walk the categories tree and construct Paginator for each node,
 // filling `pages` and `indexes` accordingly
 fn walk_categories(
@@ -155,16 +165,6 @@ fn walk_categories(
         cur_cat_paginators_holder.append(&mut sub_paginators_holder);
     }
     Ok(cur_cat_paginators_holder)
-}
-
-pub(crate) fn create_categories_paginators(
-    all_posts: &[&liquid::model::Value],
-    doc: &Document,
-    pagination_cfg: &PaginationConfig,
-) -> Result<Vec<Paginator>> {
-    let mut root_cat = distribute_posts_by_categories(all_posts)?;
-    let paginators_holder = walk_categories(&mut root_cat, pagination_cfg, doc)?;
-    Ok(paginators_holder)
 }
 
 #[cfg(test)]

@@ -2,12 +2,12 @@ use std::io::Write;
 
 use crate::error;
 use itertools::Itertools;
-use liquid_core::error::ResultLiquidReplaceExt;
-use liquid_core::parser::TryMatchToken;
 use liquid_core::Language;
 use liquid_core::TagBlock;
 use liquid_core::TagTokenIter;
 use liquid_core::ValueView;
+use liquid_core::error::ResultLiquidReplaceExt;
+use liquid_core::parser::TryMatchToken;
 use liquid_core::{Renderable, Runtime};
 use pulldown_cmark as cmark;
 use pulldown_cmark::Event::{self, End, Html, Start, Text};
@@ -16,29 +16,6 @@ use pulldown_cmark::Event::{self, End, Html, Start, Text};
 pub use engarde::Raw as SyntaxHighlight;
 #[cfg(feature = "syntax-highlight")]
 pub use engarde::Syntax as SyntaxHighlight;
-
-#[cfg(feature = "syntax-highlight")]
-fn has_syntax_theme(syntax: &SyntaxHighlight, name: &str) -> error::Result<bool> {
-    Ok(syntax.has_theme(name))
-}
-
-#[cfg(not(feature = "syntax-highlight"))]
-fn has_syntax_theme(syntax: &SyntaxHighlight, name: &str) -> error::Result<bool> {
-    anyhow::bail!("Themes are unsupported in this build.");
-}
-
-fn verify_theme(syntax: &SyntaxHighlight, theme: Option<&str>) -> error::Result<()> {
-    if let Some(theme) = &theme {
-        match has_syntax_theme(syntax, theme) {
-            Ok(true) => {}
-            Ok(false) => anyhow::bail!("Syntax theme '{}' is unsupported", theme),
-            Err(err) => {
-                log::warn!("Syntax theme named '{}' ignored. Reason: {}", theme, err);
-            }
-        };
-    }
-    Ok(())
-}
 
 #[derive(Clone, Debug)]
 struct CodeBlock {
@@ -83,6 +60,29 @@ impl CodeBlockParser {
             syntax_theme: theme,
         })
     }
+}
+
+fn verify_theme(syntax: &SyntaxHighlight, theme: Option<&str>) -> error::Result<()> {
+    if let Some(theme) = &theme {
+        match has_syntax_theme(syntax, theme) {
+            Ok(true) => {}
+            Ok(false) => anyhow::bail!("Syntax theme '{}' is unsupported", theme),
+            Err(err) => {
+                log::warn!("Syntax theme named '{}' ignored. Reason: {}", theme, err);
+            }
+        };
+    }
+    Ok(())
+}
+
+#[cfg(feature = "syntax-highlight")]
+fn has_syntax_theme(syntax: &SyntaxHighlight, name: &str) -> error::Result<bool> {
+    Ok(syntax.has_theme(name))
+}
+
+#[cfg(not(feature = "syntax-highlight"))]
+fn has_syntax_theme(syntax: &SyntaxHighlight, name: &str) -> error::Result<bool> {
+    anyhow::bail!("Themes are unsupported in this build.");
 }
 
 impl liquid_core::BlockReflection for CodeBlockParser {

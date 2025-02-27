@@ -6,7 +6,7 @@ use log::debug;
 use serde::{Deserialize, Serialize};
 
 use super::sass;
-use super::{files, Minify};
+use super::{Minify, files};
 
 use crate::error::Result;
 

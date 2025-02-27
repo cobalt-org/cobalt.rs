@@ -2,7 +2,7 @@ use std::path::Path;
 use syntect::easy::HighlightLines;
 use syntect::highlighting::ThemeSet;
 use syntect::html::{
-    append_highlighted_html_for_styled_line, start_highlighted_html_snippet, IncludeBackground,
+    IncludeBackground, append_highlighted_html_for_styled_line, start_highlighted_html_snippet,
 };
 use syntect::parsing::{SyntaxReference, SyntaxSet};
 use syntect::util::LinesWithEndings;
@@ -116,8 +116,7 @@ mod test {
     }
     ";
 
-    const CODEBLOCK_RENDERED: &str =
-        "<pre style=\"background-color:#2b303b;\">\n\
+    const CODEBLOCK_RENDERED: &str = "<pre style=\"background-color:#2b303b;\">\n\
          <code><span style=\"color:#b48ead;\">mod </span>\
          <span style=\"color:#c0c5ce;\">test {\n\
          </span><span style=\"color:#c0c5ce;\">        </span>\

@@ -119,7 +119,7 @@ impl Server {
                 *server = Some(tiny_http::Server::http(self.addr()).map_err(Error::new)?);
             }
             Ok(Some(_)) | Err(TryLockError::WouldBlock) => {
-                return Err(Error::new("the server is running"))
+                return Err(Error::new("the server is running"));
             }
             Err(error @ TryLockError::Poisoned(_)) => return Err(Error::new(error)),
         }

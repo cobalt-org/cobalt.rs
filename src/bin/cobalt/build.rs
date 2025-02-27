@@ -30,14 +30,14 @@ impl BuildArgs {
         let config = cobalt::cobalt_model::Config::from_config(config)?;
 
         build(config)?;
-        info!("Build successful");
+        log::info!("Build successful");
 
         Ok(())
     }
 }
 
 pub(crate) fn build(config: cobalt::Config) -> Result<()> {
-    info!(
+    log::info!(
         "Building from `{}` into `{}`",
         config.source.display(),
         config.destination.display()
@@ -69,8 +69,8 @@ pub(crate) fn clean(config: &cobalt::Config) -> Result<()> {
     let destdir = match destdir {
         Ok(destdir) => destdir,
         Err(e) => {
-            debug!("No `{}` to clean", config.destination.display());
-            debug!("{}", e);
+            log::debug!("No `{}` to clean", config.destination.display());
+            log::debug!("{}", e);
             return Ok(());
         }
     };
@@ -84,7 +84,7 @@ pub(crate) fn clean(config: &cobalt::Config) -> Result<()> {
 
     fs::remove_dir_all(&destdir)?;
 
-    info!("directory `{}` removed", destdir.display());
+    log::info!("directory `{}` removed", destdir.display());
 
     Ok(())
 }

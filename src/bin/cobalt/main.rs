@@ -1,11 +1,5 @@
 #![warn(warnings)]
 
-#[macro_use]
-extern crate lazy_static;
-
-#[macro_use]
-extern crate log;
-
 mod args;
 mod build;
 mod debug;
@@ -59,7 +53,7 @@ impl Cli {
             anstream::AutoStream::choice(&std::io::stderr()),
             anstream::ColorChoice::Never
         );
-        args::init_logging(self.logging.clone(), colored_stderr);
+        args::init_logging(self.logging, colored_stderr);
 
         match &self.command {
             Command::Init(cmd) => cmd.run(),

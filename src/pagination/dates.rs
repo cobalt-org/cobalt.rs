@@ -1,13 +1,37 @@
-use crate::cobalt_model::pagination::DateIndex;
 use crate::cobalt_model::DateTime;
+use crate::cobalt_model::pagination::DateIndex;
 use crate::document::Document;
 
 use super::{
-    create_all_paginators, helpers, paginator, sort_posts, PaginationConfig, Result, ValueView,
+    PaginationConfig, Result, ValueView, create_all_paginators, helpers, paginator, sort_posts,
 };
 use helpers::extract_scalar;
 use paginator::Paginator;
 
+pub(crate) fn create_dates_paginators(
+    all_posts: &[&liquid::model::Value],
+    doc: &Document,
+    pagination_cfg: &PaginationConfig,
+) -> Result<Vec<Paginator>> {
+    let mut root_date = distribute_posts_by_dates(all_posts, pagination_cfg)?;
+    walk_dates(&mut root_date, pagination_cfg, doc, None)
+}
+
+fn distribute_posts_by_dates<'a>(
+    all_posts: &[&'a liquid::model::Value],
+    pagination_cfg: &PaginationConfig,
+) -> Result<DateIndexHolder<'a>> {
+    let date_index = &pagination_cfg.date_index;
+    let mut root = DateIndexHolder::new(0u32, None);
+    for post in all_posts {
+        if let Some(published_date) = extract_published_date(post.as_view()) {
+            for idx in date_index {
+                find_or_create_date_holder_and_put_post(&mut root, &published_date, *idx, post);
+            }
+        }
+    }
+    Ok(root)
+}
 #[derive(Debug, Clone)]
 struct DateIndexHolder<'a> {
     value: u32,
@@ -32,15 +56,6 @@ fn extract_published_date(value: &'_ dyn ValueView) -> Option<DateTime> {
     published_date.to_date_time()
 }
 
-pub(crate) fn create_dates_paginators(
-    all_posts: &[&liquid::model::Value],
-    doc: &Document,
-    pagination_cfg: &PaginationConfig,
-) -> Result<Vec<Paginator>> {
-    let mut root_date = distribute_posts_by_dates(all_posts, pagination_cfg)?;
-    walk_dates(&mut root_date, pagination_cfg, doc, None)
-}
-
 fn format_date_holder(d: &DateIndexHolder<'_>) -> liquid::model::Value {
     let field = d
         .field
@@ -54,45 +69,6 @@ fn format_date_holder(d: &DateIndexHolder<'_>) -> liquid::model::Value {
 
 fn date_fields_to_array(date: &[DateIndexHolder<'_>]) -> liquid::model::Array {
     date.iter().map(format_date_holder).collect()
-}
-
-fn walk_dates(
-    date_holder: &mut DateIndexHolder<'_>,
-    config: &PaginationConfig,
-    doc: &Document,
-    parent_dates: Option<Vec<DateIndexHolder<'_>>>,
-) -> Result<Vec<Paginator>> {
-    let mut cur_date_holder_paginators: Vec<Paginator> = vec![];
-    let mut current_date = parent_dates.unwrap_or_default();
-    if let Some(_field) = date_holder.field {
-        sort_posts(&mut date_holder.posts, config);
-        current_date.push(date_holder.clone());
-        let index_title = liquid::model::Value::array(date_fields_to_array(&current_date));
-        let cur_date_paginators =
-            create_all_paginators(&date_holder.posts, doc, config, Some(&index_title))?;
-        if !cur_date_paginators.is_empty() {
-            cur_date_holder_paginators.extend(cur_date_paginators);
-        } else {
-            let p = Paginator {
-                index_title: Some(index_title),
-                ..Default::default()
-            };
-            cur_date_holder_paginators.push(p);
-        }
-    } else {
-        cur_date_holder_paginators.push(Paginator::default());
-    }
-    for dh in &mut date_holder.sub_date {
-        let mut sub_paginators_holder = walk_dates(dh, config, doc, Some(current_date.clone()))?;
-
-        if let Some(indexes) = cur_date_holder_paginators[0].indexes.as_mut() {
-            indexes.push(sub_paginators_holder[0].clone());
-        } else {
-            cur_date_holder_paginators[0].indexes = Some(vec![sub_paginators_holder[0].clone()]);
-        }
-        cur_date_holder_paginators.append(&mut sub_paginators_holder);
-    }
-    Ok(cur_date_holder_paginators)
 }
 
 fn find_or_create_date_holder_and_put_post<'a>(
@@ -143,18 +119,41 @@ fn get_date_field_value(date: &DateTime, field: DateIndex) -> u32 {
     }
 }
 
-fn distribute_posts_by_dates<'a>(
-    all_posts: &[&'a liquid::model::Value],
-    pagination_cfg: &PaginationConfig,
-) -> Result<DateIndexHolder<'a>> {
-    let date_index = &pagination_cfg.date_index;
-    let mut root = DateIndexHolder::new(0u32, None);
-    for post in all_posts {
-        if let Some(published_date) = extract_published_date(post.as_view()) {
-            for idx in date_index {
-                find_or_create_date_holder_and_put_post(&mut root, &published_date, *idx, post);
-            }
+fn walk_dates(
+    date_holder: &mut DateIndexHolder<'_>,
+    config: &PaginationConfig,
+    doc: &Document,
+    parent_dates: Option<Vec<DateIndexHolder<'_>>>,
+) -> Result<Vec<Paginator>> {
+    let mut cur_date_holder_paginators: Vec<Paginator> = vec![];
+    let mut current_date = parent_dates.unwrap_or_default();
+    if let Some(_field) = date_holder.field {
+        sort_posts(&mut date_holder.posts, config);
+        current_date.push(date_holder.clone());
+        let index_title = liquid::model::Value::array(date_fields_to_array(&current_date));
+        let cur_date_paginators =
+            create_all_paginators(&date_holder.posts, doc, config, Some(&index_title))?;
+        if !cur_date_paginators.is_empty() {
+            cur_date_holder_paginators.extend(cur_date_paginators);
+        } else {
+            let p = Paginator {
+                index_title: Some(index_title),
+                ..Default::default()
+            };
+            cur_date_holder_paginators.push(p);
         }
+    } else {
+        cur_date_holder_paginators.push(Paginator::default());
     }
-    Ok(root)
+    for dh in &mut date_holder.sub_date {
+        let mut sub_paginators_holder = walk_dates(dh, config, doc, Some(current_date.clone()))?;
+
+        if let Some(indexes) = cur_date_holder_paginators[0].indexes.as_mut() {
+            indexes.push(sub_paginators_holder[0].clone());
+        } else {
+            cur_date_holder_paginators[0].indexes = Some(vec![sub_paginators_holder[0].clone()]);
+        }
+        cur_date_holder_paginators.append(&mut sub_paginators_holder);
+    }
+    Ok(cur_date_holder_paginators)
 }

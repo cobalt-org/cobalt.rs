@@ -2,20 +2,20 @@ use std::clone::Clone;
 use std::collections::HashMap;
 use std::default::Default;
 use std::path::Path;
+use std::sync::LazyLock;
 
 use anyhow::Context as _;
-use lazy_static::lazy_static;
-use liquid::model::Value;
 use liquid::Object;
 use liquid::ValueView;
+use liquid::model::Value;
 use log::trace;
 use regex::Regex;
 
 use crate::cobalt_model;
+use crate::cobalt_model::Minify;
 use crate::cobalt_model::files;
 use crate::cobalt_model::permalink;
 use crate::cobalt_model::slug;
-use crate::cobalt_model::Minify;
 use crate::error::Result;
 
 pub(crate) struct RenderContext<'a> {
@@ -23,151 +23,6 @@ pub(crate) struct RenderContext<'a> {
     pub(crate) markdown: &'a cobalt_model::Markdown,
     pub(crate) globals: &'a Object,
     pub(crate) minify: Minify,
-}
-
-#[cfg(not(feature = "html-minifier"))]
-fn minify_if_enabled(
-    html: String,
-    _context: &RenderContext,
-    _file_path: &relative_path::RelativePath,
-) -> Result<String> {
-    Ok(html)
-}
-
-#[cfg(feature = "html-minifier")]
-fn minify_if_enabled(
-    html: String,
-    context: &RenderContext<'_>,
-    file_path: &relative_path::RelativePath,
-) -> Result<String> {
-    let extension = file_path.extension().unwrap_or_default();
-    if context.minify.html && (extension == "html" || extension == "htm") {
-        Ok(html_minifier::minify(html)?)
-    } else {
-        Ok(html)
-    }
-}
-
-pub(crate) fn permalink_attributes(
-    front: &cobalt_model::Frontmatter,
-    dest_file: &relative_path::RelativePath,
-) -> Object {
-    let mut attributes = Object::new();
-
-    attributes.insert(
-        "parent".into(),
-        Value::scalar(
-            dest_file
-                .parent()
-                .unwrap_or_else(|| relative_path::RelativePath::new(""))
-                .to_string(),
-        ),
-    );
-
-    let filename = dest_file.file_stem().unwrap_or("").to_owned();
-    attributes.insert("name".into(), Value::scalar(filename));
-
-    attributes.insert("ext".into(), Value::scalar(".html"));
-
-    // TODO(epage): Add `collection` (the collection's slug), see #257
-    // or `parent.slug`, see #323
-
-    attributes.insert("slug".into(), Value::scalar(front.slug.clone()));
-
-    attributes.insert(
-        "categories".into(),
-        Value::scalar(itertools::join(
-            front.categories.iter().map(slug::slugify),
-            "/",
-        )),
-    );
-
-    if let Some(ref date) = front.published_date {
-        attributes.insert("year".into(), Value::scalar(date.year().to_string()));
-        attributes.insert(
-            "month".into(),
-            Value::scalar(format!("{:02}", &date.month())),
-        );
-        attributes.insert("i_month".into(), Value::scalar(date.month().to_string()));
-        attributes.insert("day".into(), Value::scalar(format!("{:02}", &date.day())));
-        attributes.insert("i_day".into(), Value::scalar(date.day().to_string()));
-        attributes.insert("hour".into(), Value::scalar(format!("{:02}", &date.hour())));
-        attributes.insert(
-            "minute".into(),
-            Value::scalar(format!("{:02}", &date.minute())),
-        );
-        attributes.insert(
-            "second".into(),
-            Value::scalar(format!("{:02}", &date.second())),
-        );
-    }
-
-    attributes.insert("data".into(), Value::Object(front.data.clone()));
-
-    attributes
-}
-
-fn document_attributes(
-    front: &cobalt_model::Frontmatter,
-    source_file: &relative_path::RelativePath,
-    url_path: &str,
-) -> Object {
-    let categories = Value::Array(
-        front
-            .categories
-            .iter()
-            .cloned()
-            .map(Value::scalar)
-            .collect(),
-    );
-    // Reason for `file`:
-    // - Allow access to assets in the original location
-    // - Ease linking back to page's source
-    let file: Object = vec![
-        (
-            "permalink".into(),
-            Value::scalar(source_file.as_str().to_owned()),
-        ),
-        (
-            "parent".into(),
-            Value::scalar(
-                source_file
-                    .parent()
-                    .map(relative_path::RelativePath::as_str)
-                    .unwrap_or("")
-                    .to_owned(),
-            ),
-        ),
-    ]
-    .into_iter()
-    .collect();
-    let attributes = vec![
-        ("permalink".into(), Value::scalar(url_path.to_owned())),
-        ("title".into(), Value::scalar(front.title.clone())),
-        ("slug".into(), Value::scalar(front.slug.clone())),
-        (
-            "description".into(),
-            Value::scalar(front.description.as_deref().unwrap_or("").to_owned()),
-        ),
-        ("categories".into(), categories),
-        ("is_draft".into(), Value::scalar(front.is_draft)),
-        ("weight".into(), Value::scalar(front.weight)),
-        ("file".into(), Value::Object(file)),
-        ("collection".into(), Value::scalar(front.collection.clone())),
-        ("data".into(), Value::Object(front.data.clone())),
-    ];
-    let mut attributes: Object = attributes.into_iter().collect();
-
-    if let Some(ref tags) = front.tags {
-        let tags = Value::Array(tags.iter().cloned().map(Value::scalar).collect());
-        attributes.insert("tags".into(), tags);
-    }
-
-    if let Some(ref published_date) = front.published_date {
-        attributes.insert("published_date".into(), Value::scalar(*published_date));
-    }
-
-    attributes
 }
 
 #[derive(Debug, Clone)]
@@ -401,6 +256,151 @@ impl Document {
     }
 }
 
+pub(crate) fn permalink_attributes(
+    front: &cobalt_model::Frontmatter,
+    dest_file: &relative_path::RelativePath,
+) -> Object {
+    let mut attributes = Object::new();
+
+    attributes.insert(
+        "parent".into(),
+        Value::scalar(
+            dest_file
+                .parent()
+                .unwrap_or_else(|| relative_path::RelativePath::new(""))
+                .to_string(),
+        ),
+    );
+
+    let filename = dest_file.file_stem().unwrap_or("").to_owned();
+    attributes.insert("name".into(), Value::scalar(filename));
+
+    attributes.insert("ext".into(), Value::scalar(".html"));
+
+    // TODO(epage): Add `collection` (the collection's slug), see #257
+    // or `parent.slug`, see #323
+
+    attributes.insert("slug".into(), Value::scalar(front.slug.clone()));
+
+    attributes.insert(
+        "categories".into(),
+        Value::scalar(itertools::join(
+            front.categories.iter().map(slug::slugify),
+            "/",
+        )),
+    );
+
+    if let Some(ref date) = front.published_date {
+        attributes.insert("year".into(), Value::scalar(date.year().to_string()));
+        attributes.insert(
+            "month".into(),
+            Value::scalar(format!("{:02}", &date.month())),
+        );
+        attributes.insert("i_month".into(), Value::scalar(date.month().to_string()));
+        attributes.insert("day".into(), Value::scalar(format!("{:02}", &date.day())));
+        attributes.insert("i_day".into(), Value::scalar(date.day().to_string()));
+        attributes.insert("hour".into(), Value::scalar(format!("{:02}", &date.hour())));
+        attributes.insert(
+            "minute".into(),
+            Value::scalar(format!("{:02}", &date.minute())),
+        );
+        attributes.insert(
+            "second".into(),
+            Value::scalar(format!("{:02}", &date.second())),
+        );
+    }
+
+    attributes.insert("data".into(), Value::Object(front.data.clone()));
+
+    attributes
+}
+
+fn document_attributes(
+    front: &cobalt_model::Frontmatter,
+    source_file: &relative_path::RelativePath,
+    url_path: &str,
+) -> Object {
+    let categories = Value::Array(
+        front
+            .categories
+            .iter()
+            .cloned()
+            .map(Value::scalar)
+            .collect(),
+    );
+    // Reason for `file`:
+    // - Allow access to assets in the original location
+    // - Ease linking back to page's source
+    let file: Object = vec![
+        (
+            "permalink".into(),
+            Value::scalar(source_file.as_str().to_owned()),
+        ),
+        (
+            "parent".into(),
+            Value::scalar(
+                source_file
+                    .parent()
+                    .map(relative_path::RelativePath::as_str)
+                    .unwrap_or("")
+                    .to_owned(),
+            ),
+        ),
+    ]
+    .into_iter()
+    .collect();
+    let attributes = vec![
+        ("permalink".into(), Value::scalar(url_path.to_owned())),
+        ("title".into(), Value::scalar(front.title.clone())),
+        ("slug".into(), Value::scalar(front.slug.clone())),
+        (
+            "description".into(),
+            Value::scalar(front.description.as_deref().unwrap_or("").to_owned()),
+        ),
+        ("categories".into(), categories),
+        ("is_draft".into(), Value::scalar(front.is_draft)),
+        ("weight".into(), Value::scalar(front.weight)),
+        ("file".into(), Value::Object(file)),
+        ("collection".into(), Value::scalar(front.collection.clone())),
+        ("data".into(), Value::Object(front.data.clone())),
+    ];
+    let mut attributes: Object = attributes.into_iter().collect();
+
+    if let Some(ref tags) = front.tags {
+        let tags = Value::Array(tags.iter().cloned().map(Value::scalar).collect());
+        attributes.insert("tags".into(), tags);
+    }
+
+    if let Some(ref published_date) = front.published_date {
+        attributes.insert("published_date".into(), Value::scalar(*published_date));
+    }
+
+    attributes
+}
+
+#[cfg(not(feature = "html-minifier"))]
+fn minify_if_enabled(
+    html: String,
+    _context: &RenderContext,
+    _file_path: &relative_path::RelativePath,
+) -> Result<String> {
+    Ok(html)
+}
+
+#[cfg(feature = "html-minifier")]
+fn minify_if_enabled(
+    html: String,
+    context: &RenderContext<'_>,
+    file_path: &relative_path::RelativePath,
+) -> Result<String> {
+    let extension = file_path.extension().unwrap_or_default();
+    if context.minify.html && (extension == "html" || extension == "htm") {
+        Ok(html_minifier::minify(html)?)
+    } else {
+        Ok(html)
+    }
+}
+
 fn extract_excerpt_raw(content: &str, excerpt_separator: &str) -> String {
     content
         .split(excerpt_separator)
@@ -410,9 +410,8 @@ fn extract_excerpt_raw(content: &str, excerpt_separator: &str) -> String {
 }
 
 fn extract_excerpt_markdown(content: &str, excerpt_separator: &str) -> String {
-    lazy_static! {
-        static ref MARKDOWN_REF: Regex = Regex::new(r"(?m:^ {0,3}\[[^\]]+\]:.+$)").unwrap();
-    }
+    static MARKDOWN_REF: LazyLock<Regex> =
+        LazyLock::new(|| Regex::new(r"(?m:^ {0,3}\[[^\]]+\]:.+$)").unwrap());
 
     let mut trail = String::new();
 

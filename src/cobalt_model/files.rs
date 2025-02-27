@@ -5,8 +5,8 @@ use std::path;
 
 use crate::error::Result;
 use anyhow::Context as _;
-use ignore::gitignore::{Gitignore, GitignoreBuilder};
 use ignore::Match;
+use ignore::gitignore::{Gitignore, GitignoreBuilder};
 use log::debug;
 use log::trace;
 use normalize_line_endings::normalized;
@@ -318,7 +318,7 @@ mod tests {
     use super::*;
 
     macro_rules! assert_includes_dir {
-        ($root:expr, $ignores:expr, $test:expr, $included:expr) => {
+        ($root:expr_2021, $ignores:expr_2021, $test:expr_2021, $included:expr_2021) => {
             let mut files = FilesBuilder::new(path::Path::new($root)).unwrap();
             let ignores: &[&str] = $ignores;
             for ignore in ignores {
@@ -329,7 +329,7 @@ mod tests {
         };
     }
     macro_rules! assert_includes_file {
-        ($root:expr, $ignores:expr, $test:expr, $included:expr) => {
+        ($root:expr_2021, $ignores:expr_2021, $test:expr_2021, $included:expr_2021) => {
             let mut files = FilesBuilder::new(path::Path::new($root)).unwrap();
             let ignores: &[&str] = $ignores;
             for ignore in ignores {
