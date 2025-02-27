@@ -3,7 +3,7 @@ use std::cmp::Ordering;
 use crate::document::Document;
 
 use super::{
-    PaginationConfig, Result, ValueView, create_all_paginators, helpers, paginator, sort_posts,
+    create_all_paginators, helpers, paginator, sort_posts, PaginationConfig, Result, ValueView,
 };
 use helpers::extract_categories;
 use paginator::Paginator;
@@ -25,7 +25,7 @@ fn distribute_posts_by_categories<'a>(
     for post in all_posts {
         if let Some(categories) = extract_categories(post.as_view()) {
             let categories: Vec<_> = categories.values().collect();
-            parse_categories_list(&mut root, 1, categories.as_slice(), post)?;
+            parse_categories_list(&mut root, 0, categories.as_slice(), post)?;
         }
     }
     Ok(root)
@@ -38,7 +38,7 @@ fn parse_categories_list<'a>(
     cur_post_categories: &[&dyn ValueView],
     post: &'a liquid::model::Value,
 ) -> Result<()> {
-    if cur_idx <= cur_post_categories.len() {
+    if cur_idx < cur_post_categories.len() {
         let cat_full_path = construct_cat_full_path(cur_idx, cur_post_categories);
         let cur_cat = if let Ok(idx) = parent.sub_cats.binary_search_by(|c| {
             compare_category_path(
@@ -112,14 +112,14 @@ where
 }
 
 fn is_leaf_category(cur_idx: usize, categories: &[&dyn ValueView]) -> bool {
-    cur_idx == categories.len()
+    cur_idx + 1 == categories.len()
 }
 
 fn construct_cat_full_path<'v>(
     cur_idx: usize,
     categories: &[&'v dyn ValueView],
 ) -> Vec<&'v dyn ValueView> {
-    categories[..cur_idx].to_vec()
+    categories[..=cur_idx].to_vec()
 }
 
 fn next_category(cur_idx: usize) -> usize {
