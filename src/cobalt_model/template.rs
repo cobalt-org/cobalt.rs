@@ -9,35 +9,6 @@ use log::warn;
 use log::{debug, trace};
 use serde::Serialize;
 
-type Partials = liquid::partials::EagerCompiler<liquid::partials::InMemorySource>;
-
-fn load_partials_from_path(root: path::PathBuf) -> Result<Partials> {
-    let mut source = Partials::empty();
-
-    debug!("Loading snippets from `{}`", root.display());
-    let template_files = files::FilesBuilder::new(root)?
-        .ignore_hidden(false)?
-        .build()?;
-    for file_path in template_files.files() {
-        let rel_path = file_path
-            .strip_prefix(template_files.root())
-            .expect("file was found under the root")
-            .to_str()
-            .expect("only UTF-8 characters supported in paths")
-            .to_owned();
-        trace!("Loading snippet `{}`", rel_path);
-        match files::read_file(file_path) {
-            Ok(content) => {
-                source.add(rel_path, content);
-            }
-            Err(err) => {
-                warn!("Ignoring snippet {}: {}", rel_path, err);
-            }
-        }
-    }
-    Ok(source)
-}
-
 #[derive(Debug, Clone, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct LiquidBuilder {
@@ -66,6 +37,35 @@ impl LiquidBuilder {
             .build()?;
         Ok(Liquid { parser })
     }
+}
+
+type Partials = liquid::partials::EagerCompiler<liquid::partials::InMemorySource>;
+
+fn load_partials_from_path(root: path::PathBuf) -> Result<Partials> {
+    let mut source = Partials::empty();
+
+    debug!("Loading snippets from `{}`", root.display());
+    let template_files = files::FilesBuilder::new(root)?
+        .ignore_hidden(false)?
+        .build()?;
+    for file_path in template_files.files() {
+        let rel_path = file_path
+            .strip_prefix(template_files.root())
+            .expect("file was found under the root")
+            .to_str()
+            .expect("only UTF-8 characters supported in paths")
+            .to_owned();
+        trace!("Loading snippet `{}`", rel_path);
+        match files::read_file(file_path) {
+            Ok(content) => {
+                source.add(rel_path, content);
+            }
+            Err(err) => {
+                warn!("Ignoring snippet {}: {}", rel_path, err);
+            }
+        }
+    }
+    Ok(source)
 }
 
 pub struct Liquid {
