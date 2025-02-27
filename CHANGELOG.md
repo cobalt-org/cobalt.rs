@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 <!-- next-header -->
 ## [Unreleased] - ReleaseDate
 
+## [0.19.7] - 2025-02-27
+
 ### Compatibility
 
 - MSRV is now 1.85
@@ -729,7 +731,8 @@ this.
 [@tak1n]: https://github.com/tak1n
 
 <!-- next-url -->
-[Unreleased]: https://github.com/cobalt-org/cobalt.rs/compare/v0.19.6...HEAD
+[Unreleased]: https://github.com/cobalt-org/cobalt.rs/compare/v0.19.7...HEAD
+[0.19.7]: https://github.com/cobalt-org/cobalt.rs/compare/v0.19.6...v0.19.7
 [0.19.6]: https://github.com/cobalt-org/cobalt.rs/compare/v0.19.5...v0.19.6
 [0.19.5]: https://github.com/cobalt-org/cobalt.rs/compare/v0.19.4...v0.19.5
 [0.19.4]: https://github.com/cobalt-org/cobalt.rs/compare/v0.19.3...v0.19.4

@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 <!-- next-header -->
 ## [Unreleased] - ReleaseDate
 
+## [0.1.12] - 2025-02-27
+
 ### Compatibility
 
 - MSRV is now 1.85
@@ -54,7 +56,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [0.1.1] - 2022-04-04
 
 <!-- next-url -->
-[Unreleased]: https://github.com/cobalt-org/cobalt.rs/compare/engarde-v0.1.11...HEAD
+[Unreleased]: https://github.com/cobalt-org/cobalt.rs/compare/engarde-v0.1.12...HEAD
+[0.1.12]: https://github.com/cobalt-org/cobalt.rs/compare/engarde-v0.1.11...engarde-v0.1.12
 [0.1.11]: https://github.com/cobalt-org/cobalt.rs/compare/engarde-v0.1.10...engarde-v0.1.11
 [0.1.10]: https://github.com/cobalt-org/cobalt.rs/compare/engarde-v0.1.9...engarde-v0.1.10
 [0.1.9]: https://github.com/cobalt-org/cobalt.rs/compare/engarde-v0.1.8...engarde-v0.1.9
