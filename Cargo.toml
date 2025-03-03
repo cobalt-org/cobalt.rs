@@ -144,7 +144,7 @@ colorchoice = "1.0.3"
 colorchoice-clap = "1.0.6"
 human-panic = "2"
 scrawl = "2.0"
-tempfile = "3.16"
+tempfile = "3.17"
 relative-path = { version = "1", features = ["serde"] }
 liquid = "0.26"
 liquid-core = "0.26"
@@ -176,9 +176,9 @@ notify = { version = "7", optional = true, default-features = false, features = 
 sass-rs = { version = "0.2", optional = true }
 
 html-minifier = {version="3.0", optional = true }
-anyhow = "1.0.95"
+anyhow = "1.0.97"
 anstream = "0.6.18"
-chrono = "0.4.39"
+chrono = "0.4.40"
 anstyle = "1.0.10"
 
 [dev-dependencies]
