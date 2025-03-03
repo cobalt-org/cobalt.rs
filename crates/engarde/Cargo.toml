@@ -37,7 +37,7 @@ default-features = false
 features =  ["parsing", "regex-fancy", "default-syntaxes", "default-themes", "html", "dump-load", "yaml-load"]
 
 [target.'cfg(any())'.dependencies]
-thiserror = "1.0.2"  # HACK: bad minimal dep in syntect
+thiserror = "1.0.69"  # HACK: bad minimal dep in syntect
 
 [lints]
 workspace = true
