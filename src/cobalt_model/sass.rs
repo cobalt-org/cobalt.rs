@@ -82,13 +82,15 @@ impl SassCompiler {
         #[cfg(feature = "html-minifier")]
         let content = if minify.css {
             use html_minifier::css::minify;
-            minify(&content).map_err(|e| {
-                anyhow::format_err!(
-                    "Could not minify saas file {} error {}",
-                    source.to_string_lossy(),
-                    e
-                )
-            })?
+            minify(&content)
+                .map_err(|e| {
+                    anyhow::format_err!(
+                        "Could not minify saas file {} error {}",
+                        source.to_string_lossy(),
+                        e
+                    )
+                })?
+                .to_string()
         } else {
             content
         };
