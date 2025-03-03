@@ -171,7 +171,7 @@ open = "5"
 dunce = "1.0.5"
 
 file-serve = { version = "0.3.6", path = "crates/file-serve", optional = true }
-notify = { version = "7", optional = true, default-features = false, features = ["macos_fsevent"] }
+notify = { version = "8", optional = true, default-features = false, features = ["macos_fsevent"] }
 
 sass-rs = { version = "0.2", optional = true }
 
