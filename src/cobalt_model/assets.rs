@@ -82,13 +82,15 @@ fn copy_and_minify_css(src_file: &path::Path, dest_file: &path::Path, minify: bo
             dest_file.display()
         );
         let content = std::fs::read_to_string(src_file)?;
-        let minified = minify(&content).map_err(|e| {
-            anyhow::format_err!(
-                "Could not minify css file {} error {}",
-                src_file.to_string_lossy(),
-                e
-            )
-        })?;
+        let minified = minify(&content)
+            .map_err(|e| {
+                anyhow::format_err!(
+                    "Could not minify css file {} error {}",
+                    src_file.to_string_lossy(),
+                    e
+                )
+            })?
+            .to_string();
         std::fs::write(dest_file, minified)?;
     } else {
         files::copy_file(src_file, dest_file)?;
@@ -112,7 +114,8 @@ fn copy_and_minify_js(src_file: &path::Path, dest_file: &path::Path, minify: boo
             dest_file.display()
         );
         let content = std::fs::read_to_string(src_file)?;
-        std::fs::write(dest_file, minify(&content))?;
+        let minified = minify(&content).to_string();
+        std::fs::write(dest_file, minified)?;
     } else {
         files::copy_file(src_file, dest_file)?;
     }
