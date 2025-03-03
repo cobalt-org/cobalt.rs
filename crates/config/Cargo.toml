@@ -20,17 +20,17 @@ unstable = []
 preview_unstable = []
 
 [dependencies]
-liquid-core = "0.26"
-time = "0.3"
-log = "0.4"
-regex = "1.11"
-serde = "1.0"
-serde_yaml = "0.9"
-relative-path = { version = "1", features = ["serde"] }
-once_cell = "1.20"
+liquid-core = "0.26.9"
+time = "0.3.37"
+log = "0.4.26"
+regex = "1.11.1"
+serde = "1.0.218"
+serde_yaml = "0.9.34"
+relative-path = { version = "1.9.3", features = ["serde"] }
+once_cell = "1.20.3"
 status = { version = "0.0.10", features = ["send_sync"] }
-deunicode = "1.6"
-itertools = "0.14"
+deunicode = "1.6.0"
+itertools = "0.14.0"
 
 [lints]
 workspace = true

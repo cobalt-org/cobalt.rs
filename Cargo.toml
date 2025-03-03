@@ -137,52 +137,52 @@ doc = false
 [dependencies]
 cobalt-config = { version = "=0.19.5", path = "crates/config", features = ["unstable"] }
 cobalt-core = { version = "=0.19.5", path = "crates/core", features = ["unstable"] }
-clap = { version = "4.5", features = ["derive", "wrap_help"] }
-clap-verbosity-flag = "3.0"
-proc-exit = "2"
+clap = { version = "4.5.31", features = ["derive", "wrap_help"] }
+clap-verbosity-flag = "3.0.2"
+proc-exit = "2.0.2"
 colorchoice = "1.0.3"
 colorchoice-clap = "1.0.6"
-human-panic = "2"
-scrawl = "2.0"
-tempfile = "3.17"
-relative-path = { version = "1", features = ["serde"] }
-liquid = "0.26"
-liquid-core = "0.26"
-liquid-lib = { version = "0.26", features = ["jekyll", "shopify", "extra"] }
+human-panic = "2.0.2"
+scrawl = "2.0.0"
+tempfile = "3.17.1"
+relative-path = { version = "1.9.3", features = ["serde"] }
+liquid = "0.26.9"
+liquid-core = "0.26.9"
+liquid-lib = { version = "0.26.9", features = ["jekyll", "shopify", "extra"] }
 deunicode = "1.6.0"
-walkdir = "2.5"
-time = "0.3"
-log = "0.4"
-env_logger = "0.11"
-rss = "2.0"
-jsonfeed = "0.2"
-pulldown-cmark = {version="0.13", default-features = false, features = ["html"] }
-engarde = { version = "0.1", path = "crates/engarde" }
-regex = "1.11"
-itertools = "0.14"
-ignore = "0.4"
-serde = "1.0"
-serde_yaml = "0.9"
-serde_json = "1.0"
+walkdir = "2.5.0"
+time = "0.3.37"
+log = "0.4.26"
+env_logger = "0.11.6"
+rss = "2.0.12"
+jsonfeed = "0.2.0"
+pulldown-cmark = {version="0.13.0", default-features = false, features = ["html"] }
+engarde = { version = "0.1.0", path = "crates/engarde" }
+regex = "1.11.1"
+itertools = "0.14.0"
+ignore = "0.4.23"
+serde = "1.0.218"
+serde_yaml = "0.9.34"
+serde_json = "1.0.140"
 toml = "0.8.20"
 normalize-line-endings = "0.3.0"
-sitemap = "0.4"
-open = "5"
+sitemap = "0.4.1"
+open = "5.3.2"
 dunce = "1.0.5"
 
 file-serve = { version = "0.3.6", path = "crates/file-serve", optional = true }
-notify = { version = "8", optional = true, default-features = false, features = ["macos_fsevent"] }
+notify = { version = "8.0.0", optional = true, default-features = false, features = ["macos_fsevent"] }
 
-sass-rs = { version = "0.2", optional = true }
+sass-rs = { version = "0.2.2", optional = true }
 
-html-minifier = {version="5.0", optional = true }
+html-minifier = {version="5.0.0", optional = true }
 anyhow = "1.0.97"
 anstream = "0.6.18"
 chrono = "0.4.40"
 anstyle = "1.0.10"
 
 [dev-dependencies]
-trycmd = "0.15"
+trycmd = "0.15.9"
 snapbox = { version = "0.6.21", features = ["diff"] }
 
 [features]
