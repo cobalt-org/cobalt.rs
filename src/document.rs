@@ -92,8 +92,12 @@ impl Document {
     pub(crate) fn to_jsonfeed(&self, root_url: &str) -> jsonfeed::Item {
         let link = format!("{}/{}", root_url, &self.url_path);
 
-        let tags = if let Some(tags) = self.front.tags.as_ref() {
-            tags.iter().map(|s| s.as_str().to_owned()).collect()
+        let tags = if !self.front.tags.is_empty() {
+            self.front
+                .tags
+                .iter()
+                .map(|s| s.as_str().to_owned())
+                .collect()
         } else {
             self.front
                 .categories
@@ -364,8 +368,8 @@ fn document_attributes(
     ];
     let mut attributes: Object = attributes.into_iter().collect();
 
-    if let Some(ref tags) = front.tags {
-        let tags = Value::Array(tags.iter().cloned().map(Value::scalar).collect());
+    if !front.tags.is_empty() {
+        let tags = Value::Array(front.tags.iter().cloned().map(Value::scalar).collect());
         attributes.insert("tags".into(), tags);
     }
 

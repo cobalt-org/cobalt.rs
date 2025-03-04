@@ -17,7 +17,7 @@ pub struct Frontmatter {
     pub description: Option<liquid::model::KString>,
     pub excerpt: Option<liquid::model::KString>,
     pub categories: Vec<liquid::model::KString>,
-    pub tags: Option<Vec<liquid::model::KString>>,
+    pub tags: Vec<liquid::model::KString>,
     pub excerpt_separator: liquid::model::KString,
     pub published_date: Option<DateTime>,
     pub format: SourceFormat,
@@ -56,16 +56,11 @@ impl Frontmatter {
 
         let permalink = permalink.unwrap_or_default();
 
-        if let Some(ref tags) = tags {
+        if let Some(tags) = &tags {
             if tags.iter().any(|x| x.trim().is_empty()) {
                 anyhow::bail!("Empty strings are not allowed in tags");
             }
         }
-        let tags = if tags.as_ref().map(|t| t.len()).unwrap_or(0) == 0 {
-            None
-        } else {
-            tags
-        };
         let fm = Frontmatter {
             pagination: pagination
                 .and_then(|p| pagination::PaginationConfig::from_config(p, &permalink)),
@@ -75,7 +70,7 @@ impl Frontmatter {
             description,
             excerpt,
             categories: categories.unwrap_or_default(),
-            tags,
+            tags: tags.unwrap_or_default(),
             excerpt_separator: excerpt_separator.unwrap_or_else(|| "\n\n".into()),
             published_date,
             format: format.unwrap_or_default(),
