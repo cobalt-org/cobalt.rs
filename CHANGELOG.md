@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 <!-- next-header -->
 ## [Unreleased] - ReleaseDate
 
+### Fixes
+
+- Always include `page.tags`
+
 ## [0.19.7] - 2025-02-27
 
 ### Compatibility
