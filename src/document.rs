@@ -92,6 +92,20 @@ impl Document {
     pub(crate) fn to_jsonfeed(&self, root_url: &str) -> jsonfeed::Item {
         let link = format!("{}/{}", root_url, &self.url_path);
 
+        let tags = if !self.front.tags.is_empty() {
+            self.front
+                .tags
+                .iter()
+                .map(|s| s.as_str().to_owned())
+                .collect()
+        } else {
+            self.front
+                .categories
+                .iter()
+                .map(|s| s.as_str().to_owned())
+                .collect()
+        };
+
         jsonfeed::Item {
             id: link.clone(),
             url: Some(link),
@@ -100,19 +114,7 @@ impl Document {
                 self.description_to_str().unwrap_or_else(|| "".into()),
             ),
             date_published: self.front.published_date.map(|date| date.to_rfc2822()),
-            tags: Some(
-                self.front
-                    .tags
-                    .as_ref()
-                    .map(|tags| tags.iter().map(|s| s.as_str().to_owned()).collect())
-                    .unwrap_or_else(|| {
-                        self.front
-                            .categories
-                            .iter()
-                            .map(|s| s.as_str().to_owned())
-                            .collect()
-                    }),
-            ),
+            tags: Some(tags),
             ..Default::default()
         }
     }
@@ -328,10 +330,11 @@ fn document_attributes(
             .map(Value::scalar)
             .collect(),
     );
+    let tags = Value::Array(front.tags.iter().cloned().map(Value::scalar).collect());
     // Reason for `file`:
     // - Allow access to assets in the original location
     // - Ease linking back to page's source
-    let file: Object = vec![
+    let file: Object = [
         (
             "permalink".into(),
             Value::scalar(source_file.as_str().to_owned()),
@@ -349,7 +352,7 @@ fn document_attributes(
     ]
     .into_iter()
     .collect();
-    let attributes = vec![
+    let attributes = [
         ("permalink".into(), Value::scalar(url_path.to_owned())),
         ("title".into(), Value::scalar(front.title.clone())),
         ("slug".into(), Value::scalar(front.slug.clone())),
@@ -358,6 +361,7 @@ fn document_attributes(
             Value::scalar(front.description.as_deref().unwrap_or("").to_owned()),
         ),
         ("categories".into(), categories),
+        ("tags".into(), tags),
         ("is_draft".into(), Value::scalar(front.is_draft)),
         ("weight".into(), Value::scalar(front.weight)),
         ("file".into(), Value::Object(file)),
@@ -365,11 +369,6 @@ fn document_attributes(
         ("data".into(), Value::Object(front.data.clone())),
     ];
     let mut attributes: Object = attributes.into_iter().collect();
-
-    if let Some(ref tags) = front.tags {
-        let tags = Value::Array(tags.iter().cloned().map(Value::scalar).collect());
-        attributes.insert("tags".into(), tags);
-    }
 
     if let Some(ref published_date) = front.published_date {
         attributes.insert("published_date".into(), Value::scalar(*published_date));
