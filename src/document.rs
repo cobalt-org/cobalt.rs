@@ -330,6 +330,7 @@ fn document_attributes(
             .map(Value::scalar)
             .collect(),
     );
+    let tags = Value::Array(front.tags.iter().cloned().map(Value::scalar).collect());
     // Reason for `file`:
     // - Allow access to assets in the original location
     // - Ease linking back to page's source
@@ -360,6 +361,7 @@ fn document_attributes(
             Value::scalar(front.description.as_deref().unwrap_or("").to_owned()),
         ),
         ("categories".into(), categories),
+        ("tags".into(), tags),
         ("is_draft".into(), Value::scalar(front.is_draft)),
         ("weight".into(), Value::scalar(front.weight)),
         ("file".into(), Value::Object(file)),
@@ -367,11 +369,6 @@ fn document_attributes(
         ("data".into(), Value::Object(front.data.clone())),
     ];
     let mut attributes: Object = attributes.into_iter().collect();
-
-    if !front.tags.is_empty() {
-        let tags = Value::Array(front.tags.iter().cloned().map(Value::scalar).collect());
-        attributes.insert("tags".into(), tags);
-    }
 
     if let Some(ref published_date) = front.published_date {
         attributes.insert("published_date".into(), Value::scalar(*published_date));
