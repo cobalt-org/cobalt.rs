@@ -92,6 +92,16 @@ impl Document {
     pub(crate) fn to_jsonfeed(&self, root_url: &str) -> jsonfeed::Item {
         let link = format!("{}/{}", root_url, &self.url_path);
 
+        let tags = if let Some(tags) = self.front.tags.as_ref() {
+            tags.iter().map(|s| s.as_str().to_owned()).collect()
+        } else {
+            self.front
+                .categories
+                .iter()
+                .map(|s| s.as_str().to_owned())
+                .collect()
+        };
+
         jsonfeed::Item {
             id: link.clone(),
             url: Some(link),
@@ -100,19 +110,7 @@ impl Document {
                 self.description_to_str().unwrap_or_else(|| "".into()),
             ),
             date_published: self.front.published_date.map(|date| date.to_rfc2822()),
-            tags: Some(
-                self.front
-                    .tags
-                    .as_ref()
-                    .map(|tags| tags.iter().map(|s| s.as_str().to_owned()).collect())
-                    .unwrap_or_else(|| {
-                        self.front
-                            .categories
-                            .iter()
-                            .map(|s| s.as_str().to_owned())
-                            .collect()
-                    }),
-            ),
+            tags: Some(tags),
             ..Default::default()
         }
     }
