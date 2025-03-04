@@ -333,7 +333,7 @@ fn document_attributes(
     // Reason for `file`:
     // - Allow access to assets in the original location
     // - Ease linking back to page's source
-    let file: Object = vec![
+    let file: Object = [
         (
             "permalink".into(),
             Value::scalar(source_file.as_str().to_owned()),
@@ -351,7 +351,7 @@ fn document_attributes(
     ]
     .into_iter()
     .collect();
-    let attributes = vec![
+    let attributes = [
         ("permalink".into(), Value::scalar(url_path.to_owned())),
         ("title".into(), Value::scalar(front.title.clone())),
         ("slug".into(), Value::scalar(front.slug.clone())),
