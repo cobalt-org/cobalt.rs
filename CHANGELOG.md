@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 <!-- next-header -->
 ## [Unreleased] - ReleaseDate
 
+### Fixes
+
+- *(pagination)* Don't panic when `all` paginator has no content
+
 ## [0.19.8] - 2025-03-04
 
 ### Fixes
