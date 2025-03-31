@@ -4,7 +4,7 @@ use crate::cobalt_model::pagination::PaginationConfig;
 use crate::cobalt_model::slug;
 use crate::document::Document;
 
-use super::{Result, ValueView, create_all_paginators, helpers, paginator, sort_posts};
+use super::{Result, ValueView, all, helpers, paginator, sort_posts};
 use helpers::extract_tags;
 use paginator::Paginator;
 
@@ -12,38 +12,10 @@ use paginator::Paginator;
 pub(crate) fn create_tags_paginators(
     all_posts: &[&liquid::model::Value],
     doc: &Document,
-    pagination_cfg: &PaginationConfig,
+    config: &PaginationConfig,
 ) -> Result<Vec<Paginator>> {
     let mut per_tags = distribute_posts_by_tags(all_posts)?;
-
-    // create all other paginators
-    let mut tag_paginators: TagPaginators = per_tags
-        .iter_mut()
-        .try_fold(TagPaginators::default(), |mut acc, (tag, posts)| {
-            sort_posts(posts, pagination_cfg);
-            let cur_tag_paginators = create_all_paginators(
-                posts,
-                doc,
-                pagination_cfg,
-                Some(&liquid::model::Value::scalar(tag.to_owned())),
-            )?;
-            acc.firsts_of_tags.push(cur_tag_paginators[0].clone());
-            acc.paginators.extend(cur_tag_paginators.into_iter());
-            Ok(acc)
-        })
-        .or_else(std::result::Result::<_, anyhow::Error>::Err)?;
-
-    tag_paginators.firsts_of_tags.sort_unstable_by_key(|p| {
-        p.index_title
-            .as_ref()
-            .map(|index_title| slug::slugify(index_title.to_kstr()).to_lowercase())
-    });
-    let first = Paginator {
-        indexes: Some(tag_paginators.firsts_of_tags),
-        ..Default::default()
-    };
-    tag_paginators.paginators.insert(0, first);
-    Ok(tag_paginators.paginators)
+    walk_tags(&mut per_tags, config, doc)
 }
 
 fn distribute_posts_by_tags<'a>(
@@ -70,4 +42,39 @@ fn distribute_posts_by_tags<'a>(
 struct TagPaginators {
     firsts_of_tags: Vec<Paginator>,
     paginators: Vec<Paginator>,
+}
+
+fn walk_tags(
+    per_tags: &mut HashMap<String, Vec<&liquid::model::Value>>,
+    config: &PaginationConfig,
+    doc: &Document,
+) -> Result<Vec<Paginator>> {
+    // create all other paginators
+    let mut tag_paginators: TagPaginators = per_tags
+        .iter_mut()
+        .try_fold(TagPaginators::default(), |mut acc, (tag, posts)| {
+            sort_posts(posts, config);
+            let cur_tag_paginators = all::create_all_paginators(
+                posts,
+                doc,
+                config,
+                Some(&liquid::model::Value::scalar(tag.to_owned())),
+            )?;
+            acc.firsts_of_tags.push(cur_tag_paginators[0].clone());
+            acc.paginators.extend(cur_tag_paginators.into_iter());
+            Ok(acc)
+        })
+        .or_else(std::result::Result::<_, anyhow::Error>::Err)?;
+
+    tag_paginators.firsts_of_tags.sort_unstable_by_key(|p| {
+        p.index_title
+            .as_ref()
+            .map(|index_title| slug::slugify(index_title.to_kstr()).to_lowercase())
+    });
+    let first = Paginator {
+        indexes: Some(tag_paginators.firsts_of_tags),
+        ..Default::default()
+    };
+    tag_paginators.paginators.insert(0, first);
+    Ok(tag_paginators.paginators)
 }
