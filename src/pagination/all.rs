@@ -14,6 +14,19 @@ pub(crate) fn create_all_paginators(
     // f32 used here in order to not lose information to ceil the result,
     // otherwise we can lose an index
     let total_indexes = (total_pages as f32 / config.per_page as f32).ceil() as usize;
+
+    if total_pages == 0 {
+        return Ok(vec![paginator::create_paginator(
+            0,
+            total_indexes,
+            total_pages,
+            config,
+            doc,
+            &[],
+            index_title,
+        )?]);
+    }
+
     let paginators: Result<Vec<_>> = all_posts
         .chunks(config.per_page as usize)
         .enumerate()
