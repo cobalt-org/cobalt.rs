@@ -15,7 +15,40 @@ pub(crate) fn create_tags_paginators(
     pagination_cfg: &PaginationConfig,
 ) -> Result<Vec<Paginator>> {
     let mut per_tags = distribute_posts_by_tags(all_posts)?;
+    walk_tags(&mut per_tags, pagination_cfg, doc)
+}
 
+fn distribute_posts_by_tags<'a>(
+    all_posts: &[&'a liquid::model::Value],
+) -> Result<HashMap<String, Vec<&'a liquid::model::Value>>> {
+    let mut per_tags: HashMap<String, Vec<&'a liquid::model::Value>> = HashMap::new();
+    for post in all_posts {
+        if let Some(tags) = extract_tags(post.as_view()) {
+            for tag in tags.values() {
+                let tag = tag
+                    .as_scalar()
+                    .ok_or_else(|| anyhow::format_err!("Should have string tags"))?
+                    .to_kstr()
+                    .into_string();
+                let cur_tag = per_tags.entry(tag).or_default();
+                cur_tag.push(post);
+            }
+        }
+    }
+    Ok(per_tags)
+}
+
+#[derive(Default, Debug)]
+struct TagPaginators {
+    firsts_of_tags: Vec<Paginator>,
+    paginators: Vec<Paginator>,
+}
+
+fn walk_tags(
+    per_tags: &mut HashMap<String, Vec<&liquid::model::Value>>,
+    pagination_cfg: &PaginationConfig,
+    doc: &Document,
+) -> Result<Vec<Paginator>> {
     // create all other paginators
     let mut tag_paginators: TagPaginators = per_tags
         .iter_mut()
@@ -44,30 +77,4 @@ pub(crate) fn create_tags_paginators(
     };
     tag_paginators.paginators.insert(0, first);
     Ok(tag_paginators.paginators)
-}
-
-fn distribute_posts_by_tags<'a>(
-    all_posts: &[&'a liquid::model::Value],
-) -> Result<HashMap<String, Vec<&'a liquid::model::Value>>> {
-    let mut per_tags: HashMap<String, Vec<&'a liquid::model::Value>> = HashMap::new();
-    for post in all_posts {
-        if let Some(tags) = extract_tags(post.as_view()) {
-            for tag in tags.values() {
-                let tag = tag
-                    .as_scalar()
-                    .ok_or_else(|| anyhow::format_err!("Should have string tags"))?
-                    .to_kstr()
-                    .into_string();
-                let cur_tag = per_tags.entry(tag).or_default();
-                cur_tag.push(post);
-            }
-        }
-    }
-    Ok(per_tags)
-}
-
-#[derive(Default, Debug)]
-struct TagPaginators {
-    firsts_of_tags: Vec<Paginator>,
-    paginators: Vec<Paginator>,
 }
