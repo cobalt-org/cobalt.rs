@@ -50,21 +50,22 @@ fn walk_tags(
     doc: &Document,
 ) -> Result<Vec<Paginator>> {
     // create all other paginators
-    let mut tag_paginators: TagPaginators = per_tags
-        .iter_mut()
-        .try_fold(TagPaginators::default(), |mut acc, (tag, posts)| {
-            sort_posts(posts, config);
-            let cur_tag_paginators = all::create_all_paginators(
-                posts,
-                doc,
-                config,
-                Some(&liquid::model::Value::scalar(tag.to_owned())),
-            )?;
-            acc.firsts_of_tags.push(cur_tag_paginators[0].clone());
-            acc.paginators.extend(cur_tag_paginators.into_iter());
-            Ok(acc)
-        })
-        .or_else(std::result::Result::<_, anyhow::Error>::Err)?;
+    let mut tag_paginators = TagPaginators::default();
+    for (tag, posts) in per_tags.iter_mut() {
+        sort_posts(posts, config);
+        let cur_tag_paginators = all::create_all_paginators(
+            posts,
+            doc,
+            config,
+            Some(&liquid::model::Value::scalar(tag.to_owned())),
+        )?;
+        tag_paginators
+            .firsts_of_tags
+            .push(cur_tag_paginators[0].clone());
+        tag_paginators
+            .paginators
+            .extend(cur_tag_paginators.into_iter());
+    }
 
     tag_paginators.firsts_of_tags.sort_unstable_by_key(|p| {
         p.index_title
