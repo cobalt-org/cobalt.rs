@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 <!-- next-header -->
 ## [Unreleased] - ReleaseDate
 
+## [0.19.9] - 2025-03-31
+
 ### Fixes
 
 - *(pagination)* Don't panic when `all` paginator has no content
@@ -741,7 +743,8 @@ this.
 [@tak1n]: https://github.com/tak1n
 
 <!-- next-url -->
-[Unreleased]: https://github.com/cobalt-org/cobalt.rs/compare/v0.19.8...HEAD
+[Unreleased]: https://github.com/cobalt-org/cobalt.rs/compare/v0.19.9...HEAD
+[0.19.9]: https://github.com/cobalt-org/cobalt.rs/compare/v0.19.8...v0.19.9
 [0.19.8]: https://github.com/cobalt-org/cobalt.rs/compare/v0.19.7...v0.19.8
 [0.19.7]: https://github.com/cobalt-org/cobalt.rs/compare/v0.19.6...v0.19.7
 [0.19.6]: https://github.com/cobalt-org/cobalt.rs/compare/v0.19.5...v0.19.6

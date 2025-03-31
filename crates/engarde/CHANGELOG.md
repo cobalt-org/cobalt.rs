@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 <!-- next-header -->
 ## [Unreleased] - ReleaseDate
 
+## [0.1.13] - 2025-03-31
+
 ## [0.1.12] - 2025-02-27
 
 ### Compatibility
@@ -56,7 +58,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [0.1.1] - 2022-04-04
 
 <!-- next-url -->
-[Unreleased]: https://github.com/cobalt-org/cobalt.rs/compare/engarde-v0.1.12...HEAD
+[Unreleased]: https://github.com/cobalt-org/cobalt.rs/compare/engarde-v0.1.13...HEAD
+[0.1.13]: https://github.com/cobalt-org/cobalt.rs/compare/engarde-v0.1.12...engarde-v0.1.13
 [0.1.12]: https://github.com/cobalt-org/cobalt.rs/compare/engarde-v0.1.11...engarde-v0.1.12
 [0.1.11]: https://github.com/cobalt-org/cobalt.rs/compare/engarde-v0.1.10...engarde-v0.1.11
 [0.1.10]: https://github.com/cobalt-org/cobalt.rs/compare/engarde-v0.1.9...engarde-v0.1.10
