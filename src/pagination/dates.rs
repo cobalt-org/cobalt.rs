@@ -2,9 +2,7 @@ use crate::cobalt_model::DateTime;
 use crate::cobalt_model::pagination::DateIndex;
 use crate::document::Document;
 
-use super::{
-    PaginationConfig, Result, ValueView, create_all_paginators, helpers, paginator, sort_posts,
-};
+use super::{PaginationConfig, Result, ValueView, all, helpers, paginator, sort_posts};
 use helpers::extract_scalar;
 use paginator::Paginator;
 
@@ -132,7 +130,7 @@ fn walk_dates(
         current_date.push(date_holder.clone());
         let index_title = liquid::model::Value::array(date_fields_to_array(&current_date));
         let cur_date_paginators =
-            create_all_paginators(&date_holder.posts, doc, config, Some(&index_title))?;
+            all::create_all_paginators(&date_holder.posts, doc, config, Some(&index_title))?;
         if !cur_date_paginators.is_empty() {
             cur_date_holder_paginators.extend(cur_date_paginators);
         } else {

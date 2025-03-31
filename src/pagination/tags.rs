@@ -4,7 +4,7 @@ use crate::cobalt_model::pagination::PaginationConfig;
 use crate::cobalt_model::slug;
 use crate::document::Document;
 
-use super::{Result, ValueView, create_all_paginators, helpers, paginator, sort_posts};
+use super::{Result, ValueView, all, helpers, paginator, sort_posts};
 use helpers::extract_tags;
 use paginator::Paginator;
 
@@ -21,7 +21,7 @@ pub(crate) fn create_tags_paginators(
         .iter_mut()
         .try_fold(TagPaginators::default(), |mut acc, (tag, posts)| {
             sort_posts(posts, pagination_cfg);
-            let cur_tag_paginators = create_all_paginators(
+            let cur_tag_paginators = all::create_all_paginators(
                 posts,
                 doc,
                 pagination_cfg,

@@ -2,9 +2,7 @@ use std::collections::BTreeMap;
 
 use crate::document::Document;
 
-use super::{
-    PaginationConfig, Result, ValueView, create_all_paginators, helpers, paginator, sort_posts,
-};
+use super::{PaginationConfig, Result, ValueView, all, helpers, paginator, sort_posts};
 use helpers::extract_categories;
 use paginator::Paginator;
 
@@ -81,7 +79,7 @@ fn walk_categories(
     let mut cur_cat_paginators_holder: Vec<Paginator> = vec![];
     if !category.cat_path.is_empty() {
         sort_posts(&mut category.posts, config);
-        let cur_cat_paginators = create_all_paginators(
+        let cur_cat_paginators = all::create_all_paginators(
             &category.posts,
             doc,
             config,
