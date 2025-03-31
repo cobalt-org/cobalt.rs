@@ -76,36 +76,36 @@ fn walk_categories(
     config: &PaginationConfig,
     doc: &Document,
 ) -> Result<Vec<Paginator>> {
-    let mut cur_cat_paginators_holder: Vec<Paginator> = vec![];
+    let mut paginators: Vec<Paginator> = vec![];
     if !category.cat_path.is_empty() {
         sort_posts(&mut category.posts, config);
-        let cur_cat_paginators = all::create_all_paginators(
+        let cur_paginators = all::create_all_paginators(
             &category.posts,
             doc,
             config,
             Some(&liquid::model::Value::array(category.cat_path.clone())),
         )?;
-        if !cur_cat_paginators.is_empty() {
-            cur_cat_paginators_holder.extend(cur_cat_paginators);
+        if !cur_paginators.is_empty() {
+            paginators.extend(cur_paginators);
         } else {
             let p = Paginator {
                 index_title: Some(liquid::model::Value::array(category.cat_path.clone())),
                 ..Default::default()
             };
-            cur_cat_paginators_holder.push(p);
+            paginators.push(p);
         }
     } else {
-        cur_cat_paginators_holder.push(Paginator::default());
+        paginators.push(Paginator::default());
     }
     for c in category.sub_cats.values_mut() {
-        let mut sub_paginators_holder = walk_categories(c, config, doc)?;
+        let mut subcat_paginators = walk_categories(c, config, doc)?;
 
-        if let Some(indexes) = cur_cat_paginators_holder[0].indexes.as_mut() {
-            indexes.push(sub_paginators_holder[0].clone());
+        if let Some(indexes) = paginators[0].indexes.as_mut() {
+            indexes.push(subcat_paginators[0].clone());
         } else {
-            cur_cat_paginators_holder[0].indexes = Some(vec![sub_paginators_holder[0].clone()]);
+            paginators[0].indexes = Some(vec![subcat_paginators[0].clone()]);
         }
-        cur_cat_paginators_holder.append(&mut sub_paginators_holder);
+        paginators.append(&mut subcat_paginators);
     }
-    Ok(cur_cat_paginators_holder)
+    Ok(paginators)
 }

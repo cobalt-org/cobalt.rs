@@ -123,35 +123,35 @@ fn walk_dates(
     doc: &Document,
     parent_dates: Option<Vec<DateIndexHolder<'_>>>,
 ) -> Result<Vec<Paginator>> {
-    let mut cur_date_holder_paginators: Vec<Paginator> = vec![];
+    let mut paginators: Vec<Paginator> = vec![];
     let mut current_date = parent_dates.unwrap_or_default();
     if let Some(_field) = date_holder.field {
         sort_posts(&mut date_holder.posts, config);
         current_date.push(date_holder.clone());
         let index_title = liquid::model::Value::array(date_fields_to_array(&current_date));
-        let cur_date_paginators =
+        let cur_paginators =
             all::create_all_paginators(&date_holder.posts, doc, config, Some(&index_title))?;
-        if !cur_date_paginators.is_empty() {
-            cur_date_holder_paginators.extend(cur_date_paginators);
+        if !cur_paginators.is_empty() {
+            paginators.extend(cur_paginators);
         } else {
             let p = Paginator {
                 index_title: Some(index_title),
                 ..Default::default()
             };
-            cur_date_holder_paginators.push(p);
+            paginators.push(p);
         }
     } else {
-        cur_date_holder_paginators.push(Paginator::default());
+        paginators.push(Paginator::default());
     }
     for dh in &mut date_holder.sub_date {
-        let mut sub_paginators_holder = walk_dates(dh, config, doc, Some(current_date.clone()))?;
+        let mut sub_paginators = walk_dates(dh, config, doc, Some(current_date.clone()))?;
 
-        if let Some(indexes) = cur_date_holder_paginators[0].indexes.as_mut() {
-            indexes.push(sub_paginators_holder[0].clone());
+        if let Some(indexes) = paginators[0].indexes.as_mut() {
+            indexes.push(sub_paginators[0].clone());
         } else {
-            cur_date_holder_paginators[0].indexes = Some(vec![sub_paginators_holder[0].clone()]);
+            paginators[0].indexes = Some(vec![sub_paginators[0].clone()]);
         }
-        cur_date_holder_paginators.append(&mut sub_paginators_holder);
+        paginators.append(&mut sub_paginators);
     }
-    Ok(cur_date_holder_paginators)
+    Ok(paginators)
 }
