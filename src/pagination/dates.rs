@@ -9,17 +9,17 @@ use paginator::Paginator;
 pub(crate) fn create_dates_paginators(
     all_posts: &[&liquid::model::Value],
     doc: &Document,
-    pagination_cfg: &PaginationConfig,
+    config: &PaginationConfig,
 ) -> Result<Vec<Paginator>> {
-    let mut root_date = distribute_posts_by_dates(all_posts, pagination_cfg)?;
-    walk_dates(&mut root_date, pagination_cfg, doc, None)
+    let mut root_date = distribute_posts_by_dates(all_posts, config)?;
+    walk_dates(&mut root_date, config, doc, None)
 }
 
 fn distribute_posts_by_dates<'a>(
     all_posts: &[&'a liquid::model::Value],
-    pagination_cfg: &PaginationConfig,
+    config: &PaginationConfig,
 ) -> Result<DateIndexHolder<'a>> {
-    let date_index = &pagination_cfg.date_index;
+    let date_index = &config.date_index;
     let mut root = DateIndexHolder::new(0u32, None);
     for post in all_posts {
         if let Some(published_date) = extract_published_date(post.as_view()) {

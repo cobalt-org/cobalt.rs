@@ -9,10 +9,10 @@ use paginator::Paginator;
 pub(crate) fn create_categories_paginators(
     all_posts: &[&liquid::model::Value],
     doc: &Document,
-    pagination_cfg: &PaginationConfig,
+    config: &PaginationConfig,
 ) -> Result<Vec<Paginator>> {
     let mut root_cat = distribute_posts_by_categories(all_posts)?;
-    let paginators_holder = walk_categories(&mut root_cat, pagination_cfg, doc)?;
+    let paginators_holder = walk_categories(&mut root_cat, config, doc)?;
     Ok(paginators_holder)
 }
 

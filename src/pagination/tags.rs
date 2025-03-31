@@ -12,10 +12,10 @@ use paginator::Paginator;
 pub(crate) fn create_tags_paginators(
     all_posts: &[&liquid::model::Value],
     doc: &Document,
-    pagination_cfg: &PaginationConfig,
+    config: &PaginationConfig,
 ) -> Result<Vec<Paginator>> {
     let mut per_tags = distribute_posts_by_tags(all_posts)?;
-    walk_tags(&mut per_tags, pagination_cfg, doc)
+    walk_tags(&mut per_tags, config, doc)
 }
 
 fn distribute_posts_by_tags<'a>(
@@ -46,18 +46,18 @@ struct TagPaginators {
 
 fn walk_tags(
     per_tags: &mut HashMap<String, Vec<&liquid::model::Value>>,
-    pagination_cfg: &PaginationConfig,
+    config: &PaginationConfig,
     doc: &Document,
 ) -> Result<Vec<Paginator>> {
     // create all other paginators
     let mut tag_paginators: TagPaginators = per_tags
         .iter_mut()
         .try_fold(TagPaginators::default(), |mut acc, (tag, posts)| {
-            sort_posts(posts, pagination_cfg);
+            sort_posts(posts, config);
             let cur_tag_paginators = all::create_all_paginators(
                 posts,
                 doc,
-                pagination_cfg,
+                config,
                 Some(&liquid::model::Value::scalar(tag.to_owned())),
             )?;
             acc.firsts_of_tags.push(cur_tag_paginators[0].clone());
