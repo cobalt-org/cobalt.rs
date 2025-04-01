@@ -71,7 +71,7 @@ impl ServeArgs {
             thread::spawn(move || {
                 let e = serve(&server);
                 if let Some(e) = e.err() {
-                    log::error!("{}", e);
+                    log::error!("{e}");
                 }
                 process::exit(1)
             });
@@ -145,17 +145,17 @@ fn watch(config: &cobalt_model::Config) -> Result<()> {
             // ensure we don't miss anything (normal file walks will miss
             // `_layouts`, etc).
             if event_path.starts_with(&destination) {
-                log::trace!("Ignored file changed {:?}", event);
+                log::trace!("Ignored file changed {event:?}");
                 false
             } else {
-                log::debug!("Page changed {:?}", event);
+                log::debug!("Page changed {event:?}");
                 true
             }
         });
         if rebuild {
             let result = build::build(config.clone());
             if let Err(fail) = result {
-                log::error!("build failed\n{:?}", fail);
+                log::error!("build failed\n{fail:?}");
             }
         }
     }

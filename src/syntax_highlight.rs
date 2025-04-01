@@ -68,7 +68,7 @@ fn verify_theme(syntax: &SyntaxHighlight, theme: Option<&str>) -> error::Result<
             Ok(true) => {}
             Ok(false) => anyhow::bail!("Syntax theme '{}' is unsupported", theme),
             Err(err) => {
-                log::warn!("Syntax theme named '{}' ignored. Reason: {}", theme, err);
+                log::warn!("Syntax theme named '{theme}' ignored. Reason: {err}");
             }
         };
     }

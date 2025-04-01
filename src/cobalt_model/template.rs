@@ -55,13 +55,13 @@ fn load_partials_from_path(root: path::PathBuf) -> Result<Partials> {
             .to_str()
             .expect("only UTF-8 characters supported in paths")
             .to_owned();
-        trace!("Loading snippet `{}`", rel_path);
+        trace!("Loading snippet `{rel_path}`");
         match files::read_file(file_path) {
             Ok(content) => {
                 source.add(rel_path, content);
             }
             Err(err) => {
-                warn!("Ignoring snippet {}: {}", rel_path, err);
+                warn!("Ignoring snippet {rel_path}: {err}");
             }
         }
     }
