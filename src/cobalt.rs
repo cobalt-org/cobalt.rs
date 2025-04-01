@@ -454,7 +454,7 @@ fn create_rss(
         .build();
 
     let rss_string = channel.to_string();
-    trace!("RSS data: {}", rss_string);
+    trace!("RSS data: {rss_string}");
 
     // create target directories if any exist
     if let Some(parent) = path.parent() {

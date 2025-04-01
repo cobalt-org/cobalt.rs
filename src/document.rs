@@ -40,7 +40,7 @@ impl Document {
         rel_path: &relative_path::RelativePath,
         default_front: cobalt_config::Frontmatter,
     ) -> Result<Document> {
-        trace!("Parsing `{}`", rel_path);
+        trace!("Parsing `{rel_path}`");
         let content = files::read_file(src_path)?;
         let builder = cobalt_config::Document::parse(&content)?;
         let (front, content) = builder.into_parts();

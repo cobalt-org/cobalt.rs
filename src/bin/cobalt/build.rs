@@ -70,7 +70,7 @@ pub(crate) fn clean(config: &cobalt::Config) -> Result<()> {
         Ok(destdir) => destdir,
         Err(e) => {
             log::debug!("No `{}` to clean", config.destination.display());
-            log::debug!("{}", e);
+            log::debug!("{e}");
             return Ok(());
         }
     };
