@@ -137,23 +137,23 @@ doc = false
 [dependencies]
 cobalt-config = { version = "=0.19.6", path = "crates/config", features = ["unstable"] }
 cobalt-core = { version = "=0.19.6", path = "crates/core", features = ["unstable"] }
-clap = { version = "4.5.31", features = ["derive", "wrap_help"] }
+clap = { version = "4.5.35", features = ["derive", "wrap_help"] }
 clap-verbosity-flag = "3.0.2"
 proc-exit = "2.0.2"
 colorchoice = "1.0.3"
 colorchoice-clap = "1.0.6"
 human-panic = "2.0.2"
 scrawl = "2.0.0"
-tempfile = "3.17.1"
+tempfile = "3.19.1"
 relative-path = { version = "1.9.3", features = ["serde"] }
 liquid = "0.26.9"
 liquid-core = "0.26.9"
 liquid-lib = { version = "0.26.9", features = ["jekyll", "shopify", "extra"] }
-deunicode = "1.6.0"
+deunicode = "1.6.1"
 walkdir = "2.5.0"
-time = "0.3.37"
-log = "0.4.26"
-env_logger = "0.11.6"
+time = "0.3.41"
+log = "0.4.27"
+env_logger = "0.11.8"
 rss = "2.0.12"
 jsonfeed = "0.2.0"
 pulldown-cmark = {version="0.13.0", default-features = false, features = ["html"] }
@@ -161,7 +161,7 @@ engarde = { version = "0.1.13", path = "crates/engarde" }
 regex = "1.11.1"
 itertools = "0.14.0"
 ignore = "0.4.23"
-serde = "1.0.218"
+serde = "1.0.219"
 serde_yaml = "0.9.34"
 serde_json = "1.0.140"
 toml = "0.8.20"
