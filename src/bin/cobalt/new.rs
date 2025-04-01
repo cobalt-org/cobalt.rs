@@ -276,10 +276,7 @@ pub(crate) fn create_new_document(
         cobalt_model::files::read_file(&source_path)
             .with_context(|| anyhow::format_err!("Failed to read default: {:?}", source_path))?
     } else {
-        log::debug!(
-            "No custom default provided ({:?}), falling back to built-in",
-            source_path
-        );
+        log::debug!("No custom default provided ({source_path:?}), falling back to built-in");
         if extension != "md" {
             anyhow::bail!("No builtin default for `{}` files, only `md`", extension,);
         }
@@ -333,7 +330,7 @@ fn create_file<P: AsRef<path::Path>>(path: P, content: &str) -> Result<()> {
 }
 
 fn create_file_for_path(path: &path::Path, content: &str) -> Result<()> {
-    log::trace!("Creating file {:?}", path);
+    log::trace!("Creating file {path:?}");
 
     let mut file = fs::OpenOptions::new()
         .write(true)
@@ -438,8 +435,7 @@ fn prepend_date_to_filename(
                 .expect("at least one element is enforced by config validator"))
     );
     log::trace!(
-        "`publish_date_in_filename` setting is activated, prefix filename with date, new filename: {}",
-        file_name
+        "`publish_date_in_filename` setting is activated, prefix filename with date, new filename: {file_name}"
     );
     fs::rename(file, file.with_file_name(file_name))?;
     Ok(())
