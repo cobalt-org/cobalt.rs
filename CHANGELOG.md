@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 <!-- next-header -->
 ## [Unreleased] - ReleaseDate
 
+## [0.19.11] - 2025-04-10
+
 ## [0.19.10] - 2025-04-10
 
 ### Features
@@ -749,7 +751,8 @@ this.
 [@tak1n]: https://github.com/tak1n
 
 <!-- next-url -->
-[Unreleased]: https://github.com/cobalt-org/cobalt.rs/compare/v0.19.10...HEAD
+[Unreleased]: https://github.com/cobalt-org/cobalt.rs/compare/v0.19.11...HEAD
+[0.19.11]: https://github.com/cobalt-org/cobalt.rs/compare/v0.19.10...v0.19.11
 [0.19.10]: https://github.com/cobalt-org/cobalt.rs/compare/v0.19.9...v0.19.10
 [0.19.9]: https://github.com/cobalt-org/cobalt.rs/compare/v0.19.8...v0.19.9
 [0.19.8]: https://github.com/cobalt-org/cobalt.rs/compare/v0.19.7...v0.19.8

@@ -92,7 +92,7 @@ assigning_clones = "allow"  # TODO
 
 [package]
 name = "cobalt-bin"
-version = "0.19.10"
+version = "0.19.11"
 description = "Static site generator written in Rust"
 readme = "README.md"
 categories = ["command-line-utilities"]
