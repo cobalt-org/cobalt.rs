@@ -130,7 +130,7 @@ impl Server {
             for request in server.as_ref().unwrap().incoming_requests() {
                 // handles the request
                 if let Err(e) = static_file_handler(self.source(), request) {
-                    log::error!("{}", e);
+                    log::error!("{e}");
                 }
             }
         }
