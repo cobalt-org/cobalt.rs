@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 <!-- next-header -->
 ## [Unreleased] - ReleaseDate
 
+### Changes
+
+- Switched from libsass to grass
+
 ## [0.19.12] - 2025-04-10
 
 ## [0.19.11] - 2025-04-10
