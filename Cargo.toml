@@ -157,7 +157,7 @@ env_logger = "0.11.8"
 rss = "2.0.12"
 jsonfeed = "0.2.0"
 pulldown-cmark = {version="0.13.0", default-features = false, features = ["html"] }
-engarde = { version = "0.1.13", path = "crates/engarde" }
+engarde = { version = "0.1.14", path = "crates/engarde" }
 regex = "1.11.1"
 itertools = "0.14.0"
 ignore = "0.4.23"
