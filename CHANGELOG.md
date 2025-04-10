@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 <!-- next-header -->
 ## [Unreleased] - ReleaseDate
 
+## [0.20.0] - 2025-04-10
+
 ### Changes
 
 - Switched from libsass to grass
@@ -757,7 +759,8 @@ this.
 [@tak1n]: https://github.com/tak1n
 
 <!-- next-url -->
-[Unreleased]: https://github.com/cobalt-org/cobalt.rs/compare/v0.19.12...HEAD
+[Unreleased]: https://github.com/cobalt-org/cobalt.rs/compare/v0.20.0...HEAD
+[0.20.0]: https://github.com/cobalt-org/cobalt.rs/compare/v0.19.12...v0.20.0
 [0.19.12]: https://github.com/cobalt-org/cobalt.rs/compare/v0.19.11...v0.19.12
 [0.19.11]: https://github.com/cobalt-org/cobalt.rs/compare/v0.19.10...v0.19.11
 [0.19.10]: https://github.com/cobalt-org/cobalt.rs/compare/v0.19.9...v0.19.10
