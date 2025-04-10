@@ -18,8 +18,14 @@ on:
   push:
     tags:
     - "v*.*.*"
+
 env:
   BIN_NAME: cobalt
+
+# We need this to be able to create releases.
+permissions:
+  contents: write
+
 jobs:
   create-release:
     name: create-release
