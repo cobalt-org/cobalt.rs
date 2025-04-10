@@ -660,6 +660,7 @@ dependencies = [
 name = "engarde"
 version = "0.1.13"
 dependencies = [
+ "flate2",
  "syntect",
  "thiserror 1.0.69",
 ]
