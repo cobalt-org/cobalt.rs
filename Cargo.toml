@@ -137,7 +137,7 @@ doc = false
 [dependencies]
 cobalt-config = { version = "=0.19.7", path = "crates/config", features = ["unstable"] }
 cobalt-core = { version = "=0.19.7", path = "crates/core", features = ["unstable"] }
-clap = { version = "4.5.35", features = ["derive", "wrap_help"] }
+clap = { version = "4.5.37", features = ["derive", "wrap_help"] }
 clap-verbosity-flag = "3.0.2"
 proc-exit = "2.0.2"
 colorchoice = "1.0.3"
@@ -149,7 +149,7 @@ relative-path = { version = "1.9.3", features = ["serde"] }
 liquid = "0.26.9"
 liquid-core = "0.26.9"
 liquid-lib = { version = "0.26.9", features = ["jekyll", "shopify", "extra"] }
-deunicode = "1.6.1"
+deunicode = "1.6.2"
 walkdir = "2.5.0"
 time = "0.3.41"
 log = "0.4.27"
@@ -164,7 +164,7 @@ ignore = "0.4.23"
 serde = "1.0.219"
 serde_yaml = "0.9.34"
 serde_json = "1.0.140"
-toml = "0.8.20"
+toml = "0.8.22"
 normalize-line-endings = "0.3.0"
 sitemap = "0.4.1"
 open = "5.3.2"
@@ -176,9 +176,9 @@ notify = { version = "8.0.0", optional = true, default-features = false, feature
 grass = { version = "0.13.4", features = ["random"], default-features = false, optional = true }
 
 html-minifier = {version="5.0.0", optional = true }
-anyhow = "1.0.97"
+anyhow = "1.0.98"
 anstream = "0.6.18"
-chrono = "0.4.40"
+chrono = "0.4.41"
 anstyle = "1.0.10"
 
 [dev-dependencies]
