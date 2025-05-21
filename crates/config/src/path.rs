@@ -1,8 +1,8 @@
 use deunicode;
 use itertools::Itertools;
 
-static SLUG_INVALID_CHARS: once_cell::sync::Lazy<regex::Regex> =
-    once_cell::sync::Lazy::new(|| regex::Regex::new(r"([^a-zA-Z0-9]+)").unwrap());
+static SLUG_INVALID_CHARS: std::sync::LazyLock<regex::Regex> =
+    std::sync::LazyLock::new(|| regex::Regex::new(r"([^a-zA-Z0-9]+)").unwrap());
 
 /// Create a slug for a given file.  Correlates to Jekyll's :slug path tag
 pub fn slugify<S: AsRef<str>>(name: S) -> liquid_core::model::KString {
@@ -186,7 +186,7 @@ pub fn split_ext(name: &str) -> (&str, Option<&str>) {
         .unwrap_or_else(|| (name, None))
 }
 
-static DATE_PREFIX_REF: once_cell::sync::Lazy<regex::Regex> = once_cell::sync::Lazy::new(|| {
+static DATE_PREFIX_REF: std::sync::LazyLock<regex::Regex> = std::sync::LazyLock::new(|| {
     regex::Regex::new(r"^(\d{4})-(\d{1,2})-(\d{1,2})[- ](.*)$").unwrap()
 });
 
