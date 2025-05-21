@@ -50,7 +50,7 @@ fn parse_frontmatter(front: &str) -> Result<Frontmatter> {
 }
 
 #[cfg(feature = "preview_unstable")]
-static FRONT_MATTER: once_cell::sync::Lazy<regex::Regex> = once_cell::sync::Lazy::new(|| {
+static FRONT_MATTER: std::sync::LazyLock<regex::Regex> = std::sync::LazyLock::new(|| {
     regex::RegexBuilder::new(r"\A---\s*\r?\n([\s\S]*\n)?---\s*\r?\n(.*)")
         .dot_matches_new_line(true)
         .build()
@@ -75,14 +75,14 @@ fn split_document(content: &str) -> (Option<&str>, &str) {
 
 #[cfg(not(feature = "preview_unstable"))]
 fn split_document(content: &str) -> (Option<&str>, &str) {
-    static FRONT_MATTER_DIVIDE: once_cell::sync::Lazy<regex::Regex> =
-        once_cell::sync::Lazy::new(|| {
+    static FRONT_MATTER_DIVIDE: std::sync::LazyLock<regex::Regex> =
+        std::sync::LazyLock::new(|| {
             regex::RegexBuilder::new(r"---\s*\r?\n")
                 .dot_matches_new_line(true)
                 .build()
                 .unwrap()
         });
-    static FRONT_MATTER: once_cell::sync::Lazy<regex::Regex> = once_cell::sync::Lazy::new(|| {
+    static FRONT_MATTER: std::sync::LazyLock<regex::Regex> = std::sync::LazyLock::new(|| {
         regex::RegexBuilder::new(r"\A---\s*\r?\n([\s\S]*\n)?---\s*\r?\n")
             .dot_matches_new_line(true)
             .build()
@@ -111,8 +111,8 @@ fn split_document(content: &str) -> (Option<&str>, &str) {
 
 #[cfg(not(feature = "preview_unstable"))]
 fn deprecated_split_front_matter(content: &str) -> (Option<&str>, &str) {
-    static FRONT_MATTER_DIVIDE: once_cell::sync::Lazy<regex::Regex> =
-        once_cell::sync::Lazy::new(|| {
+    static FRONT_MATTER_DIVIDE: std::sync::LazyLock<regex::Regex> =
+        std::sync::LazyLock::new(|| {
             regex::RegexBuilder::new(r"(\A|\n)---\s*\r?\n")
                 .dot_matches_new_line(true)
                 .build()
