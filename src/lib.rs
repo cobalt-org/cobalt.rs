@@ -17,3 +17,7 @@ mod pagination;
 mod syntax_highlight;
 
 pub use crate::syntax_highlight::SyntaxHighlight;
+
+#[doc = include_str!("../README.md")]
+#[cfg(doctest)]
+pub struct ReadmeDoctests;
