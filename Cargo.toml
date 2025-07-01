@@ -154,7 +154,7 @@ colorchoice-clap = "1.0.6"
 human-panic = "2.0.2"
 scrawl = "2.0.0"
 tempfile = "3.19.1"
-relative-path = { version = "1.9.3", features = ["serde"] }
+relative-path = { version = "2.0.0", features = ["serde"] }
 liquid = "0.26.9"
 liquid-core = "0.26.9"
 liquid-lib = { version = "0.26.9", features = ["jekyll", "shopify", "extra"] }

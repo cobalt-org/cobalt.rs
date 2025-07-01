@@ -27,7 +27,7 @@ liquid-core = "0.26.9"
 log = "0.4.27"
 serde = "1.0.219"
 status = { version = "0.0.10", features = ["send_sync"] }
-relative-path = { version = "1.9.3", features = ["serde"] }
+relative-path = { version = "2.0.0", features = ["serde"] }
 
 [lints]
 workspace = true

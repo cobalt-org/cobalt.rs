@@ -26,7 +26,7 @@ log = "0.4.27"
 regex = "1.11.1"
 serde = "1.0.219"
 serde_yaml = "0.9.34"
-relative-path = { version = "1.9.3", features = ["serde"] }
+relative-path = { version = "2.0.0", features = ["serde"] }
 status = { version = "0.0.10", features = ["send_sync"] }
 deunicode = "1.6.2"
 itertools = "0.14.0"
