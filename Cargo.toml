@@ -151,7 +151,7 @@ clap-verbosity-flag = "3.0.2"
 proc-exit = "2.0.2"
 colorchoice = "1.0.3"
 colorchoice-clap = "1.0.6"
-human-panic = "2.0.2"
+human-panic = "2.0.3"
 scrawl = "2.0.0"
 tempfile = "3.19.1"
 relative-path = { version = "2.0.0", features = ["serde"] }
