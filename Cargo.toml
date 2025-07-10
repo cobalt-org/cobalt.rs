@@ -191,7 +191,7 @@ chrono = "0.4.41"
 anstyle = "1.0.10"
 
 [dev-dependencies]
-trycmd = "0.15.9"
+trycmd = "0.15.10"
 snapbox = { version = "0.6.21", features = ["diff"] }
 
 [features]
