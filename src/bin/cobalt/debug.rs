@@ -6,7 +6,7 @@ use crate::error::Result;
 pub(crate) enum DebugCommands {
     /// Prints post-processed config
     Config {
-        #[command(flatten, next_help_heading = "Confg")]
+        #[command(flatten, next_help_heading = "Config")]
         config: args::ConfigArgs,
     },
 
