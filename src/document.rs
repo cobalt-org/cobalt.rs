@@ -10,6 +10,7 @@ use liquid::ValueView;
 use liquid::model::Value;
 use log::trace;
 use regex::Regex;
+use rss::Category;
 
 use crate::cobalt_model;
 use crate::cobalt_model::Minify;
@@ -84,6 +85,13 @@ impl Document {
             .guid(Some(guid))
             .pub_date(self.front.published_date.map(|date| date.to_rfc2822()))
             .description(self.description_to_str())
+            .categories(
+                self.front
+                    .tags
+                    .iter()
+                    .map(|c| Category::from(c.as_str()))
+                    .collect::<Vec<_>>(),
+            )
             .build();
         Ok(item)
     }
