@@ -2,7 +2,8 @@ use std::path::Path;
 use syntect::easy::HighlightLines;
 use syntect::highlighting::ThemeSet;
 use syntect::html::{
-    IncludeBackground, append_highlighted_html_for_styled_line, start_highlighted_html_snippet,
+    ClassStyle, ClassedHTMLGenerator, IncludeBackground, append_highlighted_html_for_styled_line,
+    start_highlighted_html_snippet,
 };
 use syntect::parsing::{SyntaxReference, SyntaxSet};
 use syntect::util::LinesWithEndings;
@@ -15,6 +16,8 @@ pub struct Syntax {
     theme_set: ThemeSet,
     default_theme: Option<String>,
 }
+
+const CSS_THEME: &str = "css";
 
 impl Syntax {
     pub fn new() -> Self {
@@ -32,11 +35,15 @@ impl Syntax {
     }
 
     pub fn has_theme(&self, name: &str) -> bool {
-        self.theme_set.themes.contains_key(name)
+        name == CSS_THEME || self.theme_set.themes.contains_key(name)
     }
 
     pub fn themes(&self) -> impl Iterator<Item = String> + '_ {
-        self.theme_set.themes.keys().cloned()
+        let mut themes: Vec<_> = self.theme_set.themes.keys().cloned().collect();
+        themes.push(CSS_THEME.to_string());
+        themes.sort_by_key(|a| a.to_ascii_lowercase());
+
+        themes.into_iter()
     }
 
     pub fn syntaxes(&self) -> impl Iterator<Item = String> + '_ {
@@ -66,32 +73,63 @@ impl Syntax {
         self.default_theme = Some(theme.into());
     }
 
+    fn format_inline_theme(&self, code: &str, theme: &str, syntax: &SyntaxReference) -> String {
+        let theme = &self.theme_set.themes[theme];
+
+        // Essentially the same as `syntect::html::highlighted_html_for_string`,
+        // but adding <code> tags between the <pre> tags
+        // See: https://docs.rs/syntect/5.0.0/src/syntect/html.rs.html#269
+        let mut highlighter = HighlightLines::new(syntax, theme);
+        let (mut output, bg) = start_highlighted_html_snippet(theme);
+        output.push_str("<code>");
+
+        for line in LinesWithEndings::from(code) {
+            let regions = highlighter.highlight_line(line, &self.syntax_set).unwrap();
+            append_highlighted_html_for_styled_line(
+                &regions[..],
+                IncludeBackground::IfDifferent(bg),
+                &mut output,
+            )
+            .unwrap();
+        }
+
+        output.push_str("</code></pre>\n");
+        output
+    }
+
+    fn format_css_theme(&self, code: &str, lang: Option<&str>, syntax: &SyntaxReference) -> String {
+        let mut html_generator = ClassedHTMLGenerator::new_with_class_style(
+            syntax,
+            &self.syntax_set,
+            ClassStyle::SpacedPrefixed { prefix: "c-" },
+        );
+
+        for line in LinesWithEndings::from(code) {
+            html_generator
+                .parse_html_for_line_which_includes_newline(line)
+                .unwrap();
+        }
+
+        let language_class = lang.map(|l| format!("language-{l} ")).unwrap_or_default();
+        let mut output = format!("<pre class=\"{language_class}highlighter-syntect\">");
+        output.push_str("<code class=\"highlight\">");
+        output.push_str(&html_generator.finalize());
+        output.push_str("</code></pre>");
+
+        output
+    }
+
     pub fn format(&self, code: &str, lang: Option<&str>, theme: Option<&str>) -> String {
         if let Some(theme) = theme.or_else(|| self.default_theme()) {
-            let theme = &self.theme_set.themes[theme];
-
             let syntax = lang
                 .and_then(|l| self.syntax_set.find_syntax_by_token(l))
                 .unwrap_or_else(|| self.syntax_set.find_syntax_plain_text());
 
-            // Essentially the same as `syntect::html::highlighted_html_for_string`,
-            // but adding <code> tags between the <pre> tags
-            // See: https://docs.rs/syntect/5.0.0/src/syntect/html.rs.html#269
-            let mut highlighter = HighlightLines::new(syntax, theme);
-            let (mut output, bg) = start_highlighted_html_snippet(theme);
-            output.push_str("<code>");
-
-            for line in LinesWithEndings::from(code) {
-                let regions = highlighter.highlight_line(line, &self.syntax_set).unwrap();
-                append_highlighted_html_for_styled_line(
-                    &regions[..],
-                    IncludeBackground::IfDifferent(bg),
-                    &mut output,
-                )
-                .unwrap();
+            if theme == CSS_THEME {
+                self.format_css_theme(code, lang, syntax)
+            } else {
+                self.format_inline_theme(code, theme, syntax)
             }
-            output.push_str("</code></pre>\n");
-            output
         } else {
             crate::Raw::new().format(code, lang, theme)
         }
