@@ -3,7 +3,7 @@ use syntect::easy::HighlightLines;
 use syntect::highlighting::ThemeSet;
 use syntect::html::{
     ClassStyle, ClassedHTMLGenerator, IncludeBackground, append_highlighted_html_for_styled_line,
-    start_highlighted_html_snippet,
+    css_for_theme_with_class_style, start_highlighted_html_snippet,
 };
 use syntect::parsing::{SyntaxReference, SyntaxSet};
 use syntect::util::LinesWithEndings;
@@ -34,6 +34,10 @@ impl Syntax {
         self.syntax_set = builder.build();
     }
 
+    pub fn css_theme_name() -> &'static str {
+        CSS_THEME
+    }
+
     pub fn has_theme(&self, name: &str) -> bool {
         name == CSS_THEME || self.theme_set.themes.contains_key(name)
     }
@@ -44,6 +48,16 @@ impl Syntax {
         themes.sort_by_key(|a| a.to_ascii_lowercase());
 
         themes.into_iter()
+    }
+
+    fn css_class_style() -> ClassStyle {
+        ClassStyle::SpacedPrefixed { prefix: "c-" }
+    }
+
+    /// Get the content of a css file to apply the specified color theme when using the 'css' theme
+    pub fn css_for_theme(&self, name: &str) -> String {
+        let theme = &self.theme_set.themes[name];
+        css_for_theme_with_class_style(theme, Self::css_class_style()).unwrap()
     }
 
     pub fn syntaxes(&self) -> impl Iterator<Item = String> + '_ {
@@ -101,7 +115,7 @@ impl Syntax {
         let mut html_generator = ClassedHTMLGenerator::new_with_class_style(
             syntax,
             &self.syntax_set,
-            ClassStyle::SpacedPrefixed { prefix: "c-" },
+            Self::css_class_style(),
         );
 
         for line in LinesWithEndings::from(code) {
