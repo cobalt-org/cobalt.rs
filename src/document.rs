@@ -79,19 +79,24 @@ impl Document {
             .permalink(true)
             .build();
 
+        let mut categories = self
+            .front
+            .tags
+            .iter()
+            .map(|c| Category::from(c.as_str()))
+            .collect::<Vec<_>>();
+
+        if !self.front.categories.is_empty() {
+            categories.push(self.front.categories.join("/").into());
+        }
+
         let item = rss::ItemBuilder::default()
             .title(Some(self.front.title.as_str().to_owned()))
             .link(Some(link))
             .guid(Some(guid))
             .pub_date(self.front.published_date.map(|date| date.to_rfc2822()))
             .description(self.description_to_str())
-            .categories(
-                self.front
-                    .tags
-                    .iter()
-                    .map(|c| Category::from(c.as_str()))
-                    .collect::<Vec<_>>(),
-            )
+            .categories(categories)
             .build();
         Ok(item)
     }
