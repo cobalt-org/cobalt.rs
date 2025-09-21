@@ -1,3 +1,4 @@
+use std::path::PathBuf;
 use crate::args;
 use crate::error::Result;
 
@@ -34,6 +35,18 @@ pub(crate) enum HighlightCommands {
         #[command(flatten, next_help_heading = "Config")]
         config: args::ConfigArgs,
     },
+
+    /// Save the css file for a theme
+    SaveThemeCss {
+        #[command(flatten, next_help_heading = "Config")]
+        config: args::ConfigArgs,
+
+        #[arg(help = "Name of the theme to generate a css file for")]
+        name: String,
+
+        #[arg(help = "Path of the css file")]
+        path: PathBuf,
+    }
 }
 
 impl DebugCommands {
@@ -57,6 +70,19 @@ impl DebugCommands {
                 for name in config.syntax.syntaxes() {
                     println!("{name}");
                 }
+            }
+            Self::Highlight(HighlightCommands::SaveThemeCss { config, name, path }) => {
+                let config = config.load_config()?;
+                let config = cobalt::cobalt_model::Config::from_config(config)?;
+                if name == engarde::Syntax::css_theme_name() ||! config.syntax.has_theme(name) {
+                    return Err(anyhow::anyhow!("Unknown theme: {name}"));
+                }
+
+                let css = config.syntax.css_for_theme(&name);
+
+                std::fs::write(path, css)?;
+
+                println!("CSS theme '{name}' successfully saved to: {}", path.display());
             }
             Self::Files { collection, config } => {
                 let config = config.load_config()?;
