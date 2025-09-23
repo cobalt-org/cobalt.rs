@@ -3,6 +3,7 @@ layout: posts.liquid
 
 title:   My second Blogpost
 published_date:    2015-01-02 10:00:00 +0100
+categories: [lorem, ipsum]
 ---
 # {{ page.title }}
 
