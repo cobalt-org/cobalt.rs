@@ -101,7 +101,7 @@ lto = true
 
 [package]
 name = "cobalt-bin"
-version = "0.20.0"
+version = "0.20.1"
 description = "Static site generator written in Rust"
 readme = "README.md"
 categories = ["command-line-utilities"]
@@ -144,8 +144,8 @@ name = "cobalt"
 doc = false
 
 [dependencies]
-cobalt-config = { version = "=0.19.7", path = "crates/config", features = ["unstable"] }
-cobalt-core = { version = "=0.19.7", path = "crates/core", features = ["unstable"] }
+cobalt-config = { version = "=0.19.8", path = "crates/config", features = ["unstable"] }
+cobalt-core = { version = "=0.19.8", path = "crates/core", features = ["unstable"] }
 clap = { version = "4.5.37", features = ["derive", "wrap_help"] }
 clap-verbosity-flag = "3.0.2"
 proc-exit = "2.0.2"
@@ -179,7 +179,7 @@ sitemap = "0.4.1"
 open = "5.3.2"
 dunce = "1.0.5"
 
-file-serve = { version = "0.3.8", path = "crates/file-serve", optional = true }
+file-serve = { version = "0.3.9", path = "crates/file-serve", optional = true }
 notify = { version = "8.0.0", optional = true, default-features = false, features = ["macos_fsevent"] }
 
 grass = { version = "0.13.4", features = ["random"], default-features = false, optional = true }

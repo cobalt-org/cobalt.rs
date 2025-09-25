@@ -330,7 +330,7 @@ checksum = "f46ad14479a25103f283c0f10005961cf086d8dc42205bb44c46ac563475dca6"
 
 [[package]]
 name = "cobalt-bin"
-version = "0.20.0"
+version = "0.20.1"
 dependencies = [
  "anstream",
  "anstyle",
@@ -380,7 +380,7 @@ dependencies = [
 
 [[package]]
 name = "cobalt-config"
-version = "0.19.7"
+version = "0.19.8"
 dependencies = [
  "deunicode",
  "itertools 0.14.0",
@@ -396,7 +396,7 @@ dependencies = [
 
 [[package]]
 name = "cobalt-core"
-version = "0.19.7"
+version = "0.19.8"
 dependencies = [
  "cobalt-config",
  "ignore",
@@ -749,7 +749,7 @@ checksum = "37909eebbb50d72f9059c3b6d82c0463f2ff062c9e95845c43a6c9c0355411be"
 
 [[package]]
 name = "file-serve"
-version = "0.3.8"
+version = "0.3.9"
 dependencies = [
  "log",
  "mime",
