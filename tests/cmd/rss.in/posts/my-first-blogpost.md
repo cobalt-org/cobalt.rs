@@ -4,6 +4,7 @@ layout: posts.liquid
 title:   My first Blogpost
 description: It's my first blog post
 published_date:    2016-01-01 21:00:00 +0100
+tags: [blog, first]
 ---
 # {{ page.title }}
 
