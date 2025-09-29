@@ -2,20 +2,17 @@
 name = "file-serve"
 version = "0.3.9"
 description = "HTTP Static File Server"
-homepage = "https://github.com/cobalt-org/cobalt.rs/tree/master/crates/file-serve"
-documentation = "http://docs.rs/file-serve"
-readme = "README.md"
 categories = ["development-tools::testing", "web-programming::http-server"]
 keywords = ["serve", "http-server", "static-files", "http", "server"]
-license.workspace = true
 repository.workspace = true
+license.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 include.workspace = true
 
 [package.metadata.docs.rs]
 all-features = true
-rustdoc-args = ["--cfg", "docsrs"]
+rustdoc-args = ["--generate-link-to-definition"]
 
 [package.metadata.release]
 pre-release-replacements = [

@@ -1,4 +1,4 @@
-#![cfg_attr(docsrs, feature(doc_auto_cfg))]
+#![cfg_attr(docsrs, feature(doc_cfg))]
 #![warn(clippy::print_stderr)]
 #![warn(clippy::print_stdout)]
 #![allow(clippy::self_named_module_files)] // false positive

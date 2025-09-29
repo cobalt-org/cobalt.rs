@@ -3,17 +3,17 @@ name = "cobalt-core"
 version = "0.19.8"
 description = "Static site generator written in Rust"
 readme = "../../README.md"
-keywords = ["static", "site", "generator"]
 categories = ["command-line-utilities"]
-license.workspace = true
+keywords = ["static", "site", "generator"]
 repository.workspace = true
+license.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 include.workspace = true
 
 [package.metadata.docs.rs]
 all-features = true
-rustdoc-args = ["--cfg", "docsrs"]
+rustdoc-args = ["--generate-link-to-definition"]
 
 [features]
 unstable = []

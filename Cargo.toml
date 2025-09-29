@@ -125,7 +125,7 @@ exclude = [
 
 [package.metadata.docs.rs]
 all-features = true
-rustdoc-args = ["--cfg", "docsrs", "--generate-link-to-definition"]
+rustdoc-args = ["--generate-link-to-definition"]
 
 [package.metadata.release]
 pre-release-replacements = [
