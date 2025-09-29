@@ -11,6 +11,7 @@ fn cli_tests() {
         t.skip("tests/cmd/custom_syntax_highlighting.md");
         t.skip("tests/cmd/syntax_highlighting.md");
         t.skip("tests/cmd/syntax_highlighting_disabled.md");
+        t.skip("tests/cmd/syntax_highlighting_css.md");
     }
     #[cfg(not(feature = "serve"))]
     {
