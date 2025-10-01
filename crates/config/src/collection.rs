@@ -93,7 +93,7 @@ impl Default for PostCollection {
             title: Default::default(),
             description: Default::default(),
             dir: RelPath::from_unchecked("posts"),
-            drafts_dir: Default::default(),
+            drafts_dir: Some(RelPath::from_unchecked("_drafts")),
             order: Default::default(),
             rss: Default::default(),
             jsonfeed: Default::default(),
