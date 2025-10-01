@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 <!-- next-header -->
 ## [Unreleased] - ReleaseDate
 
+### Features
+
+- Built-in `css` theme
+- Function for dumping CSS to configure the `css` theme
+
 ## [0.1.14] - 2025-04-10
 
 ## [0.1.13] - 2025-03-31

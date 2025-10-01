@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 <!-- next-header -->
 ## [Unreleased] - ReleaseDate
 
+### Features
+
+- Add `css` theme
+- Add `cobalt debug highlight save-theme-css` for generating CSS for the `css` theme
+
 ## [0.20.1] - 2025-09-25
 
 ### Features
