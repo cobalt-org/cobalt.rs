@@ -1,6 +1,6 @@
 [package]
 name = "file-serve"
-version = "0.3.9"
+version = "0.3.10"
 description = "HTTP Static File Server"
 categories = ["development-tools::testing", "web-programming::http-server"]
 keywords = ["serve", "http-server", "static-files", "http", "server"]

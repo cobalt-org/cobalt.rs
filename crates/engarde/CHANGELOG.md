@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 <!-- next-header -->
 ## [Unreleased] - ReleaseDate
 
+## [0.1.15] - 2025-10-01
+
 ### Features
 
 - Built-in `css` theme
@@ -65,7 +67,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [0.1.1] - 2022-04-04
 
 <!-- next-url -->
-[Unreleased]: https://github.com/cobalt-org/cobalt.rs/compare/engarde-v0.1.14...HEAD
+[Unreleased]: https://github.com/cobalt-org/cobalt.rs/compare/engarde-v0.1.15...HEAD
+[0.1.15]: https://github.com/cobalt-org/cobalt.rs/compare/engarde-v0.1.14...engarde-v0.1.15
 [0.1.14]: https://github.com/cobalt-org/cobalt.rs/compare/engarde-v0.1.13...engarde-v0.1.14
 [0.1.13]: https://github.com/cobalt-org/cobalt.rs/compare/engarde-v0.1.12...engarde-v0.1.13
 [0.1.12]: https://github.com/cobalt-org/cobalt.rs/compare/engarde-v0.1.11...engarde-v0.1.12

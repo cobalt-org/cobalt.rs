@@ -1,6 +1,6 @@
 [package]
 name = "engarde"
-version = "0.1.14"
+version = "0.1.15"
 description = "Fenced Code Formatting"
 readme = "README.md"
 categories = ["parser-implementations", "parsing", "text-processing"]
