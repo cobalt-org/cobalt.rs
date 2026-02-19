@@ -100,7 +100,7 @@ lto = true
 
 [package]
 name = "cobalt-bin"
-version = "0.20.3"
+version = "0.20.4"
 description = "Static site generator written in Rust"
 readme = "README.md"
 categories = ["command-line-utilities"]
