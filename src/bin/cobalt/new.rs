@@ -225,7 +225,20 @@ pub(crate) fn create_new_document(
     extension: Option<&str>,
     edit: bool,
 ) -> Result<()> {
-    let (parent_dir, filename, extension) = if file.is_file() {
+    let is_file = if file.exists() {
+        file.is_file()
+    } else {
+        let trailing_sep = file
+            .as_os_str()
+            .as_encoded_bytes()
+            .last()
+            .copied()
+            .map(|b| path::is_separator(b as char))
+            .unwrap_or(false);
+        !trailing_sep && file.extension().is_some()
+    };
+
+    let (parent_dir, filename, extension) = if is_file {
         let filename = file.file_name().unwrap().to_string_lossy().into_owned();
         let ext = extension
             .map(|e| e.to_owned())
