@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 <!-- next-header -->
 ## [Unreleased] - ReleaseDate
 
+### Fixes
+
+- *(new)* Infer the users intent when `--file` is meant to override the file name and not be a directory
+
 ## [0.20.3] - 2026-02-02
 
 ## [0.20.2] - 2025-10-01
