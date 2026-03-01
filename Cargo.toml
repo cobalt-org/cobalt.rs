@@ -191,7 +191,7 @@ anstyle = "1.0.10"
 
 [dev-dependencies]
 trycmd = "0.15.10"
-snapbox = { version = "0.6.21", features = ["diff"] }
+snapbox = { version = "1.0.0", features = ["diff"] }
 
 [features]
 default = ["syntax-highlight", "sass", "serve", "html-minifier"]
