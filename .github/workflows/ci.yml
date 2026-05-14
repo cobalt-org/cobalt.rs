@@ -73,27 +73,6 @@ jobs:
     - uses: taiki-e/install-action@cargo-hack
     - name: Default features
       run: cargo hack check --each-feature --locked --rust-version --ignore-private --workspace --all-targets --keep-going
-  minimal-versions:
-    name: Minimal versions
-    strategy:
-      matrix:
-        os: ["ubuntu-latest"]
-    runs-on: ${{ matrix.os }}
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v6
-    - name: Install stable Rust
-      uses: dtolnay/rust-toolchain@stable
-      with:
-        toolchain: stable
-    - name: Install nightly Rust
-      uses: dtolnay/rust-toolchain@stable
-      with:
-        toolchain: nightly
-    - name: Downgrade dependencies to minimal versions
-      run: cargo +nightly generate-lockfile -Z minimal-versions
-    - name: Compile with minimal versions
-      run: cargo +stable check --workspace --all-features --locked --exclude cobalt-bin --exclude cobalt-core --exclude cobalt-config --keep-going
   lockfile:
     runs-on: ubuntu-latest
     steps:

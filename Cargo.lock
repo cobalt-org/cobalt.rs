@@ -656,9 +656,12 @@ dependencies = [
 
 [[package]]
 name = "engarde"
-version = "0.1.15"
+version = "0.1.16"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4dbd460b70067874750b8e63617e266afd903bc6bd1018bb3593e6f66ff86b32"
 dependencies = [
  "flate2",
+ "serde",
  "syntect",
  "thiserror 1.0.69",
 ]
@@ -749,7 +752,9 @@ checksum = "37909eebbb50d72f9059c3b6d82c0463f2ff062c9e95845c43a6c9c0355411be"
 
 [[package]]
 name = "file-serve"
-version = "0.3.10"
+version = "0.3.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c56d5e68e5234b0cb0a0869e054be1fb45923146ffe35d6501b026026b1c3249"
 dependencies = [
  "log",
  "mime",
