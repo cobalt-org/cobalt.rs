@@ -67,7 +67,7 @@ impl ServeArgs {
 
             dest.close()?;
         } else {
-            log::info!("Watching {} for changes", &config.source.display());
+            log::info!("Watching {} for changes", config.source.display());
             thread::spawn(move || {
                 let e = serve(&server);
                 if let Some(e) = e.err() {

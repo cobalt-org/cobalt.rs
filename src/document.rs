@@ -73,7 +73,7 @@ impl Document {
 
     /// Metadata for generating RSS feeds
     pub(crate) fn to_rss(&self, root_url: &str) -> Result<rss::Item> {
-        let link = format!("{}/{}", root_url, &self.url_path);
+        let link = format!("{}/{}", root_url, self.url_path);
         let guid = rss::GuidBuilder::default()
             .value(link.clone())
             .permalink(true)
@@ -103,7 +103,7 @@ impl Document {
 
     /// Metadata for generating JSON feeds
     pub(crate) fn to_jsonfeed(&self, root_url: &str) -> jsonfeed::Item {
-        let link = format!("{}/{}", root_url, &self.url_path);
+        let link = format!("{}/{}", root_url, self.url_path);
 
         let tags = if !self.front.tags.is_empty() {
             self.front
@@ -137,7 +137,7 @@ impl Document {
         root_url: &str,
         writer: &mut sitemap::writer::UrlSetWriter<T>,
     ) -> Result<()> {
-        let link = format!("{}/{}", root_url, &self.url_path);
+        let link = format!("{}/{}", root_url, self.url_path);
         let mut url = sitemap::structs::UrlEntry::builder();
         url = url.loc(link);
         if let Some(date) = self.front.published_date {
@@ -309,19 +309,19 @@ pub(crate) fn permalink_attributes(
         attributes.insert("year".into(), Value::scalar(date.year().to_string()));
         attributes.insert(
             "month".into(),
-            Value::scalar(format!("{:02}", &date.month())),
+            Value::scalar(format!("{:02}", date.month())),
         );
         attributes.insert("i_month".into(), Value::scalar(date.month().to_string()));
-        attributes.insert("day".into(), Value::scalar(format!("{:02}", &date.day())));
+        attributes.insert("day".into(), Value::scalar(format!("{:02}", date.day())));
         attributes.insert("i_day".into(), Value::scalar(date.day().to_string()));
-        attributes.insert("hour".into(), Value::scalar(format!("{:02}", &date.hour())));
+        attributes.insert("hour".into(), Value::scalar(format!("{:02}", date.hour())));
         attributes.insert(
             "minute".into(),
-            Value::scalar(format!("{:02}", &date.minute())),
+            Value::scalar(format!("{:02}", date.minute())),
         );
         attributes.insert(
             "second".into(),
-            Value::scalar(format!("{:02}", &date.second())),
+            Value::scalar(format!("{:02}", date.second())),
         );
     }
 
