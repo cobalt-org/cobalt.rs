@@ -138,17 +138,15 @@ fn deep_insert(
 fn load_data(data_path: &path::Path) -> Result<liquid::model::Value> {
     let ext = data_path.extension().unwrap_or_else(|| OsStr::new(""));
 
-    let data: liquid::model::Value;
-
-    if ext == OsStr::new("yml") || ext == OsStr::new("yaml") {
+    let data: liquid::model::Value = if ext == OsStr::new("yml") || ext == OsStr::new("yaml") {
         let reader = fs::File::open(data_path)?;
-        data = serde_yaml::from_reader(reader)?;
+        serde_yaml::from_reader(reader)?
     } else if ext == OsStr::new("json") {
         let reader = fs::File::open(data_path)?;
-        data = serde_json::from_reader(reader)?;
+        serde_json::from_reader(reader)?
     } else if ext == OsStr::new("toml") {
         let text = files::read_file(data_path)?;
-        data = toml::from_str(&text)?;
+        toml::from_str(&text)?
     } else {
         anyhow::bail!(
             "Failed to load of data `{}`: unknown file type '{:?}'.\n\
@@ -156,7 +154,7 @@ fn load_data(data_path: &path::Path) -> Result<liquid::model::Value> {
             data_path.display(),
             ext
         );
-    }
+    };
 
     Ok(data)
 }
