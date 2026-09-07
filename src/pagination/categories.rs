@@ -50,7 +50,7 @@ fn parse_categories_list<'a>(
 struct Category<'a> {
     cat_path: liquid::model::Array,
     posts: Vec<&'a liquid::model::Value>,
-    sub_cats: BTreeMap<String, Category<'a>>,
+    sub_cats: BTreeMap<String, Self>,
 }
 
 impl<'a> Category<'a> {

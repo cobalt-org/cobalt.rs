@@ -26,7 +26,7 @@ impl AssetsBuilder {
     }
 
     pub fn build(self) -> Result<Assets> {
-        let AssetsBuilder { sass, source } = self;
+        let Self { sass, source } = self;
 
         let sass = sass.build();
 

@@ -119,7 +119,7 @@ impl Config {
                 .then(|| syntax_highlight.theme.clone()),
         };
 
-        let config = Config {
+        let config = Self {
             source,
             destination,
             ignore,
@@ -141,9 +141,8 @@ impl Config {
 }
 
 impl Default for Config {
-    fn default() -> Config {
-        Config::from_config(cobalt_config::Config::default())
-            .expect("default config should not fail")
+    fn default() -> Self {
+        Self::from_config(cobalt_config::Config::default()).expect("default config should not fail")
     }
 }
 

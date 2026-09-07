@@ -26,7 +26,7 @@ impl FilesBuilder {
     }
 
     fn new_from_path(root_dir: path::PathBuf) -> Result<Self> {
-        let builder = FilesBuilder {
+        let builder = Self {
             root_dir,
             subtree: Default::default(),
             ignore: Default::default(),
@@ -57,7 +57,7 @@ impl FilesBuilder {
         Ok(self)
     }
 
-    pub fn add_extension(&mut self, ext: &str) -> Result<&mut FilesBuilder> {
+    pub fn add_extension(&mut self, ext: &str) -> Result<&mut Self> {
         trace!("{}: adding '{}' extension", self.root_dir.display(), ext);
         self.extensions.push(ext.into());
         Ok(self)
@@ -92,7 +92,7 @@ pub struct FilesIterator<'a> {
 }
 
 impl<'a> FilesIterator<'a> {
-    fn new(files: &'a Files) -> FilesIterator<'a> {
+    fn new(files: &'a Files) -> Self {
         let walker = WalkDir::new(files.root_dir.as_path())
             .min_depth(1)
             .follow_links(false)

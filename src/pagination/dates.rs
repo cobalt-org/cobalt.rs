@@ -20,7 +20,7 @@ fn distribute_posts_by_dates<'a>(
     config: &PaginationConfig,
 ) -> Result<DateIndexHolder<'a>> {
     let date_index = &config.date_index;
-    let mut root = DateIndexHolder::new(0u32, None);
+    let mut root = DateIndexHolder::new(0_u32, None);
     for post in all_posts {
         if let Some(published_date) = extract_published_date(post.as_view()) {
             for idx in date_index {
@@ -35,7 +35,7 @@ struct DateIndexHolder<'a> {
     value: u32,
     field: Option<DateIndex>,
     posts: Vec<&'a liquid::model::Value>,
-    sub_date: Vec<DateIndexHolder<'a>>,
+    sub_date: Vec<Self>,
 }
 
 impl DateIndexHolder<'_> {

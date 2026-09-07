@@ -31,7 +31,7 @@ pub struct Frontmatter {
 }
 
 impl Frontmatter {
-    pub fn from_config(config: cobalt_config::Frontmatter) -> Result<Frontmatter> {
+    pub fn from_config(config: cobalt_config::Frontmatter) -> Result<Self> {
         let cobalt_config::Frontmatter {
             permalink,
             slug,
@@ -61,7 +61,7 @@ impl Frontmatter {
                 anyhow::bail!("Empty strings are not allowed in tags");
             }
         }
-        let fm = Frontmatter {
+        let fm = Self {
             pagination: pagination
                 .and_then(|p| pagination::PaginationConfig::from_config(p, &permalink)),
             permalink,

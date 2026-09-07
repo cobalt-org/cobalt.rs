@@ -5,7 +5,7 @@ use super::{PaginationConfig, Result, interpret_permalink};
 #[derive(Default, Clone, Debug)]
 pub(crate) struct Paginator {
     pub(crate) pages: Option<Vec<liquid::model::Value>>,
-    pub(crate) indexes: Option<Vec<Paginator>>,
+    pub(crate) indexes: Option<Vec<Self>>,
     pub(crate) index: usize,
     pub(crate) index_title: Option<liquid::model::Value>,
     pub(crate) index_permalink: String,
@@ -20,8 +20,8 @@ pub(crate) struct Paginator {
 }
 
 impl Paginator {
-    pub(crate) fn new(total_indexes: usize, total_pages: usize) -> Paginator {
-        Paginator {
+    pub(crate) fn new(total_indexes: usize, total_pages: usize) -> Self {
+        Self {
             pages: None,   // pages in current index
             indexes: None, // list of the available indexes, use when include is tags for instance
             index: 0,

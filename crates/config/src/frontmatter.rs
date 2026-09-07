@@ -162,8 +162,8 @@ pub enum Permalink {
 impl Permalink {
     pub fn as_str(&self) -> &str {
         match self {
-            Permalink::Alias(PermalinkAlias::Path) => "/{{parent}}/{{name}}{{ext}}",
-            Permalink::Explicit(path) => path.as_str(),
+            Self::Alias(PermalinkAlias::Path) => "/{{parent}}/{{name}}{{ext}}",
+            Self::Explicit(path) => path.as_str(),
         }
     }
 }
@@ -194,7 +194,7 @@ impl AsRef<str> for Permalink {
 
 impl Default for Permalink {
     fn default() -> Self {
-        Permalink::Alias(PermalinkAlias::Path)
+        Self::Alias(PermalinkAlias::Path)
     }
 }
 
