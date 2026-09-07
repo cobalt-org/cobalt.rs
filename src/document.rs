@@ -40,7 +40,7 @@ impl Document {
         src_path: &Path,
         rel_path: &relative_path::RelativePath,
         default_front: cobalt_config::Frontmatter,
-    ) -> Result<Document> {
+    ) -> Result<Self> {
         trace!("Parsing `{rel_path}`");
         let content = files::read_file(src_path)?;
         let builder = cobalt_config::Document::parse(&content)?;
@@ -62,7 +62,7 @@ impl Document {
 
         let doc_attributes = document_attributes(&front, rel_path, url_path.as_ref());
 
-        Ok(Document {
+        Ok(Self {
             url_path,
             file_path,
             content,

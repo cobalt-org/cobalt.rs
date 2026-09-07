@@ -63,7 +63,7 @@ impl Context {
         let layouts = find_layouts(&layouts_path)?;
         let layouts = parse_layouts(&layouts);
 
-        let context = Context {
+        let context = Self {
             destination,
             source_files,
             page_extensions,

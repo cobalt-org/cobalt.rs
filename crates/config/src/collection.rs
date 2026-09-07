@@ -18,7 +18,7 @@ pub struct Collection {
 }
 
 impl From<PostCollection> for Collection {
-    fn from(other: PostCollection) -> Collection {
+    fn from(other: PostCollection) -> Self {
         let PostCollection {
             title,
             description,
@@ -45,7 +45,7 @@ impl From<PostCollection> for Collection {
 }
 
 impl From<PageCollection> for Collection {
-    fn from(other: PageCollection) -> Collection {
+    fn from(other: PageCollection) -> Self {
         let PageCollection { default } = other;
         // By default, Disable excerpts
         let default = default.merge(&Frontmatter {

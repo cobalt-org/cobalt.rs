@@ -43,7 +43,7 @@ impl Pagination {
     }
 
     pub fn merge(self, other: &Self) -> Self {
-        let Pagination {
+        let Self {
             include,
             per_page,
             permalink_suffix,

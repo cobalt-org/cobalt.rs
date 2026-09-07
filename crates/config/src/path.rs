@@ -88,14 +88,14 @@ impl RelPath {
 impl PartialEq<str> for RelPath {
     #[inline]
     fn eq(&self, other: &str) -> bool {
-        *self == RelPath::from_unchecked(other)
+        *self == Self::from_unchecked(other)
     }
 }
 
 impl<'s> PartialEq<&'s str> for RelPath {
     #[inline]
     fn eq(&self, other: &&'s str) -> bool {
-        *self == RelPath::from_unchecked(*other)
+        *self == Self::from_unchecked(*other)
     }
 }
 

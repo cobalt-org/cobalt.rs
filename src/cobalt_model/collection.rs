@@ -78,7 +78,7 @@ impl Collection {
             ..Default::default()
         });
 
-        let new = Collection {
+        let new = Self {
             title,
             slug,
             description,

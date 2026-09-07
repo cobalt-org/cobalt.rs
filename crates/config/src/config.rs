@@ -33,8 +33,8 @@ pub struct Config {
 }
 
 impl Default for Config {
-    fn default() -> Config {
-        Config {
+    fn default() -> Self {
+        Self {
             root: Default::default(),
             source: "./".try_into().unwrap(),
             destination: "./_site".try_into().unwrap(),
@@ -56,11 +56,11 @@ impl Default for Config {
 }
 
 impl Config {
-    pub fn from_file<P: Into<path::PathBuf>>(path: P) -> Result<Config> {
+    pub fn from_file<P: Into<path::PathBuf>>(path: P) -> Result<Self> {
         Self::from_file_internal(path.into())
     }
 
-    fn from_file_internal(path: path::PathBuf) -> Result<Config> {
+    fn from_file_internal(path: path::PathBuf) -> Result<Self> {
         let content = std::fs::read_to_string(&path).map_err(|e| {
             Status::new("Failed to read config")
                 .with_source(e)
@@ -68,7 +68,7 @@ impl Config {
         })?;
 
         let mut config = if content.trim().is_empty() {
-            Config::default()
+            Self::default()
         } else {
             serde_yaml::from_str(&content).map_err(|e| {
                 Status::new("Failed to parse config")
@@ -87,11 +87,11 @@ impl Config {
         Ok(config)
     }
 
-    pub fn from_cwd<P: Into<path::PathBuf>>(cwd: P) -> Result<Config> {
+    pub fn from_cwd<P: Into<path::PathBuf>>(cwd: P) -> Result<Self> {
         Self::from_cwd_internal(cwd.into())
     }
 
-    fn from_cwd_internal(cwd: path::PathBuf) -> Result<Config> {
+    fn from_cwd_internal(cwd: path::PathBuf) -> Result<Self> {
         let file_path = find_project_file(&cwd, "_cobalt.yml");
         let config = file_path
             .map(|p| {
@@ -100,7 +100,7 @@ impl Config {
             })
             .unwrap_or_else(|| {
                 log::warn!("No _cobalt.yml file found in current directory, using default config.");
-                let config = Config {
+                let config = Self {
                     root: cwd,
                     ..Default::default()
                 };
