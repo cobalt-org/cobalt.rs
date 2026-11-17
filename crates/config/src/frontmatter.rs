@@ -24,7 +24,10 @@ pub struct Frontmatter {
     pub tags: Option<Vec<liquid_core::model::KString>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub excerpt_separator: Option<liquid_core::model::KString>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "deserialize_date_time"
+    )]
     pub published_date: Option<DateTime>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub format: Option<SourceFormat>,
@@ -44,6 +47,32 @@ pub struct Frontmatter {
     // point but we need to first define those semantics.
     #[serde(skip)]
     pub collection: Option<liquid_core::model::KString>,
+}
+
+fn deserialize_date_time<'de, D>(deserializer: D) -> Result<Option<DateTime>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    let s: std::borrow::Cow<'_, str> = serde::Deserialize::deserialize(deserializer)?;
+    if s == "now" || s == "today" {
+        // The date time parsing support now and today not needed in this context
+        Err(serde::de::Error::custom(format!(
+            "value '{}' not a valid date time format",
+            s
+        )))
+    } else {
+        let parsed = DateTime::from_str(&s);
+        if parsed.is_some() {
+            Ok(parsed)
+        } else if !s.trim().is_empty() {
+            Err(serde::de::Error::custom(format!(
+                "value '{}' not a valid date time format",
+                s
+            )))
+        } else {
+            Ok(None)
+        }
+    }
 }
 
 impl Frontmatter {
