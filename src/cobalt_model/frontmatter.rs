@@ -20,6 +20,7 @@ pub struct Frontmatter {
     pub tags: Vec<liquid::model::KString>,
     pub excerpt_separator: liquid::model::KString,
     pub published_date: Option<DateTime>,
+    pub updated_date: Option<DateTime>,
     pub format: SourceFormat,
     pub templated: bool,
     pub layout: Option<liquid::model::KString>,
@@ -42,6 +43,7 @@ impl Frontmatter {
             tags,
             excerpt_separator,
             published_date,
+            updated_date,
             format,
             templated,
             layout,
@@ -73,6 +75,7 @@ impl Frontmatter {
             tags: tags.unwrap_or_default(),
             excerpt_separator: excerpt_separator.unwrap_or_else(|| "\n\n".into()),
             published_date,
+            updated_date,
             format: format.unwrap_or_default(),
             #[cfg(feature = "preview_unstable")]
             templated: templated.unwrap_or(false),
